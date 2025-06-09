@@ -333,3 +333,180 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type LlmConfiguration = typeof llmConfigurations.$inferSelect;
 export type InsertLlmConfiguration = z.infer<typeof insertLlmConfigurationSchema>;
+
+// Gamification tables
+export const learningModules = pgTable("learning_modules", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // "gouvernance", "droits", "securite", etc.
+  difficulty: text("difficulty").notNull(), // "beginner", "intermediate", "advanced"
+  content: text("content").notNull(), // Rich text content
+  estimatedDuration: integer("estimated_duration").notNull(), // in minutes
+  xpReward: integer("xp_reward").default(10),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(), // lucide icon name
+  category: text("category").notNull(),
+  criteria: text("criteria").notNull(), // JSON criteria for unlocking
+  xpRequired: integer("xp_required").default(0),
+  isSecret: boolean("is_secret").default(false), // Hidden until unlocked
+  rarity: text("rarity").notNull().default("common"), // "common", "rare", "epic", "legendary"
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  totalXp: integer("total_xp").default(0),
+  level: integer("level").default(1),
+  streak: integer("streak").default(0), // consecutive days of activity
+  lastActivityDate: timestamp("last_activity_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  achievementId: integer("achievement_id").references(() => achievements.id).notNull(),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  notificationSent: boolean("notification_sent").default(false)
+});
+
+export const moduleProgress = pgTable("module_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  moduleId: integer("module_id").references(() => learningModules.id).notNull(),
+  status: text("status").notNull().default("not_started"), // "not_started", "in_progress", "completed"
+  progress: integer("progress").default(0), // percentage 0-100
+  timeSpent: integer("time_spent").default(0), // in minutes
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const quizzes = pgTable("quizzes", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").references(() => learningModules.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  questions: text("questions").notNull(), // JSON array of questions
+  passingScore: integer("passing_score").default(70), // percentage
+  maxAttempts: integer("max_attempts").default(3),
+  timeLimit: integer("time_limit"), // in minutes, null for unlimited
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const quizAttempts = pgTable("quiz_attempts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  quizId: integer("quiz_id").references(() => quizzes.id).notNull(),
+  score: integer("score").notNull(), // percentage
+  answers: text("answers").notNull(), // JSON array of user answers
+  timeSpent: integer("time_spent"), // in minutes
+  passed: boolean("passed").notNull(),
+  attemptNumber: integer("attempt_number").notNull(),
+  completedAt: timestamp("completed_at").defaultNow()
+});
+
+// Relations for gamification
+export const learningModulesRelations = relations(learningModules, ({ many }) => ({
+  quizzes: many(quizzes),
+  moduleProgress: many(moduleProgress)
+}));
+
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+  userAchievements: many(userAchievements)
+}));
+
+export const userProgressRelations = relations(userProgress, ({ one, many }) => ({
+  user: one(users, { fields: [userProgress.userId], references: [users.id] }),
+  userAchievements: many(userAchievements),
+  moduleProgress: many(moduleProgress),
+  quizAttempts: many(quizAttempts)
+}));
+
+export const userAchievementsRelations = relations(userAchievements, ({ one }) => ({
+  user: one(users, { fields: [userAchievements.userId], references: [users.id] }),
+  achievement: one(achievements, { fields: [userAchievements.achievementId], references: [achievements.id] })
+}));
+
+export const moduleProgressRelations = relations(moduleProgress, ({ one }) => ({
+  user: one(users, { fields: [moduleProgress.userId], references: [users.id] }),
+  module: one(learningModules, { fields: [moduleProgress.moduleId], references: [learningModules.id] })
+}));
+
+export const quizzesRelations = relations(quizzes, ({ one, many }) => ({
+  module: one(learningModules, { fields: [quizzes.moduleId], references: [learningModules.id] }),
+  attempts: many(quizAttempts)
+}));
+
+export const quizAttemptsRelations = relations(quizAttempts, ({ one }) => ({
+  user: one(users, { fields: [quizAttempts.userId], references: [users.id] }),
+  quiz: one(quizzes, { fields: [quizAttempts.quizId], references: [quizzes.id] })
+}));
+
+// Insert schemas for gamification
+export const insertLearningModuleSchema = createInsertSchema(learningModules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAchievementSchema = createInsertSchema(achievements).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertUserAchievementSchema = createInsertSchema(userAchievements).omit({
+  id: true,
+  unlockedAt: true
+});
+
+export const insertModuleProgressSchema = createInsertSchema(moduleProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertQuizSchema = createInsertSchema(quizzes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({
+  id: true,
+  completedAt: true
+});
+
+// Types for gamification
+export type LearningModule = typeof learningModules.$inferSelect;
+export type InsertLearningModule = z.infer<typeof insertLearningModuleSchema>;
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
+export type ModuleProgress = typeof moduleProgress.$inferSelect;
+export type InsertModuleProgress = z.infer<typeof insertModuleProgressSchema>;
+export type Quiz = typeof quizzes.$inferSelect;
+export type InsertQuiz = z.infer<typeof insertQuizSchema>;
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+export type InsertQuizAttempt = z.infer<typeof insertQuizAttemptSchema>;
