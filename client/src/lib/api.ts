@@ -109,6 +109,19 @@ export const adminApi = {
   
   deleteQuestion: (id: number) =>
     apiRequest("DELETE", `/api/admin/questions/${id}`),
+
+  // LLM Configurations
+  getLlmConfigs: () =>
+    apiRequest("GET", "/api/admin/llm-configs"),
+  
+  createLlmConfig: (configData: any) =>
+    apiRequest("POST", "/api/admin/llm-configs", configData),
+  
+  updateLlmConfig: (id: number, updates: any) =>
+    apiRequest("PUT", `/api/admin/llm-configs/${id}`, updates),
+  
+  deleteLlmConfig: (id: number) =>
+    apiRequest("DELETE", `/api/admin/llm-configs/${id}`),
 };
 
 // Chatbot API

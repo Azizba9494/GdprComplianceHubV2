@@ -39,6 +39,21 @@ interface DiagnosticQuestion {
   createdAt: string;
 }
 
+interface LlmConfiguration {
+  id: number;
+  name: string;
+  provider: string;
+  apiEndpoint?: string;
+  apiKeyName: string;
+  modelName: string;
+  maxTokens: number;
+  temperature: string;
+  isActive: boolean;
+  supportsJsonMode: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const promptCategories = {
   diagnostic: "Diagnostic",
   records: "Registres",
@@ -82,6 +97,23 @@ export default function Admin() {
     },
   });
 
+  const llmForm = useForm({
+    defaultValues: {
+      name: "",
+      provider: "openai",
+      apiEndpoint: "",
+      apiKeyName: "",
+      modelName: "",
+      maxTokens: 4000,
+      temperature: "0.7",
+      isActive: false,
+      supportsJsonMode: false,
+    },
+  });
+
+  const [isLlmDialogOpen, setIsLlmDialogOpen] = useState(false);
+  const [editingLlm, setEditingLlm] = useState<LlmConfiguration | null>(null);
+
   // Queries
   const { data: prompts, isLoading: promptsLoading } = useQuery({
     queryKey: ['/api/admin/prompts'],
@@ -91,6 +123,11 @@ export default function Admin() {
   const { data: questions, isLoading: questionsLoading } = useQuery({
     queryKey: ['/api/diagnostic/questions'],
     queryFn: () => diagnosticApi.getQuestions().then(res => res.json()),
+  });
+
+  const { data: llmConfigs, isLoading: llmLoading } = useQuery({
+    queryKey: ['/api/admin/llm-configs'],
+    queryFn: () => adminApi.getLlmConfigs().then(res => res.json()),
   });
 
   // Mutations
@@ -161,6 +198,46 @@ export default function Admin() {
     },
   });
 
+  // LLM Configuration mutations
+  const createLlmMutation = useMutation({
+    mutationFn: (data: any) => adminApi.createLlmConfig(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/llm-configs'] });
+      setIsLlmDialogOpen(false);
+      llmForm.reset();
+      setEditingLlm(null);
+      toast({
+        title: "Configuration IA créée !",
+        description: "La nouvelle configuration d'IA a été ajoutée avec succès.",
+      });
+    },
+  });
+
+  const updateLlmMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => adminApi.updateLlmConfig(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/llm-configs'] });
+      setIsLlmDialogOpen(false);
+      llmForm.reset();
+      setEditingLlm(null);
+      toast({
+        title: "Configuration IA mise à jour !",
+        description: "La configuration d'IA a été modifiée avec succès.",
+      });
+    },
+  });
+
+  const deleteLlmMutation = useMutation({
+    mutationFn: (id: number) => adminApi.deleteLlmConfig(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/llm-configs'] });
+      toast({
+        title: "Configuration supprimée !",
+        description: "La configuration d'IA a été supprimée avec succès.",
+      });
+    },
+  });
+
   const onPromptSubmit = (data: any) => {
     if (editingPrompt) {
       updatePromptMutation.mutate({ id: editingPrompt.id, data });
@@ -174,6 +251,14 @@ export default function Admin() {
       updateQuestionMutation.mutate({ id: editingQuestion.id, data });
     } else {
       createQuestionMutation.mutate(data);
+    }
+  };
+
+  const onLlmSubmit = (data: any) => {
+    if (editingLlm) {
+      updateLlmMutation.mutate({ id: editingLlm.id, data });
+    } else {
+      createLlmMutation.mutate(data);
     }
   };
 
@@ -206,6 +291,27 @@ export default function Admin() {
       questionForm.reset();
     }
     setIsQuestionDialogOpen(true);
+  };
+
+  const openLlmDialog = (config?: LlmConfiguration) => {
+    if (config) {
+      setEditingLlm(config);
+      llmForm.reset({
+        name: config.name,
+        provider: config.provider,
+        apiEndpoint: config.apiEndpoint || "",
+        apiKeyName: config.apiKeyName,
+        modelName: config.modelName,
+        maxTokens: config.maxTokens,
+        temperature: config.temperature,
+        isActive: config.isActive,
+        supportsJsonMode: config.supportsJsonMode,
+      });
+    } else {
+      setEditingLlm(null);
+      llmForm.reset();
+    }
+    setIsLlmDialogOpen(true);
   };
 
   const togglePromptStatus = (prompt: AiPrompt) => {
@@ -252,6 +358,10 @@ export default function Admin() {
           <TabsTrigger value="questions" className="flex items-center space-x-2">
             <ClipboardList className="w-4 h-4" />
             <span>Questions diagnostic</span>
+          </TabsTrigger>
+          <TabsTrigger value="llm-configs" className="flex items-center space-x-2">
+            <Settings className="w-4 h-4" />
+            <span>Configuration IA</span>
           </TabsTrigger>
         </TabsList>
 
