@@ -33,6 +33,9 @@ const priorityColors = {
 };
 
 export default function ActionPlan() {
+  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+  const [newDueDate, setNewDueDate] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -61,6 +64,24 @@ export default function ActionPlan() {
     }
     
     updateActionMutation.mutate({ id: actionId, updates });
+  };
+
+  const openDateDialog = (action: any) => {
+    setSelectedAction(action);
+    setNewDueDate(action.dueDate ? new Date(action.dueDate).toISOString().split('T')[0] : "");
+    setIsDateDialogOpen(true);
+  };
+
+  const handleDateUpdate = () => {
+    if (selectedAction && newDueDate) {
+      updateActionMutation.mutate({ 
+        id: selectedAction.id, 
+        updates: { dueDate: new Date(newDueDate).toISOString() } 
+      });
+      setIsDateDialogOpen(false);
+      setSelectedAction(null);
+      setNewDueDate("");
+    }
   };
 
   if (isLoading) {
@@ -170,6 +191,16 @@ export default function ActionPlan() {
                   </div>
                   
                   <div className="flex items-center space-x-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openDateDialog(action)}
+                      className="flex items-center space-x-1"
+                    >
+                      <CalendarDays className="w-4 h-4" />
+                      <span>Échéance</span>
+                    </Button>
+                    
                     <Select
                       value={action.status}
                       onValueChange={(value) => handleStatusChange(action.id, value)}
@@ -201,6 +232,41 @@ export default function ActionPlan() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Date Picker Dialog */}
+      <Dialog open={isDateDialogOpen} onOpenChange={setIsDateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Définir l'échéance</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="dueDate">Date d'échéance</Label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={newDueDate}
+                onChange={(e) => setNewDueDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsDateDialogOpen(false)}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleDateUpdate}
+                disabled={!newDueDate}
+              >
+                Confirmer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
