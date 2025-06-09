@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, uuid, numeric } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -151,6 +151,21 @@ export const auditLogs = pgTable("audit_logs", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+export const llmConfigurations = pgTable("llm_configurations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  provider: text("provider").notNull(),
+  apiEndpoint: text("api_endpoint"),
+  apiKeyName: text("api_key_name").notNull(),
+  modelName: text("model_name").notNull(),
+  maxTokens: integer("max_tokens").default(4000),
+  temperature: text("temperature").default("0.7"),
+  isActive: boolean("is_active").default(false),
+  supportsJsonMode: boolean("supports_json_mode").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   company: one(companies, {
@@ -251,6 +266,12 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   timestamp: true,
 });
 
+export const insertLlmConfigurationSchema = createInsertSchema(llmConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -276,3 +297,5 @@ export type AiPrompt = typeof aiPrompts.$inferSelect;
 export type InsertAiPrompt = z.infer<typeof insertAiPromptSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type LlmConfiguration = typeof llmConfigurations.$inferSelect;
+export type InsertLlmConfiguration = z.infer<typeof insertLlmConfigurationSchema>;
