@@ -268,6 +268,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/breaches", async (req, res) => {
+    try {
+      const breachData = insertDataBreachSchema.parse(req.body);
+      const breach = await storage.createDataBreach(breachData);
+      res.json(breach);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   app.post("/api/breaches/analyze", async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);

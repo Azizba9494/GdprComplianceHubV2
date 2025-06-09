@@ -68,6 +68,9 @@ export const breachApi = {
   get: (companyId: number) =>
     apiRequest("GET", `/api/breaches/${companyId}`),
   
+  create: (breachData: any) =>
+    apiRequest("POST", "/api/breaches", breachData),
+  
   analyze: (breachData: any) =>
     apiRequest("POST", "/api/breaches/analyze", breachData),
 };

@@ -471,12 +471,12 @@ export class DatabaseStorage implements IStorage {
 
     const today = new Date();
     const lastActivity = progress.lastActivityDate ? new Date(progress.lastActivityDate) : null;
-    let newStreak = progress.streak;
+    let newStreak = progress.streak ?? 0;
 
     if (lastActivity) {
       const daysDiff = Math.floor((today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
       if (daysDiff === 1) {
-        newStreak += 1; // Continue streak
+        newStreak = (newStreak ?? 0) + 1; // Continue streak
       } else if (daysDiff > 1) {
         newStreak = 1; // Reset streak
       }
@@ -486,7 +486,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     return await this.updateUserProgress(userId, {
-      streak: newStreak || 1,
+      streak: newStreak,
       lastActivityDate: today
     });
   }

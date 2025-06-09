@@ -74,9 +74,15 @@ export class MistralService {
         throw new Error('Pas de réponse du modèle');
       }
 
-      // Handle string content
-      const textContent = typeof content === 'string' ? content : 
-        Array.isArray(content) ? content.map(c => c.text || '').join('') : '';
+      // Handle different content types
+      let textContent: string;
+      if (typeof content === 'string') {
+        textContent = content;
+      } else if (Array.isArray(content)) {
+        textContent = content.map(c => (c as any).text || '').join('');
+      } else {
+        textContent = '';
+      }
 
       try {
         return JSON.parse(textContent);
