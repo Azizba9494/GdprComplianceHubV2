@@ -23,6 +23,9 @@ export const diagnosticApi = {
   getQuestions: () =>
     apiRequest("GET", "/api/diagnostic/questions"),
   
+  getResponses: (companyId: number) =>
+    apiRequest("GET", `/api/diagnostic/responses/${companyId}`),
+  
   submitResponse: (responseData: { companyId: number; questionId: number; response: string; score?: number }) =>
     apiRequest("POST", "/api/diagnostic/responses", responseData),
   

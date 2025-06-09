@@ -69,6 +69,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/diagnostic/responses/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const responses = await storage.getDiagnosticResponses(companyId);
+      res.json(responses);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/diagnostic/responses", async (req, res) => {
     try {
       const responseData = insertDiagnosticResponseSchema.parse(req.body);

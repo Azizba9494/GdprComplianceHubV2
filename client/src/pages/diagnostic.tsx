@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { diagnosticApi } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,21 +6,48 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ArrowRight, ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, ArrowRight, ArrowLeft, FileText, Shield, Users, Settings, Book, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const COMPANY_ID = 1; // Mock company ID
 
+const categoryIcons = {
+  "Gouvernance": Settings,
+  "Documentation": FileText,
+  "Consentement": Users,
+  "Sécurité": Shield,
+  "Droits": Book,
+  "Formation": Users,
+  "Violations": AlertTriangle,
+};
+
+const categoryDescriptions = {
+  "Gouvernance": "Organisation et responsabilités RGPD",
+  "Documentation": "Registres et politiques de confidentialité",
+  "Consentement": "Collecte et gestion du consentement",
+  "Sécurité": "Mesures techniques et organisationnelles",
+  "Droits": "Gestion des droits des personnes concernées",
+  "Formation": "Sensibilisation et formation du personnel",
+  "Violations": "Procédures de gestion des incidents",
+};
+
 export default function Diagnostic() {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<Record<number, string>>({});
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [completedCategories, setCompletedCategories] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: questions, isLoading } = useQuery({
+  const { data: allQuestions, isLoading } = useQuery({
     queryKey: ['/api/diagnostic/questions'],
     queryFn: () => diagnosticApi.getQuestions().then(res => res.json()),
+  });
+
+  const { data: existingResponses } = useQuery({
+    queryKey: ['/api/diagnostic/responses', COMPANY_ID],
+    queryFn: () => diagnosticApi.getResponses(COMPANY_ID).then(res => res.json()),
   });
 
   const submitResponseMutation = useMutation({
@@ -34,14 +61,39 @@ export default function Diagnostic() {
     mutationFn: (companyId: number) => diagnosticApi.analyze(companyId),
     onSuccess: () => {
       toast({
-        title: "Diagnostic terminé !",
-        description: "Votre plan d'action personnalisé a été généré.",
+        title: "Questionnaire terminé !",
+        description: "Vos réponses ont été enregistrées et analysées.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/actions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
-      setIsCompleted(true);
+      queryClient.invalidateQueries({ queryKey: ['/api/diagnostic/responses'] });
+      setSelectedCategory(null);
+      setCurrentQuestionIndex(0);
+      setResponses({});
     },
   });
+
+  // Process data
+  const categories = allQuestions ? [...new Set(allQuestions.map((q: any) => q.category))] : [];
+  const questionsByCategory = allQuestions ? allQuestions.filter((q: any) => q.category === selectedCategory) : [];
+  const answeredQuestionIds = existingResponses ? existingResponses.map((r: any) => r.questionId) : [];
+  
+  // Update completed categories based on existing responses
+  React.useEffect(() => {
+    if (existingResponses && allQuestions) {
+      const completed = new Set<string>();
+      categories.forEach((category: string) => {
+        const categoryQuestions = allQuestions.filter((q: any) => q.category === category);
+        const answeredInCategory = categoryQuestions.filter((q: any) => 
+          answeredQuestionIds.includes(q.id)
+        );
+        if (answeredInCategory.length === categoryQuestions.length && categoryQuestions.length > 0) {
+          completed.add(category);
+        }
+      });
+      setCompletedCategories(completed);
+    }
+  }, [existingResponses, allQuestions, categories, answeredQuestionIds]);
 
   if (isLoading) {
     return (
@@ -57,7 +109,7 @@ export default function Diagnostic() {
     );
   }
 
-  if (!questions || questions.length === 0) {
+  if (!allQuestions || allQuestions.length === 0) {
     return (
       <div className="p-6">
         <Card>
@@ -71,9 +123,66 @@ export default function Diagnostic() {
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  // Show category selection if no category is selected
+  if (!selectedCategory) {
+    return (
+      <div className="p-6 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Diagnostic RGPD par catégorie</CardTitle>
+            <p className="text-muted-foreground">
+              Choisissez une catégorie de questions pour commencer votre diagnostic RGPD.
+              Vous pouvez compléter les questionnaires dans l'ordre de votre choix.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((category: string) => {
+                const Icon = categoryIcons[category as keyof typeof categoryIcons] || FileText;
+                const isCompleted = completedCategories.has(category);
+                const categoryQuestions = allQuestions.filter((q: any) => q.category === category);
+                
+                return (
+                  <Card 
+                    key={category} 
+                    className={`cursor-pointer transition-all hover:shadow-md ${isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 'hover:border-primary'}`}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start space-x-3">
+                        <Icon className={`w-8 h-8 ${isCompleted ? 'text-green-600' : 'text-primary'}`} />
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="font-semibold">{category}</h3>
+                            {isCompleted && (
+                              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Terminé
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {categoryDescriptions[category as keyof typeof categoryDescriptions]}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {categoryQuestions.length} question{categoryQuestions.length > 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const currentQuestion = questionsByCategory[currentQuestionIndex];
+  const progress = questionsByCategory.length > 0 ? ((currentQuestionIndex + 1) / questionsByCategory.length) * 100 : 0;
+  const isLastQuestion = currentQuestionIndex === questionsByCategory.length - 1;
 
   const handleResponse = (value: string) => {
     setResponses(prev => ({
