@@ -67,27 +67,41 @@ export default function Learning() {
 
   const { data: modules } = useQuery({
     queryKey: ['/api/learning/modules'],
-    queryFn: () => learningApi.getModules(),
+    queryFn: async () => {
+      const response = await learningApi.getModules();
+      return response.json();
+    },
   });
 
   const { data: userProgressData } = useQuery({
     queryKey: ['/api/gamification/progress', userId],
-    queryFn: () => gamificationApi.getUserProgress(userId),
+    queryFn: async () => {
+      const response = await gamificationApi.getUserProgress(userId);
+      return response.json();
+    },
   });
 
   const { data: achievements } = useQuery({
     queryKey: ['/api/gamification/achievements'],
-    queryFn: () => gamificationApi.getAchievements(),
+    queryFn: async () => {
+      const response = await gamificationApi.getAchievements();
+      return response.json();
+    },
   });
 
   const { data: leaderboard } = useQuery({
     queryKey: ['/api/gamification/leaderboard'],
-    queryFn: () => gamificationApi.getLeaderboard(5),
+    queryFn: async () => {
+      const response = await gamificationApi.getLeaderboard(5);
+      return response.json();
+    },
   });
 
   const completeModuleMutation = useMutation({
-    mutationFn: ({ userId, moduleId }: { userId: number; moduleId: number }) =>
-      learningApi.completeModule(userId, moduleId),
+    mutationFn: async ({ userId, moduleId }: { userId: number; moduleId: number }) => {
+      const response = await learningApi.completeModule(userId, moduleId);
+      return response.json();
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/gamification/progress', userId] });
       setIsModuleDialogOpen(false);
@@ -109,12 +123,15 @@ export default function Learning() {
   });
 
   const updateProgressMutation = useMutation({
-    mutationFn: ({ userId, moduleId, progress, timeSpent }: { 
+    mutationFn: async ({ userId, moduleId, progress, timeSpent }: { 
       userId: number; 
       moduleId: number; 
       progress: number; 
       timeSpent: number 
-    }) => learningApi.updateProgress(userId, moduleId, progress, timeSpent),
+    }) => {
+      const response = await learningApi.updateProgress(userId, moduleId, progress, timeSpent);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/gamification/progress', userId] });
     },
@@ -205,7 +222,8 @@ export default function Learning() {
   };
 
   const getModuleProgress = (moduleId: number) => {
-    return userProgressData?.moduleProgress?.find(
+    if (!userProgressData?.moduleProgress) return undefined;
+    return userProgressData.moduleProgress.find(
       (mp: ModuleProgress) => mp.moduleId === moduleId
     );
   };
@@ -263,7 +281,7 @@ export default function Learning() {
         {/* Learning Modules */}
         <TabsContent value="modules" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {modules?.map((module: LearningModule) => {
+            {modules && Array.isArray(modules) && modules.map((module: LearningModule) => {
               const progress = getModuleProgress(module.id);
               const isCompleted = progress?.status === 'completed';
               const isInProgress = progress?.status === 'in_progress';
@@ -341,7 +359,7 @@ export default function Learning() {
         {/* Achievements */}
         <TabsContent value="achievements" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {achievements?.map((achievement: Achievement) => {
+            {achievements && Array.isArray(achievements) && achievements.map((achievement: Achievement) => {
               const isUnlocked = userAchievements.some(
                 (ua: any) => ua.achievementId === achievement.id
               );
@@ -397,7 +415,7 @@ export default function Learning() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {leaderboard?.map((user: any, index: number) => (
+                {leaderboard && Array.isArray(leaderboard) && leaderboard.map((user: any, index: number) => (
                   <div key={user.id} className="flex items-center justify-between p-3 rounded-lg border">
                     <div className="flex items-center space-x-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold
