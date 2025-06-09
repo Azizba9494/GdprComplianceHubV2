@@ -453,7 +453,7 @@ export class DatabaseStorage implements IStorage {
       progress = await this.createUserProgress({ userId, totalXp: 0, level: 1 });
     }
 
-    const newXp = progress.totalXp + xp;
+    const newXp = (progress.totalXp || 0) + xp;
     const newLevel = Math.floor(newXp / 100) + 1; // 100 XP per level
 
     return await this.updateUserProgress(userId, {
@@ -486,7 +486,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     return await this.updateUserProgress(userId, {
-      streak: newStreak,
+      streak: newStreak || 1,
       lastActivityDate: today
     });
   }
@@ -529,11 +529,11 @@ export class DatabaseStorage implements IStorage {
       let shouldUnlock = false;
 
       // Check different achievement criteria
-      if (criteria.type === 'xp' && progress && progress.totalXp >= criteria.value) {
+      if (criteria.type === 'xp' && progress && (progress.totalXp || 0) >= criteria.value) {
         shouldUnlock = true;
-      } else if (criteria.type === 'level' && progress && progress.level >= criteria.value) {
+      } else if (criteria.type === 'level' && progress && (progress.level || 1) >= criteria.value) {
         shouldUnlock = true;
-      } else if (criteria.type === 'streak' && progress && progress.streak >= criteria.value) {
+      } else if (criteria.type === 'streak' && progress && (progress.streak || 0) >= criteria.value) {
         shouldUnlock = true;
       }
 

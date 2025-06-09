@@ -453,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get module to award XP
       const module = await storage.getLearningModule(moduleId);
       if (module) {
-        await storage.addExperience(userId, module.xpReward);
+        await storage.addExperience(userId, module.xpReward || 0);
         await storage.updateStreak(userId);
       }
       

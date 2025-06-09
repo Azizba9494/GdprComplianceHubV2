@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { 
   Shield, Home, ClipboardList, Book, FileText, 
-  AlertTriangle, ShieldX, BarChart3, Settings 
+  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap 
 } from "lucide-react";
 
 const navigation = [
@@ -14,6 +14,7 @@ const navigation = [
   { name: "Analyse de violations", href: "/breach-analysis", icon: AlertTriangle },
   { name: "Demandes des personnes", href: "/rights", icon: ShieldX },
   { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3 },
+  { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap },
   { name: "⚙️ Administration", href: "/admin", icon: Settings },
 ];
 
