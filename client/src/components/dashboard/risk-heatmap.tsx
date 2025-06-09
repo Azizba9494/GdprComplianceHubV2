@@ -157,8 +157,15 @@ export function RiskHeatMap({ companyId, data }: HeatMapProps) {
     return areas;
   };
 
-  const riskAreas = calculateRiskAreas();
-  const overallRiskScore = Math.round(riskAreas.reduce((sum, area) => sum + area.score, 0) / riskAreas.length);
+  const allRiskAreas = calculateRiskAreas();
+  
+  // Filter areas based on selected risk level
+  const riskAreas = useMemo(() => {
+    if (riskFilter === 'all') return allRiskAreas;
+    return allRiskAreas.filter(area => area.riskLevel === riskFilter);
+  }, [allRiskAreas, riskFilter]);
+
+  const overallRiskScore = Math.round(riskAssessment.overallScore);
 
   return (
     <div className="space-y-6">
@@ -179,7 +186,20 @@ export function RiskHeatMap({ companyId, data }: HeatMapProps) {
                 <div className="text-2xl font-bold text-primary">{overallRiskScore}%</div>
                 <div className="text-xs text-muted-foreground">Score global</div>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-2">
+                <Select value={riskFilter} onValueChange={setRiskFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les risques</SelectItem>
+                    <SelectItem value="critical">Critique</SelectItem>
+                    <SelectItem value="high">Élevé</SelectItem>
+                    <SelectItem value="medium">Moyen</SelectItem>
+                    <SelectItem value="low">Faible</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   size="sm"
