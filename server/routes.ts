@@ -479,15 +479,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const yesResponses = diagnosticResponses.filter(r => r.response.toLowerCase() === 'oui').length;
       const diagnosticScore = totalResponses > 0 ? Math.round((yesResponses / totalResponses) * 100) : 0;
       
-      // Identify risk areas based on low scores
-      const riskAreas = Object.entries(categoryScores)
-        .filter(([_, data]) => data.answered > 0 && data.score < 60)
-        .map(([category, data]) => ({
-          category,
-          score: data.score,
-          severity: data.score < 30 ? 'critique' : data.score < 50 ? 'elevé' : 'moyen'
-        }))
-        .sort((a, b) => a.score - b.score);
+      // Calculate real risk levels based on diagnostic question responses
+      const riskAreas: Array<{ category: string; score: number; severity: string; specificRisks: Array<{ questionId: number; question: string; response: string; riskLevel: string }> }> = [];
+      
+      categories.forEach(category => {
+        const categoryQuestions = questions.filter(q => q.category === category);
+        const categoryResponses = diagnosticResponses.filter(r => 
+          categoryQuestions.some(q => q.id === r.questionId)
+        );
+        
+        if (categoryResponses.length > 0) {
+          const specificRisks: Array<{ questionId: number; question: string; response: string; riskLevel: string }> = [];
+          let totalRiskScore = 0;
+          let riskCount = 0;
+          
+          categoryResponses.forEach(response => {
+            const question = questions.find(q => q.id === response.questionId);
+            if (question) {
+              const riskLevel = response.response.toLowerCase() === 'oui' 
+                ? question.riskLevelYes 
+                : question.riskLevelNo;
+              
+              if (riskLevel) {
+                specificRisks.push({
+                  questionId: question.id,
+                  question: question.question,
+                  response: response.response,
+                  riskLevel
+                });
+                
+                // Convert risk level to numeric score for category calculation
+                const riskScore = riskLevel === 'critique' ? 4 : riskLevel === 'elevé' ? 3 : riskLevel === 'moyen' ? 2 : 1;
+                totalRiskScore += riskScore;
+                riskCount++;
+              }
+            }
+          });
+          
+          if (riskCount > 0) {
+            const avgRiskScore = totalRiskScore / riskCount;
+            const categoryScore = categoryScores[category].score;
+            const severity = avgRiskScore >= 3.5 ? 'critique' : avgRiskScore >= 2.5 ? 'elevé' : avgRiskScore >= 1.5 ? 'moyen' : 'faible';
+            
+            riskAreas.push({
+              category,
+              score: categoryScore,
+              severity,
+              specificRisks
+            });
+          }
+        }
+      });
       
       // Save compliance snapshot if there are diagnostic responses
       if (totalResponses > 0) {

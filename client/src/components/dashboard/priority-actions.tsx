@@ -22,7 +22,17 @@ interface PriorityActionsProps {
       categoryScores?: Record<string, { score: number; total: number; answered: number }>;
     };
     riskMapping?: {
-      riskAreas: Array<{ category: string; score: number; severity: string }>;
+      riskAreas: Array<{ 
+        category: string; 
+        score: number; 
+        severity: string; 
+        specificRisks: Array<{ 
+          questionId: number; 
+          question: string; 
+          response: string; 
+          riskLevel: string 
+        }> 
+      }>;
     };
   };
 }
@@ -61,7 +71,7 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
   };
 
   const getRiskLevelForCategory = (category: string): string => {
-    if (!diagnosticData?.compliance?.categoryScores) return "moyen";
+    if (!diagnosticData?.riskMapping?.riskAreas) return "moyen";
     
     // Map action categories to diagnostic categories
     const categoryMapping: Record<string, string> = {
@@ -75,15 +85,16 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
     };
 
     const diagnosticCategory = categoryMapping[category.toLowerCase()] || category;
-    const categoryData = diagnosticData.compliance.categoryScores[diagnosticCategory];
     
-    if (!categoryData || categoryData.answered === 0) return "moyen";
+    // Find the risk area for this category
+    const riskArea = diagnosticData.riskMapping.riskAreas.find(
+      area => area.category.toLowerCase() === diagnosticCategory.toLowerCase()
+    );
     
-    const score = categoryData.score;
-    if (score >= 80) return "faible";
-    if (score >= 60) return "moyen";
-    if (score >= 40) return "elevé";
-    return "critique";
+    if (!riskArea) return "moyen";
+    
+    // Use the severity calculated from actual diagnostic question risk levels
+    return riskArea.severity;
   };
 
   const getRiskLabel = (riskLevel: string): string => {
