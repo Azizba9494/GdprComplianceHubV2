@@ -133,8 +133,7 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
               >
                 <div className={cn(
                   "w-2 h-2 rounded-full mt-2 flex-shrink-0",
-                  action.priority === "urgent" ? "bg-red-500" :
-                  action.priority === "important" ? "bg-orange-500" : "bg-slate-400"
+                  action.priority === "urgent" ? "bg-red-500" : "bg-orange-500"
                 )} />
                 
                 <div className="flex-1 min-w-0">

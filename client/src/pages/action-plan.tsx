@@ -22,14 +22,12 @@ const statusLabels = {
 
 const priorityLabels = {
   urgent: "Urgent",
-  important: "Important", 
-  normal: "Normal",
+  important: "Important",
 };
 
 const priorityColors = {
   urgent: "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300",
   important: "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300",
-  normal: "bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300",
 };
 
 export default function ActionPlan() {
@@ -157,8 +155,7 @@ export default function ActionPlan() {
                 key={action.id}
                 className={cn(
                   "p-4 rounded-lg border",
-                  action.priority === 'urgent' ? 'priority-urgent' :
-                  action.priority === 'important' ? 'priority-important' : 'priority-normal'
+                  action.priority === 'urgent' ? 'priority-urgent' : 'priority-important'
                 )}
               >
                 <div className="flex items-start justify-between">
