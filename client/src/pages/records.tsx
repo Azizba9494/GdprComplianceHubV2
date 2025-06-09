@@ -238,6 +238,9 @@ export default function Records() {
             <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Créer un registre manuellement</DialogTitle>
+                <DialogDescription>
+                  Créez un nouveau registre de traitement en saisissant manuellement tous les détails requis par le RGPD.
+                </DialogDescription>
               </DialogHeader>
               <Form {...manualForm}>
                 <form onSubmit={manualForm.handleSubmit(onManualSubmit)} className="space-y-4">
