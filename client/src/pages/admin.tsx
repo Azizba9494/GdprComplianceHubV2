@@ -321,7 +321,7 @@ export default function Admin() {
     });
   };
 
-  if (promptsLoading || questionsLoading) {
+  if (promptsLoading || questionsLoading || llmLoading) {
     return (
       <div className="p-6">
         <Card>
@@ -694,6 +694,286 @@ export default function Admin() {
                           size="sm"
                           onClick={() => deleteQuestionMutation.mutate(question.id)}
                           disabled={deleteQuestionMutation.isPending}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* LLM Configuration Management */}
+        <TabsContent value="llm-configs" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Configuration des modèles IA</h3>
+            <Dialog open={isLlmDialogOpen} onOpenChange={setIsLlmDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => openLlmDialog()}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvelle configuration
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingLlm ? "Modifier la configuration" : "Créer une nouvelle configuration"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Configurez un nouveau fournisseur d'IA pour le système
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...llmForm}>
+                  <form onSubmit={llmForm.handleSubmit(onLlmSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={llmForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: OpenAI GPT-4o" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={llmForm.control}
+                        name="provider"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Fournisseur</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Sélectionnez un fournisseur" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="openai">OpenAI</SelectItem>
+                                <SelectItem value="anthropic">Anthropic</SelectItem>
+                                <SelectItem value="azure">Azure OpenAI</SelectItem>
+                                <SelectItem value="custom">Personnalisé</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={llmForm.control}
+                        name="modelName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom du modèle</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: gpt-4o" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={llmForm.control}
+                        name="apiKeyName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom de la clé API</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: OPENAI_API_KEY" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={llmForm.control}
+                      name="apiEndpoint"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Point de terminaison API (optionnel)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: https://api.openai.com/v1" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={llmForm.control}
+                        name="maxTokens"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tokens maximum</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 4000)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={llmForm.control}
+                        name="temperature"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Température</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: 0.7" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={llmForm.control}
+                        name="isActive"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <FormLabel>Configuration active</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={llmForm.control}
+                        name="supportsJsonMode"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <FormLabel>Support mode JSON</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsLlmDialogOpen(false)}
+                      >
+                        Annuler
+                      </Button>
+                      <Button type="submit" disabled={createLlmMutation.isPending || updateLlmMutation.isPending}>
+                        {(createLlmMutation.isPending || updateLlmMutation.isPending) ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            {editingLlm ? "Modification..." : "Création..."}
+                          </>
+                        ) : (
+                          editingLlm ? "Modifier" : "Créer"
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurations IA existantes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {llmLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                  <p>Chargement des configurations...</p>
+                </div>
+              ) : !llmConfigs || llmConfigs.length === 0 ? (
+                <div className="text-center py-8">
+                  <Settings className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium">Aucune configuration</h3>
+                  <p className="text-muted-foreground">
+                    Créez votre première configuration de modèle IA.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {llmConfigs.map((config: LlmConfiguration) => (
+                    <div
+                      key={config.id}
+                      className="flex items-start justify-between p-4 border rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h4 className="font-medium">{config.name}</h4>
+                          <Badge variant={config.isActive ? "default" : "secondary"}>
+                            {config.isActive ? (
+                              <>
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Active
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="w-3 h-3 mr-1" />
+                                Inactive
+                              </>
+                            )}
+                          </Badge>
+                          <Badge variant="outline">{config.provider}</Badge>
+                          {config.supportsJsonMode && (
+                            <Badge variant="secondary">JSON</Badge>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                          <div>
+                            <span className="font-medium">Modèle:</span> {config.modelName}
+                          </div>
+                          <div>
+                            <span className="font-medium">Tokens max:</span> {config.maxTokens}
+                          </div>
+                          <div>
+                            <span className="font-medium">Température:</span> {config.temperature}
+                          </div>
+                          <div>
+                            <span className="font-medium">Clé API:</span> {config.apiKeyName}
+                          </div>
+                        </div>
+                        {config.apiEndpoint && (
+                          <div className="text-sm text-muted-foreground mt-2">
+                            <span className="font-medium">Endpoint:</span> {config.apiEndpoint}
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Créée le {new Date(config.createdAt).toLocaleDateString('fr-FR')} • 
+                          Modifiée le {new Date(config.updatedAt).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openLlmDialog(config)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteLlmMutation.mutate(config.id)}
+                          disabled={deleteLlmMutation.isPending}
                         >
                           Supprimer
                         </Button>
