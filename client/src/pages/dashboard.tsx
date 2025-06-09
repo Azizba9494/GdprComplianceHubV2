@@ -101,7 +101,7 @@ export default function Dashboard() {
       <ComplianceOverview stats={stats} />
 
       {/* Risk Heat Map */}
-      <RiskHeatMap companyId={COMPANY_ID} data={heatMapData} />
+      <RiskHeatMap companyId={COMPANY_ID} data={heatMapData} diagnosticData={stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">

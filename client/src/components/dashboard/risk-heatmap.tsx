@@ -2,16 +2,12 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { calculateRiskAssessment } from "./risk-calculator";
 import { 
   AlertTriangle, 
   Shield, 
   FileText, 
   Users, 
-  Database, 
-  Lock, 
   Eye, 
   Settings,
   TrendingUp,
@@ -40,6 +36,14 @@ interface HeatMapProps {
     records: any[];
     requests: any[];
   };
+  diagnosticData?: {
+    compliance: {
+      categoryScores?: Record<string, { score: number; total: number; answered: number }>;
+    };
+    riskMapping?: {
+      riskAreas: Array<{ category: string; score: number; severity: string }>;
+    };
+  };
 }
 
 const getRiskColor = (level: string) => {
@@ -48,7 +52,7 @@ const getRiskColor = (level: string) => {
     case 'high': return 'bg-orange-500 hover:bg-orange-600';
     case 'medium': return 'bg-yellow-500 hover:bg-yellow-600';
     case 'low': return 'bg-green-500 hover:bg-green-600';
-    default: return 'bg-gray-400 hover:bg-gray-500';
+    default: return 'bg-gray-500 hover:bg-gray-600';
   }
 };
 
@@ -62,354 +66,200 @@ const getRiskBadgeVariant = (level: string) => {
   }
 };
 
-export function RiskHeatMap({ companyId, data }: HeatMapProps) {
+export function RiskHeatMap({ companyId, data, diagnosticData }: HeatMapProps) {
   const [selectedArea, setSelectedArea] = useState<RiskArea | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [riskFilter, setRiskFilter] = useState<string>('all');
 
-  // Calculate advanced risk assessment
-  const riskAssessment = useMemo(() => {
-    return calculateRiskAssessment(data || { actions: [], breaches: [], records: [], requests: [] });
-  }, [data]);
+  const categoryScores = diagnosticData?.compliance?.categoryScores || {};
+  const actions = data?.actions || [];
 
-  // Calculate risk areas based on actual data and advanced algorithms
-  const calculateRiskAreas = (): RiskArea[] => {
-    const actions = data?.actions || [];
-    const breaches = data?.breaches || [];
-    const records = data?.records || [];
-    const requests = data?.requests || [];
+  // If no diagnostic data, show empty state
+  if (Object.keys(categoryScores).length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5" />
+              <span>Cartographie des risques RGPD</span>
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <AlertTriangle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Aucune donnée de diagnostic</h3>
+            <p className="text-muted-foreground mb-4">
+              Complétez le diagnostic RGPD pour afficher la cartographie des risques
+            </p>
+            <Button onClick={() => window.location.href = '/diagnostic'}>
+              Commencer le diagnostic
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-    const areas: RiskArea[] = [
-      {
-        id: 'data-protection',
-        name: 'Protection des données',
-        category: 'Sécurité',
-        riskLevel: riskAssessment.factors.securityScore >= 80 ? 'low' : riskAssessment.factors.securityScore >= 60 ? 'medium' : riskAssessment.factors.securityScore >= 40 ? 'high' : 'critical',
-        score: Math.round(riskAssessment.factors.securityScore),
-        description: 'Mesures de sécurité et protection contre les violations',
-        icon: Shield,
-        lastAssessed: new Date().toISOString(),
-        actionCount: actions.filter(a => a.category === 'security').length,
-        completedActions: actions.filter(a => a.category === 'security' && a.status === 'completed').length,
-      },
-      {
-        id: 'data-processing',
-        name: 'Traitement des données',
-        category: 'Opérations',
-        riskLevel: riskAssessment.factors.processingScore >= 80 ? 'low' : riskAssessment.factors.processingScore >= 60 ? 'medium' : riskAssessment.factors.processingScore >= 40 ? 'high' : 'critical',
-        score: Math.round(riskAssessment.factors.processingScore),
-        description: 'Registres et documentation des traitements',
-        icon: Database,
-        lastAssessed: new Date().toISOString(),
-        actionCount: actions.filter(a => a.category === 'processing').length,
-        completedActions: actions.filter(a => a.category === 'processing' && a.status === 'completed').length,
-      },
-      {
-        id: 'consent-management',
-        name: 'Gestion du consentement',
-        category: 'Légal',
-        riskLevel: riskAssessment.factors.consentScore >= 80 ? 'low' : riskAssessment.factors.consentScore >= 60 ? 'medium' : riskAssessment.factors.consentScore >= 40 ? 'high' : 'critical',
-        score: Math.round(riskAssessment.factors.consentScore),
-        description: 'Collecte et gestion des consentements',
-        icon: Users,
-        lastAssessed: new Date().toISOString(),
-        actionCount: actions.filter(a => a.category === 'consent').length,
-        completedActions: actions.filter(a => a.category === 'consent' && a.status === 'completed').length,
-      },
-      {
-        id: 'rights-management',
-        name: 'Droits des personnes',
-        category: 'Légal',
-        riskLevel: riskAssessment.factors.rightsScore >= 80 ? 'low' : riskAssessment.factors.rightsScore >= 60 ? 'medium' : riskAssessment.factors.rightsScore >= 40 ? 'high' : 'critical',
-        score: Math.round(riskAssessment.factors.rightsScore),
-        description: 'Gestion des demandes et droits des personnes concernées',
-        icon: Eye,
-        lastAssessed: new Date().toISOString(),
-        actionCount: requests.length,
-        completedActions: requests.filter(r => r.status === 'completed').length,
-      },
-      {
-        id: 'documentation',
-        name: 'Documentation',
-        category: 'Gouvernance',
-        riskLevel: riskAssessment.factors.documentationScore >= 80 ? 'low' : riskAssessment.factors.documentationScore >= 60 ? 'medium' : riskAssessment.factors.documentationScore >= 40 ? 'high' : 'critical',
-        score: Math.round(riskAssessment.factors.documentationScore),
-        description: 'Politiques de confidentialité et documentation',
-        icon: FileText,
-        lastAssessed: new Date().toISOString(),
-        actionCount: actions.filter(a => a.category === 'documentation').length,
-        completedActions: actions.filter(a => a.category === 'documentation' && a.status === 'completed').length,
-      },
-      {
-        id: 'vendor-management',
-        name: 'Gestion des sous-traitants',
-        category: 'Gouvernance',
-        riskLevel: riskAssessment.factors.vendorScore >= 80 ? 'low' : riskAssessment.factors.vendorScore >= 60 ? 'medium' : riskAssessment.factors.vendorScore >= 40 ? 'high' : 'critical',
-        score: Math.round(riskAssessment.factors.vendorScore),
-        description: 'Contrats et supervision des sous-traitants',
-        icon: Settings,
-        lastAssessed: new Date().toISOString(),
-        actionCount: actions.filter(a => a.category === 'vendor').length,
-        completedActions: actions.filter(a => a.category === 'vendor' && a.status === 'completed').length,
-      },
-    ];
+  // Create risk areas based on diagnostic category scores
+  const allRiskAreas = useMemo(() => {
+    return Object.entries(categoryScores).map(([category, data]) => {
+      const getRiskLevel = (score: number): 'low' | 'medium' | 'high' | 'critical' => {
+        if (score >= 80) return 'low';
+        if (score >= 60) return 'medium';
+        if (score >= 40) return 'high';
+        return 'critical';
+      };
 
-    return areas;
-  };
+      const getIcon = (category: string) => {
+        switch (category.toLowerCase()) {
+          case 'sécurité': return Shield;
+          case 'documentation': return FileText;
+          case 'consentement': return Users;
+          case 'droits': return Eye;
+          case 'gouvernance': return Settings;
+          case 'formation': return Users;
+          case 'violations': return AlertTriangle;
+          default: return Settings;
+        }
+      };
 
-  const allRiskAreas = calculateRiskAreas();
-  
+      return {
+        id: category.toLowerCase().replace(/\s+/g, '-'),
+        name: category,
+        category: category,
+        riskLevel: getRiskLevel(data.score),
+        score: data.score,
+        description: `Conformité ${category.toLowerCase()} - ${data.answered}/${data.total} questions répondues`,
+        icon: getIcon(category),
+        lastAssessed: new Date().toISOString(),
+        actionCount: actions.filter((a: any) => a.category?.toLowerCase() === category.toLowerCase()).length,
+        completedActions: actions.filter((a: any) => a.category?.toLowerCase() === category.toLowerCase() && a.status === 'completed').length,
+      };
+    });
+  }, [categoryScores, actions]);
+
   // Filter areas based on selected risk level
-  const riskAreas = useMemo(() => {
+  const filteredRiskAreas = useMemo(() => {
     if (riskFilter === 'all') return allRiskAreas;
     return allRiskAreas.filter(area => area.riskLevel === riskFilter);
   }, [allRiskAreas, riskFilter]);
 
-  const overallRiskScore = Math.round(riskAssessment.overallScore);
+  const overallRiskScore = useMemo(() => {
+    if (allRiskAreas.length === 0) return 0;
+    return Math.round(allRiskAreas.reduce((acc, area) => acc + area.score, 0) / allRiskAreas.length);
+  }, [allRiskAreas]);
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <span>Cartographie des risques RGPD</span>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Visualisation interactive des niveaux de risque par domaine de conformité
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-primary">{overallRiskScore}%</div>
-                <div className="text-xs text-muted-foreground">Score global</div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Select value={riskFilter} onValueChange={setRiskFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les risques</SelectItem>
-                    <SelectItem value="critical">Critique</SelectItem>
-                    <SelectItem value="high">Élevé</SelectItem>
-                    <SelectItem value="medium">Moyen</SelectItem>
-                    <SelectItem value="low">Faible</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                >
-                  Grille
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  Liste
-                </Button>
-              </div>
-            </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="w-5 h-5" />
+            <span>Cartographie des risques RGPD</span>
+          </CardTitle>
+          <div className="flex items-center space-x-2">
+            <Select value={riskFilter} onValueChange={setRiskFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les risques</SelectItem>
+                <SelectItem value="critical">Critique</SelectItem>
+                <SelectItem value="high">Élevé</SelectItem>
+                <SelectItem value="medium">Moyen</SelectItem>
+                <SelectItem value="low">Faible</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardHeader>
-        <CardContent>
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {riskAreas.map((area) => {
-                const Icon = area.icon;
-                return (
-                  <TooltipProvider key={area.id}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          className={`
-                            relative p-4 rounded-lg cursor-pointer transition-all duration-200 text-white
-                            ${getRiskColor(area.riskLevel)}
-                            ${selectedArea?.id === area.id ? 'ring-2 ring-white ring-offset-2' : ''}
-                          `}
-                          onClick={() => setSelectedArea(selectedArea?.id === area.id ? null : area)}
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <Icon className="w-6 h-6" />
-                            <Badge variant="secondary" className="text-xs">
-                              {area.category}
-                            </Badge>
-                          </div>
-                          <h3 className="font-medium text-sm mb-2">{area.name}</h3>
-                          <div className="flex items-center justify-between text-xs">
-                            <span>{area.score}% conforme</span>
-                            <span className="capitalize">{area.riskLevel}</span>
-                          </div>
-                          <div className="mt-2 bg-white/20 rounded-full h-1">
-                            <div 
-                              className="bg-white rounded-full h-1 transition-all duration-300"
-                              style={{ width: `${area.score}%` }}
-                            />
-                          </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="p-2 max-w-xs">
-                          <p className="font-medium">{area.name}</p>
-                          <p className="text-sm text-muted-foreground">{area.description}</p>
-                          <div className="mt-2 text-xs">
-                            <div>Actions: {area.completedActions}/{area.actionCount}</div>
-                            <div>Dernière évaluation: {new Date(area.lastAssessed).toLocaleDateString('fr-FR')}</div>
-                          </div>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {riskAreas.map((area) => {
-                const Icon = area.icon;
-                return (
-                  <div
-                    key={area.id}
-                    className={`
-                      flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all
-                      ${selectedArea?.id === area.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}
-                    `}
-                    onClick={() => setSelectedArea(selectedArea?.id === area.id ? null : area)}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className={`p-2 rounded-lg ${getRiskColor(area.riskLevel)}`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{area.name}</h3>
-                        <p className="text-sm text-muted-foreground">{area.description}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="font-medium">{area.score}%</div>
-                        <div className="text-xs text-muted-foreground">
-                          {area.completedActions}/{area.actionCount} actions
-                        </div>
-                      </div>
-                      <Badge variant={getRiskBadgeVariant(area.riskLevel) as any}>
-                        {area.riskLevel}
-                      </Badge>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Risk Legend */}
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-medium mb-3">Légende des niveaux de risque</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { level: 'low', label: 'Faible', color: 'bg-green-500' },
-                { level: 'medium', label: 'Moyen', color: 'bg-yellow-500' },
-                { level: 'high', label: 'Élevé', color: 'bg-orange-500' },
-                { level: 'critical', label: 'Critique', color: 'bg-red-500' },
-              ].map(({ level, label, color }) => (
-                <div key={level} className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded ${color}`} />
-                  <span className="text-sm">{label}</span>
-                </div>
-              ))}
-            </div>
+        </div>
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+            <span>Score de risque global</span>
+            <span>{overallRiskScore}%</span>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Selected Area Details */}
-      {selectedArea && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <selectedArea.icon className="w-5 h-5" />
-              <span>{selectedArea.name}</span>
-              <Badge variant={getRiskBadgeVariant(selectedArea.riskLevel) as any}>
-                {selectedArea.riskLevel}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <h4 className="font-medium mb-2">Détails du risque</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {selectedArea.description}
-                </p>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Score de conformité:</span>
-                    <span className="font-medium">{selectedArea.score}%</span>
+          <div className="w-full bg-muted rounded-full h-2">
+            <div 
+              className={`h-2 rounded-full transition-all duration-300 ${
+                overallRiskScore >= 80 ? 'bg-green-500' :
+                overallRiskScore >= 60 ? 'bg-yellow-500' :
+                overallRiskScore >= 40 ? 'bg-orange-500' : 'bg-red-500'
+              }`}
+              style={{ width: `${overallRiskScore}%` }}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRiskAreas.map((area) => {
+            const Icon = area.icon;
+            return (
+              <Card 
+                key={area.id} 
+                className={`cursor-pointer transition-all hover:shadow-md border ${
+                  area.riskLevel === 'critical' ? 'border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800' :
+                  area.riskLevel === 'high' ? 'border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800' :
+                  area.riskLevel === 'medium' ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800' :
+                  'border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800'
+                }`}
+                onClick={() => setSelectedArea(area)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <Icon className={`w-6 h-6 ${
+                      area.riskLevel === 'critical' ? 'text-red-600' :
+                      area.riskLevel === 'high' ? 'text-orange-600' :
+                      area.riskLevel === 'medium' ? 'text-yellow-600' :
+                      'text-green-600'
+                    }`} />
+                    <Badge variant={getRiskBadgeVariant(area.riskLevel)}>
+                      {area.riskLevel === 'critical' ? 'Critique' :
+                       area.riskLevel === 'high' ? 'Élevé' :
+                       area.riskLevel === 'medium' ? 'Moyen' : 'Faible'}
+                    </Badge>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Actions complétées:</span>
-                    <span className="font-medium">
-                      {selectedArea.completedActions}/{selectedArea.actionCount}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Dernière évaluation:</span>
-                    <span className="font-medium">
-                      {new Date(selectedArea.lastAssessed).toLocaleDateString('fr-FR')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-2">Recommandations</h4>
-                <div className="space-y-2">
-                  {selectedArea.riskLevel === 'critical' && (
-                    <div className="flex items-start space-x-2 text-sm">
-                      <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5" />
-                      <span>Action immédiate requise - risque élevé de non-conformité</span>
+                  
+                  <h3 className="font-semibold text-sm mb-2">{area.name}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{area.description}</p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span>Score de conformité</span>
+                      <span className="font-medium">{area.score}%</span>
                     </div>
-                  )}
-                  {selectedArea.riskLevel === 'high' && (
-                    <div className="flex items-start space-x-2 text-sm">
-                      <Clock className="w-4 h-4 text-orange-500 mt-0.5" />
-                      <span>Planifier des actions correctives dans les 30 jours</span>
+                    <div className="w-full bg-muted rounded-full h-1">
+                      <div 
+                        className={`h-1 rounded-full ${
+                          area.score >= 80 ? 'bg-green-500' :
+                          area.score >= 60 ? 'bg-yellow-500' :
+                          area.score >= 40 ? 'bg-orange-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${area.score}%` }}
+                      />
                     </div>
-                  )}
-                  <div className="flex items-start space-x-2 text-sm">
-                    <FileText className="w-4 h-4 text-blue-500 mt-0.5" />
-                    <span>Documenter les mesures prises et les contrôles mis en place</span>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Actions: {area.completedActions}/{area.actionCount}</span>
+                      <Clock className="w-3 h-3" />
+                    </div>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
-              <div>
-                <h4 className="font-medium mb-2">Actions rapides</h4>
-                <div className="space-y-2">
-                  <Button size="sm" className="w-full justify-start">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Voir les actions
-                  </Button>
-                  <Button size="sm" variant="outline" className="w-full justify-start">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Générer un rapport
-                  </Button>
-                  <Button size="sm" variant="outline" className="w-full justify-start">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Configurer les alertes
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {filteredRiskAreas.length === 0 && (
+          <div className="text-center py-8">
+            <Filter className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Aucun risque trouvé</h3>
+            <p className="text-muted-foreground">
+              Aucun risque ne correspond aux critères de filtrage sélectionnés.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
