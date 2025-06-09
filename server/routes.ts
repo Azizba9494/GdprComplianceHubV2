@@ -453,10 +453,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const actions = await storage.getComplianceActions(companyId);
       const requests = await storage.getDataSubjectRequests(companyId);
+      const diagnosticResponses = await storage.getDiagnosticResponses(companyId);
+      const questions = await storage.getDiagnosticQuestions();
+      
+      // Calculate category-based compliance scores
+      const categoryScores: Record<string, { score: number; total: number; answered: number }> = {};
+      const categories = Array.from(new Set(questions.map(q => q.category)));
+      
+      categories.forEach(category => {
+        const categoryQuestions = questions.filter(q => q.category === category);
+        const categoryResponses = diagnosticResponses.filter(r => 
+          categoryQuestions.some(q => q.id === r.questionId)
+        );
+        
+        const yesResponses = categoryResponses.filter(r => r.response.toLowerCase() === 'oui').length;
+        categoryScores[category] = {
+          score: categoryResponses.length > 0 ? Math.round((yesResponses / categoryResponses.length) * 100) : 0,
+          total: categoryQuestions.length,
+          answered: categoryResponses.length
+        };
+      });
+      
+      // Calculate overall compliance score based on diagnostic responses
+      const totalResponses = diagnosticResponses.length;
+      const yesResponses = diagnosticResponses.filter(r => r.response.toLowerCase() === 'oui').length;
+      const diagnosticScore = totalResponses > 0 ? Math.round((yesResponses / totalResponses) * 100) : 0;
+      
+      // Identify risk areas based on low scores
+      const riskAreas = Object.entries(categoryScores)
+        .filter(([_, data]) => data.answered > 0 && data.score < 60)
+        .map(([category, data]) => ({
+          category,
+          score: data.score,
+          severity: data.score < 30 ? 'critique' : data.score < 50 ? 'elevé' : 'moyen'
+        }))
+        .sort((a, b) => a.score - b.score);
       
       const stats = {
         compliance: {
-          score: Math.round((actions.filter(a => a.status === 'completed').length / Math.max(actions.length, 1)) * 100),
+          score: diagnosticScore,
+          categoryScores,
+          diagnosticProgress: Math.round((totalResponses / Math.max(questions.length, 1)) * 100),
         },
         actions: {
           total: actions.length,
@@ -467,6 +504,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requests: {
           pending: requests.filter(r => r.status !== 'closed').length,
           overdue: requests.filter(r => r.status !== 'closed' && new Date(r.dueDate) < new Date()).length,
+        },
+        riskMapping: {
+          riskAreas,
+          totalCategories: categories.length,
+          completedCategories: Object.values(categoryScores).filter(c => c.answered === c.total && c.total > 0).length,
         },
         priorityActions: actions
           .filter(a => a.status !== 'completed')

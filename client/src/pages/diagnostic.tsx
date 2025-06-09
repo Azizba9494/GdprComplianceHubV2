@@ -74,24 +74,24 @@ export default function Diagnostic() {
   });
 
   // Process data
-  const categories = allQuestions ? [...new Set(allQuestions.map((q: any) => q.category))] : [];
+  const categories = allQuestions ? Array.from(new Set(allQuestions.map((q: any) => q.category))) : [];
   const questionsByCategory = allQuestions ? allQuestions.filter((q: any) => q.category === selectedCategory) : [];
   const answeredQuestionIds = existingResponses ? existingResponses.map((r: any) => r.questionId) : [];
   
   // Update completed categories based on existing responses
   React.useEffect(() => {
     if (existingResponses && allQuestions) {
-      const completed = new Set<string>();
+      const completedList: string[] = [];
       categories.forEach((category: string) => {
         const categoryQuestions = allQuestions.filter((q: any) => q.category === category);
         const answeredInCategory = categoryQuestions.filter((q: any) => 
           answeredQuestionIds.includes(q.id)
         );
         if (answeredInCategory.length === categoryQuestions.length && categoryQuestions.length > 0) {
-          completed.add(category);
+          completedList.push(category);
         }
       });
-      setCompletedCategories(completed);
+      setCompletedCategories(new Set(completedList));
     }
   }, [existingResponses, allQuestions, categories, answeredQuestionIds]);
 
@@ -225,19 +225,20 @@ export default function Diagnostic() {
     }
   };
 
-  if (isCompleted) {
+  // Show questionnaire for selected category
+  if (!currentQuestion) {
     return (
       <div className="p-6">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-              <h2 className="text-2xl font-bold">Diagnostic terminé !</h2>
+              <h2 className="text-2xl font-bold">Questionnaire "{selectedCategory}" terminé !</h2>
               <p className="text-muted-foreground">
-                Votre diagnostic RGPD a été analysé et votre plan d'action personnalisé est maintenant disponible.
+                Toutes les questions de cette catégorie ont été complétées.
               </p>
-              <Button onClick={() => window.location.href = '/actions'}>
-                Voir mon plan d'action
+              <Button onClick={() => setSelectedCategory(null)}>
+                Retour aux catégories
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -253,9 +254,19 @@ export default function Diagnostic() {
         <CardHeader>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <CardTitle>Diagnostic RGPD</CardTitle>
+              <div>
+                <CardTitle>Diagnostic RGPD - {selectedCategory}</CardTitle>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedCategory(null)}
+                  className="mt-2 p-0 h-auto font-normal text-muted-foreground hover:text-foreground"
+                >
+                  ← Retour aux catégories
+                </Button>
+              </div>
               <span className="text-sm text-muted-foreground">
-                Question {currentQuestionIndex + 1} sur {questions.length}
+                Question {currentQuestionIndex + 1} sur {questionsByCategory.length}
               </span>
             </div>
             <Progress value={progress} className="h-2" />

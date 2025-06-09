@@ -4,7 +4,11 @@ import { PieChart, Clock, CheckCircle, Watch } from "lucide-react";
 
 interface ComplianceOverviewProps {
   stats: {
-    compliance: { score: number };
+    compliance: { 
+      score: number;
+      categoryScores?: Record<string, { score: number; total: number; answered: number }>;
+      diagnosticProgress?: number;
+    };
     actions: {
       total: number;
       completed: number;
@@ -14,6 +18,11 @@ interface ComplianceOverviewProps {
     requests: {
       pending: number;
       overdue: number;
+    };
+    riskMapping?: {
+      riskAreas: Array<{ category: string; score: number; severity: string }>;
+      totalCategories: number;
+      completedCategories: number;
     };
   };
 }
