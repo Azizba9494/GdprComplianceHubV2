@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -249,6 +249,9 @@ export default function Admin() {
                   <DialogTitle>
                     {editingPrompt ? "Modifier le prompt" : "Créer un nouveau prompt"}
                   </DialogTitle>
+                  <DialogDescription>
+                    {editingPrompt ? "Modifiez les détails du prompt IA existant." : "Créez un nouveau prompt IA pour automatiser les tâches de conformité."}
+                  </DialogDescription>
                 </DialogHeader>
                 <Form {...promptForm}>
                   <form onSubmit={promptForm.handleSubmit(onPromptSubmit)} className="space-y-4">
@@ -432,6 +435,9 @@ export default function Admin() {
                   <DialogTitle>
                     {editingQuestion ? "Modifier la question" : "Créer une nouvelle question"}
                   </DialogTitle>
+                  <DialogDescription>
+                    {editingQuestion ? "Modifiez cette question du diagnostic RGPD." : "Ajoutez une nouvelle question au diagnostic de conformité RGPD."}
+                  </DialogDescription>
                 </DialogHeader>
                 <Form {...questionForm}>
                   <form onSubmit={questionForm.handleSubmit(onQuestionSubmit)} className="space-y-4">
