@@ -138,3 +138,24 @@ export const dashboardApi = {
   getStats: (companyId: number) =>
     apiRequest("GET", `/api/dashboard/${companyId}`),
 };
+
+// Learning API
+export const learningApi = {
+  getModules: () => apiRequest("GET", "/api/learning/modules"),
+  getModulesByCategory: (category: string) => 
+    apiRequest("GET", `/api/learning/modules/${category}`),
+  getModule: (id: number) => apiRequest("GET", `/api/learning/module/${id}`),
+  completeModule: (userId: number, moduleId: number) => 
+    apiRequest("POST", "/api/learning/complete-module", { userId, moduleId }),
+  updateProgress: (userId: number, moduleId: number, progress: number, timeSpent: number) =>
+    apiRequest("POST", "/api/learning/update-progress", { userId, moduleId, progress, timeSpent })
+};
+
+// Gamification API
+export const gamificationApi = {
+  getUserProgress: (userId: number) => 
+    apiRequest("GET", `/api/gamification/progress/${userId}`),
+  getAchievements: () => apiRequest("GET", "/api/gamification/achievements"),
+  getLeaderboard: (limit = 10) => 
+    apiRequest("GET", `/api/gamification/leaderboard?limit=${limit}`)
+};

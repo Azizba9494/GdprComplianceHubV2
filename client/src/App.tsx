@@ -12,6 +12,7 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import BreachAnalysis from "@/pages/breach-analysis";
 import RightsManagement from "@/pages/rights-management";
 import DPIA from "@/pages/dpia";
+import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -35,6 +36,7 @@ function Router() {
             <Route path="/breach-analysis" component={BreachAnalysis} />
             <Route path="/rights" component={RightsManagement} />
             <Route path="/dpia" component={DPIA} />
+            <Route path="/learning" component={Learning} />
             <Route path="/admin" component={Admin} />
             <Route component={NotFound} />
           </Switch>

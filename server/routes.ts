@@ -363,6 +363,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Learning & Gamification endpoints
+  app.get("/api/learning/modules", async (req, res) => {
+    try {
+      const modules = await storage.getLearningModules();
+      res.json(modules);
+    } catch (error) {
+      console.error("Error fetching learning modules:", error);
+      res.status(500).json({ error: "Failed to fetch learning modules" });
+    }
+  });
+
+  app.get("/api/learning/modules/:category", async (req, res) => {
+    try {
+      const { category } = req.params;
+      const modules = await storage.getLearningModulesByCategory(category);
+      res.json(modules);
+    } catch (error) {
+      console.error("Error fetching modules by category:", error);
+      res.status(500).json({ error: "Failed to fetch modules" });
+    }
+  });
+
+  app.get("/api/learning/module/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const module = await storage.getLearningModule(id);
+      if (!module) {
+        return res.status(404).json({ error: "Module not found" });
+      }
+      res.json(module);
+    } catch (error) {
+      console.error("Error fetching module:", error);
+      res.status(500).json({ error: "Failed to fetch module" });
+    }
+  });
+
+  app.get("/api/gamification/progress/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      let progress = await storage.getUserProgress(userId);
+      
+      if (!progress) {
+        progress = await storage.createUserProgress({ userId, totalXp: 0, level: 1 });
+      }
+      
+      const achievements = await storage.getUserAchievements(userId);
+      const moduleProgress = await storage.getUserModuleProgress(userId);
+      
+      res.json({
+        progress,
+        achievements,
+        moduleProgress
+      });
+    } catch (error) {
+      console.error("Error fetching user progress:", error);
+      res.status(500).json({ error: "Failed to fetch progress" });
+    }
+  });
+
+  app.get("/api/gamification/achievements", async (req, res) => {
+    try {
+      const achievements = await storage.getAchievements();
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ error: "Failed to fetch achievements" });
+    }
+  });
+
+  app.get("/api/gamification/leaderboard", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const leaderboard = await storage.getLeaderboard(limit);
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+  });
+
+  app.post("/api/learning/complete-module", async (req, res) => {
+    try {
+      const { userId, moduleId } = req.body;
+      
+      // Complete the module
+      const moduleProgress = await storage.completeModule(userId, moduleId);
+      
+      // Get module to award XP
+      const module = await storage.getLearningModule(moduleId);
+      if (module) {
+        await storage.addExperience(userId, module.xpReward);
+        await storage.updateStreak(userId);
+      }
+      
+      // Check for new achievements
+      const newAchievements = await storage.checkAndUnlockAchievements(userId);
+      
+      res.json({
+        moduleProgress,
+        newAchievements
+      });
+    } catch (error) {
+      console.error("Error completing module:", error);
+      res.status(500).json({ error: "Failed to complete module" });
+    }
+  });
+
+  app.post("/api/learning/update-progress", async (req, res) => {
+    try {
+      const { userId, moduleId, progress, timeSpent } = req.body;
+      
+      let moduleProgress = await storage.getModuleProgress(userId, moduleId);
+      
+      if (moduleProgress) {
+        moduleProgress = await storage.updateModuleProgress(moduleProgress.id, {
+          progress,
+          timeSpent: (moduleProgress.timeSpent || 0) + timeSpent,
+          status: progress >= 100 ? 'completed' : 'in_progress'
+        });
+      } else {
+        moduleProgress = await storage.createModuleProgress({
+          userId,
+          moduleId,
+          progress,
+          timeSpent,
+          status: progress >= 100 ? 'completed' : 'in_progress'
+        });
+      }
+      
+      // Update daily streak
+      await storage.updateStreak(userId);
+      
+      res.json(moduleProgress);
+    } catch (error) {
+      console.error("Error updating module progress:", error);
+      res.status(500).json({ error: "Failed to update progress" });
+    }
+  });
+
   // AI Prompts management (Admin only)
   app.get("/api/admin/prompts", async (req, res) => {
     try {
