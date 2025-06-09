@@ -1,0 +1,412 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { openaiService } from "./services/openai";
+import { 
+  insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
+  insertDiagnosticResponseSchema, insertComplianceActionSchema,
+  insertProcessingRecordSchema, insertDataSubjectRequestSchema,
+  insertPrivacyPolicySchema, insertDataBreachSchema,
+  insertDpiaAssessmentSchema, insertAiPromptSchema
+} from "@shared/schema";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Authentication routes
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      const user = await storage.createUser(userData);
+      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email } });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ error: "Identifiants invalides" });
+      }
+      
+      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Company routes
+  app.get("/api/companies/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const company = await storage.getCompanyByUserId(userId);
+      res.json(company);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/companies", async (req, res) => {
+    try {
+      const companyData = insertCompanySchema.parse(req.body);
+      const company = await storage.createCompany(companyData);
+      res.json(company);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Diagnostic routes
+  app.get("/api/diagnostic/questions", async (req, res) => {
+    try {
+      const questions = await storage.getDiagnosticQuestions();
+      res.json(questions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/diagnostic/responses", async (req, res) => {
+    try {
+      const responseData = insertDiagnosticResponseSchema.parse(req.body);
+      const response = await storage.createDiagnosticResponse(responseData);
+      res.json(response);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/diagnostic/analyze", async (req, res) => {
+    try {
+      const { companyId } = req.body;
+      
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      const responses = await storage.getDiagnosticResponses(companyId);
+      const analysis = await openaiService.generateActionPlan(responses, company);
+      
+      // Create compliance actions from analysis
+      for (const action of analysis.actions) {
+        await storage.createComplianceAction({
+          companyId,
+          title: action.title,
+          description: action.description,
+          category: action.category,
+          priority: action.priority,
+          status: "todo",
+          dueDate: action.dueDate ? new Date(action.dueDate) : undefined,
+        });
+      }
+
+      res.json(analysis);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Compliance actions routes
+  app.get("/api/actions/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const actions = await storage.getComplianceActions(companyId);
+      res.json(actions);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/actions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const action = await storage.updateComplianceAction(id, updates);
+      res.json(action);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Processing records routes
+  app.get("/api/records/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const records = await storage.getProcessingRecords(companyId);
+      res.json(records);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/records/generate", async (req, res) => {
+    try {
+      const { companyId, processingType, description } = req.body;
+      
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      const recordTemplate = await openaiService.generateProcessingRecord(company, processingType, description);
+      
+      const record = await storage.createProcessingRecord({
+        companyId,
+        ...recordTemplate,
+        type: processingType,
+      });
+
+      res.json(record);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/records", async (req, res) => {
+    try {
+      const recordData = insertProcessingRecordSchema.parse(req.body);
+      const record = await storage.createProcessingRecord(recordData);
+      res.json(record);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Privacy policy routes
+  app.get("/api/privacy-policies/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const policies = await storage.getPrivacyPolicies(companyId);
+      res.json(policies);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/privacy-policies/generate", async (req, res) => {
+    try {
+      const { companyId } = req.body;
+      
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      const records = await storage.getProcessingRecords(companyId);
+      const policyData = await openaiService.generatePrivacyPolicy(company, records);
+      
+      const policy = await storage.createPrivacyPolicy({
+        companyId,
+        content: policyData.content,
+        version: 1,
+        isActive: true,
+      });
+
+      res.json(policy);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Data breach routes
+  app.get("/api/breaches/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const breaches = await storage.getDataBreaches(companyId);
+      res.json(breaches);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/breaches/analyze", async (req, res) => {
+    try {
+      const breachData = insertDataBreachSchema.parse(req.body);
+      const analysis = await openaiService.analyzeDataBreach(breachData);
+      
+      const breach = await storage.createDataBreach({
+        ...breachData,
+        notificationRequired: analysis.notificationRequired,
+        notificationJustification: analysis.justification,
+        status: "analyzed",
+      });
+
+      res.json({ breach, analysis });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Data subject requests routes
+  app.get("/api/requests/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const requests = await storage.getDataSubjectRequests(companyId);
+      res.json(requests);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/requests", async (req, res) => {
+    try {
+      const requestData = insertDataSubjectRequestSchema.parse(req.body);
+      // Auto-calculate due date (1 month from now)
+      const dueDate = new Date();
+      dueDate.setMonth(dueDate.getMonth() + 1);
+      
+      const request = await storage.createDataSubjectRequest({
+        ...requestData,
+        dueDate,
+      });
+      
+      res.json(request);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const request = await storage.updateDataSubjectRequest(id, updates);
+      res.json(request);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // DPIA routes
+  app.get("/api/dpia/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const assessments = await storage.getDpiaAssessments(companyId);
+      res.json(assessments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/dpia/assess", async (req, res) => {
+    try {
+      const { companyId, processingName, processingDescription } = req.body;
+      
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      const riskAssessment = await openaiService.assessDpiaRisks(processingDescription, company);
+      
+      const assessment = await storage.createDpiaAssessment({
+        companyId,
+        processingName,
+        processingDescription,
+        riskAssessment,
+        measures: riskAssessment.measures,
+        status: "completed",
+      });
+
+      res.json(assessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // AI Prompts management (Admin only)
+  app.get("/api/admin/prompts", async (req, res) => {
+    try {
+      const prompts = await storage.getAiPrompts();
+      res.json(prompts);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/prompts", async (req, res) => {
+    try {
+      const promptData = insertAiPromptSchema.parse(req.body);
+      const prompt = await storage.createAiPrompt(promptData);
+      res.json(prompt);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/admin/prompts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const prompt = await storage.updateAiPrompt(id, updates);
+      res.json(prompt);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Chatbot
+  app.post("/api/chatbot", async (req, res) => {
+    try {
+      const { message, companyId } = req.body;
+      
+      let context = null;
+      if (companyId) {
+        const company = await storage.getCompany(companyId);
+        if (company) {
+          context = { company };
+        }
+      }
+
+      const response = await openaiService.getChatbotResponse(message, context);
+      res.json(response);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Dashboard stats
+  app.get("/api/dashboard/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      
+      const actions = await storage.getComplianceActions(companyId);
+      const requests = await storage.getDataSubjectRequests(companyId);
+      
+      const stats = {
+        compliance: {
+          score: Math.round((actions.filter(a => a.status === 'completed').length / Math.max(actions.length, 1)) * 100),
+        },
+        actions: {
+          total: actions.length,
+          completed: actions.filter(a => a.status === 'completed').length,
+          inProgress: actions.filter(a => a.status === 'inprogress').length,
+          urgent: actions.filter(a => a.priority === 'urgent' && a.status !== 'completed').length,
+        },
+        requests: {
+          pending: requests.filter(r => r.status !== 'closed').length,
+          overdue: requests.filter(r => r.status !== 'closed' && new Date(r.dueDate) < new Date()).length,
+        },
+        priorityActions: actions
+          .filter(a => a.status !== 'completed')
+          .sort((a, b) => {
+            const priorityOrder = { urgent: 3, important: 2, normal: 1 };
+            return (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - 
+                   (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
+          })
+          .slice(0, 5),
+      };
+      
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
