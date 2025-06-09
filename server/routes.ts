@@ -489,6 +489,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }))
         .sort((a, b) => a.score - b.score);
       
+      // Save compliance snapshot if there are diagnostic responses
+      if (totalResponses > 0) {
+        try {
+          await storage.createComplianceSnapshot({
+            companyId,
+            overallScore: diagnosticScore,
+            categoryScores,
+            totalQuestions: questions.length,
+            answeredQuestions: totalResponses
+          });
+        } catch (error) {
+          // Ignore duplicate snapshots for the same timestamp
+        }
+      }
+
       const stats = {
         compliance: {
           score: diagnosticScore,
@@ -562,6 +577,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       await storage.deleteLlmConfiguration(id);
       res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Compliance snapshots routes
+  app.get("/api/compliance-snapshots/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
+      const snapshots = await storage.getComplianceSnapshots(companyId, limit);
+      res.json(snapshots);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

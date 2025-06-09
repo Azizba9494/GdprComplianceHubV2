@@ -109,7 +109,7 @@ export default function Dashboard() {
         </div>
         <div className="space-y-6">
           <QuickActions stats={stats} />
-          <RiskTrends data={{ actions: actions || [], breaches: breaches || [], requests: requests || [] }} />
+          <RiskTrends companyId={COMPANY_ID} data={{ actions: actions || [], breaches: breaches || [], requests: requests || [] }} />
         </div>
       </div>
 

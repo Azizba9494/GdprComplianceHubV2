@@ -1,10 +1,11 @@
 import { 
   users, companies, diagnosticQuestions, diagnosticResponses, complianceActions,
   processingRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
-  dpiaAssessments, aiPrompts, auditLogs, llmConfigurations,
+  dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   type User, type InsertUser, type Company, type InsertCompany,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
+  type ComplianceSnapshot, type InsertComplianceSnapshot,
   type ComplianceAction, type InsertComplianceAction,
   type ProcessingRecord, type InsertProcessingRecord,
   type DataSubjectRequest, type InsertDataSubjectRequest,
@@ -40,6 +41,10 @@ export interface IStorage {
   // Diagnostic Responses
   getDiagnosticResponses(companyId: number): Promise<DiagnosticResponse[]>;
   createDiagnosticResponse(response: InsertDiagnosticResponse): Promise<DiagnosticResponse>;
+  
+  // Compliance Snapshots
+  getComplianceSnapshots(companyId: number, limit?: number): Promise<ComplianceSnapshot[]>;
+  createComplianceSnapshot(snapshot: InsertComplianceSnapshot): Promise<ComplianceSnapshot>;
   
   // Compliance Actions
   getComplianceActions(companyId: number): Promise<ComplianceAction[]>;
@@ -160,6 +165,20 @@ export class DatabaseStorage implements IStorage {
 
   async createDiagnosticResponse(response: InsertDiagnosticResponse): Promise<DiagnosticResponse> {
     const [created] = await db.insert(diagnosticResponses).values(response).returning();
+    return created;
+  }
+
+  // Compliance Snapshots
+  async getComplianceSnapshots(companyId: number, limit: number = 12): Promise<ComplianceSnapshot[]> {
+    return await db.select()
+      .from(complianceSnapshots)
+      .where(eq(complianceSnapshots.companyId, companyId))
+      .orderBy(desc(complianceSnapshots.createdAt))
+      .limit(limit);
+  }
+
+  async createComplianceSnapshot(snapshot: InsertComplianceSnapshot): Promise<ComplianceSnapshot> {
+    const [created] = await db.insert(complianceSnapshots).values(snapshot).returning();
     return created;
   }
 
