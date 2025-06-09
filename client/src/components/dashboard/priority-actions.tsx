@@ -17,6 +17,14 @@ interface PriorityAction {
 
 interface PriorityActionsProps {
   actions: PriorityAction[];
+  diagnosticData?: {
+    compliance: {
+      categoryScores?: Record<string, { score: number; total: number; answered: number }>;
+    };
+    riskMapping?: {
+      riskAreas: Array<{ category: string; score: number; severity: string }>;
+    };
+  };
 }
 
 const priorityColors = {
@@ -31,7 +39,14 @@ const priorityBadgeColors = {
   normal: "bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300",
 };
 
-export default function PriorityActions({ actions }: PriorityActionsProps) {
+const riskBadgeColors = {
+  critique: "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300",
+  elevé: "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300", 
+  moyen: "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300",
+  faible: "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
+};
+
+export default function PriorityActions({ actions, diagnosticData }: PriorityActionsProps) {
   const getActionLink = (category: string) => {
     switch (category) {
       case "registres":
@@ -42,6 +57,42 @@ export default function PriorityActions({ actions }: PriorityActionsProps) {
         return "/dpia";
       default:
         return "/actions";
+    }
+  };
+
+  const getRiskLevelForCategory = (category: string): string => {
+    if (!diagnosticData?.compliance?.categoryScores) return "moyen";
+    
+    // Map action categories to diagnostic categories
+    const categoryMapping: Record<string, string> = {
+      "gouvernance": "Gouvernance",
+      "documentation": "Documentation", 
+      "consentement": "Consentement",
+      "sécurité": "Sécurité",
+      "droits": "Droits",
+      "formation": "Formation",
+      "violations": "Violations"
+    };
+
+    const diagnosticCategory = categoryMapping[category.toLowerCase()] || category;
+    const categoryData = diagnosticData.compliance.categoryScores[diagnosticCategory];
+    
+    if (!categoryData || categoryData.answered === 0) return "moyen";
+    
+    const score = categoryData.score;
+    if (score >= 80) return "faible";
+    if (score >= 60) return "moyen";
+    if (score >= 40) return "elevé";
+    return "critique";
+  };
+
+  const getRiskLabel = (riskLevel: string): string => {
+    switch (riskLevel) {
+      case "critique": return "Critique";
+      case "elevé": return "Élevé";
+      case "moyen": return "Moyen";
+      case "faible": return "Faible";
+      default: return "Moyen";
     }
   };
 
@@ -86,13 +137,21 @@ export default function PriorityActions({ actions }: PriorityActionsProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium text-foreground">{action.title}</h3>
-                    <Badge 
-                      variant="secondary"
-                      className={cn("text-xs", priorityBadgeColors[action.priority as keyof typeof priorityBadgeColors])}
-                    >
-                      {action.priority === "urgent" ? "Urgent" :
-                       action.priority === "important" ? "Important" : "Normal"}
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge 
+                        variant="secondary"
+                        className={cn("text-xs", priorityBadgeColors[action.priority as keyof typeof priorityBadgeColors])}
+                      >
+                        {action.priority === "urgent" ? "Urgent" :
+                         action.priority === "important" ? "Important" : "Normal"}
+                      </Badge>
+                      <Badge 
+                        variant="outline"
+                        className={cn("text-xs", riskBadgeColors[getRiskLevelForCategory(action.category) as keyof typeof riskBadgeColors])}
+                      >
+                        Risque {getRiskLabel(getRiskLevelForCategory(action.category))}
+                      </Badge>
+                    </div>
                   </div>
                   
                   <p className="text-sm text-muted-foreground mb-3">{action.description}</p>
