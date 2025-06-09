@@ -45,18 +45,18 @@ export default function Sidebar() {
           const isActive = location === item.href;
           
           return (
-            <Link key={item.name} href={item.href}>
-              <div
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.name}</span>
-              </div>
+            <Link 
+              key={item.name} 
+              href={item.href}
+              className={cn(
+                "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer",
+                isActive
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{item.name}</span>
             </Link>
           );
         })}
@@ -67,18 +67,18 @@ export default function Sidebar() {
             const isActive = location === item.href;
             
             return (
-              <Link key={item.name} href={item.href}>
-                <div
-                  className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer",
-                    isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </div>
+              <Link 
+                key={item.name} 
+                href={item.href}
+                className={cn(
+                  "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer",
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{item.name}</span>
               </Link>
             );
           })}
