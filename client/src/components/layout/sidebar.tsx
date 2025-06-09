@@ -14,9 +14,6 @@ const navigation = [
   { name: "Analyse de violations", href: "/breach-analysis", icon: AlertTriangle },
   { name: "Demandes des personnes", href: "/rights", icon: ShieldX },
   { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3 },
-];
-
-const adminNavigation = [
   { name: "Administration", href: "/admin", icon: Settings },
 ];
 
@@ -60,29 +57,6 @@ export default function Sidebar() {
             </Link>
           );
         })}
-        
-        <div className="pt-4 border-t border-sidebar-border mt-4">
-          {adminNavigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href;
-            
-            return (
-              <Link 
-                key={item.name} 
-                href={item.href}
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
-        </div>
       </nav>
       
       {/* User Profile */}
