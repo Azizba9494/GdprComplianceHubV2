@@ -70,32 +70,25 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
     }
   };
 
-  const getRiskLevelForCategory = (category: string): string => {
+  const getRiskLevelForAction = (actionTitle: string): string => {
     if (!diagnosticData?.riskMapping?.riskAreas) return "moyen";
     
-    // Map action categories to diagnostic categories - use exact category names
-    const categoryMapping: Record<string, string> = {
-      "gouvernance et principes fondamentaux": "Gouvernance et principes fondamentaux",
-      "gouvernance": "Gouvernance et principes fondamentaux",
-      "documentation": "Documentation", 
-      "consentement": "Consentement",
-      "sécurité": "Sécurité",
-      "droits": "Droits",
-      "formation": "Formation",
-      "violations": "Violations"
-    };
-
-    const diagnosticCategory = categoryMapping[category.toLowerCase()] || category;
+    // Extract question content from action title to match with diagnostic responses
+    const questionText = actionTitle.replace("Action pour: ", "").substring(0, 50);
     
-    // Find the risk area for this category
-    const riskArea = diagnosticData.riskMapping.riskAreas.find(
-      area => area.category.toLowerCase() === diagnosticCategory.toLowerCase()
-    );
+    // Find the specific question this action is related to
+    for (const riskArea of diagnosticData.riskMapping.riskAreas) {
+      const matchingRisk = riskArea.specificRisks.find(risk => 
+        risk.question.substring(0, 50).includes(questionText.substring(0, 30)) ||
+        questionText.substring(0, 30).includes(risk.question.substring(0, 30))
+      );
+      
+      if (matchingRisk) {
+        return matchingRisk.riskLevel;
+      }
+    }
     
-    if (!riskArea) return "moyen";
-    
-    // Use the severity calculated from actual diagnostic question risk levels
-    return riskArea.severity;
+    return "moyen";
   };
 
   const getRiskLabel = (riskLevel: string): string => {
@@ -159,9 +152,9 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
                       </Badge>
                       <Badge 
                         variant="outline"
-                        className={cn("text-xs", riskBadgeColors[getRiskLevelForCategory(action.category) as keyof typeof riskBadgeColors])}
+                        className={cn("text-xs", riskBadgeColors[getRiskLevelForAction(action.title) as keyof typeof riskBadgeColors])}
                       >
-                        Risque {getRiskLabel(getRiskLevelForCategory(action.category))}
+                        Risque {getRiskLabel(getRiskLevelForAction(action.title))}
                       </Badge>
                     </div>
                   </div>
