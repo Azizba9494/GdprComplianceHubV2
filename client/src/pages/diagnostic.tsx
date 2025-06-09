@@ -94,7 +94,7 @@ export default function Diagnostic() {
     }
 
     // Submit the response
-    const score = response === "oui" ? 2 : response === "partiellement" ? 1 : 0;
+    const score = response === "oui" ? 1 : 0;
     await submitResponseMutation.mutateAsync({
       companyId: COMPANY_ID,
       questionId: currentQuestion.id,
@@ -164,19 +164,11 @@ export default function Diagnostic() {
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="oui" id="oui" />
-                <Label htmlFor="oui">Oui, entièrement</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="partiellement" id="partiellement" />
-                <Label htmlFor="partiellement">Partiellement</Label>
+                <Label htmlFor="oui">Oui</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="non" id="non" />
                 <Label htmlFor="non">Non</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ne_sais_pas" id="ne_sais_pas" />
-                <Label htmlFor="ne_sais_pas">Je ne sais pas</Label>
               </div>
             </RadioGroup>
           </div>
