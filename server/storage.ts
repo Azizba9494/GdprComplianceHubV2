@@ -1,7 +1,7 @@
 import { 
   users, companies, diagnosticQuestions, diagnosticResponses, complianceActions,
   processingRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
-  dpiaAssessments, aiPrompts, auditLogs,
+  dpiaAssessments, aiPrompts, auditLogs, llmConfigurations,
   type User, type InsertUser, type Company, type InsertCompany,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
@@ -12,7 +12,8 @@ import {
   type DataBreach, type InsertDataBreach,
   type DpiaAssessment, type InsertDpiaAssessment,
   type AiPrompt, type InsertAiPrompt,
-  type AuditLog, type InsertAuditLog
+  type AuditLog, type InsertAuditLog,
+  type LlmConfiguration, type InsertLlmConfiguration
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -81,6 +82,13 @@ export interface IStorage {
   // Audit Logs
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(companyId?: number): Promise<AuditLog[]>;
+  
+  // LLM Configurations
+  getLlmConfigurations(): Promise<LlmConfiguration[]>;
+  getActiveLlmConfiguration(): Promise<LlmConfiguration | undefined>;
+  createLlmConfiguration(config: InsertLlmConfiguration): Promise<LlmConfiguration>;
+  updateLlmConfiguration(id: number, updates: Partial<InsertLlmConfiguration>): Promise<LlmConfiguration>;
+  deleteLlmConfiguration(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -284,6 +292,41 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(auditLogs).where(eq(auditLogs.companyId, companyId)).orderBy(desc(auditLogs.timestamp));
     }
     return await db.select().from(auditLogs).orderBy(desc(auditLogs.timestamp));
+  }
+
+  // LLM Configurations
+  async getLlmConfigurations(): Promise<LlmConfiguration[]> {
+    return await db.select().from(llmConfigurations).orderBy(desc(llmConfigurations.createdAt));
+  }
+
+  async getActiveLlmConfiguration(): Promise<LlmConfiguration | undefined> {
+    const [config] = await db.select().from(llmConfigurations).where(eq(llmConfigurations.isActive, true));
+    return config || undefined;
+  }
+
+  async createLlmConfiguration(config: InsertLlmConfiguration): Promise<LlmConfiguration> {
+    // Deactivate all other configurations if this one is set to active
+    if (config.isActive) {
+      await db.update(llmConfigurations).set({ isActive: false });
+    }
+    const [created] = await db.insert(llmConfigurations).values(config).returning();
+    return created;
+  }
+
+  async updateLlmConfiguration(id: number, updates: Partial<InsertLlmConfiguration>): Promise<LlmConfiguration> {
+    // Deactivate all other configurations if this one is being set to active
+    if (updates.isActive) {
+      await db.update(llmConfigurations).set({ isActive: false });
+    }
+    const [updated] = await db.update(llmConfigurations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(llmConfigurations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteLlmConfiguration(id: number): Promise<void> {
+    await db.delete(llmConfigurations).where(eq(llmConfigurations.id, id));
   }
 }
 

@@ -7,7 +7,7 @@ import {
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
   insertProcessingRecordSchema, insertDataSubjectRequestSchema,
   insertPrivacyPolicySchema, insertDataBreachSchema,
-  insertDpiaAssessmentSchema, insertAiPromptSchema
+  insertDpiaAssessmentSchema, insertAiPromptSchema, insertLlmConfigurationSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -434,6 +434,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // LLM Configuration routes
+  app.get("/api/admin/llm-configs", async (req, res) => {
+    try {
+      const configs = await storage.getLlmConfigurations();
+      res.json(configs);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/llm-configs", async (req, res) => {
+    try {
+      const configData = insertLlmConfigurationSchema.parse(req.body);
+      const config = await storage.createLlmConfiguration(configData);
+      res.json(config);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/admin/llm-configs/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertLlmConfigurationSchema.partial().parse(req.body);
+      const config = await storage.updateLlmConfiguration(id, updates);
+      res.json(config);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/llm-configs/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteLlmConfiguration(id);
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
