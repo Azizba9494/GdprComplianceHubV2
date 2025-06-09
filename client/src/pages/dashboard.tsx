@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { dashboardApi } from "@/lib/api";
+import { dashboardApi, actionsApi, breachApi, recordsApi, requestsApi } from "@/lib/api";
 import ComplianceOverview from "@/components/dashboard/compliance-overview";
 import PriorityActions from "@/components/dashboard/priority-actions";
 import QuickActions from "@/components/dashboard/quick-actions";
+import { RiskHeatMap } from "@/components/dashboard/risk-heatmap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,34 @@ export default function Dashboard() {
     queryKey: ['/api/dashboard', COMPANY_ID],
     queryFn: () => dashboardApi.getStats(COMPANY_ID).then(res => res.json()),
   });
+
+  // Fetch additional data for heat map
+  const { data: actions } = useQuery({
+    queryKey: ['/api/actions', COMPANY_ID],
+    queryFn: () => actionsApi.get(COMPANY_ID).then((res: any) => res.json()),
+  });
+
+  const { data: breaches } = useQuery({
+    queryKey: ['/api/breaches', COMPANY_ID],
+    queryFn: () => breachApi.get(COMPANY_ID).then((res: any) => res.json()),
+  });
+
+  const { data: records } = useQuery({
+    queryKey: ['/api/records', COMPANY_ID],
+    queryFn: () => recordsApi.get(COMPANY_ID).then((res: any) => res.json()),
+  });
+
+  const { data: requests } = useQuery({
+    queryKey: ['/api/requests', COMPANY_ID],
+    queryFn: () => requestsApi.get(COMPANY_ID).then((res: any) => res.json()),
+  });
+
+  const heatMapData = {
+    actions: actions || [],
+    breaches: breaches || [],
+    records: records || [],
+    requests: requests || [],
+  };
 
   if (isLoading) {
     return (
@@ -67,10 +96,13 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       <ComplianceOverview stats={stats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Risk Heat Map */}
+      <RiskHeatMap companyId={COMPANY_ID} data={heatMapData} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <PriorityActions actions={stats.priorityActions || []} />
         <QuickActions stats={stats} />
       </div>
