@@ -14,7 +14,7 @@ const navigation = [
   { name: "Analyse de violations", href: "/breach-analysis", icon: AlertTriangle },
   { name: "Demandes des personnes", href: "/rights", icon: ShieldX },
   { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3 },
-  { name: "Administration", href: "/admin", icon: Settings },
+  { name: "⚙️ Administration", href: "/admin", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -36,7 +36,7 @@ export default function Sidebar() {
       </div>
       
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
