@@ -40,13 +40,11 @@ interface PriorityActionsProps {
 const priorityColors = {
   urgent: "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800",
   important: "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800",
-  normal: "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800",
 };
 
 const priorityBadgeColors = {
   urgent: "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300",
   important: "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300",
-  normal: "bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300",
 };
 
 const riskBadgeColors = {
@@ -117,7 +115,7 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {actions.length === 0 ? (
+          {actions.filter(action => action.priority !== 'normal').length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Aucune action prioritaire</p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -125,7 +123,7 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
               </p>
             </div>
           ) : (
-            actions.map((action) => (
+            actions.filter(action => action.priority !== 'normal').map((action) => (
               <div
                 key={action.id}
                 className={cn(
