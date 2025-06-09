@@ -4,6 +4,7 @@ import ComplianceOverview from "@/components/dashboard/compliance-overview";
 import PriorityActions from "@/components/dashboard/priority-actions";
 import QuickActions from "@/components/dashboard/quick-actions";
 import { RiskHeatMap } from "@/components/dashboard/risk-heatmap";
+import { RiskTrends } from "@/components/dashboard/risk-trends";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,8 +104,13 @@ export default function Dashboard() {
       <RiskHeatMap companyId={COMPANY_ID} data={heatMapData} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <PriorityActions actions={stats.priorityActions || []} />
-        <QuickActions stats={stats} />
+        <div className="lg:col-span-2">
+          <PriorityActions actions={stats.priorityActions || []} />
+        </div>
+        <div className="space-y-6">
+          <QuickActions stats={stats} />
+          <RiskTrends data={{ actions: actions || [], breaches: breaches || [], requests: requests || [] }} />
+        </div>
       </div>
 
       {/* Recent Activity */}

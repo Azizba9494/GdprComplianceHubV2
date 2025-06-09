@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { calculateRiskAssessment } from "./risk-calculator";
 import { 
   AlertTriangle, 
   Shield, 
@@ -13,7 +15,8 @@ import {
   Eye, 
   Settings,
   TrendingUp,
-  Clock
+  Clock,
+  Filter
 } from "lucide-react";
 
 interface RiskArea {
@@ -62,8 +65,14 @@ const getRiskBadgeVariant = (level: string) => {
 export function RiskHeatMap({ companyId, data }: HeatMapProps) {
   const [selectedArea, setSelectedArea] = useState<RiskArea | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [riskFilter, setRiskFilter] = useState<string>('all');
 
-  // Calculate risk areas based on actual data
+  // Calculate advanced risk assessment
+  const riskAssessment = useMemo(() => {
+    return calculateRiskAssessment(data || { actions: [], breaches: [], records: [], requests: [] });
+  }, [data]);
+
+  // Calculate risk areas based on actual data and advanced algorithms
   const calculateRiskAreas = (): RiskArea[] => {
     const actions = data?.actions || [];
     const breaches = data?.breaches || [];
@@ -75,8 +84,8 @@ export function RiskHeatMap({ companyId, data }: HeatMapProps) {
         id: 'data-protection',
         name: 'Protection des données',
         category: 'Sécurité',
-        riskLevel: breaches.length > 0 ? 'critical' : actions.filter(a => a.category === 'security' && a.status !== 'completed').length > 2 ? 'high' : 'medium',
-        score: Math.max(0, 100 - (breaches.length * 30) - (actions.filter(a => a.category === 'security' && a.status !== 'completed').length * 10)),
+        riskLevel: riskAssessment.factors.securityScore >= 80 ? 'low' : riskAssessment.factors.securityScore >= 60 ? 'medium' : riskAssessment.factors.securityScore >= 40 ? 'high' : 'critical',
+        score: Math.round(riskAssessment.factors.securityScore),
         description: 'Mesures de sécurité et protection contre les violations',
         icon: Shield,
         lastAssessed: new Date().toISOString(),
@@ -87,8 +96,8 @@ export function RiskHeatMap({ companyId, data }: HeatMapProps) {
         id: 'data-processing',
         name: 'Traitement des données',
         category: 'Opérations',
-        riskLevel: records.length === 0 ? 'high' : records.length < 3 ? 'medium' : 'low',
-        score: Math.min(100, records.length * 25),
+        riskLevel: riskAssessment.factors.processingScore >= 80 ? 'low' : riskAssessment.factors.processingScore >= 60 ? 'medium' : riskAssessment.factors.processingScore >= 40 ? 'high' : 'critical',
+        score: Math.round(riskAssessment.factors.processingScore),
         description: 'Registres et documentation des traitements',
         icon: Database,
         lastAssessed: new Date().toISOString(),
@@ -99,8 +108,8 @@ export function RiskHeatMap({ companyId, data }: HeatMapProps) {
         id: 'consent-management',
         name: 'Gestion du consentement',
         category: 'Légal',
-        riskLevel: actions.filter(a => a.category === 'consent' && a.status !== 'completed').length > 1 ? 'high' : 'medium',
-        score: Math.max(0, 100 - (actions.filter(a => a.category === 'consent' && a.status !== 'completed').length * 20)),
+        riskLevel: riskAssessment.factors.consentScore >= 80 ? 'low' : riskAssessment.factors.consentScore >= 60 ? 'medium' : riskAssessment.factors.consentScore >= 40 ? 'high' : 'critical',
+        score: Math.round(riskAssessment.factors.consentScore),
         description: 'Collecte et gestion des consentements',
         icon: Users,
         lastAssessed: new Date().toISOString(),
@@ -111,20 +120,20 @@ export function RiskHeatMap({ companyId, data }: HeatMapProps) {
         id: 'rights-management',
         name: 'Droits des personnes',
         category: 'Légal',
-        riskLevel: requests.filter(r => r.status !== 'closed').length > 5 ? 'critical' : requests.filter(r => r.status !== 'closed').length > 2 ? 'high' : 'low',
-        score: Math.max(0, 100 - (requests.filter(r => r.status !== 'closed').length * 15)),
+        riskLevel: riskAssessment.factors.rightsScore >= 80 ? 'low' : riskAssessment.factors.rightsScore >= 60 ? 'medium' : riskAssessment.factors.rightsScore >= 40 ? 'high' : 'critical',
+        score: Math.round(riskAssessment.factors.rightsScore),
         description: 'Gestion des demandes et droits des personnes concernées',
         icon: Eye,
         lastAssessed: new Date().toISOString(),
         actionCount: requests.length,
-        completedActions: requests.filter(r => r.status === 'closed').length,
+        completedActions: requests.filter(r => r.status === 'completed').length,
       },
       {
         id: 'documentation',
         name: 'Documentation',
         category: 'Gouvernance',
-        riskLevel: actions.filter(a => a.category === 'documentation' && a.status !== 'completed').length > 2 ? 'high' : 'low',
-        score: Math.max(0, 100 - (actions.filter(a => a.category === 'documentation' && a.status !== 'completed').length * 15)),
+        riskLevel: riskAssessment.factors.documentationScore >= 80 ? 'low' : riskAssessment.factors.documentationScore >= 60 ? 'medium' : riskAssessment.factors.documentationScore >= 40 ? 'high' : 'critical',
+        score: Math.round(riskAssessment.factors.documentationScore),
         description: 'Politiques de confidentialité et documentation',
         icon: FileText,
         lastAssessed: new Date().toISOString(),
@@ -135,8 +144,8 @@ export function RiskHeatMap({ companyId, data }: HeatMapProps) {
         id: 'vendor-management',
         name: 'Gestion des sous-traitants',
         category: 'Gouvernance',
-        riskLevel: actions.filter(a => a.category === 'vendor' && a.status !== 'completed').length > 1 ? 'medium' : 'low',
-        score: Math.max(0, 100 - (actions.filter(a => a.category === 'vendor' && a.status !== 'completed').length * 20)),
+        riskLevel: riskAssessment.factors.vendorScore >= 80 ? 'low' : riskAssessment.factors.vendorScore >= 60 ? 'medium' : riskAssessment.factors.vendorScore >= 40 ? 'high' : 'critical',
+        score: Math.round(riskAssessment.factors.vendorScore),
         description: 'Contrats et supervision des sous-traitants',
         icon: Settings,
         lastAssessed: new Date().toISOString(),
