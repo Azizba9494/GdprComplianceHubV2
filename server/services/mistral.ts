@@ -1,12 +1,12 @@
-import { MistralApi } from '@mistralai/mistralai';
+import { Mistral } from '@mistralai/mistralai';
 
 export class MistralService {
-  private client: MistralApi | null = null;
+  private client: Mistral | null = null;
 
   constructor() {
     const apiKey = process.env.MISTRAL_API_KEY;
     if (apiKey) {
-      this.client = new MistralApi({
+      this.client = new Mistral({
         apiKey: apiKey,
       });
     }
@@ -23,7 +23,7 @@ export class MistralService {
     const client = this.ensureClient();
     
     try {
-      const response = await client.chat({
+      const chatResponse = await client.chat.complete({
         model: 'mistral-large-latest',
         messages: [
           {
@@ -36,11 +36,11 @@ export class MistralService {
           }
         ],
         temperature: 0.7,
-        maxTokens: 2000,
+        max_tokens: 2000,
       });
 
       return {
-        response: response.choices?.[0]?.message?.content || 'Désolé, je n\'ai pas pu générer une réponse.'
+        response: chatResponse.choices?.[0]?.message?.content || 'Désolé, je n\'ai pas pu générer une réponse.'
       };
     } catch (error: any) {
       console.error('Mistral API error:', error);

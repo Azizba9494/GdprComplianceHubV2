@@ -206,7 +206,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(dataSubjectRequests).where(eq(dataSubjectRequests.companyId, companyId)).orderBy(desc(dataSubjectRequests.createdAt));
   }
 
-  async createDataSubjectRequest(request: InsertDataSubjectRequest): Promise<DataSubjectRequest> {
+  async createDataSubjectRequest(request: InsertDataSubjectRequest & { dueDate: Date }): Promise<DataSubjectRequest> {
     const [created] = await db.insert(dataSubjectRequests).values(request).returning();
     return created;
   }

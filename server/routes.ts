@@ -295,13 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       dueDate.setMonth(dueDate.getMonth() + 1);
       
       const request = await storage.createDataSubjectRequest({
-        companyId: requestData.companyId,
-        requesterId: requestData.requesterId,
-        requesterEmail: requestData.requesterEmail,
-        requestType: requestData.requestType,
-        description: requestData.description,
-        status: requestData.status || "new",
-        identityVerified: requestData.identityVerified || false,
+        ...requestData,
         dueDate,
       });
       
