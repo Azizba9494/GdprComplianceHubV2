@@ -36,11 +36,12 @@ export class MistralService {
           }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        maxTokens: 2000,
       });
 
+      const content = chatResponse.choices?.[0]?.message?.content;
       return {
-        response: chatResponse.choices?.[0]?.message?.content || 'Désolé, je n\'ai pas pu générer une réponse.'
+        response: typeof content === 'string' ? content : 'Désolé, je n\'ai pas pu générer une réponse.'
       };
     } catch (error: any) {
       console.error('Mistral API error:', error);
@@ -52,7 +53,7 @@ export class MistralService {
     const client = this.ensureClient();
     
     try {
-      const response = await client.chat({
+      const response = await client.chat.complete({
         model: 'mistral-large-latest',
         messages: [
           {
@@ -73,11 +74,15 @@ export class MistralService {
         throw new Error('Pas de réponse du modèle');
       }
 
+      // Handle string content
+      const textContent = typeof content === 'string' ? content : 
+        Array.isArray(content) ? content.map(c => c.text || '').join('') : '';
+
       try {
-        return JSON.parse(content);
+        return JSON.parse(textContent);
       } catch (parseError) {
         // Attempt to extract JSON from the response
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        const jsonMatch = textContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           return JSON.parse(jsonMatch[0]);
         }
