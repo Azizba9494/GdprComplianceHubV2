@@ -49,6 +49,17 @@ export const diagnosticResponses = pgTable("diagnostic_responses", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Compliance snapshots - historical compliance scores
+export const complianceSnapshots = pgTable("compliance_snapshots", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  overallScore: integer("overall_score").notNull(),
+  categoryScores: jsonb("category_scores").$type<Record<string, { score: number; total: number; answered: number }>>().notNull(),
+  totalQuestions: integer("total_questions").notNull(),
+  answeredQuestions: integer("answered_questions").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Compliance actions
 export const complianceActions = pgTable("compliance_actions", {
   id: serial("id").primaryKey(),
@@ -187,6 +198,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
     references: [users.id],
   }),
   diagnosticResponses: many(diagnosticResponses),
+  complianceSnapshots: many(complianceSnapshots),
   complianceActions: many(complianceActions),
   processingRecords: many(processingRecords),
   dataSubjectRequests: many(dataSubjectRequests),
@@ -194,6 +206,13 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   dataBreaches: many(dataBreaches),
   dpiaAssessments: many(dpiaAssessments),
   auditLogs: many(auditLogs),
+}));
+
+export const complianceSnapshotsRelations = relations(complianceSnapshots, ({ one }) => ({
+  company: one(companies, {
+    fields: [complianceSnapshots.companyId],
+    references: [companies.id],
+  }),
 }));
 
 export const diagnosticQuestionsRelations = relations(diagnosticQuestions, ({ many }) => ({
@@ -228,6 +247,11 @@ export const insertDiagnosticQuestionSchema = createInsertSchema(diagnosticQuest
 });
 
 export const insertDiagnosticResponseSchema = createInsertSchema(diagnosticResponses).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertComplianceSnapshotSchema = createInsertSchema(complianceSnapshots).omit({
   id: true,
   createdAt: true,
 });
@@ -289,6 +313,8 @@ export type DiagnosticQuestion = typeof diagnosticQuestions.$inferSelect;
 export type InsertDiagnosticQuestion = z.infer<typeof insertDiagnosticQuestionSchema>;
 export type DiagnosticResponse = typeof diagnosticResponses.$inferSelect;
 export type InsertDiagnosticResponse = z.infer<typeof insertDiagnosticResponseSchema>;
+export type ComplianceSnapshot = typeof complianceSnapshots.$inferSelect;
+export type InsertComplianceSnapshot = z.infer<typeof insertComplianceSnapshotSchema>;
 export type ComplianceAction = typeof complianceActions.$inferSelect;
 export type InsertComplianceAction = z.infer<typeof insertComplianceActionSchema>;
 export type ProcessingRecord = typeof processingRecords.$inferSelect;
