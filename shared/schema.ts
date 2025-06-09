@@ -30,6 +30,12 @@ export const diagnosticQuestions = pgTable("diagnostic_questions", {
   category: text("category").notNull(),
   order: integer("order").notNull(),
   isActive: boolean("is_active").default(true),
+  // Action plan for "Yes" response
+  actionPlanYes: text("action_plan_yes"),
+  riskLevelYes: text("risk_level_yes"), // 'faible', 'moyen', 'elevé', 'critique'
+  // Action plan for "No" response
+  actionPlanNo: text("action_plan_no"),
+  riskLevelNo: text("risk_level_no"), // 'faible', 'moyen', 'elevé', 'critique'
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

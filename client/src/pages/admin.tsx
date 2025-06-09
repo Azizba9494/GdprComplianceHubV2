@@ -36,6 +36,10 @@ interface DiagnosticQuestion {
   category: string;
   order: number;
   isActive: boolean;
+  actionPlanYes?: string;
+  riskLevelYes?: string;
+  actionPlanNo?: string;
+  riskLevelNo?: string;
   createdAt: string;
 }
 
@@ -94,6 +98,10 @@ export default function Admin() {
       question: "",
       category: "",
       order: 0,
+      actionPlanYes: "",
+      riskLevelYes: "faible",
+      actionPlanNo: "",
+      riskLevelNo: "faible",
     },
   });
 
@@ -285,6 +293,10 @@ export default function Admin() {
         question: question.question,
         category: question.category,
         order: question.order,
+        actionPlanYes: question.actionPlanYes || '',
+        riskLevelYes: question.riskLevelYes || 'faible',
+        actionPlanNo: question.actionPlanNo || '',
+        riskLevelNo: question.riskLevelNo || 'faible',
       });
     } else {
       setEditingQuestion(null);
@@ -622,6 +634,110 @@ export default function Admin() {
                         )}
                       />
                     </div>
+                    
+                    {/* Action Plans and Risk Levels */}
+                    <div className="space-y-6 mt-6 p-4 border rounded-lg bg-muted/50">
+                      <h4 className="font-medium">Configuration des plans d'action</h4>
+                      
+                      {/* Yes Response */}
+                      <div className="space-y-3">
+                        <h5 className="text-sm font-medium text-green-700">Si la réponse est "Oui"</h5>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                          <div className="lg:col-span-2">
+                            <FormField
+                              control={questionForm.control}
+                              name="actionPlanYes"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Plan d'action</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Décrivez le plan d'action si la réponse est 'Oui'"
+                                      className="min-h-[80px]"
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={questionForm.control}
+                            name="riskLevelYes"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Niveau de risque</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choisir un niveau" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="faible">Faible</SelectItem>
+                                    <SelectItem value="moyen">Moyen</SelectItem>
+                                    <SelectItem value="elevé">Élevé</SelectItem>
+                                    <SelectItem value="critique">Critique</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* No Response */}
+                      <div className="space-y-3">
+                        <h5 className="text-sm font-medium text-red-700">Si la réponse est "Non"</h5>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                          <div className="lg:col-span-2">
+                            <FormField
+                              control={questionForm.control}
+                              name="actionPlanNo"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Plan d'action</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Décrivez le plan d'action si la réponse est 'Non'"
+                                      className="min-h-[80px]"
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={questionForm.control}
+                            name="riskLevelNo"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Niveau de risque</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choisir un niveau" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="faible">Faible</SelectItem>
+                                    <SelectItem value="moyen">Moyen</SelectItem>
+                                    <SelectItem value="elevé">Élevé</SelectItem>
+                                    <SelectItem value="critique">Critique</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="flex justify-end space-x-2">
                       <Button
                         type="button"
