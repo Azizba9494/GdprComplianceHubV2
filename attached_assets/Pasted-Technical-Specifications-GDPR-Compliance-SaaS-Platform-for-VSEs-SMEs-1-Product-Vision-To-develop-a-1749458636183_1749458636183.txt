@@ -1,0 +1,206 @@
+Technical Specifications: GDPR Compliance SaaS Platform for VSEs/SMEs
+1. Product Vision To develop an Artificial Intelligence (AI)-assisted Software as a Service (SaaS) solution to democratize GDPR compliance for Very Small Enterprises (VSEs) and Small to Medium-sized Enterprises (SMEs) in France. The goal is to provide an extremely simple, intuitive, and low-cost tool that guides non-specialist entrepreneurs through the complexities of the regulation. The product should be perceived as an intelligent compliance assistant, reducing the time, cost, and stress associated with the GDPR.
+2. Target Audience
+Primary Target: Very Small Enterprises (VSEs) with 1 to 10 employees and self-employed individuals in France.
+Profile: Entrepreneurs and managers with little to no legal expertise, limited time, and a tight budget. They are often paralyzed by the complexity of the GDPR and "don't know where to start."
+Secondary Target: Web agencies and freelance developers who create websites for VSEs/SMEs and are looking for a tool to ensure a basic level of compliance for their clients.
+Platform Administrators: The technical and product team in charge of maintaining and improving the solution.
+3. Minimum Viable Product (MVP) Scope The MVP must focus on solving the "blank page syndrome" by providing immediate and tangible value.
+Module 1: Initial Diagnosis and Dynamic Action Plan
+Functionality (Client-Side): An interactive and intelligent questionnaire that assesses the company's GDPR maturity level.
+Functionality (Admin-Side): A secure back-office allowing the platform administrator to create, view, modify, and delete the questions in the diagnostic questionnaire.
+AI Contribution: The AI guides the user through simple questions and can adapt the path based on previous answers to refine the diagnosis.
+Output (Result for the client): The diagnosis no longer generates a static report, but a dashboard for monitoring compliance actions.
+Each point of non-compliance identified during the diagnosis is transcribed as an "action to be completed" in this dashboard.
+The client can track the progress of each action by assigning it a status (e.g., "To Do," "In Progress," "Resolved").
+For certain actions, a "Generate Action" or "Start" button redirects the user directly to the relevant module of the solution. For example, for the action "Draft the record of processing activities," the button will redirect to Module 2.
+The client can export a copy of their compliance action monitoring dashboard at any time to communicate it upon request.
+Module 2: AI-Assisted Record of Processing Activities Generator
+Description: This module centralizes the creation and management of the two types of records required by the GDPR.
+Functionality 1: Record of Processing Activities (as Data Controller)
+For whom: To manage the company's own data processing activities (e.g., customer management, employee management).
+AI Contribution: Proposes pre-filled record templates based on common use cases.
+Functionality 2: Record of Processing Activities on Behalf of a Controller (as Data Processor)
+For whom: For companies that process data on behalf of their clients (e.g., a web agency managing data from its client's contact form).
+Functionality: Allows the client to create and manage their record as a processor.
+Compliance: The data entry form and the structure of the generated record will be based on the official model provided by the CNIL. Fields will include:
+The name and contact details of each client (the data controller).
+The description of the processing carried out on behalf of that client.
+The categories of data processed.
+Information on any data transfers outside the EU.
+AI Contribution: The AI can suggest standard processing descriptions based on the user's business sector (e.g., "Website hosting," "Application maintenance," "Email campaign management").
+Module 3: Privacy Policy Generator
+Functionality: Generation of a basic privacy policy for a website.
+AI Contribution: The AI uses information collected during the diagnosis (company name, purposes, data types, etc.) to automatically customize the document. It "translates" legal jargon into clear and understandable language.
+Output: A privacy policy text ready to be integrated into the user's website.
+Module 4: AI-Powered Data Breach Analysis Assistant
+Objective: To guide users (managers, DPOs, legal staff) in assessing whether a personal data breach requires notification to the supervisory authority (e.g., the CNIL).
+Interface: The platform interface must be available in French.
+Core Functionality:
+Information Collection: The user fills out a detailed form about the security incident via the platform. Data categories to be collected include the nature and circumstances of the breach, the categories of individuals and data concerned, the likely consequences, potential harm, and measures taken.
+AI Analysis: The AI analyzes this information based exclusively on the criteria, examples, and risk thresholds from the EDPB's "Guidelines 9/2022 on personal data breach notification under GDPR."
+Result Generation: The AI automatically generates a recommendation, a reasoned justification, and a summary table.
+AI-Generated Outputs:
+Clear Recommendation: A direct statement: "Notification to the supervisory authority is likely required." or "Notification to the supervisory authority is likely not required."
+Detailed Justification: A reasoned text explaining the rationale behind the recommendation. This justification must explicitly reference the relevant sections of the EDPB 9/2022 guidelines, demonstrating how the incident data aligns (or not) with the risk criteria. The language must be professional and use GDPR terminology.
+Justification Export: The user must be able to easily download this complete justification in a readable format (e.g., .txt, .md).
+Automated Summary Table: The AI must automatically fill a summary table with key information from the incident and analysis.
+Constraint and Disclaimer:
+A clear disclaimer must be displayed, stating that the analysis provided does not constitute formal legal advice and that consultation with qualified professionals is recommended for any final decision.
+Module 5: Data Subject Rights Request Management
+Objective: To provide a centralized tool to receive, track, manage, and respond to requests from data subjects (right of access, rectification, objection, erasure, etc.) within legal deadlines.
+Key Features:
+Submission Portal: Ability to generate a link to a secure and customizable web form that the company can place on its website. This structured form helps collect requests clearly.
+Centralized Dashboard: An overview of all requests with their status (New, In Progress, Awaiting Verification, Closed), the type of right exercised, the requester, and the due date.
+Automated Deadline Tracking: The system automatically calculates the legal deadline (one month) upon receiving a request and sends reminders to the user as the date approaches.
+Request Qualification and Response Assistance (AI): The AI can analyze the content of a request to help qualify its nature (access, deletion, etc.) and suggest response templates tailored to the situation (acknowledgment of receipt, request for identification, confirmation of action).
+Identity Verification Workflow: A checklist or a dedicated space to document the steps taken to verify the requester's identity before processing the request.
+Audit Log: Every action (receipt, status change, response sent) is automatically timestamped and recorded in an unalterable history to ensure traceability in case of an audit. Only 26% of VSEs/SMEs maintain such a record.
+Module 6: DPIA (Data Protection Impact Assessment) Assistance Tool
+Objective: To guide the user step-by-step through conducting a Data Protection Impact Assessment (DPIA), which is mandatory for certain high-risk processing activities, following the CNIL's methodology.
+Key Features:
+Guided Workflow: A step-by-step wizard that structures the analysis according to the three main phases of the CNIL model: description of the processing, risk assessment, and identification of measures.
+AI Assistance at Each Step:
+Description of Processing: The AI can pre-fill certain information (purposes, data collected) based on data already present in the record of processing activities (Module 2).
+Risk Assessment: This is the core of the AI's contribution. Based on the description of the processing, the AI suggests a list of potential threats (e.g., "unauthorized access," "unwanted modification," "disappearance of data") and risks to the rights and freedoms of individuals (e.g., "identity theft," "financial loss," "reputational damage"). It helps the user assess the likelihood and severity of each risk.
+Identification of Measures: Once the risks are identified, the AI proposes a catalog of concrete technical and organizational measures to control them (e.g., "data encryption," "access management procedure," "staff awareness training").
+Report Generation: At the end of the process, the tool generates a complete and structured DPIA report, compliant with the CNIL model, ready to be archived and presented if needed.
+
+Module 7. GDPR Assistance Chatbot (AI)
+Objective: To provide a conversational assistant to answer user questions about data protection law (GDPR, recommendations from the CNIL and the EDPB).
+Persona and Behavior: The chatbot must act as a specialized Data Protection Officer. It introduces itself as such, uses a professional tone, provides accurate and up-to-date information, and cites relevant resources. It must be able to adapt its language level to the user.
+Interface: The chatbot will be accessible via a floating icon across the entire platform, offering contextual help at any time.
+Prompt Management: The system prompt that defines the chatbot's persona, rules, and behavior will be manageable from the administrator back office.
+
+4. Admin Back-Office and AI Prompt Management 
+Objective: To create a centralized and secure management interface, reserved for platform administrators, to allow them to control and refine the AI's behavior without developer intervention.
+Key Features:
+Prompt Management: The interface must allow for the management of all prompts used by the AI across all application modules (Record Generator, Breach Analysis, DPIA Assistance, etc.).
+CRUD Interface: The administrator must be able to:
+Create new prompts for future features.
+Read and view the list of all existing prompts, with a clear name and description (e.g., "DPIA - Risk Suggestion," "Breach - Justification Generation").
+Update the text of an existing prompt via a simple text editor.
+Disable a prompt without deleting it.
+Versioning: Each modification of a prompt must create a new version. This allows for maintaining a history, comparing performance between versions, and easily reverting to a previous version if a change proves counterproductive.
+Variable Visualization: The prompt editor must clearly identify the variables (e.g., {{processing_description}}, {{business_sector}}) that will be dynamically injected into the prompt before being sent to the AI API.
+Architectural Impact: The application's code must no longer contain hard-coded prompts. Before each call to an AI service, the backend must first retrieve the active version of the corresponding prompt from the database.
+4. Technical Architecture and Stack
+Frontend Framework: Use a modern JavaScript framework like React (Next.js) or Vue.js (Nuxt.js) for a responsive, fast, and modular user interface. The design must be responsive for use on desktops and tablets.
+Backend Language: Python or Node.js. Python is recommended for its robust AI and NLP ecosystem (libraries like spaCy, Hugging Face Transformers). Node.js is a viable option for its performance with I/O-intensive applications.
+Database: A relational database like PostgreSQL is ideal for structuring the relationships between users, companies, records, and documents.
+Artificial Intelligence:
+For text generation (policies, record entries), use a pre-trained Large Language Model (LLM) via an API (e.g., OpenAI API, Google Gemini, or open-source models like Mistral). The approach will be "Prompt Engineering" to generate precise legal content from user inputs.
+The "intelligent" questionnaire logic can be implemented via a rules engine or a series of simple conditional logics initially.
+Hosting: The hosting of data and the application must imperatively be in France or the European Union to be a selling point for trust and compliance. Use a cloud provider like Scaleway, OVHcloud, or the European regions of AWS/GCP/Azure.
+Authentication: Implement a secure user management system (e.g., Auth0, Clerk, or a custom implementation with JWT).
+5. User Experience and Interface (UI/UX)
+Guiding Principle: Extreme simplicity. The interface must be clean, intuitive, and avoid information overload.
+Onboarding: The registration and initial setup process must be quick and guided, holding the user's hand from the start.
+Language: Use simple, direct, and non-legal language. Each technical term should be explained with a tooltip.
+Guided Paths: Implement "wizards" (step-by-step assistants) for all complex tasks, such as creating a processing record.
+Dashboard: The home screen after login should be a simple visual dashboard, indicating the compliance status and the next actions to be taken.
+6. Data Model Details
+1. User and Platform Management
+Table: User
+Objective: Store login information and rights for each user.
+Key Fields:
+id (PK, INTEGER): Unique user identifier.
+email (VARCHAR, UNIQUE): Login email address.
+password_hash (VARCHAR): User's password, stored securely (hashed).
+role (ENUM: 'client', 'admin'): Defines access rights ('client' for VSEs/SMEs, 'admin' for platform managers).
+created_at (TIMESTAMP): Account creation date and time.
+Table: Company
+Objective: Store basic information about the client's company. Each company is linked to a user.
+Key Fields:
+id (PK, INTEGER): Unique company identifier.
+user_id (FK, INTEGER): Link to the User table to associate the company with its owner.
+name (VARCHAR): Company name.
+activity_sector (VARCHAR): Business sector, used by the AI to contextualize its suggestions.
+website_url (VARCHAR): Company's website URL.
+Table: AIPrompt
+Objective: Manage AI prompts from the admin back-office.
+Key Fields:
+id (PK, INTEGER): Unique prompt identifier.
+prompt_name (VARCHAR, UNIQUE): Technical identifier for the prompt (e.g., "DPIA_RISK_SUGGESTION").
+description (TEXT): Explanation of the prompt's purpose for the administrator.
+prompt_text (TEXT): The body of the prompt itself, with its variables (e.g., {{variable}}).
+version (INTEGER): Version number for tracking changes.
+is_active (BOOLEAN): Indicates if this version of the prompt is the one used in production.
+updated_at (TIMESTAMP): Date of the last modification.
+2. Compliance Modules
+Table: ComplianceAction (Module 1)
+Objective: Store actions for the compliance plan generated after the initial diagnosis.
+Key Fields:
+id (PK, INTEGER): Unique action identifier.
+company_id (FK, INTEGER): Link to the concerned company.
+description (TEXT): Description of the action to be performed (e.g., "Draft the record of processing activities").
+status (ENUM: 'todo', 'in_progress', 'resolved'): Progress status of the action.
+linked_module_path (VARCHAR): Internal path to the platform module that allows completing the action (e.g., "/app/register").
+Table: ProcessingActivity (Module 2)
+Objective: Store records for processing activities where the company is the data controller.
+Key Fields:
+id (PK, INTEGER): Unique processing record identifier.
+company_id (FK, INTEGER): Link to the concerned company.
+name (VARCHAR): Name of the processing activity (e.g., "Payroll management").
+purpose (TEXT): Purpose of the processing.
+data_categories (TEXT): Categories of personal data processed.
+recipients (TEXT): Recipients of the data.
+retention_period (VARCHAR): Data retention period.
+Table: ProcessorActivity (Module 2)
+Objective: Store records where the company acts as a data processor on behalf of its clients.
+Key Fields:
+id (PK, INTEGER): Unique processor activity identifier.
+company_id (FK, INTEGER): Link to the user's company.
+controller_name (VARCHAR): Name of the client (the data controller).
+processing_description (TEXT): Description of the processing operations carried out for this client.
+Table: DataBreachIncident (Module 4)
+Objective: Store detailed information about a data breach entered by the user.
+Key Fields:
+id (PK, INTEGER): Unique incident identifier.
+company_id (FK, INTEGER): Link to the concerned company.
+incident_details (JSONB): Flexible storage (JSON format) for all responses to the breach form.
+created_at (TIMESTAMP): Date the incident was reported on the platform.
+Table: AIAssessmentResult (Module 4)
+Objective: Store the result of the AI's analysis for a data breach incident.
+Key Fields:
+id (PK, INTEGER): Unique assessment identifier.
+incident_id (FK, INTEGER): Link to the analyzed incident.
+recommendation (ENUM: 'notification_required', 'notification_not_required'): The AI's recommendation.
+justification_text (TEXT): The full argumentation generated by the AI.
+Table: DataSubjectRequest (Module 5)
+Objective: Track each data subject right request.
+Key Fields:
+id (PK, INTEGER): Unique request identifier.
+company_id (FK, INTEGER): Link to the concerned company.
+request_type (ENUM: 'access', 'rectification', 'erasure', 'etc.'): Type of right exercised.
+status (ENUM: 'new', 'in_progress', 'closed', 'rejected'): Processing status of the request.
+received_date (TIMESTAMP): Date the request was received.
+deadline_date (TIMESTAMP): Legal deadline (calculated automatically).
+Table: RequestAuditLog (Module 5)
+Objective: Maintain a history of all actions taken on a data subject right request.
+Key Fields:
+id (PK, INTEGER): Unique log entry identifier.
+request_id (FK, INTEGER): Link to the concerned request.
+user_id (FK, INTEGER): Link to the user who performed the action.
+action_description (TEXT): Description of the action (e.g., "Response sent to the data subject").
+created_at (TIMESTAMP): Timestamp of the action.
+Table: DPIAProject (Module 6)
+Objective: Store information for a Data Protection Impact Assessment (DPIA).
+Key Fields:
+id (PK, INTEGER): Unique DPIA project identifier.
+company_id (FK, INTEGER): Link to the concerned company.
+project_name (VARCHAR): Name of the analyzed processing activity.
+status (ENUM: 'in_progress', 'completed'): Status of the DPIA.
+description_data (JSONB): Storage for phase 1 data (description of processing).
+risk_assessment_data (JSONB): Storage for phase 2 data (risk assessment).
+measures_data (JSONB): Storage for phase 3 data (planned measures).
+7. Monetization Strategy (for MVP and beyond)
+Model: Freemium + Affordable Tiers.
+Tier 1: "Discovery" (Free)
+Objective: Massive user acquisition and value demonstration.
+Included Features: Full initial diagnosis, generation of one privacy policy (with discreet branding of the solution), limited access to the records module (e.g., 3 processing records).
+Tier 2: "Essential" (Paid, target price €19/month)
+Objective: Conversion of free users who need the fundamental tools.
+Included Features: All content from the free tier (without branding), complete record of processing activities with AI assistance, access to document templates (information notices, etc.).
+Payment Integration: Use a recognized subscription payment solution like Stripe to manage subscriptions, invoices, and trials.
+
