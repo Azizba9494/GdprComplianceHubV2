@@ -517,9 +517,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           if (riskCount > 0) {
-            const avgRiskScore = totalRiskScore / riskCount;
+            // Use the highest risk level found in the category instead of average
+            const maxRiskScore = Math.max(...specificRisks.map(r => 
+              r.riskLevel === 'critique' ? 4 : r.riskLevel === 'elevé' ? 3 : r.riskLevel === 'moyen' ? 2 : 1
+            ));
             const categoryScore = categoryScores[category].score;
-            const severity = avgRiskScore >= 3.5 ? 'critique' : avgRiskScore >= 2.5 ? 'elevé' : avgRiskScore >= 1.5 ? 'moyen' : 'faible';
+            const severity = maxRiskScore >= 4 ? 'critique' : maxRiskScore >= 3 ? 'elevé' : maxRiskScore >= 2 ? 'moyen' : 'faible';
             
             riskAreas.push({
               category,

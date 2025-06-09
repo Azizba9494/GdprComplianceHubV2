@@ -73,9 +73,10 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
   const getRiskLevelForCategory = (category: string): string => {
     if (!diagnosticData?.riskMapping?.riskAreas) return "moyen";
     
-    // Map action categories to diagnostic categories
+    // Map action categories to diagnostic categories - use exact category names
     const categoryMapping: Record<string, string> = {
-      "gouvernance": "Gouvernance",
+      "gouvernance et principes fondamentaux": "Gouvernance et principes fondamentaux",
+      "gouvernance": "Gouvernance et principes fondamentaux",
       "documentation": "Documentation", 
       "consentement": "Consentement",
       "sécurité": "Sécurité",
