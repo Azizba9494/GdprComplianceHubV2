@@ -245,6 +245,8 @@ export const insertProcessingRecordSchema = createInsertSchema(processingRecords
 export const insertDataSubjectRequestSchema = createInsertSchema(dataSubjectRequests).omit({
   id: true,
   createdAt: true,
+  dueDate: true,
+  completedAt: true,
 });
 
 export const insertPrivacyPolicySchema = createInsertSchema(privacyPolicies).omit({

@@ -93,7 +93,15 @@ export default function Admin() {
     },
   });
 
-  const questionForm = useForm({
+  const questionForm = useForm<{
+    question: string;
+    category: string;
+    order: number;
+    actionPlanYes: string;
+    riskLevelYes: string;
+    actionPlanNo: string;
+    riskLevelNo: string;
+  }>({
     defaultValues: {
       question: "",
       category: "",

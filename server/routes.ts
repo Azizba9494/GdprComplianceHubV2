@@ -89,10 +89,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const responses = await storage.getDiagnosticResponses(companyId);
-      const analysis = await openaiService.generateActionPlan(responses, company);
+      const questions = await storage.getDiagnosticQuestions();
       
-      // Create compliance actions from analysis
-      for (const action of analysis.actions) {
+      // Generate action plans based on manual configuration
+      const actions = [];
+      let overallRiskScore = 0;
+      let riskCount = { faible: 0, moyen: 0, elevé: 0, critique: 0 };
+      
+      for (const response of responses) {
+        const question = questions.find(q => q.id === response.questionId);
+        if (!question) continue;
+        
+        const isYes = response.response.toLowerCase() === 'oui';
+        const actionPlan = isYes ? question.actionPlanYes : question.actionPlanNo;
+        const riskLevel = isYes ? question.riskLevelYes : question.riskLevelNo;
+        
+        if (actionPlan && actionPlan.trim()) {
+          const riskScore = riskLevel === 'critique' ? 25 : riskLevel === 'elevé' ? 15 : riskLevel === 'moyen' ? 10 : 5;
+          overallRiskScore += riskScore;
+          riskCount[riskLevel as keyof typeof riskCount]++;
+          
+          actions.push({
+            title: `Action pour: ${question.question.substring(0, 50)}...`,
+            description: actionPlan,
+            category: question.category,
+            priority: riskLevel === 'critique' ? 'critical' : riskLevel === 'elevé' ? 'high' : riskLevel === 'moyen' ? 'medium' : 'low',
+            riskLevel: riskLevel,
+          });
+        }
+      }
+      
+      // Create compliance actions from manual configuration
+      for (const action of actions) {
         await storage.createComplianceAction({
           companyId,
           title: action.title,
@@ -100,9 +128,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           category: action.category,
           priority: action.priority,
           status: "todo",
-          dueDate: action.dueDate ? new Date(action.dueDate) : undefined,
         });
       }
+
+      const analysis = {
+        actions,
+        overallRiskScore: Math.min(100, overallRiskScore),
+        riskDistribution: riskCount,
+        totalActions: actions.length,
+        summary: `Diagnostic terminé. ${actions.length} actions identifiées basées sur vos réponses.`
+      };
 
       res.json(analysis);
     } catch (error: any) {
@@ -260,7 +295,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       dueDate.setMonth(dueDate.getMonth() + 1);
       
       const request = await storage.createDataSubjectRequest({
-        ...requestData,
+        companyId: requestData.companyId,
+        requesterId: requestData.requesterId,
+        requesterEmail: requestData.requesterEmail,
+        requestType: requestData.requestType,
+        description: requestData.description,
+        status: requestData.status || "new",
+        identityVerified: requestData.identityVerified || false,
         dueDate,
       });
       
