@@ -349,6 +349,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Diagnostic Questions management (Admin only)
+  app.post("/api/admin/questions", async (req, res) => {
+    try {
+      const questionData = insertDiagnosticQuestionSchema.parse(req.body);
+      const question = await storage.createDiagnosticQuestion(questionData);
+      res.json(question);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/admin/questions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const question = await storage.updateDiagnosticQuestion(id, updates);
+      res.json(question);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/questions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteDiagnosticQuestion(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Chatbot
   app.post("/api/chatbot", async (req, res) => {
     try {

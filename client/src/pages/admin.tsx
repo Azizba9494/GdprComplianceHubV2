@@ -123,10 +123,7 @@ export default function Admin() {
   });
 
   const createQuestionMutation = useMutation({
-    mutationFn: (data: any) => {
-      // This would need to be implemented in the API
-      return Promise.resolve(); // Placeholder
-    },
+    mutationFn: (data: any) => adminApi.createQuestion(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/diagnostic/questions'] });
       setIsQuestionDialogOpen(false);
@@ -135,6 +132,31 @@ export default function Admin() {
       toast({
         title: "Question créée !",
         description: "La nouvelle question de diagnostic a été ajoutée.",
+      });
+    },
+  });
+
+  const updateQuestionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => adminApi.updateQuestion(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/diagnostic/questions'] });
+      setIsQuestionDialogOpen(false);
+      questionForm.reset();
+      setEditingQuestion(null);
+      toast({
+        title: "Question mise à jour !",
+        description: "La question de diagnostic a été modifiée avec succès.",
+      });
+    },
+  });
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: (id: number) => adminApi.deleteQuestion(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/diagnostic/questions'] });
+      toast({
+        title: "Question supprimée !",
+        description: "La question a été supprimée avec succès.",
       });
     },
   });
@@ -149,7 +171,7 @@ export default function Admin() {
 
   const onQuestionSubmit = (data: any) => {
     if (editingQuestion) {
-      // Update question logic
+      updateQuestionMutation.mutate({ id: editingQuestion.id, data });
     } else {
       createQuestionMutation.mutate(data);
     }
@@ -548,14 +570,24 @@ export default function Admin() {
                           Créée le {new Date(question.createdAt).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openQuestionDialog(question)}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Modifier
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openQuestionDialog(question)}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteQuestionMutation.mutate(question.id)}
+                          disabled={deleteQuestionMutation.isPending}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

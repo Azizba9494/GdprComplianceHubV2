@@ -100,6 +100,15 @@ export const adminApi = {
   
   updatePrompt: (id: number, updates: any) =>
     apiRequest("PUT", `/api/admin/prompts/${id}`, updates),
+
+  createQuestion: (questionData: any) =>
+    apiRequest("POST", "/api/admin/questions", questionData),
+  
+  updateQuestion: (id: number, updates: any) =>
+    apiRequest("PUT", `/api/admin/questions/${id}`, updates),
+  
+  deleteQuestion: (id: number) =>
+    apiRequest("DELETE", `/api/admin/questions/${id}`),
 };
 
 // Chatbot API
