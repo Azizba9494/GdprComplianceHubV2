@@ -74,7 +74,7 @@ export default function Diagnostic() {
   });
 
   // Process data
-  const categories = allQuestions ? Array.from(new Set(allQuestions.map((q: any) => q.category))) : [];
+  const categories = allQuestions ? Array.from(new Set(allQuestions.map((q: any) => q.category))) as string[] : [];
   const questionsByCategory = allQuestions ? allQuestions.filter((q: any) => q.category === selectedCategory) : [];
   const answeredQuestionIds = existingResponses ? existingResponses.map((r: any) => r.questionId) : [];
   
@@ -82,10 +82,11 @@ export default function Diagnostic() {
   React.useEffect(() => {
     if (existingResponses && allQuestions) {
       const completedList: string[] = [];
-      categories.forEach((category: string) => {
+      const allCategories = Array.from(new Set(allQuestions.map((q: any) => q.category))) as string[];
+      allCategories.forEach((category: string) => {
         const categoryQuestions = allQuestions.filter((q: any) => q.category === category);
         const answeredInCategory = categoryQuestions.filter((q: any) => 
-          answeredQuestionIds.includes(q.id)
+          existingResponses.some((r: any) => r.questionId === q.id)
         );
         if (answeredInCategory.length === categoryQuestions.length && categoryQuestions.length > 0) {
           completedList.push(category);
@@ -93,7 +94,7 @@ export default function Diagnostic() {
       });
       setCompletedCategories(new Set(completedList));
     }
-  }, [existingResponses, allQuestions, categories, answeredQuestionIds]);
+  }, [existingResponses, allQuestions]);
 
   if (isLoading) {
     return (
@@ -137,7 +138,7 @@ export default function Diagnostic() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map((category: string) => {
+              {categories.map((category) => {
                 const Icon = categoryIcons[category as keyof typeof categoryIcons] || FileText;
                 const isCompleted = completedCategories.has(category);
                 const categoryQuestions = allQuestions.filter((q: any) => q.category === category);
