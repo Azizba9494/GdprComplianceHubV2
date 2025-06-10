@@ -160,8 +160,8 @@ export default function ActionPlan() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-medium text-foreground">{action.title}</h3>
+                    <div className="flex items-start space-x-3 mb-2">
+                      <h3 className="font-medium text-foreground flex-1">{action.title}</h3>
                       <Badge 
                         variant="secondary"
                         className={priorityColors[action.priority as keyof typeof priorityColors]}
@@ -170,7 +170,7 @@ export default function ActionPlan() {
                       </Badge>
                     </div>
                     
-                    <p className="text-sm text-muted-foreground mb-3">{action.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap">{action.description}</p>
                     
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-1">
@@ -181,7 +181,13 @@ export default function ActionPlan() {
                       {action.dueDate && (
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
-                          <span>Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
+                          <span className="font-medium">Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                      )}
+                      {!action.dueDate && (
+                        <div className="flex items-center space-x-1 text-orange-600">
+                          <Clock className="w-4 h-4" />
+                          <span className="font-medium">Aucune échéance définie</span>
                         </div>
                       )}
                     </div>

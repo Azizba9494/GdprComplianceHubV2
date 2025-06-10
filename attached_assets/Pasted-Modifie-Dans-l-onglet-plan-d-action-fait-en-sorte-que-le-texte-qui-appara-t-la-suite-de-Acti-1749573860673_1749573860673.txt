@@ -1,0 +1,25 @@
+Modifie : 
+
+Dans l’onglet plan d’action, fait en sorte que le texte qui apparaît à la suite de “Action pour” ne soit pas tronqué. 
+Dans l’onglet plan d’action, ajoute de manière visible la date d’échance fixée par le client.  
+Dans l’onglet registre des traitements, lorsqu’un traitement est créé manuellement la base légale s’affiche soit en anglais “contract” soit avec un _ “legal_obligation”. Corrige le et affiche la base légale telle qu’elle a été choisie par le client.
+Dans l’onglet “Analyse d’impact” supprime les deux analyses d’impact réalisées que je ne peux pas supprimer au moyen du bouton “supprimer”. 
+Dans l’onglet “Analyse d’impact” lorsque le résultat de l’évaluation de l’AIPD fait apparaître le résultat de l’évaluation suivant “AIPD non requise à première vue”, ajoute après le texte “Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement.” un texte qui mentionne qu’il faut également veiller à ce que le traitement poursuivi ne fasse pas partie de la Liste des types d’opérations de traitement pour lesquelles une analyse d’impact relative à la protection des données est requise par la CNIL. Puis ajoute un “?”, qui lorsque le client clique dessus affiche ladite liste, à savoir les traitements suivants :
+- Traitements de données de santé mis en œuvre par les établissements de santé ou les établissements médico-sociaux pour la prise en charge des personnes ;
+- Traitements portant sur des données génétiques de personnes dites « vulnérables » (patients, employés, enfants,
+etc.) ;
+- Traitements établissant des profils de personnes physiques à des fins de gestion des ressources humaines ;
+- Traitements ayant pour finalité de surveiller de manière constante l'activité des employés concernés ;
+- Traitements ayant pour finalité la gestion des alertes et des signalements en matière sociale et sanitaire ;
+- Traitements ayant pour finalité la gestion des alertes et des signalements en matière professionnelle ;
+- Traitements des données de santé nécessaires à la constitution d'un entrepôt de données ou d'un registre ;
+- Traitements impliquant le profilage des personnes pouvant aboutir à leur exclusion du bénéfice d'un contrat ou à la
+suspension voire à la rupture de celui-ci ;
+- Traitements mutualisés de manquements contractuels constatés, susceptibles d'aboutir à une décision d'exclusion
+ou de suspension du bénéfice d'un contrat ;
+- Traitements de profilage faisant appel à des données provenant de sources externes ;
+- Traitements de données biométriques aux fins de reconnaissance des personnes parmi lesquelles figurent des
+personnes dites « vulnérables » (élèves, personnes âgées, patients, demandeurs d'asile, etc.);
+- Instruction des demandes et gestion des logements sociaux ;
+- Traitements ayant pour finalité l’accompagnement social ou médico-social des personnes ;
+- Traitements de données de localisation à large échelle.

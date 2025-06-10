@@ -30,6 +30,12 @@ const LEGAL_BASES = [
   { value: "legitimate_interests", label: "Intérêts légitimes (Art. 6.1.f)" },
 ];
 
+// Fonction pour convertir les bases légales
+const getLegalBasisLabel = (value: string): string => {
+  const basis = LEGAL_BASES.find(b => b.value === value);
+  return basis ? basis.label : value;
+};
+
 // Catégories de données prédéfinies
 const DATA_CATEGORIES = [
   "Données d'identité (nom, prénom, etc.)",
@@ -1028,7 +1034,7 @@ Informations complémentaires: ${data.additionalInfo}
                         </SelectContent>
                       </Select>
                     ) : (
-                      <p className="text-sm">{record.legalBasis}</p>
+                      <p className="text-sm">{getLegalBasisLabel(record.legalBasis)}</p>
                     )}
                     {showJustification[`${record.id}_legalBasis`] && (
                       <div className="mt-2 p-3 bg-muted rounded-md text-xs">
