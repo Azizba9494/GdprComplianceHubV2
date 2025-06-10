@@ -210,6 +210,10 @@ Informations complémentaires: ${data.additionalInfo}
       return response.json();
     },
     onSuccess: (result: any, record) => {
+      // Force immediate UI update by invalidating queries
+      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      
+      // Also update the record directly for immediate feedback
       updateMutation.mutate({
         id: record.id,
         data: {
@@ -217,9 +221,19 @@ Informations complémentaires: ${data.additionalInfo}
           dpiaJustification: result.justification,
         },
       });
+      
       toast({
         title: "Analyse terminée",
-        description: "L'analyse DPIA a été effectuée avec succès.",
+        description: result.dpiaRequired ? 
+          "Une AIPD est nécessaire pour ce traitement." : 
+          "Aucune AIPD requise pour ce traitement.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur d'analyse",
+        description: "Impossible d'analyser la nécessité d'une AIPD.",
+        variant: "destructive",
       });
     },
   });
@@ -764,36 +778,6 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                     <Badge variant={record.type === "controller" ? "default" : "secondary"}>
                       {record.type === "controller" ? "Responsable" : "Sous-traitant"}
                     </Badge>
-                    {record.type === "controller" && (
-                      <div className="flex items-center space-x-2">
-                        {record.dpiaRequired === true && (
-                          <Badge variant="destructive">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            AIPD requise
-                          </Badge>
-                        )}
-                        {record.dpiaRequired === false && (
-                          <Badge variant="secondary">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            AIPD non requise
-                          </Badge>
-                        )}
-                        {record.dpiaRequired === undefined && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => dpiaAnalysisMutation.mutate(record)}
-                            disabled={dpiaAnalysisMutation.isPending}
-                          >
-                            {dpiaAnalysisMutation.isPending ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              "Analyser AIPD"
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    )}
                   </div>
                   <Button
                     size="sm"
@@ -954,7 +938,7 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                           <FileSearch className="w-4 h-4 mr-2" />
                           Faut-il réaliser une analyse d'impact ?
                         </h4>
-                        {record.dpiaRequired === undefined && (
+                        {(record.dpiaRequired === undefined || record.dpiaRequired === null) && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -966,45 +950,48 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                             ) : (
                               <FileSearch className="w-4 h-4 mr-2" />
                             )}
-                            Lancer l'analyse
+                            Réaliser l'analyse
                           </Button>
                         )}
                       </div>
 
                       {record.dpiaJustification && (
-                        <div className="p-4 bg-muted rounded-lg">
-                          <div className="flex items-start space-x-3">
-                            {record.dpiaRequired ? (
-                              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
-                            ) : (
-                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
-                            )}
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center justify-between">
+                        <div className="space-y-3">
+                          <div className="p-4 bg-muted rounded-lg">
+                            <div className="flex items-start space-x-3">
+                              {record.dpiaRequired ? (
+                                <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
+                              ) : (
+                                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+                              )}
+                              <div className="flex-1 space-y-3">
                                 <Badge variant={record.dpiaRequired ? "destructive" : "secondary"}>
                                   {record.dpiaRequired ? "AIPD nécessaire" : "AIPD non nécessaire"}
                                 </Badge>
-                                {record.dpiaRequired && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => createDpiaMutation.mutate(record)}
-                                    disabled={createDpiaMutation.isPending}
-                                  >
-                                    {createDpiaMutation.isPending ? (
-                                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                    ) : (
-                                      <FileText className="w-4 h-4 mr-2" />
-                                    )}
-                                    Réaliser une analyse d'impact
-                                  </Button>
-                                )}
+                                <p className="text-sm">{record.dpiaJustification}</p>
+                                <p className="text-xs text-muted-foreground border-t pt-2">
+                                  ⚠️ Cette analyse est générée par IA et doit être validée avec un conseil juridique spécialisé en protection des données.
+                                </p>
                               </div>
-                              <p className="text-sm">{record.dpiaJustification}</p>
-                              <p className="text-xs text-muted-foreground">
-                                ⚠️ Cette analyse est générée par IA et doit être validée avec un conseil juridique spécialisé en protection des données.
-                              </p>
                             </div>
                           </div>
+                          
+                          {record.dpiaRequired && (
+                            <div className="flex justify-center">
+                              <Button
+                                onClick={() => createDpiaMutation.mutate(record)}
+                                disabled={createDpiaMutation.isPending}
+                                className="w-full max-w-md"
+                              >
+                                {createDpiaMutation.isPending ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : (
+                                  <FileText className="w-4 h-4 mr-2" />
+                                )}
+                                Réaliser l'AIPD grâce à l'IA
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
