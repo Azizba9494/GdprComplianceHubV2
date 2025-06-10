@@ -26,15 +26,28 @@ export default function Chatbot() {
   const [input, setInput] = useState("");
 
   const sendMessageMutation = useMutation({
-    mutationFn: (message: string) => chatbotApi.sendMessage(message, 1), // TODO: Use actual company ID
-    onSuccess: (response) => {
+    mutationFn: async (message: string) => {
+      const response = await chatbotApi.sendMessage(message, 1);
+      return response.json();
+    },
+    onSuccess: (data) => {
       const botMessage: Message = {
         id: Date.now().toString() + "_bot",
-        content: response.response,
+        content: data.response || "Désolé, je n'ai pas pu traiter votre demande.",
         isBot: true,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, botMessage]);
+    },
+    onError: (error) => {
+      console.error('Erreur chatbot:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString() + "_error",
+        content: "Une erreur s'est produite. Veuillez réessayer.",
+        isBot: true,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
     },
   });
 
