@@ -74,7 +74,7 @@ export default function ActionPlan() {
     if (selectedAction && newDueDate) {
       updateActionMutation.mutate({ 
         id: selectedAction.id, 
-        updates: { dueDate: newDueDate } 
+        updates: { dueDate: new Date(newDueDate).toISOString() } 
       });
       setIsDateDialogOpen(false);
       setSelectedAction(null);

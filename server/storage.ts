@@ -87,6 +87,7 @@ export interface IStorage {
   getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]>;
   createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment>;
   updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment>;
+  deleteDpiaAssessment(id: number): Promise<void>;
   
   // AI Prompts
   getAiPrompts(): Promise<AiPrompt[]>;
@@ -338,6 +339,10 @@ export class DatabaseStorage implements IStorage {
   async updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment> {
     const [updated] = await db.update(dpiaAssessments).set(updates).where(eq(dpiaAssessments.id, id)).returning();
     return updated;
+  }
+
+  async deleteDpiaAssessment(id: number): Promise<void> {
+    await db.delete(dpiaAssessments).where(eq(dpiaAssessments.id, id));
   }
 
   // AI Prompts

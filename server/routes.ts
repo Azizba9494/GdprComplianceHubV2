@@ -444,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/dpia/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      await storage.deleteDpiaAssessment(id);
+      await storage.deleteDpiaEvaluation(id);
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
