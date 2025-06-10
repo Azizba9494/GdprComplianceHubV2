@@ -806,7 +806,7 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h4 className="font-medium">{assessment.processingName}</h4>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap break-words">
                         {assessment.processingDescription}
                       </p>
                       <div className="flex items-center space-x-4 mt-3">

@@ -161,7 +161,7 @@ export default function ActionPlan() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-start space-x-3 mb-2">
-                      <h3 className="font-medium text-foreground flex-1">{action.title}</h3>
+                      <h3 className="font-medium text-foreground flex-1 whitespace-pre-wrap break-words">{action.title}</h3>
                       <Badge 
                         variant="secondary"
                         className={priorityColors[action.priority as keyof typeof priorityColors]}
