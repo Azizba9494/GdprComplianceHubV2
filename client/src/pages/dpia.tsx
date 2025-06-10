@@ -122,8 +122,27 @@ export default function DPIA() {
     queryFn: () => dpiaApi.get(COMPANY_ID).then(res => res.json()),
   });
 
+  const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
+    queryKey: ['/api/dpia-evaluations', COMPANY_ID],
+    queryFn: () => fetch(`/api/dpia-evaluations/${COMPANY_ID}`).then(res => res.json()),
+  });
+
   // Filtrer les traitements de responsable uniquement
   const controllerRecords = records?.filter((record: ProcessingRecord) => record.type === 'controller') || [];
+
+  // Charger les évaluations stockées au démarrage
+  React.useEffect(() => {
+    if (storedEvaluations && storedEvaluations.length > 0) {
+      const results: Record<number, any> = {};
+      storedEvaluations.forEach((evaluation: any) => {
+        results[evaluation.recordId] = {
+          ...evaluation,
+          criteriaAnswers: evaluation.criteriaAnswers ? JSON.parse(evaluation.criteriaAnswers) : {}
+        };
+      });
+      setEvaluationResults(results);
+    }
+  }, [storedEvaluations]);
 
   // Fonctions utilitaires
   const checkCnilMandatoryList = async (record: ProcessingRecord): Promise<string | null> => {
@@ -197,13 +216,41 @@ export default function DPIA() {
         justification = `Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement.`;
       }
 
-      const result = {
+      // Sauvegarder en base de données
+      const evaluationData = {
+        companyId: COMPANY_ID,
+        recordId: selectedRecord!.id,
         score,
         recommendation,
         justification,
-        criteriaAnswers: answers,
+        criteriaAnswers: JSON.stringify(answers),
         cnilListMatch: cnilMatch,
         largeScaleEstimate: data.largeScaleEstimate || null
+      };
+
+      // Vérifier si une évaluation existe déjà
+      const existingEvaluation = storedEvaluations?.find((evaluation: any) => evaluation.recordId === selectedRecord!.id);
+      
+      let savedEvaluation;
+      if (existingEvaluation) {
+        const response = await fetch(`/api/dpia-evaluations/${existingEvaluation.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(evaluationData)
+        });
+        savedEvaluation = await response.json();
+      } else {
+        const response = await fetch('/api/dpia-evaluations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(evaluationData)
+        });
+        savedEvaluation = await response.json();
+      }
+
+      const result = {
+        ...savedEvaluation,
+        criteriaAnswers: answers
       };
 
       setEvaluationResults(prev => ({
@@ -214,6 +261,7 @@ export default function DPIA() {
       return result;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations'] });
       toast({
         title: "Évaluation terminée",
         description: "L'évaluation AIPD a été enregistrée avec succès."
