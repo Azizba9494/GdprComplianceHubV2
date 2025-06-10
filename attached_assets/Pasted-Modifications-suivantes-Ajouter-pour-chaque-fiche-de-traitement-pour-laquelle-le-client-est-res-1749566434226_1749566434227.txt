@@ -1,0 +1,20 @@
+Modifications suivantes : 
+
+Ajouter, pour chaque fiche de traitement pour laquelle le client est responsable de traitement la collecte des informations suivantes concernant le traitement : 
+Est-ce que le traitement met en œuvre une évaluation ou une notation (scoring) 
+Est-ce que le traitement induit une prise de décision automatisée avec effet juridique ou similaire 
+Est-ce que le traitement induit une surveillance systématique des personnes 
+Est-ce que le traitement induit une collecte de données sensibles ou à caractère hautement personnel 
+Est-ce que le traitement induit un traitement de données à grande échelle 
+Est-ce que le traitement induit un croisement ou une combinaison d’un ensembles de données 
+Est-ce que le traitement induit le traitement de données concernant des personnes vulnérables 
+Est-ce que le traitement induit un usage innovant ou l’application de nouvelles solutions technologiques/organisationnelles 
+Est-ce que le traitement empêche les personnes d'exercer un droit ou de bénéficier d'un service/contrat 
+Le client pourra doit renseigner ces informations lorsqu’il crée sa fiche de traitement. S’il ne sait pas, l’IA pourra le compléter pour lui en fonction du traitement poursuivi. Si l’IA ne sait pas remplir, il appartiendra au client de le faire en toutes circonstances. En toutes hypothèses, il doit être rappelé au client qu’il lui appartient de vérifier et de faire valider ces informations par un professionnel du droit dans l’hypothèse où ces informations seraient générées par IA. 
+
+Ces informations seront utilisées par l’IA afin de déterminer si oui ou non le traitement en question doit faire l’objet d’un PIA. 
+
+Modifier le bouton intitulé ‘Réaliser l’AIPD grâce à l’IA” par “Réaliser une analyse d’impact”. Ensuite, lorsqu’il clique sur ce bouton, il ne faut plus réaliser l’analyse d’impact mais simplement rediriger le client vers l’onglet Analyse d’impact. 
+
+Dans l’onglet analyse d’impact, le client doit retrouver l’ensemble de traitements pour lesquels il agit en tant que responsable de traitement, ainsi que la recommandation selon laquelle il doit ou non réaliser une AIPD pour ce traitement. Le client pourra alors sélectionner le traitement en question, puis cliquer sur un bouton “Réaliser l’analyse d’impact de ce traitement”. Il sera alors redirigé vers une série de questions dont l’objectif est d’évaluer l’impact du traitement. Pour la création de ces questions, tu doit récréer les mêmes questions et le même workflow que celui de l’outil développé par la CNIL dont le code  figure aux adresses suivantes : https://github.com/LINCnil/pia et https://github.com/LINCnil/pia-back. 
+Choisi la version la plus pertinente afin de recréer les même outil. A la différence de celui de la CNIL, cet outil sera boosté par l’IA car chacune des sections pourra être complétée de manière automatique par l’IA. 

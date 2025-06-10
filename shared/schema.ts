@@ -89,6 +89,16 @@ export const processingRecords = pgTable("processing_records", {
   type: text("type").notNull(), // controller, processor
   dpiaRequired: boolean("dpia_required"),
   dpiaJustification: text("dpia_justification"),
+  // DPIA Criteria (9 criteria for DPIA assessment)
+  hasScoring: boolean("has_scoring"), // Evaluation ou notation (scoring)
+  hasAutomatedDecision: boolean("has_automated_decision"), // Décision automatisée avec effet juridique
+  hasSystematicMonitoring: boolean("has_systematic_monitoring"), // Surveillance systématique
+  hasSensitiveData: boolean("has_sensitive_data"), // Données sensibles ou hautement personnelles
+  hasLargeScale: boolean("has_large_scale"), // Traitement à grande échelle
+  hasDataCombination: boolean("has_data_combination"), // Croisement/combinaison de données
+  hasVulnerablePersons: boolean("has_vulnerable_persons"), // Personnes vulnérables
+  hasInnovativeTechnology: boolean("has_innovative_technology"), // Usage innovant/nouvelles technologies
+  preventsRightsExercise: boolean("prevents_rights_exercise"), // Empêche l'exercice de droits
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

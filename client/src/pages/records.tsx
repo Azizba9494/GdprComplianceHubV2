@@ -93,6 +93,16 @@ interface ProcessingRecord {
   createdAt: string;
   dpiaRequired?: boolean;
   dpiaJustification?: string;
+  // DPIA Criteria
+  hasScoring?: boolean;
+  hasAutomatedDecision?: boolean;
+  hasSystematicMonitoring?: boolean;
+  hasSensitiveData?: boolean;
+  hasLargeScale?: boolean;
+  hasDataCombination?: boolean;
+  hasVulnerablePersons?: boolean;
+  hasInnovativeTechnology?: boolean;
+  preventsRightsExercise?: boolean;
 }
 
 export default function Records() {
@@ -131,6 +141,16 @@ export default function Records() {
       securityMeasures: "",
       type: "controller",
       transfersOutsideEU: false,
+      // DPIA Criteria
+      hasScoring: false,
+      hasAutomatedDecision: false,
+      hasSystematicMonitoring: false,
+      hasSensitiveData: false,
+      hasLargeScale: false,
+      hasDataCombination: false,
+      hasVulnerablePersons: false,
+      hasInnovativeTechnology: false,
+      preventsRightsExercise: false,
     },
   });
 
@@ -486,6 +506,338 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
             Exporter CSV
           </Button>
           
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Créer manuellement
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Créer une fiche de traitement</DialogTitle>
+                <DialogDescription>
+                  Créez manuellement une fiche de traitement en remplissant les informations requises
+                </DialogDescription>
+              </DialogHeader>
+              
+              <Form {...manualForm}>
+                <form onSubmit={manualForm.handleSubmit(data => createMutation.mutate(data))} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={manualForm.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type de responsabilité *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionnez votre rôle" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="controller">Responsable de traitement</SelectItem>
+                              <SelectItem value="processor">Sous-traitant</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={manualForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom du traitement *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: Gestion de la paie, Prospection commerciale..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={manualForm.control}
+                      name="purpose"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Finalité du traitement *</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Décrivez la finalité du traitement de données..."
+                              {...field}
+                              rows={3}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={manualForm.control}
+                      name="legalBasis"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Base légale *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionnez la base légale" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {LEGAL_BASES.map((basis) => (
+                                <SelectItem key={basis.value} value={basis.value}>
+                                  {basis.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={manualForm.control}
+                      name="retention"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Durée de conservation</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: 3 ans après fin du contrat..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={manualForm.control}
+                      name="transfersOutsideEU"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Transferts hors UE</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Section DPIA - seulement pour les responsables de traitement */}
+                  {manualForm.watch("type") === "controller" && (
+                    <div className="space-y-4 border-t pt-6">
+                      <div className="flex items-center space-x-2">
+                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                        <h3 className="text-lg font-semibold">Critères d'évaluation AIPD</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Répondez aux questions suivantes pour déterminer si une analyse d'impact est nécessaire :
+                      </p>
+                      
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={manualForm.control}
+                          name="hasScoring"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement met-il en œuvre une évaluation ou une notation (scoring) ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="hasAutomatedDecision"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement induit-il une prise de décision automatisée avec effet juridique ou similaire ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="hasSystematicMonitoring"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement induit-il une surveillance systématique des personnes ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="hasSensitiveData"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement induit-il une collecte de données sensibles ou à caractère hautement personnel ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="hasLargeScale"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement induit-il un traitement de données à grande échelle ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="hasDataCombination"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement induit-il un croisement ou une combinaison d'ensembles de données ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="hasVulnerablePersons"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement induit-il le traitement de données concernant des personnes vulnérables ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="hasInnovativeTechnology"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement induit-il un usage innovant ou l'application de nouvelles solutions technologiques/organisationnelles ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="preventsRightsExercise"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0 p-3 border rounded-lg">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-sm">
+                                Le traitement empêche-t-il les personnes d'exercer un droit ou de bénéficier d'un service/contrat ?
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-xs text-amber-800">
+                          ⚠️ Ces informations sont cruciales pour déterminer la nécessité d'une AIPD. 
+                          En cas de doute, il est recommandé de faire valider ces éléments par un professionnel du droit spécialisé en protection des données.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end space-x-2 pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit" disabled={createMutation.isPending}>
+                      {createMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Création...
+                        </>
+                      ) : (
+                        "Créer la fiche"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -981,16 +1333,11 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                           {(dpiaResults[record.id]?.required ?? record.dpiaRequired) && (
                             <div className="flex justify-center">
                               <Button
-                                onClick={() => createDpiaMutation.mutate(record)}
-                                disabled={createDpiaMutation.isPending}
+                                onClick={() => window.location.href = '/dpia'}
                                 className="w-full max-w-md"
                               >
-                                {createDpiaMutation.isPending ? (
-                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                ) : (
-                                  <FileText className="w-4 h-4 mr-2" />
-                                )}
-                                Réaliser l'AIPD grâce à l'IA
+                                <FileText className="w-4 h-4 mr-2" />
+                                Réaliser une analyse d'impact
                               </Button>
                             </div>
                           )}
