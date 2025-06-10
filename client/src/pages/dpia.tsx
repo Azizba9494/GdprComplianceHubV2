@@ -540,7 +540,7 @@ AVERTISSEMENT: Cette analyse est générée automatiquement et doit être revue 
       )}
 
       {/* Previous Assessments */}
-      {assessments && assessments.length > 0 && (
+      {!showFullDpia && assessments && assessments.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Analyses précédentes</CardTitle>
@@ -580,50 +580,52 @@ AVERTISSEMENT: Cette analyse est générée automatiquement et doit être revue 
       )}
 
       {/* Guidance Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Lightbulb className="w-5 h-5 text-primary" />
-            <span>Guide méthodologique</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium">1. Description du traitement</h4>
-                <p className="text-sm text-muted-foreground">
-                  Décrivez précisément le traitement envisagé, ses finalités, 
-                  les données collectées et les personnes concernées.
-                </p>
+      {!showFullDpia && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Lightbulb className="w-5 h-5 text-primary" />
+              <span>Guide méthodologique</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium">1. Description du traitement</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Décrivez précisément le traitement envisagé, ses finalités, 
+                    les données collectées et les personnes concernées.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium">2. Évaluation des risques</h4>
+                  <p className="text-sm text-muted-foreground">
+                    L'IA identifie les menaces potentielles et évalue leur impact 
+                    sur les droits et libertés des personnes.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-medium">2. Évaluation des risques</h4>
-                <p className="text-sm text-muted-foreground">
-                  L'IA identifie les menaces potentielles et évalue leur impact 
-                  sur les droits et libertés des personnes.
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium">3. Mesures de protection</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Des mesures techniques et organisationnelles sont proposées 
+                    pour réduire les risques identifiés.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium">4. Rapport final</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Un rapport complet est généré, conforme à la méthodologie CNIL 
+                    et prêt pour archivage ou présentation.
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium">3. Mesures de protection</h4>
-                <p className="text-sm text-muted-foreground">
-                  Des mesures techniques et organisationnelles sont proposées 
-                  pour réduire les risques identifiés.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-medium">4. Rapport final</h4>
-                <p className="text-sm text-muted-foreground">
-                  Un rapport complet est généré, conforme à la méthodologie CNIL 
-                  et prêt pour archivage ou présentation.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
