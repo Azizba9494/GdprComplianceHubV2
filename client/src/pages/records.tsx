@@ -258,6 +258,51 @@ Informations complémentaires: ${data.additionalInfo}
     },
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const recordData = {
+        companyId: COMPANY_ID,
+        name: data.name,
+        purpose: data.purpose,
+        legalBasis: data.legalBasis,
+        dataCategories: data.dataCategories ? data.dataCategories.split(',').map((s: string) => s.trim()) : [],
+        recipients: data.recipients ? data.recipients.split(',').map((s: string) => s.trim()) : [],
+        retention: data.retention,
+        securityMeasures: data.securityMeasures ? data.securityMeasures.split(',').map((s: string) => s.trim()) : [],
+        type: data.type,
+        transfersOutsideEU: data.transfersOutsideEU,
+        hasScoring: data.hasScoring,
+        hasAutomatedDecision: data.hasAutomatedDecision,
+        hasSystematicMonitoring: data.hasSystematicMonitoring,
+        hasSensitiveData: data.hasSensitiveData,
+        hasLargeScale: data.hasLargeScale,
+        hasDataCombination: data.hasDataCombination,
+        hasVulnerablePersons: data.hasVulnerablePersons,
+        hasInnovativeTechnology: data.hasInnovativeTechnology,
+        preventsRightsExercise: data.preventsRightsExercise,
+      };
+      
+      const response = await recordsApi.create(recordData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      setIsCreateDialogOpen(false);
+      manualForm.reset();
+      toast({
+        title: "Fiche créée",
+        description: "La fiche de traitement a été créée avec succès.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de créer la fiche",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createDpiaMutation = useMutation({
     mutationFn: async (record: ProcessingRecord) => {
       const response = await dpiaApi.create({
