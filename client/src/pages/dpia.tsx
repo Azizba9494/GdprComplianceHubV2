@@ -709,7 +709,7 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                             )}
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-xs text-muted-foreground">
-                                Vérifiez également la liste des traitements obligatoires CNIL
+                                Vérifiez également la liste des traitements rendus obligatoires par la CNIL
                               </span>
                               <Dialog>
                                 <DialogTrigger asChild>
