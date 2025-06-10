@@ -1,0 +1,74 @@
+Modifications suivantes : 
+
+Supprime les critères d’évaluation AIPD intégrés dans le questionnaire intitulé “Créer manuellement une fiche de traitement”. 
+Supprimer la partie “Faut-il réaliser une analyse d'impact” dans chacune des fiches de traitement, ainsi que la justification qui apparait en dessous et le bouton “réaliser une analyse d’impact”.
+Complète les questions qui figurent dans le questionnaire intitulé “Créer manuellement une fiche de traitement” par l’ensemble des éléments nécessaires à la génération d’une fiche de traitement lorsqu’elle est créée manuellement. 
+Dans l’onglet analyse d’impact, supprime tout lien entre l’évaluation réalisée dans le registre des traitements et l’onglet analyse d’impact. 
+Dans l’onglet analyse d’impact, liste à la place l’ensemble des traitements pour lesquels le client est responsable de traitement, puis permet au client, d’évaluer au moyen d’un questionnaire pour chacun des traitements si ce traitement doit faire l’objet d’une analyse d’impact. Pour déterminer si une telle analyse est nécessaire, tu utiliseras les guidelines jointes, et tu implémenteras le présent questionnaire suivant : 
+Ce questionnaire doit être précédé d'une introduction claire pour votre client, expliquant son objectif : "Ce questionnaire a pour but de nous aider à évaluer si le traitement de données que vous envisagez est susceptible d'engendrer un risque élevé pour les droits et libertés des personnes, et par conséquent, s'il nécessite une Analyse d'Impact relative à la Protection des Données (AIPD)."
+
+Section 1 : Identification du traitement
+Nom du traitement envisagé : ce champ est complété automatique grâce au registre des traitements.
+Brève description de sa finalité (son objectif) : ce champ est complété automatique grâce au registre des traitements.
+
+Section 2 : Critères de risque (Répondre par Oui ou Non)
+1. Évaluation ou Notation Le traitement implique-t-il une évaluation ou une notation de personnes sur la base de leurs données, y compris le profilage ? (Exemples : score de crédit, évaluation de la performance d'un employé, profilage marketing pour prédire les préférences, diagnostic médical automatisé) 🔘 Oui 🔘 Non
+2. Décision Automatisée Le traitement conduit-il à une prise de décision entièrement automatisée (sans intervention humaine) ayant un effet juridique ou vous affectant de manière significative ? (Exemples : refus automatisé d'un crédit en ligne, décision d'éligibilité à une prestation sociale, tri automatique de CV menant à un rejet sans examen humain)🔘 Oui 🔘 Non
+3. Surveillance Systématique Le traitement implique-t-il une surveillance systématique et continue de personnes ?(Exemples : vidéosurveillance d'un lieu public ou d'employés, surveillance de l'activité réseau, géolocalisation continue de véhicules) 🔘 Oui 🔘 Non
+4. Données Sensibles ou Hautement Personnelles Le traitement porte-t-il sur des données dites "sensibles" (santé, opinions politiques/religieuses, orientation sexuelle) ou d'autres données à caractère hautement personnel ? (Exemples : dossiers médicaux, données biométriques, données de localisation précises, données financières détaillées) 🔘 Oui 🔘 Non
+5. Traitement à Grande Échelle Les données sont-elles traitées à "grande échelle" ? (Pensez en volume de données, nombre de personnes, zone géographique, durée) (Exemples : données des utilisateurs d'un réseau social national, données des patients d'une chaîne d'hôpitaux, données de géolocalisation collectées par une application populaire)(Champ optionnel pour aider le client : "Estimez le nombre de personnes concernées : ______") 🔘 Oui 🔘 Non
+6. Croisement de Données Le traitement consiste-t-il à croiser ou combiner des ensembles de données provenant de différentes sources ou collectées pour différents objectifs ? (Exemples : croiser les données de navigation d'un site web avec des informations d'achat en magasin ; enrichir une base de données clients avec des données achetées à des courtiers en données) 🔘 Oui 🔘 Non
+7. Personnes Vulnérables Le traitement concerne-t-il des personnes considérées comme "vulnérables", qui ont des difficultés à consentir ou à s'opposer au traitement ? (Exemples : enfants, patients, personnes âgées, employés (en raison du lien de subordination), demandeurs d'asile) 🔘 Oui 🔘 Non
+8. Technologie Innovante Le traitement fait-il appel à une technologie innovante ou à un usage nouveau d'une technologie existante, pouvant créer de nouveaux types de risques ? (Exemples : utilisation de l'Intelligence Artificielle pour l'analyse de personnalité, objets connectés (IoT), reconnaissance faciale, neuro-technologies) 🔘 Oui 🔘 Non
+9. Obstacle à un Droit ou un Service Le traitement peut-il avoir pour conséquence d'empêcher une personne d'exercer un droit ou de bénéficier d'un service ou d'un contrat ? (Exemples : utiliser un score de crédit pour refuser un prêt ou un logement, utiliser un profil de risque pour refuser une assurance) 🔘 Oui 🔘 Non
+
+Partie 2 : Logique de l'IA pour l'analyse et la recommandation
+Une fois que le client a soumis le questionnaire, votre système (l'IA) peut appliquer la logique suivante pour générer une recommandation et une justification claires.
+Étape 1 : Le Scoring
+Le mécanisme est simple :
+Chaque réponse "Oui" à une question de la Section 2 vaut 1 point.
+Le score total est la somme des points (de 0 à 9).
+Étape 2 : Le Moteur de Règles et la Recommandation
+Le système applique une règle de décision basée sur le score total, conformément aux recommandations de la CNIL/CEPD.
+Si Score >= 2 :
+Recommandation : Réalisation d'une AIPD fortement recommandée / obligatoire.
+Si Score = 1 :
+Recommandation : Vigilance requise. Une AIPD n'est pas strictement obligatoire sur la seule base de ces critères, mais la présence d'un facteur de risque justifie une analyse plus approfondie pour confirmer l'absence de risque élevé.
+Si Score = 0 :
+Recommandation : Réalisation d'une AIPD non requise à première vue. Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement.
+Étape 3 : La Génération de la Justification Dynamique
+C'est ici que l'IA apporte le plus de valeur. La justification ne doit pas être générique. Elle doit lister les raisons spécifiques.
+Exemple de rapport généré pour un score de 3 :
+Analyse du questionnaire pour le traitement : "Mise en place d'un outil de recrutement par IA"
+Score de Risque : 3 / 9
+Recommandation : Réalisation d'une AIPD fortement recommandée / obligatoire.
+Justification : Notre analyse préliminaire indique que ce traitement est susceptible d'engendrer un risque élevé. La réalisation d'une AIPD est nécessaire car le projet remplit 3 des 9 critères de risque identifiés par les autorités de protection des données.
+Les critères remplis sont les suivants :
+Critère 2 - Décision Automatisée : Le traitement conduit à une prise de décision entièrement automatisée (sans intervention humaine) ayant un effet juridique ou vous affectant de manière significative.
+Critère 7 - Personnes Vulnérables : Le traitement concerne des personnes considérées comme "vulnérables" (ici, des candidats à l'emploi qui sont dans une position de demandeur).
+Critère 8 - Technologie Innovante : Le traitement fait appel à une technologie innovante (Intelligence Artificielle) pour analyser les candidatures.
+Nous vous contacterons pour planifier les prochaines étapes de la réalisation de cette analyse d'impact.
+Par la suite, il convient de déterminer grâce au système d’IA si le traitement réalisé pourrait correspondre à un des traitements qui figure dans liste des types d’opérations de traitement pour lesquelles une analyse d’impact relative à la protection des données est requise par la CNIL. Il s’agit des traitements suivants : 
+- Traitements de données de santé mis en œuvre par les établissements de santé ou les établissements médico-
+sociaux pour la prise en charge des personnes ;
+- Traitements portant sur des données génétiques de personnes dites « vulnérables » (patients, employés, enfants,
+etc.) ;
+- Traitements établissant des profils de personnes physiques à des fins de gestion des ressources humaines ;
+- Traitements ayant pour finalité de surveiller de manière constante l'activité des employés concernés ;
+- Traitements ayant pour finalité la gestion des alertes et des signalements en matière sociale et sanitaire ;
+- Traitements ayant pour finalité la gestion des alertes et des signalements en matière professionnelle ;
+- Traitements des données de santé nécessaires à la constitution d'un entrepôt de données ou d'un registre ;
+- Traitements impliquant le profilage des personnes pouvant aboutir à leur exclusion du bénéfice d'un contrat ou à la
+suspension voire à la rupture de celui-ci ;
+- Traitements mutualisés de manquements contractuels constatés, susceptibles d'aboutir à une décision d'exclusion
+ou de suspension du bénéfice d'un contrat ;
+- Traitements de profilage faisant appel à des données provenant de sources externes ;
+- Traitements de données biométriques aux fins de reconnaissance des personnes parmi lesquelles figurent des
+personnes dites « vulnérables » (élèves, personnes âgées, patients, demandeurs d'asile, etc.);
+- Instruction des demandes et gestion des logements sociaux ;
+- Traitements ayant pour finalité l’accompagnement social ou médico-social des personnes ;
+- Traitements de données de localisation à large échelle.
+
+Si l’IA détermine que c’est le cas, alors elle doit recommander la réalisation d’un PIA. 
+Si l’IA détermine que ça n’est pas le cas, alors elle doit demander au client de valider que le client ne correspond effectivement pas à un des traitements qui figure dans liste ci-dessus.
+S’il apparait qu’un PIA est nécessaire, alors le client est invité au moyen d’un bouton à réaliser l’analyse d’impact.
