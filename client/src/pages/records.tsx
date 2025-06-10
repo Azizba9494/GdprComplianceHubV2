@@ -101,6 +101,7 @@ export default function Records() {
   const [filterType, setFilterType] = useState<"all" | "controller" | "processor">("all");
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [showJustification, setShowJustification] = useState<{[key: string]: boolean}>({});
+  const [dpiaResults, setDpiaResults] = useState<{[key: number]: {required: boolean, justification: string}}>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -210,23 +211,22 @@ Informations complémentaires: ${data.additionalInfo}
       return response.json();
     },
     onSuccess: (result: any, record) => {
-      // Force immediate UI update by invalidating queries
-      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      // Store results in local state for immediate display
+      setDpiaResults(prev => ({
+        ...prev,
+        [record.id]: {
+          required: result.dpiaRequired,
+          justification: result.justification
+        }
+      }));
       
-      // Also update the record directly for immediate feedback
+      // Update database in background
       updateMutation.mutate({
         id: record.id,
         data: {
           dpiaRequired: result.dpiaRequired,
           dpiaJustification: result.justification,
         },
-      });
-      
-      toast({
-        title: "Analyse terminée",
-        description: result.dpiaRequired ? 
-          "Une AIPD est nécessaire pour ce traitement." : 
-          "Aucune AIPD requise pour ce traitement.",
       });
     },
     onError: (error: any) => {
@@ -938,7 +938,7 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                           <FileSearch className="w-4 h-4 mr-2" />
                           Faut-il réaliser une analyse d'impact ?
                         </h4>
-                        {(record.dpiaRequired === undefined || record.dpiaRequired === null) && (
+                        {!dpiaResults[record.id] && (record.dpiaRequired === undefined || record.dpiaRequired === null) && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -955,20 +955,22 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                         )}
                       </div>
 
-                      {record.dpiaJustification && (
+                      {(dpiaResults[record.id] || record.dpiaJustification) && (
                         <div className="space-y-3">
                           <div className="p-4 bg-muted rounded-lg">
                             <div className="flex items-start space-x-3">
-                              {record.dpiaRequired ? (
+                              {(dpiaResults[record.id]?.required ?? record.dpiaRequired) ? (
                                 <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
                               ) : (
                                 <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                               )}
                               <div className="flex-1 space-y-3">
-                                <Badge variant={record.dpiaRequired ? "destructive" : "secondary"}>
-                                  {record.dpiaRequired ? "AIPD nécessaire" : "AIPD non nécessaire"}
+                                <Badge variant={(dpiaResults[record.id]?.required ?? record.dpiaRequired) ? "destructive" : "secondary"}>
+                                  {(dpiaResults[record.id]?.required ?? record.dpiaRequired) ? "AIPD nécessaire" : "AIPD non nécessaire"}
                                 </Badge>
-                                <p className="text-sm">{record.dpiaJustification}</p>
+                                <p className="text-sm">
+                                  {dpiaResults[record.id]?.justification || record.dpiaJustification}
+                                </p>
                                 <p className="text-xs text-muted-foreground border-t pt-2">
                                   ⚠️ Cette analyse est générée par IA et doit être validée avec un conseil juridique spécialisé en protection des données.
                                 </p>
@@ -976,7 +978,7 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                             </div>
                           </div>
                           
-                          {record.dpiaRequired && (
+                          {(dpiaResults[record.id]?.required ?? record.dpiaRequired) && (
                             <div className="flex justify-center">
                               <Button
                                 onClick={() => createDpiaMutation.mutate(record)}

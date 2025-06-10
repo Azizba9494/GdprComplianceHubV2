@@ -87,6 +87,8 @@ export const processingRecords = pgTable("processing_records", {
   securityMeasures: text("security_measures").array(),
   transfersOutsideEU: boolean("transfers_outside_eu").default(false),
   type: text("type").notNull(), // controller, processor
+  dpiaRequired: boolean("dpia_required"),
+  dpiaJustification: text("dpia_justification"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
