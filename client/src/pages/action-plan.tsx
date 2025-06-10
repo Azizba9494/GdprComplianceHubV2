@@ -158,42 +158,40 @@ export default function ActionPlan() {
                   action.priority === 'urgent' ? 'priority-urgent' : 'priority-important'
                 )}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start space-x-3 mb-2">
-                      <h3 className="font-medium text-foreground flex-1 whitespace-pre-wrap break-words">{action.title}</h3>
-                      <Badge 
-                        variant="secondary"
-                        className={priorityColors[action.priority as keyof typeof priorityColors]}
-                      >
-                        {priorityLabels[action.priority as keyof typeof priorityLabels]}
-                      </Badge>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <h3 className="font-medium text-foreground whitespace-pre-wrap break-words min-w-0 flex-1">{action.title}</h3>
+                    <Badge 
+                      variant="secondary"
+                      className={`${priorityColors[action.priority as keyof typeof priorityColors]} flex-shrink-0`}
+                    >
+                      {priorityLabels[action.priority as keyof typeof priorityLabels]}
+                    </Badge>
+                  </div>
+                    
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">{action.description}</p>
+                  
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-1">
+                      <span className="font-medium">Catégorie:</span>
+                      <span>{action.category}</span>
                     </div>
                     
-                    <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap break-words">{action.description}</p>
-                    
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    {action.dueDate && (
                       <div className="flex items-center space-x-1">
-                        <span className="font-medium">Catégorie:</span>
-                        <span>{action.category}</span>
+                        <Calendar className="w-4 h-4" />
+                        <span className="font-medium">Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
                       </div>
-                      
-                      {action.dueDate && (
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-4 h-4" />
-                          <span className="font-medium">Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
-                        </div>
-                      )}
-                      {!action.dueDate && (
-                        <div className="flex items-center space-x-1 text-orange-600">
-                          <Clock className="w-4 h-4" />
-                          <span className="font-medium">Aucune échéance définie</span>
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    {!action.dueDate && (
+                      <div className="flex items-center space-x-1 text-orange-600">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-medium">Aucune échéance définie</span>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="flex items-center space-x-3">
+                  <div className="flex flex-wrap items-center justify-end gap-3">
                     <Button
                       variant="outline"
                       size="sm"
