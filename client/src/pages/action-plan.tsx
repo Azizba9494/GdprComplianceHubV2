@@ -74,7 +74,7 @@ export default function ActionPlan() {
     if (selectedAction && newDueDate) {
       updateActionMutation.mutate({ 
         id: selectedAction.id, 
-        updates: { dueDate: new Date(newDueDate).toISOString() } 
+        updates: { dueDate: newDueDate } 
       });
       setIsDateDialogOpen(false);
       setSelectedAction(null);
@@ -170,7 +170,7 @@ export default function ActionPlan() {
                       </Badge>
                     </div>
                     
-                    <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap">{action.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap break-words">{action.description}</p>
                     
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-1">

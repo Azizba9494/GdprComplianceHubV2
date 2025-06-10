@@ -12,10 +12,36 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart3, Loader2, Search, Download, AlertTriangle, Shield, CheckCircle, Info, Lightbulb, FileText, Users, FileSearch, ArrowLeft, Trash2 } from "lucide-react";
+import { BarChart3, Loader2, Search, Download, AlertTriangle, Shield, CheckCircle, Info, Lightbulb, FileText, Users, FileSearch, ArrowLeft, Trash2, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { dpiaApi, recordsApi } from "@/lib/api";
 
 const COMPANY_ID = 1;
+
+const CNIL_MANDATORY_TREATMENTS = [
+  "Traitements d'évaluation, y compris de profilage, et de prédiction relatifs aux aspects concernant les performances au travail, la situation économique, la santé, les préférences ou centres d'intérêt personnels, la fiabilité ou le comportement, la localisation ou les déplacements de la personne concernée",
+  "Traitements ayant pour effet d'exclure des personnes du bénéfice d'un droit, d'un service ou d'un contrat en l'absence de motif légitime",
+  "Traitements portant sur des données sensibles ou des données à caractère hautement personnel (données de santé, biométriques, de géolocalisation, etc.)",
+  "Traitements de données personnelles à grande échelle",
+  "Traitements de croisement, combinaison ou appariement de données",
+  "Traitements de données concernant des personnes vulnérables (mineurs, personnes âgées, patients, etc.)",
+  "Traitements impliquant l'utilisation de nouvelles technologies ou d'usages nouveaux de technologies existantes",
+  "Traitements qui empêchent les personnes d'exercer un droit ou de bénéficier d'un service ou d'un contrat",
+  "Traitements de données de santé mis en œuvre par les établissements de santé ou les établissements médico-sociaux pour la prise en charge des personnes",
+  "Traitements portant sur des données génétiques de personnes dites « vulnérables » (patients, employés, enfants, etc.)",
+  "Traitements établissant des profils de personnes physiques à des fins de gestion des ressources humaines",
+  "Traitements ayant pour finalité de surveiller de manière constante l'activité des employés concernés",
+  "Traitements ayant pour finalité la gestion des alertes et des signalements en matière sociale et sanitaire",
+  "Traitements ayant pour finalité la gestion des alertes et des signalements en matière professionnelle",
+  "Traitements des données de santé nécessaires à la constitution d'un entrepôt de données ou d'un registre",
+  "Traitements impliquant le profilage des personnes pouvant aboutir à leur exclusion du bénéfice d'un contrat ou à la suspension voire à la rupture de celui-ci",
+  "Traitements mutualisés de manquements contractuels constatés, susceptibles d'aboutir à une décision d'exclusion ou de suspension du bénéfice d'un contrat",
+  "Traitements de profilage faisant appel à des données provenant de sources externes",
+  "Traitements de données biométriques aux fins de reconnaissance des personnes parmi lesquelles figurent des personnes dites « vulnérables » (élèves, personnes âgées, patients, demandeurs d'asile, etc.)",
+  "Instruction des demandes et gestion des logements sociaux",
+  "Traitements ayant pour finalité l'accompagnement social ou médico-social des personnes",
+  "Traitements de données de localisation à large échelle"
+];
 
 interface ProcessingRecord {
   id: number;
@@ -213,30 +239,7 @@ export default function DPIA() {
         justification = `Une AIPD n'est pas strictement obligatoire sur la seule base de ces critères, mais la présence d'un facteur de risque justifie une analyse plus approfondie pour confirmer l'absence de risque élevé.`;
       } else {
         recommendation = "AIPD non requise à première vue";
-        justification = `Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement. Il faut également veiller à ce que le traitement poursuivi ne fasse pas partie de la Liste des types d'opérations de traitement pour lesquelles une analyse d'impact relative à la protection des données est requise selon la CNIL :
-
-• Traitements d'évaluation, y compris de profilage, et de prédiction relatifs aux aspects concernant les performances au travail, la situation économique, la santé, les préférences ou centres d'intérêt personnels, la fiabilité ou le comportement, la localisation ou les déplacements de la personne concernée ;
-• Traitements ayant pour effet d'exclure des personnes du bénéfice d'un droit, d'un service ou d'un contrat en l'absence de motif légitime ;
-• Traitements portant sur des données sensibles ou des données à caractère hautement personnel (données de santé, biométriques, de géolocalisation, etc.) ;
-• Traitements de données personnelles à grande échelle ;
-• Traitements de croisement, combinaison ou appariement de données ;
-• Traitements de données concernant des personnes vulnérables (mineurs, personnes âgées, patients, etc.) ;
-• Traitements impliquant l'utilisation de nouvelles technologies ou d'usages nouveaux de technologies existantes ;
-• Traitements qui empêchent les personnes d'exercer un droit ou de bénéficier d'un service ou d'un contrat ;
-• Traitements de données de santé mis en œuvre par les établissements de santé ou les établissements médico-sociaux pour la prise en charge des personnes ;
-• Traitements portant sur des données génétiques de personnes dites « vulnérables » (patients, employés, enfants, etc.) ;
-• Traitements établissant des profils de personnes physiques à des fins de gestion des ressources humaines ;
-• Traitements ayant pour finalité de surveiller de manière constante l'activité des employés concernés ;
-• Traitements ayant pour finalité la gestion des alertes et des signalements en matière sociale et sanitaire ;
-• Traitements ayant pour finalité la gestion des alertes et des signalements en matière professionnelle ;
-• Traitements des données de santé nécessaires à la constitution d'un entrepôt de données ou d'un registre ;
-• Traitements impliquant le profilage des personnes pouvant aboutir à leur exclusion du bénéfice d'un contrat ou à la suspension voire à la rupture de celui-ci ;
-• Traitements mutualisés de manquements contractuels constatés, susceptibles d'aboutir à une décision d'exclusion ou de suspension du bénéfice d'un contrat ;
-• Traitements de profilage faisant appel à des données provenant de sources externes ;
-• Traitements de données biométriques aux fins de reconnaissance des personnes parmi lesquelles figurent des personnes dites « vulnérables » (élèves, personnes âgées, patients, demandeurs d'asile, etc.) ;
-• Instruction des demandes et gestion des logements sociaux ;
-• Traitements ayant pour finalité l'accompagnement social ou médico-social des personnes ;
-• Traitements de données de localisation à large échelle.`;
+        justification = `Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement.`;
       }
 
       // Sauvegarder en base de données
@@ -704,6 +707,42 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                                 Correspondance CNIL : {evaluation.cnilListMatch}
                               </p>
                             )}
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-muted-foreground">
+                                Vérifiez également la liste des traitements obligatoires CNIL
+                              </span>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 px-2">
+                                    <HelpCircle className="w-3 h-3 mr-1" />
+                                    <span className="text-xs">En savoir plus</span>
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle>Liste des traitements pour lesquels une AIPD est requise (CNIL)</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <p className="text-sm text-muted-foreground">
+                                      Selon la CNIL, une analyse d'impact relative à la protection des données (AIPD) est obligatoire pour les types d'opérations de traitement suivants :
+                                    </p>
+                                    <div className="space-y-3">
+                                      {CNIL_MANDATORY_TREATMENTS.map((treatment, index) => (
+                                        <div key={index} className="flex items-start space-x-3 p-3 bg-muted rounded-lg">
+                                          <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">
+                                            {index + 1}
+                                          </span>
+                                          <p className="text-sm">{treatment}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-4">
+                                      Source : Commission nationale de l'informatique et des libertés (CNIL)
+                                    </p>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
                           </div>
                         )}
 
