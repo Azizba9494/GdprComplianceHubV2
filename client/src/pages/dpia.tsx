@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,7 +131,7 @@ export default function DPIA() {
   const controllerRecords = records?.filter((record: ProcessingRecord) => record.type === 'controller') || [];
 
   // Charger les évaluations stockées au démarrage
-  React.useEffect(() => {
+  useEffect(() => {
     if (storedEvaluations && storedEvaluations.length > 0) {
       const results: Record<number, any> = {};
       storedEvaluations.forEach((evaluation: any) => {
