@@ -242,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const records = await storage.getProcessingRecords(companyId);
-      const policyData = await openaiService.generatePrivacyPolicy(company, records);
+      const policyData = await geminiService.generatePrivacyPolicy(company, records);
       
       const policy = await storage.createPrivacyPolicy({
         companyId,
@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/breaches/analyze", async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
-      const analysis = await openaiService.analyzeDataBreach(breachData);
+      const analysis = await geminiService.analyzeDataBreach(breachData);
       
       const breach = await storage.createDataBreach({
         ...breachData,
@@ -356,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Entreprise non trouvée" });
       }
 
-      const riskAssessment = await openaiService.assessDpiaRisks(processingDescription, company);
+      const riskAssessment = await geminiService.assessDPIA(processingName, processingDescription, company);
       
       const assessment = await storage.createDpiaAssessment({
         companyId,
@@ -588,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const response = await openaiService.getChatbotResponse(message, context);
+      const response = await geminiService.getChatbotResponse(message, context);
       res.json(response);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
