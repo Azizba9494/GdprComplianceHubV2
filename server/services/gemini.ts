@@ -219,6 +219,57 @@ Analysez les risques et proposez des mesures de protection adaptées à une VSE/
 
     return await this.generateStructuredResponse(prompt, schema, { processingName, processingDescription, company });
   }
+
+  async generateDPIA(processingName: string, processingDescription: string, company: any, customPrompt: string): Promise<any> {
+    const prompt = `${customPrompt}
+
+Traitement à analyser:
+Nom: ${processingName}
+Description: ${processingDescription}
+Entreprise: ${JSON.stringify(company)}
+
+Générez une DPIA complète selon la structure demandée.`;
+
+    const schema = {
+      description: {
+        finalites: "string",
+        categoriesDonnees: ["string"],
+        categoriesPersonnes: ["string"],
+        destinataires: ["string"],
+        dureeConservation: "string",
+        transfertsHorsUE: "boolean"
+      },
+      necessite: {
+        justificationNecessite: "string",
+        adequationMoyens: "string",
+        proportionnalite: "string"
+      },
+      risques: {
+        risquesViePrivee: ["string"],
+        risquesSecurite: ["string"],
+        risquesDiscrimination: ["string"],
+        autresRisques: ["string"]
+      },
+      evaluation: {
+        probabilite: "string (faible|moyen|élevé)",
+        gravite: "string (faible|moyen|élevé)",
+        niveauRisque: "string (faible|moyen|élevé|critique)"
+      },
+      mesures: {
+        techniqueExistantes: ["string"],
+        organisationnellesExistantes: ["string"],
+        complementaires: ["string"],
+        transferts: ["string"]
+      },
+      conclusion: {
+        acceptabilite: "string",
+        actionsCorrectices: ["string"],
+        suivi: "string"
+      }
+    };
+
+    return await this.generateStructuredResponse(prompt, schema, { processingName, processingDescription, company });
+  }
 }
 
 export const geminiService = new GeminiService();

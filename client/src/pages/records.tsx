@@ -852,11 +852,11 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="consentement">Consentement (art. 6.1.a)</SelectItem>
-                          <SelectItem value="contrat">Contrat (art. 6.1.b)</SelectItem>
-                          <SelectItem value="obligation_legale">Obligation légale (art. 6.1.c)</SelectItem>
-                          <SelectItem value="mission_service_public">Mission de service public (art. 6.1.e)</SelectItem>
-                          <SelectItem value="interet_legitime">Intérêt légitime (art. 6.1.f)</SelectItem>
+                          {LEGAL_BASES.map((basis) => (
+                            <SelectItem key={basis.value} value={basis.value}>
+                              {basis.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : (
@@ -871,30 +871,24 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
 
                   <div>
                     <Label className="font-medium">Catégories de données</Label>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {Array.isArray(record.dataCategories) ? 
-                        record.dataCategories.map((category, index) => (
-                          <Badge key={index} variant="outline">
-                            {category}
-                          </Badge>
-                        )) :
-                        <Badge variant="outline">{record.dataCategories}</Badge>
-                      }
-                    </div>
+                    <EditableList
+                      items={Array.isArray(record.dataCategories) ? record.dataCategories : [record.dataCategories].filter(Boolean)}
+                      field="dataCategories"
+                      recordId={record.id}
+                      predefinedOptions={DATA_CATEGORIES}
+                      placeholder="Ajouter une catégorie de données..."
+                    />
                   </div>
 
                   <div>
                     <Label className="font-medium">Destinataires</Label>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {Array.isArray(record.recipients) ? 
-                        record.recipients.map((recipient, index) => (
-                          <Badge key={index} variant="outline">
-                            {recipient}
-                          </Badge>
-                        )) :
-                        <Badge variant="outline">{record.recipients}</Badge>
-                      }
-                    </div>
+                    <EditableList
+                      items={Array.isArray(record.recipients) ? record.recipients : [record.recipients].filter(Boolean)}
+                      field="recipients"
+                      recordId={record.id}
+                      predefinedOptions={RECIPIENT_TYPES}
+                      placeholder="Ajouter un destinataire..."
+                    />
                   </div>
 
                   <div>
@@ -940,25 +934,110 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                   </div>
                 </div>
 
-                {record.dpiaJustification && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg">
-                    <Label className="font-medium">Analyse d'impact (AIPD)</Label>
-                    <p className="text-sm mt-2">{record.dpiaJustification}</p>
+                <div className="pt-4 border-t">
+                  <Label className="font-medium">Mesures de sécurité</Label>
+                  <EditableList
+                    items={Array.isArray(record.securityMeasures) ? record.securityMeasures : [record.securityMeasures].filter(Boolean)}
+                    field="securityMeasures"
+                    recordId={record.id}
+                    predefinedOptions={SECURITY_MEASURES}
+                    placeholder="Ajouter une mesure de sécurité..."
+                  />
+                </div>
+
+                {/* Section Analyse d'Impact (AIPD) */}
+                {record.type === "controller" && (
+                  <div className="pt-4 border-t">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium flex items-center">
+                          <FileSearch className="w-4 h-4 mr-2" />
+                          Faut-il réaliser une analyse d'impact ?
+                        </h4>
+                        {record.dpiaRequired === undefined && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => dpiaAnalysisMutation.mutate(record)}
+                            disabled={dpiaAnalysisMutation.isPending}
+                          >
+                            {dpiaAnalysisMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                              <FileSearch className="w-4 h-4 mr-2" />
+                            )}
+                            Lancer l'analyse
+                          </Button>
+                        )}
+                      </div>
+
+                      {record.dpiaJustification && (
+                        <div className="p-4 bg-muted rounded-lg">
+                          <div className="flex items-start space-x-3">
+                            {record.dpiaRequired ? (
+                              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
+                            ) : (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+                            )}
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Badge variant={record.dpiaRequired ? "destructive" : "secondary"}>
+                                  {record.dpiaRequired ? "AIPD nécessaire" : "AIPD non nécessaire"}
+                                </Badge>
+                                {record.dpiaRequired && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => createDpiaMutation.mutate(record)}
+                                    disabled={createDpiaMutation.isPending}
+                                  >
+                                    {createDpiaMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                    ) : (
+                                      <FileText className="w-4 h-4 mr-2" />
+                                    )}
+                                    Réaliser une analyse d'impact
+                                  </Button>
+                                )}
+                              </div>
+                              <p className="text-sm">{record.dpiaJustification}</p>
+                              <p className="text-xs text-muted-foreground">
+                                ⚠️ Cette analyse est générée par IA et doit être validée avec un conseil juridique spécialisé en protection des données.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                <div className="pt-4 border-t">
-                  <Label className="font-medium">Mesures de sécurité</Label>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {Array.isArray(record.securityMeasures) ? 
-                      record.securityMeasures.map((measure, index) => (
-                        <Badge key={index} variant="outline">
-                          {measure}
-                        </Badge>
-                      )) :
-                      <Badge variant="outline">{record.securityMeasures}</Badge>
-                    }
-                  </div>
+                {/* Actions */}
+                <div className="pt-4 border-t flex justify-end">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Supprimer la fiche de traitement</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Êtes-vous sûr de vouloir supprimer la fiche "{record.name}" ? Cette action est irréversible.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteMutation.mutate(record.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Supprimer définitivement
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </CardContent>
             </Card>
