@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { recordsApi } from "@/lib/api";
+import { recordsApi, dpiaApi } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,72 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch } from "lucide-react";
 
 const COMPANY_ID = 1;
+
+// Bases légales complètes du RGPD
+const LEGAL_BASES = [
+  { value: "consent", label: "Consentement (Art. 6.1.a)" },
+  { value: "contract", label: "Exécution d'un contrat (Art. 6.1.b)" },
+  { value: "legal_obligation", label: "Obligation légale (Art. 6.1.c)" },
+  { value: "vital_interests", label: "Sauvegarde des intérêts vitaux (Art. 6.1.d)" },
+  { value: "public_task", label: "Mission d'intérêt public (Art. 6.1.e)" },
+  { value: "legitimate_interests", label: "Intérêts légitimes (Art. 6.1.f)" },
+];
+
+// Catégories de données prédéfinies
+const DATA_CATEGORIES = [
+  "Données d'identité (nom, prénom, etc.)",
+  "Données de contact (email, téléphone, adresse)",
+  "Données professionnelles (fonction, entreprise)",
+  "Données de connexion (logs, adresses IP)",
+  "Données de localisation",
+  "Données bancaires et financières",
+  "Données de santé",
+  "Données biométriques",
+  "Données relatives aux condamnations pénales",
+  "Données révélant l'origine raciale ou ethnique",
+  "Opinions politiques",
+  "Convictions religieuses ou philosophiques",
+  "Appartenance syndicale",
+  "Données concernant la vie sexuelle",
+  "Autres données sensibles",
+];
+
+// Destinataires types
+const RECIPIENT_TYPES = [
+  "Personnel interne autorisé",
+  "Prestataires de services (sous-traitants)",
+  "Autorités publiques",
+  "Organismes sociaux",
+  "Institutions financières",
+  "Clients/Partenaires commerciaux",
+  "Autorités judiciaires",
+  "Organismes de certification",
+  "Hébergeurs de données",
+  "Fournisseurs de solutions logicielles",
+];
+
+// Mesures de sécurité
+const SECURITY_MEASURES = [
+  "Chiffrement des données",
+  "Contrôle d'accès par mot de passe",
+  "Authentification à deux facteurs",
+  "Sauvegarde régulière",
+  "Antivirus et pare-feu",
+  "Formation du personnel",
+  "Journalisation des accès",
+  "Pseudonymisation",
+  "Minimisation des données",
+  "Suppression automatique",
+  "Contrôle des accès physiques",
+  "Clauses de confidentialité",
+];
 
 interface ProcessingRecord {
   id: number;
@@ -126,6 +186,24 @@ Informations complémentaires: ${data.additionalInfo}
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => recordsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      toast({
+        title: "Fiche supprimée",
+        description: "La fiche de traitement a été supprimée avec succès.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer la fiche",
+        variant: "destructive",
+      });
+    },
+  });
+
   const dpiaAnalysisMutation = useMutation({
     mutationFn: async (record: ProcessingRecord) => {
       const response = await recordsApi.analyzeDpia(record);
@@ -138,6 +216,43 @@ Informations complémentaires: ${data.additionalInfo}
           dpiaRequired: result.dpiaRequired,
           dpiaJustification: result.justification,
         },
+      });
+      toast({
+        title: "Analyse terminée",
+        description: "L'analyse DPIA a été effectuée avec succès.",
+      });
+    },
+  });
+
+  const createDpiaMutation = useMutation({
+    mutationFn: async (record: ProcessingRecord) => {
+      const response = await dpiaApi.create({
+        companyId: COMPANY_ID,
+        processingName: record.name,
+        processingDescription: `
+Finalité: ${record.purpose}
+Base légale: ${record.legalBasis}
+Catégories de données: ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : record.dataCategories}
+Destinataires: ${Array.isArray(record.recipients) ? record.recipients.join(', ') : record.recipients}
+Durée de conservation: ${record.retention}
+Mesures de sécurité: ${Array.isArray(record.securityMeasures) ? record.securityMeasures.join(', ') : record.securityMeasures}
+Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
+        `.trim()
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/dpia'] });
+      toast({
+        title: "DPIA créée",
+        description: "L'analyse d'impact a été générée et est disponible dans l'onglet DPIA.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de créer l'analyse d'impact",
+        variant: "destructive",
       });
     },
   });
@@ -209,6 +324,137 @@ Informations complémentaires: ${data.additionalInfo}
       id: recordId,
       data: { [field]: value }
     });
+  };
+
+  // Composant pour éditer les listes (catégories, destinataires, mesures)
+  const EditableList = ({ items, field, recordId, predefinedOptions, placeholder }: {
+    items: string[];
+    field: string;
+    recordId: number;
+    predefinedOptions: string[];
+    placeholder: string;
+  }) => {
+    const [editMode, setEditMode] = useState(false);
+    const [currentItems, setCurrentItems] = useState<string[]>(items || []);
+    const [newItem, setNewItem] = useState("");
+
+    const addItem = () => {
+      if (newItem.trim() && !currentItems.includes(newItem.trim())) {
+        const updatedItems = [...currentItems, newItem.trim()];
+        setCurrentItems(updatedItems);
+        setNewItem("");
+      }
+    };
+
+    const removeItem = (index: number) => {
+      const updatedItems = currentItems.filter((_, i) => i !== index);
+      setCurrentItems(updatedItems);
+    };
+
+    const addPredefinedItem = (item: string) => {
+      if (!currentItems.includes(item)) {
+        const updatedItems = [...currentItems, item];
+        setCurrentItems(updatedItems);
+      }
+    };
+
+    const saveChanges = () => {
+      handleFieldUpdate(recordId, field, currentItems);
+      setEditMode(false);
+    };
+
+    const cancelEdit = () => {
+      setCurrentItems(items || []);
+      setNewItem("");
+      setEditMode(false);
+    };
+
+    if (!editMode) {
+      return (
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-1">
+            {(items || []).map((item, index) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                {item}
+              </Badge>
+            ))}
+            {(!items || items.length === 0) && (
+              <span className="text-muted-foreground text-sm">Aucun élément</span>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setEditMode(true)}
+            className="mt-2"
+          >
+            <Edit2 className="w-3 h-3 mr-1" />
+            Modifier
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3 border p-3 rounded-lg">
+        <div className="flex flex-wrap gap-1">
+          {currentItems.map((item, index) => (
+            <Badge key={index} variant="secondary" className="text-xs">
+              {item}
+              <button
+                onClick={() => removeItem(index)}
+                className="ml-1 text-destructive hover:text-destructive/80"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        
+        <div className="flex gap-2">
+          <Input
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            placeholder={placeholder}
+            onKeyPress={(e) => e.key === 'Enter' && addItem()}
+            className="text-sm"
+          />
+          <Button size="sm" onClick={addItem}>
+            <Plus className="w-3 h-3" />
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Éléments prédéfinis :</Label>
+          <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+            {predefinedOptions
+              .filter(option => !currentItems.includes(option))
+              .map((option, index) => (
+                <Button
+                  key={index}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => addPredefinedItem(option)}
+                  className="text-xs h-6"
+                >
+                  {option}
+                </Button>
+              ))}
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button size="sm" onClick={saveChanges}>
+            <Save className="w-3 h-3 mr-1" />
+            Enregistrer
+          </Button>
+          <Button size="sm" variant="outline" onClick={cancelEdit}>
+            <X className="w-3 h-3 mr-1" />
+            Annuler
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   return (
