@@ -170,6 +170,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
+      
+      // Convert date strings to Date objects if present
+      if (updates.dueDate && typeof updates.dueDate === 'string') {
+        updates.dueDate = new Date(updates.dueDate);
+      }
+      
       const action = await storage.updateComplianceAction(id, updates);
       res.json(action);
     } catch (error: any) {
