@@ -572,12 +572,20 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Base légale envisagée</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Consentement, contrat, obligation légale, intérêt légitime..."
-                              {...field}
-                            />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionnez la base légale" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {LEGAL_BASES.map((basis) => (
+                                <SelectItem key={basis.value} value={basis.value}>
+                                  {basis.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

@@ -232,6 +232,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/records/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteProcessingRecord(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/records/analyze-dpia", async (req, res) => {
     try {
       const record = req.body;
@@ -368,6 +378,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const companyId = parseInt(req.params.companyId);
       const assessments = await storage.getDpiaAssessments(companyId);
       res.json(assessments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/dpia", async (req, res) => {
+    try {
+      const { companyId, processingName, processingDescription } = req.body;
+      
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      // Get the DPIA generation prompt
+      const dpiaPrompt = await storage.getActivePromptByCategory("dpia_generation");
+      if (!dpiaPrompt) {
+        throw new Error("Prompt DPIA non configuré");
+      }
+
+      const riskAssessment = await geminiService.generateDPIA(processingName, processingDescription, company, dpiaPrompt.prompt);
+      
+      const assessment = await storage.createDpiaAssessment({
+        companyId,
+        processingName,
+        processingDescription,
+        riskAssessment,
+        measures: riskAssessment.measures,
+        status: "completed",
+      });
+
+      res.json(assessment);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

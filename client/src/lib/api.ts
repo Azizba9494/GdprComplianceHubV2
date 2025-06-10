@@ -56,6 +56,9 @@ export const recordsApi = {
   update: (id: number, data: any) =>
     apiRequest("PUT", `/api/records/${id}`, data),
   
+  delete: (id: number) =>
+    apiRequest("DELETE", `/api/records/${id}`),
+  
   analyzeDpia: (record: any) =>
     apiRequest("POST", "/api/records/analyze-dpia", record),
 };
@@ -97,6 +100,9 @@ export const requestsApi = {
 export const dpiaApi = {
   get: (companyId: number) =>
     apiRequest("GET", `/api/dpia/${companyId}`),
+  
+  create: (data: { companyId: number; processingName: string; processingDescription: string }) =>
+    apiRequest("POST", "/api/dpia", data),
   
   assess: (data: { companyId: number; processingName: string; processingDescription: string }) =>
     apiRequest("POST", "/api/dpia/assess", data),
