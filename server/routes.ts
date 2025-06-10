@@ -441,6 +441,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/dpia/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteDpiaAssessment(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // DPIA Evaluation endpoints
+  app.get("/api/dpia-evaluations/:companyId", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const evaluations = await storage.getDpiaEvaluations(companyId);
+      res.json(evaluations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/dpia-evaluations", async (req, res) => {
+    try {
+      const evaluation = await storage.createDpiaEvaluation(req.body);
+      res.json(evaluation);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/dpia-evaluations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const evaluation = await storage.updateDpiaEvaluation(id, req.body);
+      res.json(evaluation);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Learning & Gamification endpoints
   app.get("/api/learning/modules", async (req, res) => {
     try {

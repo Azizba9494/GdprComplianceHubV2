@@ -106,6 +106,9 @@ export const dpiaApi = {
   
   assess: (data: { companyId: number; processingName: string; processingDescription: string }) =>
     apiRequest("POST", "/api/dpia/assess", data),
+  
+  delete: (id: number) =>
+    apiRequest("DELETE", `/api/dpia/${id}`),
 };
 
 // Admin API

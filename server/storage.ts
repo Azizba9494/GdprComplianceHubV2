@@ -3,7 +3,7 @@ import {
   processingRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
-  quizzes, quizAttempts,
+  quizzes, quizAttempts, dpiaEvaluations,
   type User, type InsertUser, type Company, type InsertCompany,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
@@ -23,7 +23,8 @@ import {
   type UserAchievement, type InsertUserAchievement,
   type ModuleProgress, type InsertModuleProgress,
   type Quiz, type InsertQuiz,
-  type QuizAttempt, type InsertQuizAttempt
+  type QuizAttempt, type InsertQuizAttempt,
+  type DpiaEvaluation, type InsertDpiaEvaluation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -146,6 +147,13 @@ export interface IStorage {
   getUserQuizAttempts(userId: number): Promise<QuizAttempt[]>;
   createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
   getLeaderboard(limit?: number): Promise<UserProgress[]>;
+  
+  // DPIA Evaluations
+  getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]>;
+  getDpiaEvaluation(recordId: number): Promise<DpiaEvaluation | undefined>;
+  createDpiaEvaluation(evaluation: InsertDpiaEvaluation): Promise<DpiaEvaluation>;
+  updateDpiaEvaluation(id: number, updates: Partial<InsertDpiaEvaluation>): Promise<DpiaEvaluation>;
+  deleteDpiaEvaluation(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -639,6 +647,37 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(userProgress)
       .orderBy(desc(userProgress.totalXp), desc(userProgress.level))
       .limit(limit);
+  }
+
+  // DPIA Evaluations
+  async getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]> {
+    return await db.select().from(dpiaEvaluations)
+      .where(eq(dpiaEvaluations.companyId, companyId))
+      .orderBy(desc(dpiaEvaluations.createdAt));
+  }
+
+  async getDpiaEvaluation(recordId: number): Promise<DpiaEvaluation | undefined> {
+    const result = await db.select().from(dpiaEvaluations)
+      .where(eq(dpiaEvaluations.recordId, recordId))
+      .limit(1);
+    return result[0];
+  }
+
+  async createDpiaEvaluation(evaluation: InsertDpiaEvaluation): Promise<DpiaEvaluation> {
+    const result = await db.insert(dpiaEvaluations).values(evaluation).returning();
+    return result[0];
+  }
+
+  async updateDpiaEvaluation(id: number, updates: Partial<InsertDpiaEvaluation>): Promise<DpiaEvaluation> {
+    const result = await db.update(dpiaEvaluations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dpiaEvaluations.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDpiaEvaluation(id: number): Promise<void> {
+    await db.delete(dpiaEvaluations).where(eq(dpiaEvaluations.id, id));
   }
 }
 

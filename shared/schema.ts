@@ -522,3 +522,28 @@ export type Quiz = typeof quizzes.$inferSelect;
 export type InsertQuiz = z.infer<typeof insertQuizSchema>;
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type InsertQuizAttempt = z.infer<typeof insertQuizAttemptSchema>;
+
+// DPIA Evaluations table
+export const dpiaEvaluations = pgTable("dpia_evaluations", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").references(() => companies.id).notNull(),
+  recordId: integer("record_id").references(() => processingRecords.id).notNull(),
+  score: integer("score").notNull(),
+  recommendation: text("recommendation").notNull(),
+  justification: text("justification").notNull(),
+  criteriaAnswers: text("criteria_answers").notNull(), // JSON object
+  cnilListMatch: text("cnil_list_match"), // Optional match from CNIL mandatory list
+  largeScaleEstimate: text("large_scale_estimate"), // Optional estimate for large scale criterion
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const insertDpiaEvaluationSchema = createInsertSchema(dpiaEvaluations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// DPIA Evaluation types
+export type DpiaEvaluation = typeof dpiaEvaluations.$inferSelect;
+export type InsertDpiaEvaluation = z.infer<typeof insertDpiaEvaluationSchema>;
