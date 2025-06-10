@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart3, Loader2, Search, Download, AlertTriangle, Shield, CheckCircle, Info, Lightbulb, FileText, Users, FileSearch, ArrowLeft } from "lucide-react";
+import { BarChart3, Loader2, Search, Download, AlertTriangle, Shield, CheckCircle, Info, Lightbulb, FileText, Users, FileSearch, ArrowLeft, Trash2 } from "lucide-react";
 import { dpiaApi, recordsApi } from "@/lib/api";
 
 const COMPANY_ID = 1;
@@ -90,16 +91,16 @@ export default function DPIA() {
   // Formulaires
   const evaluationForm = useForm({
     defaultValues: {
-      scoring: false,
-      automatedDecision: false,
-      systematicMonitoring: false,
-      sensitiveData: false,
-      largeScale: false,
+      scoring: "",
+      automatedDecision: "",
+      systematicMonitoring: "",
+      sensitiveData: "",
+      largeScale: "",
       largeScaleEstimate: "",
-      dataCombination: false,
-      vulnerablePersons: false,
-      innovativeTechnology: false,
-      obstacleToRight: false
+      dataCombination: "",
+      vulnerablePersons: "",
+      innovativeTechnology: "",
+      obstacleToRight: ""
     }
   });
 
@@ -124,27 +125,68 @@ export default function DPIA() {
   // Filtrer les traitements de responsable uniquement
   const controllerRecords = records?.filter((record: ProcessingRecord) => record.type === 'controller') || [];
 
+  // Fonctions utilitaires
+  const checkCnilMandatoryList = async (record: ProcessingRecord): Promise<string | null> => {
+    // Vérifier si le traitement correspond à la liste CNIL
+    const cnilTypes = [
+      "Traitements d'évaluation ou de notation des personnes",
+      "Prise de décision entièrement automatisée",
+      "Surveillance systématique à grande échelle",
+      "Données sensibles ou hautement personnelles à grande échelle",
+      "Données relatives aux condamnations pénales et aux infractions",
+      "Biométrie pour identifier de manière unique une personne",
+      "Données génétiques",
+      "Données de localisation à grande échelle",
+      "Données d'enfants à grande échelle",
+      "Données relatives à la santé"
+    ];
+
+    // Simulation de vérification (à remplacer par IA si disponible)
+    const keywords = [record.name, record.purpose, ...(record.dataCategories || [])].join(' ').toLowerCase();
+    
+    if (keywords.includes('biométr') || keywords.includes('reconnaissance')) {
+      return "Biométrie pour identifier de manière unique une personne";
+    }
+    if (keywords.includes('santé') || keywords.includes('médical')) {
+      return "Données relatives à la santé";
+    }
+    if (keywords.includes('enfant') || keywords.includes('mineur')) {
+      return "Données d'enfants à grande échelle";
+    }
+    if (keywords.includes('géolocalisation') || keywords.includes('localisation')) {
+      return "Données de localisation à grande échelle";
+    }
+    
+    return null;
+  };
+
   // Mutations
   const evaluationMutation = useMutation({
     mutationFn: async (data: any) => {
       const answers = {
-        scoring: data.scoring,
-        automatedDecision: data.automatedDecision,
-        systematicMonitoring: data.systematicMonitoring,
-        sensitiveData: data.sensitiveData,
-        largeScale: data.largeScale,
-        dataCombination: data.dataCombination,
-        vulnerablePersons: data.vulnerablePersons,
-        innovativeTechnology: data.innovativeTechnology,
-        obstacleToRight: data.obstacleToRight
+        scoring: data.scoring === "oui",
+        automatedDecision: data.automatedDecision === "oui",
+        systematicMonitoring: data.systematicMonitoring === "oui",
+        sensitiveData: data.sensitiveData === "oui",
+        largeScale: data.largeScale === "oui",
+        dataCombination: data.dataCombination === "oui",
+        vulnerablePersons: data.vulnerablePersons === "oui",
+        innovativeTechnology: data.innovativeTechnology === "oui",
+        obstacleToRight: data.obstacleToRight === "oui"
       };
 
       const score = Object.values(answers).filter(Boolean).length;
       
+      // Vérifier la liste CNIL
+      const cnilMatch = await checkCnilMandatoryList(selectedRecord!);
+      
       let recommendation = "";
       let justification = "";
       
-      if (score >= 2) {
+      if (cnilMatch) {
+        recommendation = "AIPD obligatoire (Liste CNIL)";
+        justification = `Ce traitement figure dans la liste des types d'opérations de traitement pour lesquelles une AIPD est requise : "${cnilMatch}". Une AIPD est donc obligatoire selon l'article 35.4 du RGPD.`;
+      } else if (score >= 2) {
         recommendation = "AIPD fortement recommandée / obligatoire";
         justification = `Notre analyse préliminaire indique que ce traitement est susceptible d'engendrer un risque élevé. La réalisation d'une AIPD est nécessaire car le projet remplit ${score} des 9 critères de risque identifiés par les autorités de protection des données.`;
       } else if (score === 1) {
@@ -159,7 +201,9 @@ export default function DPIA() {
         score,
         recommendation,
         justification,
-        criteriaAnswers: answers
+        criteriaAnswers: answers,
+        cnilListMatch: cnilMatch,
+        largeScaleEstimate: data.largeScaleEstimate || null
       };
 
       setEvaluationResults(prev => ({
@@ -204,6 +248,25 @@ export default function DPIA() {
       toast({
         title: "Erreur",
         description: "Impossible de réaliser l'analyse d'impact",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteAssessmentMutation = useMutation({
+    mutationFn: (assessmentId: number) =>
+      dpiaApi.delete(assessmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/dpia'] });
+      toast({
+        title: "Analyse supprimée",
+        description: "L'analyse d'impact a été supprimée avec succès",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'analyse d'impact",
         variant: "destructive",
       });
     },
@@ -306,39 +369,51 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                     name={criterion.id as any}
                     render={({ field }) => (
                       <FormItem className="p-4 border rounded-lg space-y-3">
-                        <div className="flex items-start space-x-3">
+                        <div className="space-y-3">
+                          <FormLabel className="text-sm font-medium leading-relaxed">
+                            {index + 1}. {criterion.question}
+                          </FormLabel>
+                          <p className="text-xs text-muted-foreground">
+                            {criterion.examples}
+                          </p>
                           <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <RadioGroup
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              className="flex space-x-6"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="oui" id={`${criterion.id}-oui`} />
+                                <label htmlFor={`${criterion.id}-oui`} className="text-sm font-medium">
+                                  Oui
+                                </label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="non" id={`${criterion.id}-non`} />
+                                <label htmlFor={`${criterion.id}-non`} className="text-sm font-medium">
+                                  Non
+                                </label>
+                              </div>
+                            </RadioGroup>
                           </FormControl>
-                          <div className="flex-1 space-y-2">
-                            <FormLabel className="text-sm font-medium leading-relaxed">
-                              {index + 1}. {criterion.question}
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              {criterion.examples}
-                            </p>
-                            {criterion.id === 'largeScale' && field.value && (
-                              <FormField
-                                control={evaluationForm.control}
-                                name="largeScaleEstimate"
-                                render={({ field: estimateField }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs">Estimez le nombre de personnes concernées (optionnel)</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Ex: 10 000 personnes"
-                                        {...estimateField}
-                                        className="text-sm"
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            )}
-                          </div>
+                          {criterion.id === 'largeScale' && field.value === 'oui' && (
+                            <FormField
+                              control={evaluationForm.control}
+                              name="largeScaleEstimate"
+                              render={({ field: estimateField }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Estimez le nombre de personnes concernées (optionnel)</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Ex: 10 000 personnes"
+                                      {...estimateField}
+                                      className="text-sm"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          )}
                         </div>
                       </FormItem>
                     )}
@@ -545,9 +620,19 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                           <div className="p-3 bg-muted rounded-lg">
                             <p className="text-xs font-medium mb-1">Résultat de l'évaluation :</p>
                             <p className="text-xs text-muted-foreground mb-2">{evaluation.justification}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Score de risque : {evaluation.score}/9
-                            </p>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>Score de risque : {evaluation.score}/9</span>
+                              {evaluation.cnilListMatch && (
+                                <Badge variant="destructive" className="text-xs">
+                                  Liste CNIL
+                                </Badge>
+                              )}
+                            </div>
+                            {evaluation.cnilListMatch && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Correspondance CNIL : {evaluation.cnilListMatch}
+                              </p>
+                            )}
                           </div>
                         )}
 
@@ -568,23 +653,26 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                             <Search className="w-4 h-4 mr-2" />
                             Évaluer la nécessité
                           </Button>
-                        ) : evaluation.recommendation.includes('obligatoire') ? (
-                          <Button 
-                            size="sm"
-                            onClick={() => startFullDpia(record)}
-                          >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Réaliser l'AIPD
-                          </Button>
                         ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => startEvaluation(record)}
-                          >
-                            <Search className="w-4 h-4 mr-2" />
-                            Réévaluer
-                          </Button>
+                          <div className="flex flex-col space-y-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => startEvaluation(record)}
+                            >
+                              <Search className="w-4 h-4 mr-2" />
+                              Réévaluer
+                            </Button>
+                            {(evaluation.recommendation.includes('obligatoire') || evaluation.recommendation.includes('recommandée')) && (
+                              <Button 
+                                size="sm"
+                                onClick={() => startFullDpia(record)}
+                              >
+                                <FileText className="w-4 h-4 mr-2" />
+                                Réaliser l'AIPD
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -623,10 +711,21 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                         </span>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      Télécharger
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        <Download className="w-4 h-4 mr-2" />
+                        Télécharger
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => deleteAssessmentMutation.mutate(assessment.id)}
+                        disabled={deleteAssessmentMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
