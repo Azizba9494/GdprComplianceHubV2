@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { openaiService } from "./services/openai";
+import { geminiService } from "./services/gemini";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
@@ -197,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Entreprise non trouvée" });
       }
 
-      const recordTemplate = await openaiService.generateProcessingRecord(company, processingType, description);
+      const recordTemplate = await geminiService.generateProcessingRecord(company, processingType, description);
       
       const record = await storage.createProcessingRecord({
         companyId,
