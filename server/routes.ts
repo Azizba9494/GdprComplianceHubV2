@@ -221,6 +221,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/records/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const record = await storage.updateProcessingRecord(id, updates);
+      res.json(record);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/records/analyze-dpia", async (req, res) => {
+    try {
+      const record = req.body;
+      const analysis = await geminiService.assessDPIA(record.name, record.purpose, { companyId: record.companyId });
+      
+      res.json({
+        dpiaRequired: analysis.dpiaRequired,
+        justification: analysis.conclusion,
+        riskLevel: analysis.riskAssessment?.overallRisk || 'moyen'
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Privacy policy routes
   app.get("/api/privacy-policies/:companyId", async (req, res) => {
     try {

@@ -52,6 +52,12 @@ export const recordsApi = {
   
   create: (recordData: any) =>
     apiRequest("POST", "/api/records", recordData),
+  
+  update: (id: number, data: any) =>
+    apiRequest("PUT", `/api/records/${id}`, data),
+  
+  analyzeDpia: (record: any) =>
+    apiRequest("POST", "/api/records/analyze-dpia", record),
 };
 
 // Privacy Policy API
