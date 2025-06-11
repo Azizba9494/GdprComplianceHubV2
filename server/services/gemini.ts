@@ -17,15 +17,23 @@ export class GeminiService {
     return this.client;
   }
 
-  async generateResponse(prompt: string, context?: any): Promise<{ response: string }> {
+  async generateResponse(prompt: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
     const client = this.ensureClient();
     
     try {
       const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
       
+      let contextSection = '';
+      if (ragDocuments && ragDocuments.length > 0) {
+        contextSection = `\n\nDocuments de référence à prioriser dans votre réponse:\n${ragDocuments.join('\n\n---\n\n')}`;
+      }
+      
       const fullPrompt = `Vous êtes un expert en conformité RGPD qui aide les entreprises françaises VSE/PME. Répondez en français de manière claire et professionnelle.
 
-${prompt}${context ? `\n\nContexte: ${JSON.stringify(context)}` : ''}`;
+${contextSection ? 'IMPORTANT: Utilisez en priorité les informations des documents de référence fournis ci-dessous pour répondre à la question.' : ''}
+${contextSection}
+
+${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''}`;
 
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
@@ -118,14 +126,14 @@ Priorisez les actions selon leur urgence légale et leur impact sur la conformit
     return await this.generateStructuredResponse(prompt, schema, { diagnosticData, companyInfo });
   }
 
-  async getChatbotResponse(message: string, context?: any): Promise<{ response: string }> {
+  async getChatbotResponse(message: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
     const prompt = `L'utilisateur demande: ${message}
 
 Vous êtes un assistant IA spécialisé en conformité RGPD pour les VSE/PME françaises. 
 Répondez de manière claire et pratique, en donnant des conseils concrets et adaptés au contexte français.
 Utilisez un langage accessible et évitez le jargon juridique complexe.`;
 
-    return await this.generateResponse(prompt, context);
+    return await this.generateResponse(prompt, context, ragDocuments);
   }
 
   async generatePrivacyPolicy(company: any, processingRecords: any[]): Promise<{ content: string }> {

@@ -780,10 +780,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Chatbot
+  // Chatbot with RAG support
   app.post("/api/chatbot", async (req, res) => {
     try {
-      const { message, companyId } = req.body;
+      const { message, companyId, promptCategory } = req.body;
       
       let context = null;
       if (companyId) {
@@ -793,7 +793,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const response = await geminiService.getChatbotResponse(message, context);
+      // Get relevant documents for the prompt category
+      let ragDocuments: string[] = [];
+      if (promptCategory) {
+        const activePrompt = await storage.getActivePromptByCategory(promptCategory);
+        if (activePrompt) {
+          const promptDocuments = await storage.getPromptDocuments(activePrompt.id);
+          if (promptDocuments.length > 0) {
+            // Get document contents sorted by priority
+            const documentIds = promptDocuments
+              .sort((a, b) => a.priority - b.priority)
+              .map(pd => pd.documentId);
+            
+            for (const docId of documentIds) {
+              const document = await storage.getRagDocument(docId);
+              if (document && document.isActive) {
+                ragDocuments.push(document.content);
+              }
+            }
+          }
+        }
+      }
+
+      const response = await geminiService.getChatbotResponse(message, context, ragDocuments);
       res.json(response);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
