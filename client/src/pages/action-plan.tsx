@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ExpandableText } from "@/components/ui/expandable-text";
 import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -160,7 +161,14 @@ export default function ActionPlan() {
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-4">
-                    <h3 className="font-medium text-foreground whitespace-pre-wrap break-words min-w-0 flex-1">{action.title}</h3>
+                    <div className="min-w-0 flex-1">
+                      <ExpandableText
+                        text={action.title}
+                        maxLength={80}
+                        className="font-medium text-foreground"
+                        previewMode="characters"
+                      />
+                    </div>
                     <Badge 
                       variant="secondary"
                       className={`${priorityColors[action.priority as keyof typeof priorityColors]} flex-shrink-0`}
@@ -169,7 +177,12 @@ export default function ActionPlan() {
                     </Badge>
                   </div>
                     
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">{action.description}</p>
+                  <ExpandableText
+                    text={action.description}
+                    maxLength={200}
+                    className="text-sm text-muted-foreground"
+                    previewMode="characters"
+                  />
                   
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center space-x-1">

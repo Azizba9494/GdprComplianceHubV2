@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
+import { ExpandableText } from "@/components/ui/expandable-text";
 import { BarChart3, Loader2, Search, Download, AlertTriangle, Shield, CheckCircle, Info, Lightbulb, FileText, Users, FileSearch, ArrowLeft, Trash2, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { dpiaApi, recordsApi } from "@/lib/api";
@@ -806,9 +807,12 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h4 className="font-medium">{assessment.processingName}</h4>
-                      <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap break-words">
-                        {assessment.processingDescription}
-                      </p>
+                      <ExpandableText
+                        text={assessment.processingDescription}
+                        maxLength={150}
+                        className="text-sm text-muted-foreground mt-1"
+                        previewMode="characters"
+                      />
                       <div className="flex items-center space-x-4 mt-3">
                         <Badge variant="default">
                           {assessment.riskAssessment?.risks?.length || 0} risques identifiés
