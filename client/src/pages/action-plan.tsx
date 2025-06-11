@@ -164,7 +164,7 @@ export default function ActionPlan() {
                     <div className="min-w-0 flex-1">
                       <ExpandableText
                         text={action.title}
-                        maxLength={80}
+                        maxLength={40}
                         className="font-medium text-foreground"
                         previewMode="characters"
                       />
@@ -179,7 +179,7 @@ export default function ActionPlan() {
                     
                   <ExpandableText
                     text={action.description}
-                    maxLength={200}
+                    maxLength={50}
                     className="text-sm text-muted-foreground"
                     previewMode="characters"
                   />
