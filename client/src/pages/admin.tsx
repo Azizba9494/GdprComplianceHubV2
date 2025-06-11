@@ -59,6 +59,27 @@ interface LlmConfiguration {
   updatedAt: string;
 }
 
+interface RagDocument {
+  id: number;
+  name: string;
+  filename: string;
+  fileSize: number;
+  mimeType: string;
+  content: string;
+  uploadedBy: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PromptDocument {
+  id: number;
+  promptId: number;
+  documentId: number;
+  priority: number;
+  createdAt: string;
+}
+
 const promptCategories = {
   diagnostic: "Diagnostic",
   records: "Registres",
@@ -80,8 +101,11 @@ const categoryIcons = {
 export default function Admin() {
   const [isPromptDialogOpen, setIsPromptDialogOpen] = useState(false);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
+  const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<AiPrompt | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<DiagnosticQuestion | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [documentName, setDocumentName] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -145,6 +169,11 @@ export default function Admin() {
   const { data: llmConfigs, isLoading: llmLoading } = useQuery({
     queryKey: ['/api/admin/llm-configs'],
     queryFn: () => adminApi.getLlmConfigs().then(res => res.json()),
+  });
+
+  const { data: documents, isLoading: documentsLoading } = useQuery({
+    queryKey: ['/api/admin/documents'],
+    queryFn: () => ragDocumentsApi.getDocuments().then(res => res.json()),
   });
 
   // Mutations
@@ -255,6 +284,31 @@ export default function Admin() {
     },
   });
 
+  const uploadDocumentMutation = useMutation({
+    mutationFn: (formData: FormData) => ragDocumentsApi.uploadDocument(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/documents'] });
+      setIsDocumentDialogOpen(false);
+      setSelectedFile(null);
+      setDocumentName("");
+      toast({
+        title: "Document téléchargé !",
+        description: "Le document PDF a été importé avec succès.",
+      });
+    },
+  });
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: (id: number) => ragDocumentsApi.deleteDocument(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/documents'] });
+      toast({
+        title: "Document supprimé !",
+        description: "Le document a été supprimé avec succès.",
+      });
+    },
+  });
+
   const onPromptSubmit = (data: any) => {
     if (editingPrompt) {
       updatePromptMutation.mutate({ id: editingPrompt.id, data });
@@ -276,6 +330,43 @@ export default function Admin() {
       updateLlmMutation.mutate({ id: editingLlm.id, data });
     } else {
       createLlmMutation.mutate(data);
+    }
+  };
+
+  const handleFileUpload = () => {
+    if (!selectedFile) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un fichier PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    if (documentName) {
+      formData.append('name', documentName);
+    }
+
+    uploadDocumentMutation.mutate(formData);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: "Format invalide",
+          description: "Seuls les fichiers PDF sont acceptés.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+      if (!documentName) {
+        setDocumentName(file.name.replace('.pdf', ''));
+      }
     }
   };
 
@@ -365,7 +456,7 @@ export default function Admin() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Administration</h2>
           <p className="text-muted-foreground">
-            Gérez les prompts IA et les questions de diagnostic
+            Gérez les prompts IA, questions de diagnostic et documents RAG
           </p>
         </div>
       </div>
@@ -383,6 +474,10 @@ export default function Admin() {
           <TabsTrigger value="llm-configs" className="flex items-center space-x-2">
             <Settings className="w-4 h-4" />
             <span>Configuration IA</span>
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center space-x-2">
+            <FileIcon className="w-4 h-4" />
+            <span>Documents RAG</span>
           </TabsTrigger>
         </TabsList>
 
