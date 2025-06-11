@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { ExpandableText } from "@/components/ui/expandable-text";
 import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch } from "lucide-react";
 
 const COMPANY_ID = 1;
@@ -997,7 +998,12 @@ Informations complémentaires: ${data.additionalInfo}
                         onBlur={(e) => handleFieldUpdate(record.id, 'purpose', e.target.value)}
                       />
                     ) : (
-                      <p className="text-sm">{record.purpose}</p>
+                      <ExpandableText
+                        text={record.purpose}
+                        maxLength={120}
+                        className="text-sm"
+                        previewMode="characters"
+                      />
                     )}
                     {showJustification[`${record.id}_purpose`] && (
                       <div className="mt-2 p-3 bg-muted rounded-md text-xs">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { ExpandableText } from "@/components/ui/expandable-text";
 import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2 } from "lucide-react";
 
 const COMPANY_ID = 1; // Mock company ID

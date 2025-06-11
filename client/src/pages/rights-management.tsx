@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { ExpandableText } from "@/components/ui/expandable-text";
 import { 
   ShieldX, Plus, Calendar, Clock, CheckCircle, AlertCircle, 
   User, Mail, FileText, Loader2, Filter, Search
@@ -438,7 +439,12 @@ export default function RightsManagement() {
                         </div>
 
                         {request.description && (
-                          <p className="text-sm text-muted-foreground">{request.description}</p>
+                          <ExpandableText
+                            text={request.description}
+                            maxLength={100}
+                            className="text-sm text-muted-foreground"
+                            previewMode="characters"
+                          />
                         )}
 
                         <div className="flex items-center space-x-4 text-sm">
