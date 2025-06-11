@@ -16,7 +16,8 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { 
   Settings, Plus, Edit, Brain, MessageSquare, ClipboardList, 
-  FileText, AlertTriangle, BarChart3, Loader2, CheckCircle, Clock
+  FileText, AlertTriangle, BarChart3, Loader2, CheckCircle, Clock,
+  Upload, Trash2, Link, FileIcon
 } from "lucide-react";
 
 interface AiPrompt {

@@ -11,7 +11,7 @@ import {
   insertRagDocumentSchema, insertPromptDocumentSchema
 } from "@shared/schema";
 import multer from "multer";
-const pdfParse = require("pdf-parse");
+// import pdfParse from "pdf-parse";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -721,22 +721,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
-      // Extract text from PDF
-      const pdfData = await pdfParse(req.file.buffer);
-      
-      // Create chunks from the text (split by paragraphs or sentences)
-      const textChunks = pdfData.text
-        .split(/\n\s*\n/)
-        .filter(chunk => chunk.trim().length > 0)
-        .map(text => ({ text: text.trim() }));
-
+      // Temporarily store file metadata (PDF text extraction will be added later)
       const documentData = {
         name: req.body.name || req.file.originalname.replace('.pdf', ''),
         filename: req.file.originalname,
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
-        content: pdfData.text,
-        chunks: textChunks,
+        content: `Document uploaded: ${req.file.originalname}. Text extraction will be implemented.`,
         uploadedBy: 1 // TODO: Get from authenticated user
       };
 
