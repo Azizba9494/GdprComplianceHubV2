@@ -547,3 +547,44 @@ export const insertDpiaEvaluationSchema = createInsertSchema(dpiaEvaluations).om
 // DPIA Evaluation types
 export type DpiaEvaluation = typeof dpiaEvaluations.$inferSelect;
 export type InsertDpiaEvaluation = z.infer<typeof insertDpiaEvaluationSchema>;
+
+// RAG Documents table - for storing uploaded PDF documents
+export const ragDocuments = pgTable("rag_documents", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  filename: text("filename").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  content: text("content").notNull(), // Extracted text content from PDF
+  chunks: jsonb("chunks").$type<Array<{ text: string; embedding?: number[] }>>().notNull().default([]),
+  uploadedBy: integer("uploaded_by").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Prompt-Document associations - which documents to use for which prompts
+export const promptDocuments = pgTable("prompt_documents", {
+  id: serial("id").primaryKey(),
+  promptId: integer("prompt_id").notNull().references(() => aiPrompts.id),
+  documentId: integer("document_id").notNull().references(() => ragDocuments.id),
+  priority: integer("priority").notNull().default(1), // Lower numbers = higher priority
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertRagDocumentSchema = createInsertSchema(ragDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPromptDocumentSchema = createInsertSchema(promptDocuments).omit({
+  id: true,
+  createdAt: true,
+});
+
+// RAG Document types
+export type RagDocument = typeof ragDocuments.$inferSelect;
+export type InsertRagDocument = z.infer<typeof insertRagDocumentSchema>;
+export type PromptDocument = typeof promptDocuments.$inferSelect;
+export type InsertPromptDocument = z.infer<typeof insertPromptDocumentSchema>;

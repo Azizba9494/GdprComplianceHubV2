@@ -3,7 +3,7 @@ import {
   processingRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
-  quizzes, quizAttempts, dpiaEvaluations,
+  quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
   type User, type InsertUser, type Company, type InsertCompany,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
@@ -24,7 +24,9 @@ import {
   type ModuleProgress, type InsertModuleProgress,
   type Quiz, type InsertQuiz,
   type QuizAttempt, type InsertQuizAttempt,
-  type DpiaEvaluation, type InsertDpiaEvaluation
+  type DpiaEvaluation, type InsertDpiaEvaluation,
+  type RagDocument, type InsertRagDocument,
+  type PromptDocument, type InsertPromptDocument
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -155,6 +157,19 @@ export interface IStorage {
   createDpiaEvaluation(evaluation: InsertDpiaEvaluation): Promise<DpiaEvaluation>;
   updateDpiaEvaluation(id: number, updates: Partial<InsertDpiaEvaluation>): Promise<DpiaEvaluation>;
   deleteDpiaEvaluation(id: number): Promise<void>;
+  
+  // RAG Documents
+  getRagDocuments(): Promise<RagDocument[]>;
+  getRagDocument(id: number): Promise<RagDocument | undefined>;
+  createRagDocument(document: InsertRagDocument): Promise<RagDocument>;
+  updateRagDocument(id: number, updates: Partial<InsertRagDocument>): Promise<RagDocument>;
+  deleteRagDocument(id: number): Promise<void>;
+  
+  // Prompt-Document associations
+  getPromptDocuments(promptId: number): Promise<PromptDocument[]>;
+  getDocumentPrompts(documentId: number): Promise<PromptDocument[]>;
+  createPromptDocument(association: InsertPromptDocument): Promise<PromptDocument>;
+  deletePromptDocument(promptId: number, documentId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -683,6 +698,56 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDpiaEvaluation(id: number): Promise<void> {
     await db.delete(dpiaEvaluations).where(eq(dpiaEvaluations.id, id));
+  }
+
+  // RAG Documents
+  async getRagDocuments(): Promise<RagDocument[]> {
+    return await db.select().from(ragDocuments).where(eq(ragDocuments.isActive, true)).orderBy(desc(ragDocuments.createdAt));
+  }
+
+  async getRagDocument(id: number): Promise<RagDocument | undefined> {
+    const [document] = await db.select().from(ragDocuments).where(eq(ragDocuments.id, id));
+    return document || undefined;
+  }
+
+  async createRagDocument(document: InsertRagDocument): Promise<RagDocument> {
+    const [created] = await db.insert(ragDocuments).values(document).returning();
+    return created;
+  }
+
+  async updateRagDocument(id: number, updates: Partial<InsertRagDocument>): Promise<RagDocument> {
+    const [updated] = await db.update(ragDocuments).set({
+      ...updates,
+      updatedAt: new Date()
+    }).where(eq(ragDocuments.id, id)).returning();
+    return updated;
+  }
+
+  async deleteRagDocument(id: number): Promise<void> {
+    await db.update(ragDocuments).set({ isActive: false, updatedAt: new Date() }).where(eq(ragDocuments.id, id));
+  }
+
+  // Prompt-Document associations
+  async getPromptDocuments(promptId: number): Promise<PromptDocument[]> {
+    return await db.select().from(promptDocuments).where(eq(promptDocuments.promptId, promptId)).orderBy(promptDocuments.priority);
+  }
+
+  async getDocumentPrompts(documentId: number): Promise<PromptDocument[]> {
+    return await db.select().from(promptDocuments).where(eq(promptDocuments.documentId, documentId));
+  }
+
+  async createPromptDocument(association: InsertPromptDocument): Promise<PromptDocument> {
+    const [created] = await db.insert(promptDocuments).values(association).returning();
+    return created;
+  }
+
+  async deletePromptDocument(promptId: number, documentId: number): Promise<void> {
+    await db.delete(promptDocuments).where(
+      and(
+        eq(promptDocuments.promptId, promptId),
+        eq(promptDocuments.documentId, documentId)
+      )
+    );
   }
 }
 
