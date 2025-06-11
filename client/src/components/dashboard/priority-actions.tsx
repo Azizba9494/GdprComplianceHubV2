@@ -138,7 +138,7 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-foreground">{action.title}</h3>
+                    <h3 className="font-medium text-foreground">{action.title.replace(/^Action pour:\s*/, '')}</h3>
                     <div className="flex items-center space-x-2">
                       <Badge 
                         variant="secondary"
