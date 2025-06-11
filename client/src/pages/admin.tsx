@@ -370,6 +370,40 @@ export default function Admin() {
     }
   };
 
+  // Handle document association
+  const associateDocumentMutation = useMutation({
+    mutationFn: async ({ promptId, documentId, priority }: { promptId: number; documentId: number; priority: number }) => {
+      const response = await fetch('/api/admin/prompt-documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ promptId, documentId, priority }),
+      });
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'association');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Association créée",
+        description: "Le document a été associé au prompt avec succès."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'associer le document.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleAssociateDocument = (promptId: number, documentId: number, priority: number) => {
+    associateDocumentMutation.mutate({ promptId, documentId, priority });
+  };
+
   const openPromptDialog = (prompt?: AiPrompt) => {
     if (prompt) {
       setEditingPrompt(prompt);
@@ -447,40 +481,6 @@ export default function Admin() {
       </div>
     );
   }
-
-  // Handle document association
-  const associateDocumentMutation = useMutation({
-    mutationFn: async ({ promptId, documentId, priority }: { promptId: number; documentId: number; priority: number }) => {
-      const response = await fetch('/api/admin/prompt-documents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ promptId, documentId, priority }),
-      });
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'association');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Association créée",
-        description: "Le document a été associé au prompt avec succès."
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible d'associer le document.",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleAssociateDocument = (promptId: number, documentId: number, priority: number) => {
-    associateDocumentMutation.mutate({ promptId, documentId, priority });
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -1395,44 +1395,53 @@ export default function Admin() {
                         </Badge>
                       </div>
                       
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium">
-                          Documents associés (par ordre de priorité)
-                        </Label>
-                        
-                        {documents && documents.length > 0 ? (
-                          <div className="space-y-2">
-                            {documents.map((document: RagDocument, index: number) => (
-                              <div
-                                key={document.id}
-                                className="flex items-center justify-between p-3 border rounded"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <FileIcon className="w-4 h-4 text-primary" />
-                                  <span className="text-sm">{document.name}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    Priorité {index + 1}
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center space-x-2">
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Documents disponibles
+                          </Label>
+                          {documents && documents.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-2">
+                              {documents.map((document: RagDocument) => (
+                                <div
+                                  key={document.id}
+                                  className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <FileIcon className="w-4 h-4 text-primary" />
+                                    <div>
+                                      <span className="text-sm font-medium">{document.name}</span>
+                                      <p className="text-xs text-muted-foreground">
+                                        {document.filename} • {(document.fileSize / 1024 / 1024).toFixed(2)} MB
+                                      </p>
+                                    </div>
+                                  </div>
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleAssociateDocument(prompt.id, document.id, index + 1)}
+                                    onClick={() => handleAssociateDocument(prompt.id, document.id, 1)}
+                                    disabled={associateDocumentMutation.isPending}
                                   >
-                                    <Plus className="w-3 h-3 mr-1" />
-                                    Associer
+                                    {associateDocumentMutation.isPending ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <Plus className="w-3 h-3 mr-1" />
+                                        Associer
+                                      </>
+                                    )}
                                   </Button>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-4 text-muted-foreground">
-                            <FileIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Aucun document disponible</p>
-                          </div>
-                        )}
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-4 text-muted-foreground border rounded">
+                              <FileIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">Aucun document disponible</p>
+                              <p className="text-xs">Téléchargez des documents dans l'onglet ci-dessus</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

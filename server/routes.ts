@@ -780,6 +780,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Associate prompt with document
+  app.post("/api/admin/prompt-documents", async (req, res) => {
+    try {
+      const { promptId, documentId, priority } = req.body;
+      
+      if (!promptId || !documentId) {
+        return res.status(400).json({ error: "promptId et documentId sont requis" });
+      }
+
+      const association = await storage.createPromptDocument({
+        promptId,
+        documentId,
+        priority: priority || 1
+      });
+
+      res.json(association);
+    } catch (error: any) {
+      console.error('Associate document error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get prompt-document associations
+  app.get("/api/admin/prompt-documents/:promptId", async (req, res) => {
+    try {
+      const promptId = parseInt(req.params.promptId);
+      const associations = await storage.getPromptDocuments(promptId);
+      res.json(associations);
+    } catch (error: any) {
+      console.error('Get prompt documents error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete prompt-document association
+  app.delete("/api/admin/prompt-documents/:promptId/:documentId", async (req, res) => {
+    try {
+      const promptId = parseInt(req.params.promptId);
+      const documentId = parseInt(req.params.documentId);
+      await storage.deletePromptDocument(promptId, documentId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Delete prompt document error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Chatbot with RAG support
   app.post("/api/chatbot", async (req, res) => {
     try {
