@@ -133,11 +133,11 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none">
-              <div 
-                className="text-sm text-muted-foreground max-h-32 overflow-hidden"
-                dangerouslySetInnerHTML={{ 
-                  __html: activePolicy.content.substring(0, 200) + '...' 
-                }}
+              <ExpandableText
+                text={activePolicy.content.replace(/<[^>]*>/g, '')} // Strip HTML tags for preview
+                maxLength={300}
+                className="text-sm text-muted-foreground"
+                previewMode="characters"
               />
             </div>
           </CardContent>
