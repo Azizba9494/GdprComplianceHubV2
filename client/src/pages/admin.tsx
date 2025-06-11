@@ -448,6 +448,40 @@ export default function Admin() {
     );
   }
 
+  // Handle document association
+  const associateDocumentMutation = useMutation({
+    mutationFn: async ({ promptId, documentId, priority }: { promptId: number; documentId: number; priority: number }) => {
+      const response = await fetch('/api/admin/prompt-documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ promptId, documentId, priority }),
+      });
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'association');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Association créée",
+        description: "Le document a été associé au prompt avec succès."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'associer le document.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleAssociateDocument = (promptId: number, documentId: number, priority: number) => {
+    associateDocumentMutation.mutate({ promptId, documentId, priority });
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -1345,13 +1379,73 @@ export default function Admin() {
               </p>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <Link className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium">Associations à venir</h3>
-                <p className="text-muted-foreground">
-                  L'interface d'association prompt-document sera disponible prochainement.
-                </p>
-              </div>
+              {prompts && prompts.length > 0 ? (
+                <div className="space-y-6">
+                  {prompts.map((prompt: AiPrompt) => (
+                    <div key={prompt.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="font-medium">{prompt.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Catégorie: {prompt.category}
+                          </p>
+                        </div>
+                        <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                          {prompt.isActive ? "Actif" : "Inactif"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">
+                          Documents associés (par ordre de priorité)
+                        </Label>
+                        
+                        {documents && documents.length > 0 ? (
+                          <div className="space-y-2">
+                            {documents.map((document: RagDocument, index: number) => (
+                              <div
+                                key={document.id}
+                                className="flex items-center justify-between p-3 border rounded"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <FileIcon className="w-4 h-4 text-primary" />
+                                  <span className="text-sm">{document.name}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    Priorité {index + 1}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleAssociateDocument(prompt.id, document.id, index + 1)}
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Associer
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4 text-muted-foreground">
+                            <FileIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">Aucun document disponible</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Settings className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium">Aucun prompt configuré</h3>
+                  <p className="text-muted-foreground">
+                    Créez d'abord des prompts IA pour pouvoir les associer à des documents.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
