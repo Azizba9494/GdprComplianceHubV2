@@ -7,8 +7,24 @@ import {
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
   insertProcessingRecordSchema, insertDataSubjectRequestSchema,
   insertPrivacyPolicySchema, insertDataBreachSchema,
-  insertDpiaAssessmentSchema, insertAiPromptSchema, insertLlmConfigurationSchema
+  insertDpiaAssessmentSchema, insertAiPromptSchema, insertLlmConfigurationSchema,
+  insertRagDocumentSchema, insertPromptDocumentSchema
 } from "@shared/schema";
+import multer from "multer";
+const pdfParse = require("pdf-parse");
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -683,6 +699,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteDiagnosticQuestion(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // RAG Documents management (Admin only)
+  app.get("/api/admin/documents", async (req, res) => {
+    try {
+      const documents = await storage.getRagDocuments();
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/documents", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Extract text from PDF
+      const pdfData = await pdfParse(req.file.buffer);
+      
+      // Create chunks from the text (split by paragraphs or sentences)
+      const textChunks = pdfData.text
+        .split(/\n\s*\n/)
+        .filter(chunk => chunk.trim().length > 0)
+        .map(text => ({ text: text.trim() }));
+
+      const documentData = {
+        name: req.body.name || req.file.originalname.replace('.pdf', ''),
+        filename: req.file.originalname,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+        content: pdfData.text,
+        chunks: textChunks,
+        uploadedBy: 1 // TODO: Get from authenticated user
+      };
+
+      const document = await storage.createRagDocument(documentData);
+      res.json(document);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/documents/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteRagDocument(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Prompt-Document associations
+  app.get("/api/admin/prompt-documents/:promptId", async (req, res) => {
+    try {
+      const promptId = parseInt(req.params.promptId);
+      const associations = await storage.getPromptDocuments(promptId);
+      res.json(associations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/prompt-documents", async (req, res) => {
+    try {
+      const associationData = insertPromptDocumentSchema.parse(req.body);
+      const association = await storage.createPromptDocument(associationData);
+      res.json(association);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/prompt-documents/:promptId/:documentId", async (req, res) => {
+    try {
+      const promptId = parseInt(req.params.promptId);
+      const documentId = parseInt(req.params.documentId);
+      await storage.deletePromptDocument(promptId, documentId);
       res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });

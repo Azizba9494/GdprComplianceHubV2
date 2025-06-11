@@ -177,3 +177,21 @@ export const gamificationApi = {
   getLeaderboard: (limit = 10) => 
     apiRequest("GET", `/api/gamification/leaderboard?limit=${limit}`)
 };
+
+// RAG Documents API
+export const ragDocumentsApi = {
+  getDocuments: () => apiRequest("GET", "/api/admin/documents"),
+  uploadDocument: (formData: FormData) => 
+    fetch("/api/admin/documents", {
+      method: "POST",
+      body: formData
+    }).then(res => res.json()),
+  deleteDocument: (id: number) => 
+    apiRequest("DELETE", `/api/admin/documents/${id}`),
+  getPromptDocuments: (promptId: number) => 
+    apiRequest("GET", `/api/admin/prompt-documents/${promptId}`),
+  createPromptDocument: (data: { promptId: number; documentId: number; priority: number }) =>
+    apiRequest("POST", "/api/admin/prompt-documents", data),
+  deletePromptDocument: (promptId: number, documentId: number) =>
+    apiRequest("DELETE", `/api/admin/prompt-documents/${promptId}/${documentId}`)
+};
