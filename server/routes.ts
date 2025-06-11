@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           riskCount[riskLevel as keyof typeof riskCount]++;
           
           actions.push({
-            title: `Action pour: ${question.question.substring(0, 50)}...`,
+            title: `Action pour: ${question.question}`,
             description: actionPlan,
             category: question.category,
             priority: riskLevel === 'critique' ? 'critical' : riskLevel === 'elevé' ? 'high' : riskLevel === 'moyen' ? 'medium' : 'low',
