@@ -1205,6 +1205,156 @@ export default function Admin() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* RAG Documents Management */}
+        <TabsContent value="documents" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Gestion des documents RAG</h3>
+            <Dialog open={isDocumentDialogOpen} onOpenChange={setIsDocumentDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setIsDocumentDialogOpen(true)}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Télécharger PDF
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Télécharger un document PDF</DialogTitle>
+                  <DialogDescription>
+                    Importez un document PDF pour enrichir les réponses de l'IA avec vos propres documents.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="document-name">Nom du document (optionnel)</Label>
+                    <Input
+                      id="document-name"
+                      placeholder="Nom descriptif du document"
+                      value={documentName}
+                      onChange={(e) => setDocumentName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="file-upload">Fichier PDF</Label>
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileChange}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+                    />
+                    {selectedFile && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Fichier sélectionné: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsDocumentDialogOpen(false);
+                        setSelectedFile(null);
+                        setDocumentName("");
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={handleFileUpload}
+                      disabled={!selectedFile || uploadDocumentMutation.isPending}
+                    >
+                      {uploadDocumentMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Téléchargement...
+                        </>
+                      ) : (
+                        "Télécharger"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents importés</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {documentsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                  <p>Chargement des documents...</p>
+                </div>
+              ) : !documents || documents.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium">Aucun document</h3>
+                  <p className="text-muted-foreground">
+                    Téléchargez votre premier document PDF pour enrichir les réponses de l'IA.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {documents.map((document: RagDocument) => (
+                    <div
+                      key={document.id}
+                      className="flex items-start justify-between p-4 border rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <FileIcon className="w-5 h-5 text-primary" />
+                          <h4 className="font-medium">{document.name}</h4>
+                          <Badge variant="outline">
+                            {(document.fileSize / 1024 / 1024).toFixed(2)} MB
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Fichier: {document.filename}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Importé le {new Date(document.createdAt).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteDocumentMutation.mutate(document.id)}
+                          disabled={deleteDocumentMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Supprimer
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Association Prompt-Document</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Configurez quels documents utiliser en priorité pour chaque prompt IA
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Link className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium">Associations à venir</h3>
+                <p className="text-muted-foreground">
+                  L'interface d'association prompt-document sera disponible prochainement.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
