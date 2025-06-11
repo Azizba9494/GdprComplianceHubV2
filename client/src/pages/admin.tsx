@@ -370,6 +370,16 @@ export default function Admin() {
     }
   };
 
+  // Get prompt-document associations
+  const { data: promptDocuments, isLoading: promptDocumentsLoading, refetch: refetchPromptDocuments } = useQuery({
+    queryKey: ['/api/admin/prompt-documents'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/prompt-documents');
+      if (!response.ok) throw new Error('Erreur lors du chargement des associations');
+      return response.json();
+    }
+  });
+
   // Handle document association
   const associateDocumentMutation = useMutation({
     mutationFn: async ({ promptId, documentId, priority }: { promptId: number; documentId: number; priority: number }) => {
@@ -386,6 +396,7 @@ export default function Admin() {
       return response.json();
     },
     onSuccess: () => {
+      refetchPromptDocuments();
       toast({
         title: "Association créée",
         description: "Le document a été associé au prompt avec succès."
@@ -400,8 +411,45 @@ export default function Admin() {
     }
   });
 
+  // Handle document dissociation
+  const dissociateDocumentMutation = useMutation({
+    mutationFn: async ({ promptId, documentId }: { promptId: number; documentId: number }) => {
+      const response = await fetch(`/api/admin/prompt-documents/${promptId}/${documentId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Erreur lors de la dissociation');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchPromptDocuments();
+      toast({
+        title: "Dissociation réussie",
+        description: "Le document a été dissocié du prompt avec succès."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de dissocier le document.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleAssociateDocument = (promptId: number, documentId: number, priority: number) => {
     associateDocumentMutation.mutate({ promptId, documentId, priority });
+  };
+
+  const handleDissociateDocument = (promptId: number, documentId: number) => {
+    dissociateDocumentMutation.mutate({ promptId, documentId });
+  };
+
+  // Helper function to check if document is associated with prompt
+  const isDocumentAssociated = (promptId: number, documentId: number): boolean => {
+    if (!promptDocuments) return false;
+    return promptDocuments.some((pd: any) => pd.promptId === promptId && pd.documentId === documentId);
   };
 
   const openPromptDialog = (prompt?: AiPrompt) => {
@@ -1402,37 +1450,69 @@ export default function Admin() {
                           </Label>
                           {documents && documents.length > 0 ? (
                             <div className="grid grid-cols-1 gap-2">
-                              {documents.map((document: RagDocument) => (
-                                <div
-                                  key={document.id}
-                                  className="flex items-center justify-between p-3 border rounded hover:bg-muted/50"
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <FileIcon className="w-4 h-4 text-primary" />
-                                    <div>
-                                      <span className="text-sm font-medium">{document.name}</span>
-                                      <p className="text-xs text-muted-foreground">
-                                        {document.filename} • {(document.fileSize / 1024 / 1024).toFixed(2)} MB
-                                      </p>
+                              {documents.map((document: RagDocument) => {
+                                const isAssociated = isDocumentAssociated(prompt.id, document.id);
+                                return (
+                                  <div
+                                    key={document.id}
+                                    className={`flex items-center justify-between p-3 border rounded hover:bg-muted/50 ${
+                                      isAssociated ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800' : ''
+                                    }`}
+                                  >
+                                    <div className="flex items-center space-x-3">
+                                      <FileIcon className={`w-4 h-4 ${isAssociated ? 'text-green-600' : 'text-primary'}`} />
+                                      <div>
+                                        <div className="flex items-center space-x-2">
+                                          <span className="text-sm font-medium">{document.name}</span>
+                                          {isAssociated && (
+                                            <Badge variant="default" className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                                              Associé
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                          {document.filename} • {(document.fileSize / 1024 / 1024).toFixed(2)} MB
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      {isAssociated ? (
+                                        <Button
+                                          variant="destructive"
+                                          size="sm"
+                                          onClick={() => handleDissociateDocument(prompt.id, document.id)}
+                                          disabled={dissociateDocumentMutation.isPending}
+                                        >
+                                          {dissociateDocumentMutation.isPending ? (
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                          ) : (
+                                            <>
+                                              <Trash2 className="w-3 h-3 mr-1" />
+                                              Dissocier
+                                            </>
+                                          )}
+                                        </Button>
+                                      ) : (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleAssociateDocument(prompt.id, document.id, 1)}
+                                          disabled={associateDocumentMutation.isPending}
+                                        >
+                                          {associateDocumentMutation.isPending ? (
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                          ) : (
+                                            <>
+                                              <Plus className="w-3 h-3 mr-1" />
+                                              Associer
+                                            </>
+                                          )}
+                                        </Button>
+                                      )}
                                     </div>
                                   </div>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleAssociateDocument(prompt.id, document.id, 1)}
-                                    disabled={associateDocumentMutation.isPending}
-                                  >
-                                    {associateDocumentMutation.isPending ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <>
-                                        <Plus className="w-3 h-3 mr-1" />
-                                        Associer
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           ) : (
                             <div className="text-center py-4 text-muted-foreground border rounded">

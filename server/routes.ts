@@ -802,7 +802,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get prompt-document associations
+  // Get all prompt-document associations
+  app.get("/api/admin/prompt-documents", async (req, res) => {
+    try {
+      const associations = await db.select().from(promptDocuments);
+      res.json(associations);
+    } catch (error: any) {
+      console.error('Get all prompt documents error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get prompt-document associations for specific prompt
   app.get("/api/admin/prompt-documents/:promptId", async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
