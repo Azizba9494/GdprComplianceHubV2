@@ -166,6 +166,7 @@ export interface IStorage {
   deleteRagDocument(id: number): Promise<void>;
   
   // Prompt-Document associations
+  getAllPromptDocuments(): Promise<PromptDocument[]>;
   getPromptDocuments(promptId: number): Promise<PromptDocument[]>;
   getDocumentPrompts(documentId: number): Promise<PromptDocument[]>;
   createPromptDocument(association: InsertPromptDocument): Promise<PromptDocument>;
@@ -728,6 +729,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Prompt-Document associations
+  async getAllPromptDocuments(): Promise<PromptDocument[]> {
+    return await db.select().from(promptDocuments);
+  }
+
   async getPromptDocuments(promptId: number): Promise<PromptDocument[]> {
     return await db.select().from(promptDocuments).where(eq(promptDocuments.promptId, promptId)).orderBy(promptDocuments.priority);
   }

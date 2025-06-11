@@ -2,13 +2,14 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
+import { db } from "./db";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
   insertProcessingRecordSchema, insertDataSubjectRequestSchema,
   insertPrivacyPolicySchema, insertDataBreachSchema,
   insertDpiaAssessmentSchema, insertAiPromptSchema, insertLlmConfigurationSchema,
-  insertRagDocumentSchema, insertPromptDocumentSchema
+  insertRagDocumentSchema, insertPromptDocumentSchema, promptDocuments
 } from "@shared/schema";
 import multer from "multer";
 // import pdfParse from "pdf-parse";
@@ -805,8 +806,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all prompt-document associations
   app.get("/api/admin/prompt-documents", async (req, res) => {
     try {
-      const associations = await db.select().from(promptDocuments);
-      res.json(associations);
+      // Récupérer toutes les associations via une requête SQL directe
+      const allAssociations = await storage.getAllPromptDocuments();
+      res.json(allAssociations);
     } catch (error: any) {
       console.error('Get all prompt documents error:', error);
       res.status(500).json({ error: error.message });
