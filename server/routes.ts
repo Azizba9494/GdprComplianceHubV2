@@ -843,7 +843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Chatbot with RAG support
   app.post("/api/chatbot", async (req, res) => {
     try {
-      const { message, companyId, promptCategory } = req.body;
+      const { message, companyId } = req.body;
       
       let context = null;
       if (companyId) {
@@ -853,31 +853,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Get relevant documents for the prompt category
+      // Get ALL documents from active prompts for general chatbot usage
       let ragDocuments: string[] = [];
-      if (promptCategory) {
-        const activePrompt = await storage.getActivePromptByCategory(promptCategory);
-        if (activePrompt) {
-          const promptDocuments = await storage.getPromptDocuments(activePrompt.id);
-          if (promptDocuments.length > 0) {
-            // Get document contents sorted by priority
-            const documentIds = promptDocuments
-              .sort((a, b) => a.priority - b.priority)
-              .map(pd => pd.documentId);
-            
-            for (const docId of documentIds) {
-              const document = await storage.getRagDocument(docId);
-              if (document && document.isActive) {
-                ragDocuments.push(document.content);
-              }
+      
+      // Get all active prompts
+      const allPrompts = await storage.getAiPrompts();
+      const activePrompts = allPrompts.filter(p => p.isActive);
+      
+      // For each active prompt, get associated documents
+      for (const prompt of activePrompts) {
+        const promptDocuments = await storage.getPromptDocuments(prompt.id);
+        if (promptDocuments.length > 0) {
+          const documentIds = promptDocuments
+            .sort((a, b) => a.priority - b.priority)
+            .map(pd => pd.documentId);
+          
+          for (const docId of documentIds) {
+            const document = await storage.getRagDocument(docId);
+            if (document && document.isActive && !ragDocuments.includes(document.content)) {
+              ragDocuments.push(document.content);
             }
           }
         }
       }
 
+      console.log(`[RAG] Found ${ragDocuments.length} documents for chatbot context`);
+      
       const response = await geminiService.getChatbotResponse(message, context, ragDocuments);
       res.json(response);
     } catch (error: any) {
+      console.error('Chatbot error:', error);
       res.status(500).json({ error: error.message });
     }
   });
