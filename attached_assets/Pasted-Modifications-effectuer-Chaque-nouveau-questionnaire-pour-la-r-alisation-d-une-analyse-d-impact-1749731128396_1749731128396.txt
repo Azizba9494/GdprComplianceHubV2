@@ -1,0 +1,67 @@
+Modifications à effectuer : 
+Chaque nouveau questionnaire pour la réalisation d’une analyse d’impact doit être lié à un traitement particulier et non à l'ensemble des traitements. Pour ce faire, il faut : 
+soit demander en début de questionnaire au client de sélectionner parmi la liste des traitements pour lesquels une analyse d’impact est nécessaire de choisir le traitement concerné par l’analyse. 
+soit attribuer automatiquement le traitement. Cette attribution automatique est réalisée au moment où le client clique sur “Crée l’AIPD” pour chaque traitement concerné. 
+
+Dans la partie vue d’ensemble, ajouter une question 1.1.5 relative aux référentiels applicables au traitement. Il s’agit de recenser les référentiels applicables au traitement, utiles ou à respecter et certifications en matière de protection des données (cf. art. 42 du RGPD], notamment les codes de conduite approuvés (cf. art. 40 du RGPD). A l’instar des autres questions, le client peut répondre directement, ou alors cliquer sur “générer une proposition par l’IA”. Dans cette seconde hypothèse, l’IA doit déterminer en fonction du traitement concerné s’il existe un référentiel applicable à ce traitement. 
+
+Pour la partie 1.2.1 Données personnelles traitées, ajouter un bouton “générer une proposition par l’IA”. Cette proposition sera générée à partir des données qui figurent dans le registre des traitements. 
+
+Dans la partie 2 il faut ajouter les questions et sections suivantes : 
+2.1.3 Explication et justification des finalités
+Explication : Vous avez déjà listé vos objectifs (finalités) dans la partie 1. Il s'agit maintenant de justifier en quoi ils sont légitimes, c'est-à-dire conformes à la loi et clairement définis. Une finalité ne doit pas être vague ou "fourre-tout".
+Questions pour vous guider :
+Vos objectifs sont-ils précis et compréhensibles ?
+Sont-ils en accord avec l'activité légale de votre organisme ?
+Champ de réponse : Zone de texte libre pour la justification.
+Option 2 : &lt;button>Générer une proposition par l’IA&lt;/button>
+2.1.4 Explication et justification du fondement (Base légale)
+Explication : Tout traitement de données personnelles doit reposer sur une des six bases légales prévues par le RGPD. Vous devez choisir celle qui correspond à votre situation et justifier ce choix. Il n'est généralement pas possible de changer de base légale en cours de traitement.
+Questions pour vous guider : Cochez la base légale de votre traitement et expliquez pourquoi :
+☐ Le consentement : La personne a-t-elle donné son accord explicite, libre et éclairé ? (ex: inscription à une newsletter).
+☐ Le contrat : Le traitement est-il indispensable à l'exécution d'un contrat avec la personne ? (ex: traitement d'une adresse pour livrer un colis). 
+☐ L'obligation légale : Une loi vous oblige-t-elle à traiter ces données ? (ex: déclarations sociales pour les salariés). 
+☐ La mission d'intérêt public : Êtes-vous un organisme public qui traite des données dans le cadre de ses missions ? 
+☐ La sauvegarde des intérêts vitaux : Le traitement est-il nécessaire pour protéger la vie d'une personne ? (cas très rare). 
+☐ L'intérêt légitime : Le traitement est-il nécessaire à la poursuite des intérêts de votre organisme, sans porter une atteinte excessive aux droits et libertés des personnes ? (ex: lutte contre la fraude). 
+Champ de réponse : Cases à cocher et zone de texte libre pour la justification.
+Option 2 : &lt;button>Générer une proposition par l’IA&lt;/button>
+2.1.5 Explication et justification de la qualité des données
+Explication : Les données que vous traitez doivent être "exactes et, si nécessaire, tenues à jour". Des décisions basées sur des données erronées peuvent avoir des conséquences négatives pour les personnes.
+Questions pour vous guider :
+Avez-vous mis en place des processus pour vérifier l'exactitude des données lors de leur collecte ?
+Comment les personnes peuvent-elles corriger leurs données si elles sont inexactes ? (voir aussi la section sur les droits).
+Comment mettez-vous à jour les informations qui peuvent devenir obsolètes ?
+Champ de réponse : Zone de texte libre.
+Option 2 : &lt;button>Générer une proposition par l’IA&lt;/button>
+2.1.6 Évaluation des mesures (Tableau récapitulatif)
+Explication : C'est une étape de synthèse pour vous auto-évaluer. Pour chaque grand principe de cette section, indiquez si vous jugez les mesures en place suffisantes ou s'il faut les améliorer.
+Questions pour vous guider : Pour chaque ligne, votre situation est-elle "Acceptable" ou "Améliorable" ? Si elle est améliorable, quelles mesures correctives prévoyez-vous ?
+Champ de réponse : Tableau. | Mesures garantissant la proportionnalité et la nécessité | Acceptable / Améliorable ? | Mesures correctives | | :--- | :--- | :--- | | Finalités : déterminées, explicites et légitimes | | | | Fondement : licéité du traitement | | | | Minimisation des données : adéquates, pertinentes et limitées | | | | Qualité des données : exactes et tenues à jour | | | | Durées de conservation : limitées | | |
+Option 2 : &lt;button>Générer une proposition par l’IA&lt;/button>
+2.2 Évaluation des mesures protectrices des droits des personnes concernées (sections ajoutées)
+2.2.6 Détermination et description des mesures pour la sous-traitance
+Explication : Lorsque vous faites appel à un prestataire (sous-traitant) qui traite des données pour vous, vous devez signer un contrat spécifique et détaillé. Ce contrat doit garantir que le sous-traitant présente des garanties suffisantes en matière de protection des données et qu'il ne traitera les données que sur vos instructions.
+Questions pour vous guider :
+Avez-vous listé tous vos sous-traitants pour ce traitement ?
+Pour chacun d'entre eux, disposez-vous d'un contrat écrit qui respecte les exigences de l'article 28 du RGPD ? 
+Ce contrat précise-t-il bien la nature, la finalité, la durée du traitement, ainsi que les obligations du sous-traitant en matière de sécurité, de confidentialité et d'aide à l'exercice des droits ?
+Champ de réponse : Tableau. | Nom du sous-traitant | Finalité de la sous-traitance | Périmètre | Référence du contrat | Conformité (Art. 28 RGPD) | | :--- | :--- | :--- | :--- | :--- | | | | | | |
+Option 2 : &lt;button>Générer une proposition par l’IA&lt;/button>
+2.2.7 Détermination et description des mesures pour le transfert de données hors de l'Union européenne
+Explication : Le transfert de données personnelles hors de l'UE est interdit par principe, sauf si le pays de destination offre un niveau de protection adéquat ou si des garanties spécifiques sont mises en place (ex: Clauses Contractuelles Types, BCR). Cela s'applique aussi si les données sont simplement accessibles depuis un pays tiers (ex: pour de la maintenance informatique).
+Questions pour vous guider :
+Les données sont-elles stockées ou accessibles en dehors de l'Union européenne (y compris par un de vos sous-traitants) ?
+Si oui, dans quel(s) pays ?
+Quel outil juridique utilisez-vous pour encadrer ce transfert ? (ex: décision d'adéquation de la Commission européenne, signature de Clauses Contractuelles Types, etc.). 
+Champ de réponse : Tableau. | Données | France | UE | Pays reconnu adéquat par l'UE | Autre pays | Justification et encadrement juridique | | :--- | :--- | :--- | :--- | :--- | :--- | | | | | | | |
+Option 2 : &lt;button>Générer une proposition par l’IA&lt;/button>
+2.2.8 Évaluation des mesures (Tableau récapitulatif)
+Explication : Comme pour la section précédente, évaluez de manière synthétique votre niveau de conformité concernant les droits des personnes.
+Questions pour vous guider : Pour chaque ligne, votre situation est-elle "Acceptable" ou "Améliorable" ? Si elle est améliorable, quelles mesures correctives prévoyez-vous ?
+Champ de réponse : Tableau. | Mesures protectrices des droits des personnes concernées | Acceptable / Améliorable ? | Mesures correctives | | :--- | :--- | :--- | | Information des personnes concernées | | | | Recueil du consentement | | | | Exercice des droits d'accès et à la portabilité | | | | Exercice des droits de rectification et d'effacement | | | | Exercice des droits de limitation et d'opposition | | | | Sous-traitance : identifiée et contractualisée | | | | Transferts : respect des obligations | | |
+Option 2 : &lt;button>Générer une proposition par l’IA&lt;/button>
+
+Dans la partie 3.1 Mesures de Sécurité, met à disposition du client une liste de l’ensemble des mesures techniques et opérationnelles qu’il peut ajouter en cliquant dessus. Puis pour chaque mesure ajoutée, permettre au client de décrire la mesure. Ces mesures figurent dans le document intitulé “cnil-pia-3-fr-basesdeconnaissances”.
+
+Pour chacune des questions du questionnaire d’analyse d’impact, n’hésites pas à être plus pédagogue dans les questions et dans les exemples générés car les clients ne comprennent pas toujours de quoi il s’agit. 

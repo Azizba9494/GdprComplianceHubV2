@@ -148,7 +148,7 @@ export const dataBreaches = pgTable("data_breaches", {
 export const dpiaAssessments = pgTable("dpia_assessments", {
   id: serial("id").primaryKey(),
   companyId: integer("company_id").notNull().references(() => companies.id),
-  processingRecordId: integer("processing_record_id").references(() => processingRecords.id),
+  processingRecordId: integer("processing_record_id").notNull().references(() => processingRecords.id),
   
   // Part 1: Context Description
   generalDescription: text("general_description"),
@@ -161,18 +161,65 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
     recipients: string;
     retentionPeriod: string;
   }>>(),
+  applicableReferentials: text("applicable_referentials"), // 1.1.5 - New field for referentials and certifications
+  personalDataProcessed: text("personal_data_processed"), // 1.2.1 - Enhanced field for AI-generated proposals
   
   // Part 2: Fundamental Principles Verification
   dataMinimization: text("data_minimization"),
   retentionJustification: text("retention_justification"),
+  
+  // Section 2.1: Proportionality and necessity measures
+  finalitiesJustification: text("finalities_justification"), // 2.1.3 - New
+  legalBasisJustification: text("legal_basis_justification"), // 2.1.4 - New  
+  legalBasisType: text("legal_basis_type"), // consent, contract, legal_obligation, etc.
+  dataQualityJustification: text("data_quality_justification"), // 2.1.5 - New
+  proportionalityEvaluation: jsonb("proportionality_evaluation").$type<{
+    finalities: {status: 'acceptable' | 'improvable', measures: string},
+    legalBasis: {status: 'acceptable' | 'improvable', measures: string},
+    dataMinimization: {status: 'acceptable' | 'improvable', measures: string},
+    dataQuality: {status: 'acceptable' | 'improvable', measures: string},
+    retentionPeriods: {status: 'acceptable' | 'improvable', measures: string}
+  }>(), // 2.1.6 - New
+  
+  // Section 2.2: Rights protection measures
   rightsInformation: text("rights_information"),
   rightsConsent: text("rights_consent"),
   rightsAccess: text("rights_access"),
   rightsRectification: text("rights_rectification"),
   rightsOpposition: text("rights_opposition"),
+  subcontractingMeasures: jsonb("subcontracting_measures").$type<Array<{
+    name: string,
+    purpose: string,
+    scope: string,
+    contractReference: string,
+    gdprCompliance: string
+  }>>(), // 2.2.6 - New
+  internationalTransfersMeasures: jsonb("international_transfers_measures").$type<Array<{
+    dataType: string,
+    france: boolean,
+    eu: boolean,
+    adequateCountry: boolean,
+    otherCountry: boolean,
+    justification: string
+  }>>(), // 2.2.7 - New
+  rightsProtectionEvaluation: jsonb("rights_protection_evaluation").$type<{
+    information: {status: 'acceptable' | 'improvable', measures: string},
+    consent: {status: 'acceptable' | 'improvable', measures: string},
+    accessPortability: {status: 'acceptable' | 'improvable', measures: string},
+    rectificationErasure: {status: 'acceptable' | 'improvable', measures: string},
+    limitationOpposition: {status: 'acceptable' | 'improvable', measures: string},
+    subcontracting: {status: 'acceptable' | 'improvable', measures: string},
+    internationalTransfers: {status: 'acceptable' | 'improvable', measures: string}
+  }>(), // 2.2.8 - New
   
   // Part 3: Privacy Risk Management
-  securityMeasures: text("security_measures"),
+  securityMeasures: jsonb("security_measures").$type<Array<{
+    id: string,
+    name: string,
+    category: string,
+    description: string,
+    implemented: boolean
+  }>>(), // Enhanced with predefined measures from CNIL base knowledge
   riskAssessment: jsonb("risk_assessment").$type<Array<{
     riskType: "illegitimate_access" | "unwanted_modification" | "data_disappearance";
     riskSources: string;
