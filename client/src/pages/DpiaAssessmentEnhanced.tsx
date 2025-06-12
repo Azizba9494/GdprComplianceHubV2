@@ -772,7 +772,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.1.3 - Finalities justification */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.1.3 Explication et justification des finalités</CardTitle>
+                  <CardTitle>Explication et justification des finalités</CardTitle>
                   <CardDescription>
                     Vous avez déjà listé vos objectifs (finalités) dans la partie 1. Il s'agit maintenant de justifier en quoi ils sont légitimes, c'est-à-dire conformes à la loi et clairement définis. Une finalité ne doit pas être vague ou "fourre-tout".
                   </CardDescription>
