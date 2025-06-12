@@ -612,49 +612,12 @@ export default function DpiaAssessmentEnhanced() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="personalDataProcessed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Données personnelles traitées</FormLabel>
-                        <FormDescription>
-                          Listez de manière détaillée toutes les catégories de données personnelles traitées, en précisant leur nature et leur utilisation.
-                        </FormDescription>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Ex: Données d'identification (nom, prénom, adresse email), données professionnelles (fonction, entreprise), données de connexion..."
-                            className="min-h-[120px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => generateWithAI.mutate({ 
-                              field: "personalDataProcessed",
-                              context: { useRegistryData: true }
-                            })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
-                        </div>
-                        <FormDescription className="text-xs text-gray-500">
-                          Cette proposition sera générée à partir des données qui figurent dans le registre des traitements.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  
 
                   {/* 1.2.2 Personal data categories, processes, supports, recipients and retention */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <Label className="text-base font-medium">1.2.2 Processus, supports, destinataires et durées de conservation</Label>
+                      <Label className="text-base font-medium">Processus, supports, destinataires et durées de conservation</Label>
                       <Button
                         type="button"
                         variant="outline"
