@@ -137,11 +137,47 @@ export default function DpiaList() {
             Gérez vos analyses d'impact sur la protection des données avec assistance IA
           </p>
         </div>
-        <Button onClick={() => setLocation("/dpia/new")}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle AIPD
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => setLocation('/dpia/evaluation')} 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Shield className="h-4 w-4" />
+            Évaluation préliminaire
+          </Button>
+          <Button onClick={() => setLocation("/dpia/new")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle AIPD
+          </Button>
+        </div>
       </div>
+
+      {/* Info card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-blue-600" />
+            Processus AIPD en deux étapes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm">1. Évaluation préliminaire</h4>
+              <p className="text-sm text-muted-foreground">
+                Déterminez si votre traitement nécessite une AIPD selon les critères RGPD et la liste CNIL
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm">2. AIPD complète avec IA</h4>
+              <p className="text-sm text-muted-foreground">
+                Réalisez votre AIPD avec l'assistance de l'IA selon la méthodologie CNIL
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Search */}
       <div className="mb-6">
