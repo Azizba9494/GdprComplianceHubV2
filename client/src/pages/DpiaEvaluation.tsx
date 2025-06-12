@@ -9,6 +9,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { 
@@ -19,7 +21,13 @@ import {
   HelpCircle, 
   FileText,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Search,
+  Download,
+  Lightbulb,
+  Users,
+  FileSearch,
+  Trash2
 } from "lucide-react";
 import { 
   Select, 
@@ -28,6 +36,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface ProcessingRecord {
   id: number;
@@ -102,28 +111,32 @@ const CNIL_MANDATORY_TREATMENTS = [
   "Traitements qui empêchent les personnes d'exercer un droit ou de bénéficier d'un service",
 ];
 
+const COMPANY_ID = 1;
+
 export default function DpiaEvaluation() {
   const [, setLocation] = useLocation();
   const [selectedRecord, setSelectedRecord] = useState<ProcessingRecord | null>(null);
-  const [showResults, setShowResults] = useState(false);
-  const [evaluationResult, setEvaluationResult] = useState<any>(null);
+  const [showEvaluation, setShowEvaluation] = useState(false);
+  const [showFullDpia, setShowFullDpia] = useState(false);
+  const [currentAssessment, setCurrentAssessment] = useState<any>(null);
+  const [evaluationResults, setEvaluationResults] = useState<Record<number, any>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get user company
-  const userId = parseInt(localStorage.getItem("userId") || "1");
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/${userId}`],
+  // Get processing records
+  const { data: records, isLoading: recordsLoading } = useQuery({
+    queryKey: ['/api/records', COMPANY_ID],
+    queryFn: () => fetch(`/api/records/${COMPANY_ID}`).then(res => res.json()),
   });
 
-  // Get processing records
-  const { data: records = [], isLoading: recordsLoading } = useQuery({
-    queryKey: [`/api/records/${(company as any)?.id}`],
-    enabled: !!(company as any)?.id,
+  // Get stored evaluations
+  const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
+    queryKey: ['/api/dpia-evaluations', COMPANY_ID],
+    queryFn: () => fetch(`/api/dpia-evaluations/${COMPANY_ID}`).then(res => res.json()),
   });
 
   // Filter controller records only
-  const controllerRecords = records.filter((record: ProcessingRecord) => record.type === 'controller');
+  const controllerRecords = records?.filter((record: ProcessingRecord) => record.type === 'controller') || [];
 
   const form = useForm({
     defaultValues: {

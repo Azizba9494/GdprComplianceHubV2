@@ -14,7 +14,7 @@ import RightsManagement from "@/pages/rights-management";
 import DPIA from "@/pages/dpia";
 import DpiaList from "@/pages/DpiaList";
 import DpiaAssessment from "@/pages/DpiaAssessment";
-import DpiaEvaluation from "@/pages/DpiaEvaluation";
+import DpiaEvaluationOriginal from "@/pages/DpiaEvaluationOriginal";
 import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
 import Sidebar from "@/components/layout/sidebar";
@@ -39,7 +39,7 @@ function Router() {
             <Route path="/breach-analysis" component={BreachAnalysis} />
             <Route path="/rights" component={RightsManagement} />
             <Route path="/dpia" component={DpiaList} />
-            <Route path="/dpia/evaluation" component={DpiaEvaluation} />
+            <Route path="/dpia/evaluation" component={DpiaEvaluationOriginal} />
             <Route path="/dpia/:id" component={DpiaAssessment} />
             <Route path="/dpia-old" component={DPIA} />
             <Route path="/learning" component={Learning} />

@@ -16,7 +16,8 @@ import {
   Clock,
   Trash2,
   Edit,
-  Shield
+  Shield,
+  HelpCircle
 } from "lucide-react";
 import {
   AlertDialog,
@@ -143,12 +144,12 @@ export default function DpiaList() {
             variant="outline"
             className="flex items-center gap-2"
           >
-            <Shield className="h-4 w-4" />
+            <HelpCircle className="h-4 w-4" />
             Évaluation préliminaire
           </Button>
           <Button onClick={() => setLocation("/dpia/new")}>
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle AIPD
+            Nouvelle AIPD complète
           </Button>
         </div>
       </div>
