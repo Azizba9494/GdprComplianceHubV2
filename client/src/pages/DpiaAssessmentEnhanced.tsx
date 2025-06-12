@@ -417,7 +417,6 @@ export default function DpiaAssessmentEnhanced() {
           </Badge>
         </div>
       </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -433,7 +432,7 @@ export default function DpiaAssessmentEnhanced() {
             <TabsContent value="overview" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>1.1 Description générale du traitement</CardTitle>
+                  <CardTitle>Description générale du traitement</CardTitle>
                   <CardDescription>
                     Décrivez de manière claire et précise le traitement de données personnelles concerné par cette AIPD.
                   </CardDescription>
