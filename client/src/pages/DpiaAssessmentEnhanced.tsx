@@ -1074,7 +1074,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.2.3 - Access and portability rights */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.2.3 Détermination et description des mesures pour les droits d'accès et à la portabilité</CardTitle>
+                  <CardTitle>Détermination et description des mesures pour les droits d'accès et à la portabilité</CardTitle>
                   <CardDescription>
                     Les personnes ont le droit d'accéder à leurs données et de les récupérer dans un format structuré et couramment utilisé.
                   </CardDescription>
