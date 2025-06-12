@@ -930,7 +930,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.1.5 - Data quality justification */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.1.5 Explication et justification de la qualité des données</CardTitle>
+                  <CardTitle>Explication et justification de la qualité des données</CardTitle>
                   <CardDescription>
                     Les données que vous traitez doivent être "exactes et, si nécessaire, tenues à jour". Des décisions basées sur des données erronées peuvent avoir des conséquences négatives pour les personnes.
                   </CardDescription>
