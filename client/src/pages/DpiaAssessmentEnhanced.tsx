@@ -825,7 +825,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.1.4 - Legal basis justification */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.1.4 Explication et justification du fondement (Base légale)</CardTitle>
+                  <CardTitle>Explication et justification du fondement (Base légale)</CardTitle>
                   <CardDescription>
                     Tout traitement de données personnelles doit reposer sur une des six bases légales prévues par le RGPD. Vous devez choisir celle qui correspond à votre situation et justifier ce choix. Il n'est généralement pas possible de changer de base légale en cours de traitement.
                   </CardDescription>
