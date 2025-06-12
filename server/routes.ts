@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
-import { db } from "./db";
+import { db, testDatabaseConnection } from "./db";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
@@ -61,6 +61,11 @@ async function getRagDocuments(): Promise<string[]> {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Test database connection before setting up routes
+  const dbConnected = await testDatabaseConnection();
+  if (!dbConnected) {
+    console.warn('Database connection failed, some routes may not work properly');
+  }
   
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
