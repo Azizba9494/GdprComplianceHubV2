@@ -573,7 +573,7 @@ export default function DpiaAssessmentEnhanced() {
                     name="applicableReferentials"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>1.1.5 Référentiels applicables</FormLabel>
+                        <FormLabel>Référentiels applicables</FormLabel>
                         <FormDescription>
                           Recensez les référentiels applicables au traitement, utiles ou à respecter et certifications en matière de protection des données (art. 42 du RGPD), notamment les codes de conduite approuvés (art. 40 du RGPD).
                         </FormDescription>
