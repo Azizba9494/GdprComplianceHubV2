@@ -1162,7 +1162,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.2.5 - Limitation and opposition rights */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.2.5 Détermination et description des mesures pour les droits de limitation du traitement et d'opposition</CardTitle>
+                  <CardTitle>Détermination et description des mesures pour les droits de limitation du traitement et d'opposition</CardTitle>
                   <CardDescription>
                     Les personnes peuvent demander la limitation du traitement de leurs données ou s'opposer au traitement dans certaines situations.
                   </CardDescription>
