@@ -220,6 +220,12 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
     description: string,
     implemented: boolean
   }>>(), // Enhanced with predefined measures from CNIL base knowledge
+  customSecurityMeasures: jsonb("custom_security_measures").$type<Array<{
+    name: string,
+    category: string,
+    description: string,
+    implemented: boolean
+  }>>(), // Custom security measures added by users
   riskAssessment: jsonb("risk_assessment").$type<Array<{
     riskType: "illegitimate_access" | "unwanted_modification" | "data_disappearance";
     riskSources: string;
