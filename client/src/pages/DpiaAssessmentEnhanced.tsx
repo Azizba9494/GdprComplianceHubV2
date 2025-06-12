@@ -330,9 +330,6 @@ const dpiaFormSchema = z.object({
     }).optional()
   }).optional(),
   
-  // Data processing simplified
-  personalDataProcessed: z.string().optional(),
-  
   // Status
   status: z.enum(["draft", "inprogress", "completed", "validated"]).default("draft")
 });
@@ -2029,7 +2026,577 @@ export default function DpiaAssessmentEnhanced() {
               </Card>
             </TabsContent>
 
-            {/* Tab 5: Validation */}
+            {/* Tab 5: Risk Assessment */}
+            <TabsContent value="risks" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Évaluation des risques</CardTitle>
+                  <CardDescription>
+                    Analysez les risques potentiels pour les droits et libertés des personnes concernées selon les 3 scénarios de risque principaux.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-8">
+                    
+                    {/* Scenario 1: Illegitimate Access */}
+                    <div className="border rounded-lg p-6 space-y-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                          <span className="text-red-600 dark:text-red-400 font-semibold">1</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          Accès illégitime aux données
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.illegitimateAccess.impacts"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Décrivez les conséquences possibles d'un accès non autorisé aux données..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.illegitimateAccess.threats"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Menaces identifiées</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Listez les menaces qui pourraient conduire à un accès illégitime..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.illegitimateAccess.sources"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sources de risque</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Identifiez les sources potentielles de ce risque..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.illegitimateAccess.measures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Risk evaluation */}
+                      <div className="border-t pt-6">
+                        <h4 className="font-medium mb-4">Évaluation du risque</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.illegitimateAccess.severity"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Gravité des impacts</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionnez la gravité" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="negligible">Négligeable</SelectItem>
+                                      <SelectItem value="limited">Limitée</SelectItem>
+                                      <SelectItem value="important">Importante</SelectItem>
+                                      <SelectItem value="maximum">Maximale</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.illegitimateAccess.severityJustification"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Justification de la gravité</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Justifiez votre évaluation de la gravité..."
+                                      className="min-h-[80px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.illegitimateAccess.likelihood"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Vraisemblance</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionnez la vraisemblance" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="negligible">Négligeable</SelectItem>
+                                      <SelectItem value="limited">Limitée</SelectItem>
+                                      <SelectItem value="important">Importante</SelectItem>
+                                      <SelectItem value="maximum">Maximale</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.illegitimateAccess.likelihoodJustification"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Justification de la vraisemblance</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Justifiez votre évaluation de la vraisemblance..."
+                                      className="min-h-[80px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Scenario 2: Unwanted Modification */}
+                    <div className="border rounded-lg p-6 space-y-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center">
+                          <span className="text-orange-600 dark:text-orange-400 font-semibold">2</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          Modification non désirée des données
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.unwantedModification.impacts"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Décrivez les conséquences d'une modification non autorisée des données..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.unwantedModification.threats"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Menaces identifiées</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Listez les menaces qui pourraient conduire à une modification non désirée..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.unwantedModification.sources"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sources de risque</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Identifiez les sources potentielles de ce risque..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.unwantedModification.measures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Risk evaluation */}
+                      <div className="border-t pt-6">
+                        <h4 className="font-medium mb-4">Évaluation du risque</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.unwantedModification.severity"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Gravité des impacts</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionnez la gravité" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="negligible">Négligeable</SelectItem>
+                                      <SelectItem value="limited">Limitée</SelectItem>
+                                      <SelectItem value="important">Importante</SelectItem>
+                                      <SelectItem value="maximum">Maximale</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.unwantedModification.severityJustification"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Justification de la gravité</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Justifiez votre évaluation de la gravité..."
+                                      className="min-h-[80px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.unwantedModification.likelihood"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Vraisemblance</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionnez la vraisemblance" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="negligible">Négligeable</SelectItem>
+                                      <SelectItem value="limited">Limitée</SelectItem>
+                                      <SelectItem value="important">Importante</SelectItem>
+                                      <SelectItem value="maximum">Maximale</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.unwantedModification.likelihoodJustification"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Justification de la vraisemblance</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Justifiez votre évaluation de la vraisemblance..."
+                                      className="min-h-[80px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Scenario 3: Data Disappearance */}
+                    <div className="border rounded-lg p-6 space-y-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                          <span className="text-blue-600 dark:text-blue-400 font-semibold">3</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          Disparition des données
+                        </h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.dataDisappearance.impacts"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Décrivez les conséquences de la perte ou destruction des données..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.dataDisappearance.threats"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Menaces identifiées</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Listez les menaces qui pourraient conduire à la disparition des données..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.dataDisappearance.sources"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Sources de risque</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Identifiez les sources potentielles de ce risque..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="riskScenarios.dataDisappearance.measures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Risk evaluation */}
+                      <div className="border-t pt-6">
+                        <h4 className="font-medium mb-4">Évaluation du risque</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.dataDisappearance.severity"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Gravité des impacts</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionnez la gravité" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="negligible">Négligeable</SelectItem>
+                                      <SelectItem value="limited">Limitée</SelectItem>
+                                      <SelectItem value="important">Importante</SelectItem>
+                                      <SelectItem value="maximum">Maximale</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.dataDisappearance.severityJustification"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Justification de la gravité</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Justifiez votre évaluation de la gravité..."
+                                      className="min-h-[80px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+
+                          <div className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.dataDisappearance.likelihood"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Vraisemblance</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Sélectionnez la vraisemblance" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="negligible">Négligeable</SelectItem>
+                                      <SelectItem value="limited">Limitée</SelectItem>
+                                      <SelectItem value="important">Importante</SelectItem>
+                                      <SelectItem value="maximum">Maximale</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="riskScenarios.dataDisappearance.likelihoodJustification"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Justification de la vraisemblance</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Justifiez votre évaluation de la vraisemblance..."
+                                      className="min-h-[80px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* AI Generation Button */}
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateWithAI.mutate({ field: "riskScenarios" })}
+                        disabled={isGenerating}
+                      >
+                        <Brain className="h-4 w-4 mr-2" />
+                        {isGenerating ? "Génération..." : "Générer une analyse de risques avec l'IA"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tab 6: Validation */}
             <TabsContent value="validation" className="space-y-6">
               {/* Validation summary */}
               <Card>

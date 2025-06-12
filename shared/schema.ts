@@ -226,14 +226,39 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
     description: string,
     implemented: boolean
   }>>(), // Custom security measures added by users
-  riskAssessment: jsonb("risk_assessment").$type<Array<{
-    riskType: "illegitimate_access" | "unwanted_modification" | "data_disappearance";
-    riskSources: string;
-    threats: string;
-    potentialImpacts: string;
-    severity: "negligible" | "limited" | "significant" | "maximum";
-    likelihood: "negligible" | "limited" | "significant" | "maximum";
-  }>>(),
+  // Risk scenarios with detailed evaluation
+  riskScenarios: jsonb("risk_scenarios").$type<{
+    illegitimateAccess?: {
+      impacts?: string;
+      threats?: string;
+      sources?: string;
+      measures?: string;
+      severity?: "undefined" | "negligible" | "limited" | "important" | "maximum";
+      severityJustification?: string;
+      likelihood?: "undefined" | "negligible" | "limited" | "important" | "maximum";
+      likelihoodJustification?: string;
+    };
+    unwantedModification?: {
+      impacts?: string;
+      threats?: string;
+      sources?: string;
+      measures?: string;
+      severity?: "undefined" | "negligible" | "limited" | "important" | "maximum";
+      severityJustification?: string;
+      likelihood?: "undefined" | "negligible" | "limited" | "important" | "maximum";
+      likelihoodJustification?: string;
+    };
+    dataDisappearance?: {
+      impacts?: string;
+      threats?: string;
+      sources?: string;
+      measures?: string;
+      severity?: "undefined" | "negligible" | "limited" | "important" | "maximum";
+      severityJustification?: string;
+      likelihood?: "undefined" | "negligible" | "limited" | "important" | "maximum";
+      likelihoodJustification?: string;
+    };
+  }>(),
   
   // Part 4: Validation
   actionPlan: jsonb("action_plan").$type<Array<{
