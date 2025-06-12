@@ -26,12 +26,19 @@ const SECURITY_CATEGORIES = [
   "Authentification",
   "Chiffrement", 
   "Contrôle d'accès",
+  "Contrôle d'accès logique",
   "Sécurité réseau",
   "Surveillance",
   "Sauvegarde",
   "Organisationnel",
   "Sécurité physique",
-  "Maintenance"
+  "Maintenance",
+  "Anonymisation",
+  "Cloisonnement",
+  "Traçabilité",
+  "Intégrité",
+  "Archivage",
+  "Sécurité documentaire"
 ];
 
 const CNIL_SECURITY_MEASURES = [
