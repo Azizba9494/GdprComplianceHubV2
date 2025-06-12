@@ -2,45 +2,36 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { storage } from '../storage';
 
 export class GeminiService {
-  private client: GoogleGenerativeAI | null = null;
+  constructor() {}
 
-  constructor() {
-    // Constructor ne configure plus directement le client
-    // Il sera configuré dynamiquement selon la configuration active
-  }
-
-  private async getActiveClient() {
-    const activeLlmConfig = await storage.getActiveLlmConfiguration();
-    
-    if (!activeLlmConfig) {
-      // Fallback vers la variable d'environnement
-      const apiKey = process.env.GOOGLE_API_KEY;
-      if (apiKey) {
-        console.log('[LLM] Using fallback environment API key');
-        return new GoogleGenerativeAI(apiKey);
+  private async getClient(): Promise<GoogleGenerativeAI> {
+    // Try to get active LLM configuration
+    try {
+      const activeLlmConfig = await storage.getActiveLlmConfiguration();
+      
+      if (activeLlmConfig && activeLlmConfig.provider === 'google') {
+        const apiKey = process.env[activeLlmConfig.apiKeyName];
+        if (apiKey) {
+          console.log(`[LLM] Using configuration: ${activeLlmConfig.name}`);
+          return new GoogleGenerativeAI(apiKey);
+        }
       }
-      throw new Error('Aucune configuration LLM active trouvée');
-    }
-
-    console.log(`[LLM] Using active configuration: ${activeLlmConfig.name} (${activeLlmConfig.provider})`);
-    
-    if (activeLlmConfig.provider === 'google') {
-      const apiKey = process.env[activeLlmConfig.apiKeyName] || process.env.GOOGLE_API_KEY;
-      if (apiKey) {
-        return new GoogleGenerativeAI(apiKey);
-      }
-      throw new Error(`Clé API non trouvée pour ${activeLlmConfig.apiKeyName}`);
+    } catch (error) {
+      console.log('[LLM] Error getting active config, using fallback');
     }
     
-    throw new Error(`Configuration LLM non supportée: ${activeLlmConfig.provider}`);
-  }
-
-  private async ensureClient() {
-    return await this.getActiveClient();
+    // Fallback to environment variable
+    const apiKey = process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      throw new Error('Google API key not configured');
+    }
+    
+    console.log('[LLM] Using fallback environment API key');
+    return new GoogleGenerativeAI(apiKey);
   }
 
   async generateResponse(prompt: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
-    const client = this.ensureClient();
+    const client = await this.getClient();
     
     try {
       const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
@@ -71,7 +62,7 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
   }
 
   async generateStructuredResponse(prompt: string, schema: any, context?: any, ragDocuments?: string[]): Promise<any> {
-    const client = this.ensureClient();
+    const client = await this.getClient();
     
     try {
       const model = client.getGenerativeModel({ 

@@ -903,37 +903,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test RAG system endpoint
-  app.post("/api/test-rag", async (req, res) => {
+  // Test admin functionality endpoint
+  app.post("/api/test-admin", async (req, res) => {
     try {
-      const { message } = req.body;
+      const { testType } = req.body;
       
-      // Get RAG documents
-      const ragDocuments = await getRagDocuments();
-      
-      // Test with chatbot
-      const chatbotResponse = await geminiService.getChatbotResponse(message, null, ragDocuments);
-      
-      // Test with breach analysis (sample data)
-      const sampleBreachData = {
-        description: "Test de violation de données",
-        affectedData: ["email", "nom"],
-        numberOfRecords: 100,
-        breachType: "accidental_loss"
-      };
-      
-      const breachAnalysis = await geminiService.analyzeDataBreach(sampleBreachData, ragDocuments);
-      
-      res.json({
-        ragDocumentsCount: ragDocuments.length,
-        ragDocumentsPreview: ragDocuments.map(doc => doc.substring(0, 200) + "..."),
-        chatbotResponse: chatbotResponse.response,
-        breachAnalysis,
-        message: `RAG system test completed with ${ragDocuments.length} documents`
-      });
+      if (testType === 'prompts') {
+        // Test prompt modification functionality
+        const prompts = await storage.getAiPrompts();
+        const activePrompts = prompts.filter(p => p.isActive);
+        const chatbotPrompt = await storage.getActivePromptByCategory('chatbot');
+        
+        res.json({
+          totalPrompts: prompts.length,
+          activePrompts: activePrompts.length,
+          chatbotPromptFound: !!chatbotPrompt,
+          chatbotPromptId: chatbotPrompt?.id,
+          message: `Prompts test: ${prompts.length} total, ${activePrompts.length} active, chatbot prompt ${chatbotPrompt ? 'found' : 'not found'}`
+        });
+      } else if (testType === 'llm') {
+        // Test LLM configuration functionality
+        const llmConfigs = await storage.getLlmConfigurations();
+        const activeLlm = await storage.getActiveLlmConfiguration();
+        
+        res.json({
+          totalConfigs: llmConfigs.length,
+          activeConfigFound: !!activeLlm,
+          activeConfigName: activeLlm?.name,
+          activeConfigProvider: activeLlm?.provider,
+          message: `LLM test: ${llmConfigs.length} configurations, active: ${activeLlm ? activeLlm.name : 'none'}`
+        });
+      } else {
+        res.status(400).json({ error: 'Invalid test type. Use "prompts" or "llm"' });
+      }
       
     } catch (error: any) {
-      console.error('RAG test error:', error);
+      console.error('Admin test error:', error);
       res.status(500).json({ error: error.message });
     }
   });
