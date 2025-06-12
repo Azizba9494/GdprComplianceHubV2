@@ -111,11 +111,21 @@ const dpiaFormSchema = z.object({
   // Part 1: Context Description - Enhanced
   generalDescription: z.string().optional(),
   processingPurposes: z.string().optional(),
+  dataController: z.string().optional(), // Responsable du traitement
+  dataProcessors: z.string().optional(), // Sous-traitants
   applicableReferentials: z.string().optional(), // 1.1.5 - New field
   personalDataProcessed: z.string().optional(), // 1.2.1 - Enhanced field
+  personalDataCategories: z.array(z.object({
+    category: z.string(),
+    examples: z.string(),
+    recipients: z.string(),
+    retentionPeriod: z.string(),
+  })).optional(), // Processus, supports, destinataires et durées
   
   // Part 2.1: Proportionality and necessity measures - New sections
   finalitiesJustification: z.string().optional(), // 2.1.3
+  dataMinimization: z.string().optional(), // Minimisation des données
+  retentionJustification: z.string().optional(), // Durées de conservation
   legalBasisType: z.enum(["consent", "contract", "legal_obligation", "public_task", "vital_interests", "legitimate_interests"]).optional(),
   legalBasisJustification: z.string().optional(), // 2.1.4
   dataQualityJustification: z.string().optional(), // 2.1.5
@@ -128,11 +138,11 @@ const dpiaFormSchema = z.object({
   }).optional(), // 2.1.6
   
   // Part 2.2: Rights protection measures - Enhanced sections
-  rightsInformation: z.string().optional(),
-  rightsConsent: z.string().optional(),
-  rightsAccess: z.string().optional(),
-  rightsRectification: z.string().optional(),
-  rightsOpposition: z.string().optional(),
+  rightsInformation: z.string().optional(), // Mesures pour l'information des personnes
+  rightsConsent: z.string().optional(), // Mesures pour le recueil du consentement
+  rightsAccess: z.string().optional(), // Mesures pour les droits d'accès et à la portabilité
+  rightsRectification: z.string().optional(), // Mesures pour les droits de rectification et d'effacement
+  rightsOpposition: z.string().optional(), // Mesures pour les droits de limitation et d'opposition
   subcontractingMeasures: z.array(z.object({
     name: z.string(),
     purpose: z.string(),
@@ -495,6 +505,72 @@ export default function DpiaAssessmentEnhanced() {
                   {/* 1.1.5 - New field: Applicable referentials */}
                   <FormField
                     control={form.control}
+                    name="dataController"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Responsable du traitement</FormLabel>
+                        <FormDescription>
+                          Identifiez l'organisme qui détermine les finalités et les moyens du traitement.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Nom de l'entreprise, adresse, représentant légal..."
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "dataController" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer avec l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="dataProcessors"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sous-traitants</FormLabel>
+                        <FormDescription>
+                          Listez les organismes qui traitent des données personnelles pour le compte du responsable de traitement.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Prestataires informatiques, hébergeurs, services de maintenance..."
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "dataProcessors" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer avec l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="applicableReferentials"
                     render={({ field }) => (
                       <FormItem>
@@ -536,7 +612,7 @@ export default function DpiaAssessmentEnhanced() {
                     Identifiez précisément les catégories de données personnelles concernées par le traitement.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
                   <FormField
                     control={form.control}
                     name="personalDataProcessed"
@@ -575,6 +651,119 @@ export default function DpiaAssessmentEnhanced() {
                       </FormItem>
                     )}
                   />
+
+                  {/* 1.2.2 Personal data categories, processes, supports, recipients and retention */}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-base font-medium">1.2.2 Processus, supports, destinataires et durées de conservation</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const current = form.getValues("personalDataCategories") || [];
+                          form.setValue("personalDataCategories", [...current, {
+                            category: "",
+                            examples: "",
+                            recipients: "",
+                            retentionPeriod: ""
+                          }]);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter une catégorie
+                      </Button>
+                    </div>
+
+                    {form.watch("personalDataCategories")?.map((_, index) => (
+                      <Card key={index} className="p-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-medium">Catégorie {index + 1}</h4>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const current = form.getValues("personalDataCategories") || [];
+                              form.setValue("personalDataCategories", current.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name={`personalDataCategories.${index}.category`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Catégorie de données</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Ex: Données d'identification" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`personalDataCategories.${index}.examples`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Exemples et processus</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Ex: Nom, prénom, email - collecte via formulaire web, traitement automatisé, stockage base de données"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`personalDataCategories.${index}.recipients`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Destinataires</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Ex: Service commercial, partenaires" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`personalDataCategories.${index}.retentionPeriod`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Durée de conservation</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Ex: 3 ans après fin de relation" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </Card>
+                    ))}
+
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateWithAI.mutate({ field: "personalDataCategories" })}
+                        disabled={isGenerating}
+                      >
+                        <Brain className="h-4 w-4 mr-2" />
+                        Générer avec l'IA
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -795,6 +984,225 @@ export default function DpiaAssessmentEnhanced() {
 
             {/* Tab 3: Rights protection measures */}
             <TabsContent value="rights" className="space-y-6">
+              {/* 2.2.1 - Information measures */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>2.2.1 Détermination et description des mesures pour l'information des personnes</CardTitle>
+                  <CardDescription>
+                    Les personnes concernées doivent être informées de manière claire et transparente du traitement de leurs données personnelles.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="rightsInformation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mesures d'information</FormLabel>
+                        <FormDescription>
+                          Décrivez comment vous informez les personnes concernées : mentions légales, politique de confidentialité, notices d'information, etc.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Politique de confidentialité accessible sur le site, mentions dans les formulaires de collecte, information lors de la création de compte..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "rightsInformation" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer une proposition par l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* 2.2.2 - Consent measures */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>2.2.2 Détermination et description des mesures pour le recueil du consentement</CardTitle>
+                  <CardDescription>
+                    Si votre base légale est le consentement, décrivez comment vous le recueillez de manière libre, spécifique, éclairée et univoque.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="rightsConsent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mesures pour le consentement</FormLabel>
+                        <FormDescription>
+                          Détaillez vos mécanismes de recueil et de gestion du consentement (cases à cocher, double opt-in, etc.).
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Cases à cocher non pré-cochées, double opt-in pour la newsletter, possibilité de retrait facile du consentement..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "rightsConsent" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer une proposition par l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* 2.2.3 - Access and portability rights */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>2.2.3 Détermination et description des mesures pour les droits d'accès et à la portabilité</CardTitle>
+                  <CardDescription>
+                    Les personnes ont le droit d'accéder à leurs données et de les récupérer dans un format structuré et couramment utilisé.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="rightsAccess"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mesures pour l'accès et la portabilité</FormLabel>
+                        <FormDescription>
+                          Décrivez comment les personnes peuvent exercer leurs droits d'accès et de portabilité des données.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Formulaire en ligne dédié, adresse email de contact DPO, export des données en format JSON/CSV, délai de réponse 1 mois..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "rightsAccess" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer une proposition par l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* 2.2.4 - Rectification and erasure rights */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>2.2.4 Détermination et description des mesures pour les droits de rectification et d'effacement</CardTitle>
+                  <CardDescription>
+                    Les personnes peuvent demander la rectification de leurs données inexactes ou leur effacement dans certaines conditions.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="rightsRectification"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mesures pour la rectification et l'effacement</FormLabel>
+                        <FormDescription>
+                          Expliquez vos procédures pour traiter les demandes de rectification et d'effacement des données.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Interface utilisateur pour modifier les données, procédure de vérification d'identité, suppression définitive après demande, information des sous-traitants..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "rightsRectification" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer une proposition par l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* 2.2.5 - Limitation and opposition rights */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>2.2.5 Détermination et description des mesures pour les droits de limitation du traitement et d'opposition</CardTitle>
+                  <CardDescription>
+                    Les personnes peuvent demander la limitation du traitement de leurs données ou s'opposer au traitement dans certaines situations.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="rightsOpposition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mesures pour la limitation et l'opposition</FormLabel>
+                        <FormDescription>
+                          Décrivez comment vous gérez les demandes de limitation du traitement et d'opposition.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Marquage des données limitées, arrêt du traitement marketing, procédure d'opposition pour prospection, gestion des listes d'opposition..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "rightsOpposition" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer une proposition par l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
               {/* 2.2.6 - Subcontracting measures */}
               <Card>
                 <CardHeader>
