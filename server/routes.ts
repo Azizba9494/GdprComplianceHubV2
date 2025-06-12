@@ -373,7 +373,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/breaches/analyze", async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
-      const analysis = await geminiService.analyzeDataBreach(breachData);
+      
+      // Get RAG documents for enhanced analysis
+      const ragDocuments = await getRagDocuments();
+      console.log(`[RAG] Found ${ragDocuments.length} documents for breach analysis`);
+      
+      const analysis = await geminiService.analyzeDataBreach(breachData, ragDocuments);
       
       const breach = await storage.createDataBreach({
         ...breachData,
@@ -894,6 +899,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(response);
     } catch (error: any) {
       console.error('Chatbot error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Test RAG system endpoint
+  app.post("/api/test-rag", async (req, res) => {
+    try {
+      const { message } = req.body;
+      
+      // Get RAG documents
+      const ragDocuments = await getRagDocuments();
+      
+      // Test with chatbot
+      const chatbotResponse = await geminiService.getChatbotResponse(message, null, ragDocuments);
+      
+      // Test with breach analysis (sample data)
+      const sampleBreachData = {
+        description: "Test de violation de données",
+        affectedData: ["email", "nom"],
+        numberOfRecords: 100,
+        breachType: "accidental_loss"
+      };
+      
+      const breachAnalysis = await geminiService.analyzeDataBreach(sampleBreachData, ragDocuments);
+      
+      res.json({
+        ragDocumentsCount: ragDocuments.length,
+        ragDocumentsPreview: ragDocuments.map(doc => doc.substring(0, 200) + "..."),
+        chatbotResponse: chatbotResponse.response,
+        breachAnalysis,
+        message: `RAG system test completed with ${ragDocuments.length} documents`
+      });
+      
+    } catch (error: any) {
+      console.error('RAG test error:', error);
       res.status(500).json({ error: error.message });
     }
   });

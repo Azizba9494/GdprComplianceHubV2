@@ -160,7 +160,7 @@ La politique doit être:
     return { content: result.response };
   }
 
-  async analyzeDataBreach(breachData: any): Promise<{
+  async analyzeDataBreach(breachData: any, ragDocuments?: string[]): Promise<{
     notificationRequired: boolean;
     justification: string;
     riskLevel: string;
@@ -183,7 +183,7 @@ Déterminez:
       recommendations: ["string"]
     };
 
-    return await this.generateStructuredResponse(prompt, schema, breachData);
+    return await this.generateStructuredResponse(prompt, schema, breachData, ragDocuments);
   }
 
   async generateProcessingRecord(company: any, processingType: string, description: string): Promise<any> {
