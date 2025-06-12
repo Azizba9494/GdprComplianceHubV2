@@ -21,7 +21,87 @@ import { useToast } from "@/hooks/use-toast";
 import { Brain, Save, FileText, Shield, AlertTriangle, CheckCircle, Loader2, Plus, Trash2, ArrowLeft } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CNIL_SECURITY_MEASURES, SECURITY_CATEGORIES } from "../../../shared/cnil-security-measures";
+// Import constants directly in the file since the shared import is causing issues
+const SECURITY_CATEGORIES = [
+  "Authentification",
+  "Chiffrement", 
+  "Contrôle d'accès",
+  "Sécurité réseau",
+  "Surveillance",
+  "Sauvegarde",
+  "Organisationnel",
+  "Sécurité physique",
+  "Maintenance"
+];
+
+const CNIL_SECURITY_MEASURES = [
+  {
+    id: "auth_001",
+    name: "Authentification par mot de passe",
+    category: "Authentification",
+    description: "Mise en place de mots de passe robustes avec politique de complexité",
+  },
+  {
+    id: "auth_002",
+    name: "Authentification à deux facteurs (2FA)",
+    category: "Authentification",
+    description: "Authentification renforcée par un second facteur",
+  },
+  {
+    id: "crypto_001",
+    name: "Chiffrement des données en transit",
+    category: "Chiffrement",
+    description: "Protection des données lors de leur transmission",
+  },
+  {
+    id: "crypto_002",
+    name: "Chiffrement des données au repos",
+    category: "Chiffrement",
+    description: "Protection des données stockées",
+  },
+  {
+    id: "access_001",
+    name: "Gestion des habilitations",
+    category: "Contrôle d'accès",
+    description: "Attribution et révision des droits d'accès",
+  },
+  {
+    id: "network_001",
+    name: "Pare-feu (Firewall)",
+    category: "Sécurité réseau",
+    description: "Filtrage du trafic réseau entrant et sortant",
+  },
+  {
+    id: "monitor_001",
+    name: "Surveillance continue",
+    category: "Surveillance",
+    description: "Monitoring 24/7 des systèmes et réseaux",
+  },
+  {
+    id: "backup_001",
+    name: "Sauvegarde régulière",
+    category: "Sauvegarde",
+    description: "Copies de sécurité automatisées et testées",
+  },
+  {
+    id: "org_001",
+    name: "Formation du personnel",
+    category: "Organisationnel",
+    description: "Sensibilisation à la sécurité et protection des données",
+  },
+  {
+    id: "physical_001",
+    name: "Contrôle d'accès physique",
+    category: "Sécurité physique",
+    description: "Protection des locaux et équipements",
+  },
+  {
+    id: "update_001",
+    name: "Gestion des correctifs",
+    category: "Maintenance",
+    description: "Application régulière des mises à jour de sécurité",
+  }
+];
 
 // Enhanced schema with new sections
 const dpiaFormSchema = z.object({
