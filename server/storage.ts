@@ -87,6 +87,7 @@ export interface IStorage {
   
   // DPIA Assessments
   getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]>;
+  getDpiaAssessment(id: number): Promise<DpiaAssessment | undefined>;
   createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment>;
   updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment>;
   deleteDpiaAssessment(id: number): Promise<void>;
@@ -345,6 +346,11 @@ export class DatabaseStorage implements IStorage {
   // DPIA Assessments
   async getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]> {
     return await db.select().from(dpiaAssessments).where(eq(dpiaAssessments.companyId, companyId)).orderBy(desc(dpiaAssessments.createdAt));
+  }
+
+  async getDpiaAssessment(id: number): Promise<DpiaAssessment | undefined> {
+    const [assessment] = await db.select().from(dpiaAssessments).where(eq(dpiaAssessments.id, id));
+    return assessment || undefined;
   }
 
   async createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment> {

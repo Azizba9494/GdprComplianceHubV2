@@ -112,14 +112,14 @@ export default function DpiaAssessment() {
 
   // Load existing DPIA if editing
   const { data: existingDpia, isLoading } = useQuery({
-    queryKey: [`/api/dpia/${id}`],
+    queryKey: [`/api/dpia/assessment/${id}`],
     enabled: !!id && id !== "new",
   });
 
   const form = useForm<DpiaFormData>({
     resolver: zodResolver(dpiaFormSchema),
     defaultValues: {
-      companyId: company?.id || 1,
+      companyId: (company as any)?.id || 1,
       status: "draft",
       personalDataCategories: [],
       riskAssessment: [],
@@ -130,19 +130,20 @@ export default function DpiaAssessment() {
   // Load existing data into form
   useEffect(() => {
     if (existingDpia && company) {
+      const dpiaData = existingDpia as any;
       form.reset({
-        ...existingDpia,
+        ...dpiaData,
         companyId: company.id,
       });
       
-      if (existingDpia.personalDataCategories) {
-        setDataCategories(existingDpia.personalDataCategories);
+      if (dpiaData.personalDataCategories) {
+        setDataCategories(dpiaData.personalDataCategories);
       }
-      if (existingDpia.riskAssessment) {
-        setRisks(existingDpia.riskAssessment);
+      if (dpiaData.riskAssessment) {
+        setRisks(dpiaData.riskAssessment);
       }
-      if (existingDpia.actionPlan) {
-        setActions(existingDpia.actionPlan);
+      if (dpiaData.actionPlan) {
+        setActions(dpiaData.actionPlan);
       }
     }
   }, [existingDpia, company, form]);
