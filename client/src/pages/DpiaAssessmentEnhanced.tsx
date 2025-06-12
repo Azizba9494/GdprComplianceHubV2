@@ -35,6 +35,7 @@ const SECURITY_CATEGORIES = [
 ];
 
 const CNIL_SECURITY_MEASURES = [
+  // Authentification
   {
     id: "auth_001",
     name: "Authentification par mot de passe",
@@ -46,6 +47,110 @@ const CNIL_SECURITY_MEASURES = [
     name: "Authentification à deux facteurs (2FA)",
     category: "Authentification",
     description: "Authentification renforcée par un second facteur",
+  },
+  {
+    id: "auth_003",
+    name: "Authentification unique (SSO)",
+    category: "Authentification",
+    description: "Système d'authentification centralisée",
+  },
+  
+  // Anonymisation
+  {
+    id: "anon_001",
+    name: "Anonymisation",
+    category: "Anonymisation",
+    description: "Suppression de tout élément d'identification directe ou indirecte",
+  },
+  {
+    id: "anon_002",
+    name: "Pseudonymisation",
+    category: "Anonymisation",
+    description: "Remplacement des identifiants par des pseudonymes",
+  },
+  
+  // Cloisonnement
+  {
+    id: "compartment_001",
+    name: "Cloisonnement des données",
+    category: "Cloisonnement",
+    description: "Isolation des données par rapport au reste du système d'information",
+  },
+  {
+    id: "compartment_002",
+    name: "Séparation des environnements",
+    category: "Cloisonnement",
+    description: "Isolation des environnements de développement et production",
+  },
+  
+  // Contrôle d'accès logique
+  {
+    id: "logical_access_001",
+    name: "Contrôle des accès logiques",
+    category: "Contrôle d'accès logique",
+    description: "Gestion fine des droits d'accès aux systèmes et applications",
+  },
+  {
+    id: "logical_access_002",
+    name: "Gestion des rôles et permissions",
+    category: "Contrôle d'accès logique",
+    description: "Attribution des droits selon le principe du moindre privilège",
+  },
+  
+  // Traçabilité
+  {
+    id: "traceability_001",
+    name: "Traçabilité (journalisation)",
+    category: "Traçabilité",
+    description: "Enregistrement détaillé de toutes les opérations sur les données",
+  },
+  {
+    id: "traceability_002",
+    name: "Horodatage sécurisé",
+    category: "Traçabilité",
+    description: "Horodatage qualifié des opérations critiques",
+  },
+  
+  // Intégrité
+  {
+    id: "integrity_001",
+    name: "Contrôle d'intégrité",
+    category: "Intégrité",
+    description: "Vérification de l'intégrité et de l'authenticité des données",
+  },
+  {
+    id: "integrity_002",
+    name: "Signature électronique",
+    category: "Intégrité",
+    description: "Protection de l'authenticité par signature numérique",
+  },
+  
+  // Archivage
+  {
+    id: "archive_001",
+    name: "Archivage sécurisé",
+    category: "Archivage",
+    description: "Conservation sécurisée à long terme des données",
+  },
+  {
+    id: "archive_002",
+    name: "Coffre-fort numérique",
+    category: "Archivage",
+    description: "Stockage hautement sécurisé pour documents sensibles",
+  },
+  
+  // Sécurité documentaire
+  {
+    id: "doc_security_001",
+    name: "Sécurité des documents papier",
+    category: "Sécurité documentaire",
+    description: "Protection physique des documents papier contenant des données personnelles",
+  },
+  {
+    id: "doc_security_002",
+    name: "Destruction sécurisée",
+    category: "Sécurité documentaire",
+    description: "Procédures de destruction certifiée des documents",
   },
   {
     id: "crypto_001",
@@ -340,18 +445,13 @@ export default function DpiaAssessmentEnhanced() {
         return promptMappings[fieldName] || 'general_analysis';
       };
 
-      const response = await fetch("/api/ai/generate-dpia-content", {
+      const response = await fetch("/api/dpia/ai-assist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          field,
-          promptType: getPromptType(field),
-          registryData,
-          context: {
-            existingData: form.getValues(),
-            useRegistryData: true,
-            ...context
-          }
+          questionField: field,
+          companyId: company?.id,
+          existingDpiaData: form.getValues()
         })
       });
       
@@ -362,7 +462,7 @@ export default function DpiaAssessmentEnhanced() {
       return response.json();
     },
     onSuccess: (result, variables) => {
-      form.setValue(variables.field as any, result.content);
+      form.setValue(variables.field as any, result.response);
       toast({
         title: "Contenu généré",
         description: "Le contenu a été généré avec succès par l'IA.",
