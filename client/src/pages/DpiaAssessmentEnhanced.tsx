@@ -1344,7 +1344,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.2.7 - International transfers measures */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.2.7 Détermination et description des mesures pour le transfert de données hors de l'Union européenne</CardTitle>
+                  <CardTitle>Détermination et description des mesures pour le transfert de données hors de l'Union européenne</CardTitle>
                   <CardDescription>
                     Le transfert de données personnelles hors de l'UE est interdit par principe, sauf si le pays de destination offre un niveau de protection adéquat ou si des garanties spécifiques sont mises en place (ex: Clauses Contractuelles Types, BCR). Cela s'applique aussi si les données sont simplement accessibles depuis un pays tiers (ex: pour de la maintenance informatique).
                   </CardDescription>
