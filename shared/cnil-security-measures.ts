@@ -192,6 +192,204 @@ export const CNIL_SECURITY_MEASURES: SecurityMeasure[] = [
     examples: ["Broyage sécurisé", "Démagnetisation", "Incinération", "Effacement cryptographique"]
   },
 
+  // Anonymisation
+  {
+    id: "anon_001",
+    name: "Anonymisation",
+    category: "Anonymisation",
+    description: "Suppression de tout élément d'identification directe ou indirecte",
+    examples: ["Suppression d'identifiants", "Généralisation des données", "Ajout de bruit statistique"]
+  },
+
+  // Cloisonnement des données
+  {
+    id: "compartment_001",
+    name: "Cloisonnement des données",
+    category: "Cloisonnement",
+    description: "Isolation des données par rapport au reste du système d'information",
+    examples: ["Bases de données séparées", "Réseaux isolés", "Environnements dédiés"]
+  },
+
+  // Contrôle des accès logiques
+  {
+    id: "logical_access_001",
+    name: "Contrôle des accès logiques",
+    category: "Contrôle d'accès logique",
+    description: "Gestion fine des droits d'accès aux systèmes et applications",
+    examples: ["RBAC", "ABAC", "Single Sign-On", "Fédération d'identités"]
+  },
+
+  // Traçabilité (journalisation)
+  {
+    id: "traceability_001",
+    name: "Traçabilité (journalisation)",
+    category: "Traçabilité",
+    description: "Enregistrement détaillé de toutes les opérations sur les données",
+    examples: ["Logs d'audit", "Horodatage", "Signature électronique", "Chaîne de custody"]
+  },
+
+  // Contrôle d'intégrité
+  {
+    id: "integrity_001",
+    name: "Contrôle d'intégrité",
+    category: "Intégrité",
+    description: "Vérification de l'intégrité et de l'authenticité des données",
+    examples: ["Hash cryptographiques", "Signatures numériques", "Checksums", "Blockchain"]
+  },
+
+  // Archivage
+  {
+    id: "archive_001",
+    name: "Archivage",
+    category: "Archivage",
+    description: "Conservation sécurisée à long terme des données",
+    examples: ["Coffres-forts numériques", "Supports optiques", "Tiers archiveur", "Horodatage qualifié"]
+  },
+
+  // Sécurité des documents papier
+  {
+    id: "paper_security_001",
+    name: "Sécurité des documents papier",
+    category: "Sécurité documentaire",
+    description: "Protection des documents physiques contenant des données personnelles",
+    examples: ["Armoires verrouillées", "Destruction sécurisée", "Accès contrôlé", "Watermarking"]
+  },
+
+  // Sécurité de l'exploitation
+  {
+    id: "operations_security_001",
+    name: "Sécurité de l'exploitation",
+    category: "Sécurité opérationnelle",
+    description: "Sécurisation des processus d'exploitation informatique",
+    examples: ["Procédures sécurisées", "Séparation des environnements", "Contrôle des changements"]
+  },
+
+  // Lutte contre les logiciels malveillants
+  {
+    id: "malware_protection_001",
+    name: "Lutte contre les logiciels malveillants",
+    category: "Protection anti-malware",
+    description: "Protection contre virus, ransomware et autres logiciels malveillants",
+    examples: ["Antivirus avancé", "EDR/XDR", "Analyse comportementale", "Sandboxing"]
+  },
+
+  // Gestion des postes de travail
+  {
+    id: "workstation_management_001",
+    name: "Gestion des postes de travail",
+    category: "Gestion des postes",
+    description: "Sécurisation et gestion centralisée des postes utilisateurs",
+    examples: ["MDM", "Chiffrement des disques", "Politique de sécurité", "Mise à jour automatique"]
+  },
+
+  // Sécurité des sites web
+  {
+    id: "web_security_001",
+    name: "Sécurité des sites web",
+    category: "Sécurité web",
+    description: "Protection des applications et sites web contre les attaques",
+    examples: ["WAF", "Protection CSRF/XSS", "HTTPS obligatoire", "Content Security Policy"]
+  },
+
+  // Sécurité des canaux informatiques (réseaux)
+  {
+    id: "network_channels_001",
+    name: "Sécurité des canaux informatiques",
+    category: "Sécurité des canaux",
+    description: "Protection des communications et transmissions réseau",
+    examples: ["VPN", "Tunneling sécurisé", "Chiffrement des flux", "Inspection du trafic"]
+  },
+
+  // Sécurité des matériels
+  {
+    id: "hardware_security_001",
+    name: "Sécurité des matériels",
+    category: "Sécurité matérielle",
+    description: "Protection physique et logique des équipements informatiques",
+    examples: ["HSM", "TPM", "Secure Boot", "Protection anti-tamper"]
+  },
+
+  // Éloignement des sources de risques
+  {
+    id: "risk_distancing_001",
+    name: "Éloignement des sources de risques",
+    category: "Gestion des risques",
+    description: "Mise à distance des éléments présentant des risques",
+    examples: ["Sites de secours distants", "Séparation géographique", "Isolation des zones à risque"]
+  },
+
+  // Protection contre les sources de risques non humaines
+  {
+    id: "non_human_risks_001",
+    name: "Protection contre les sources de risques non humaines",
+    category: "Protection environnementale",
+    description: "Protection contre les risques naturels et environnementaux",
+    examples: ["Protection incendie", "Alimentation de secours", "Climatisation", "Protection sismique"]
+  },
+
+  // Organisation
+  {
+    id: "organization_001",
+    name: "Organisation",
+    category: "Organisation",
+    description: "Structure organisationnelle de la sécurité",
+    examples: ["RSSI", "Comité sécurité", "Définition des rôles", "Gouvernance"]
+  },
+
+  // Politique (gestion des règles)
+  {
+    id: "policy_001",
+    name: "Politique (gestion des règles)",
+    category: "Politique de sécurité",
+    description: "Définition et application des règles de sécurité",
+    examples: ["PSSI", "Chartes utilisateurs", "Procédures", "Standards de sécurité"]
+  },
+
+  // Gestion des projets
+  {
+    id: "project_management_001",
+    name: "Gestion des projets",
+    category: "Gestion de projet",
+    description: "Intégration de la sécurité dans les projets",
+    examples: ["Security by design", "AIPD projets", "Tests sécurité", "Validation sécurité"]
+  },
+
+  // Gestion des incidents et des violations de données
+  {
+    id: "incident_management_001",
+    name: "Gestion des incidents et violations",
+    category: "Gestion d'incidents",
+    description: "Processus de traitement des incidents de sécurité",
+    examples: ["CERT", "Plan de réponse", "Notification CNIL", "Communication de crise"]
+  },
+
+  // Gestion des personnels
+  {
+    id: "personnel_management_001",
+    name: "Gestion des personnels",
+    category: "Gestion RH",
+    description: "Sécurisation du cycle de vie des employés",
+    examples: ["Background check", "Formation sécurité", "Contrats de confidentialité", "Départ sécurisé"]
+  },
+
+  // Relations avec les tiers
+  {
+    id: "third_party_001",
+    name: "Relations avec les tiers",
+    category: "Gestion des tiers",
+    description: "Sécurisation des relations avec les partenaires externes",
+    examples: ["Contrats DPA", "Audits fournisseurs", "Certification tiers", "Clauses de sécurité"]
+  },
+
+  // Supervision
+  {
+    id: "supervision_001",
+    name: "Supervision",
+    category: "Supervision",
+    description: "Surveillance et pilotage de la sécurité",
+    examples: ["Tableaux de bord", "Métriques sécurité", "Reporting", "Revues périodiques"]
+  },
+
   // Mise à jour et maintenance
   {
     id: "update_001",
@@ -225,5 +423,27 @@ export const SECURITY_CATEGORIES = [
   "Sauvegarde",
   "Organisationnel",
   "Sécurité physique",
-  "Maintenance"
+  "Maintenance",
+  "Anonymisation",
+  "Cloisonnement",
+  "Contrôle d'accès logique",
+  "Traçabilité",
+  "Intégrité",
+  "Archivage",
+  "Sécurité documentaire",
+  "Sécurité opérationnelle",
+  "Protection anti-malware",
+  "Gestion des postes",
+  "Sécurité web",
+  "Sécurité des canaux",
+  "Sécurité matérielle",
+  "Gestion des risques",
+  "Protection environnementale",
+  "Organisation",
+  "Politique de sécurité",
+  "Gestion de projet",
+  "Gestion d'incidents",
+  "Gestion RH",
+  "Gestion des tiers",
+  "Supervision"
 ];

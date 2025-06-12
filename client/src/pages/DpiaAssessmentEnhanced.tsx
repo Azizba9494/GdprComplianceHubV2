@@ -612,8 +612,6 @@ export default function DpiaAssessmentEnhanced() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  
-
                   {/* 1.2.2 Personal data categories, processes, supports, recipients and retention */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
@@ -772,6 +770,112 @@ export default function DpiaAssessmentEnhanced() {
                             variant="outline"
                             size="sm"
                             onClick={() => generateWithAI.mutate({ field: "finalitiesJustification" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer une proposition par l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* 2.1.3.1 - Data minimization justification */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Explication et justification de la minimisation des données</CardTitle>
+                  <CardDescription>
+                    Les données collectées doivent être adéquates, pertinentes et limitées à ce qui est nécessaire au regard des finalités pour lesquelles elles sont traitées.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Alert className="mb-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Questions pour vous guider :</strong>
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Avez-vous vérifié que toutes les données collectées sont strictement nécessaires ?</li>
+                        <li>Pouvez-vous atteindre vos objectifs avec moins de données ?</li>
+                        <li>Avez-vous mis en place des processus pour éviter la collecte excessive ?</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+
+                  <FormField
+                    control={form.control}
+                    name="dataMinimization"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Justification de la minimisation des données</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Expliquez comment vous limitez la collecte aux données strictement nécessaires et les mesures mises en place..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "dataMinimization" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer une proposition par l'IA
+                          </Button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* 2.1.3.2 - Retention periods justification */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Explication et justification des durées de conservation</CardTitle>
+                  <CardDescription>
+                    Les données ne doivent pas être conservées plus longtemps que nécessaire pour atteindre les finalités du traitement.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Alert className="mb-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Questions pour vous guider :</strong>
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Avez-vous défini des durées de conservation précises pour chaque catégorie de données ?</li>
+                        <li>Ces durées sont-elles justifiées par vos besoins métier ou des obligations légales ?</li>
+                        <li>Avez-vous mis en place un processus de suppression automatique ?</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+
+                  <FormField
+                    control={form.control}
+                    name="retentionJustification"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Justification des durées de conservation</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Justifiez les durées de conservation définies pour chaque catégorie de données et les processus de suppression..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "retentionJustification" })}
                             disabled={isGenerating}
                           >
                             <Brain className="h-4 w-4 mr-2" />

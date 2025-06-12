@@ -1,0 +1,48 @@
+Modifier : 
+
+Dans l’onglet proportionnalité, réintègre la section relative à la justification de la minimisation des données ainsi que celle relative à la justification des durées de conservation. 
+Dans la partie sécurité, (i) complète les mesures proposées par les mesures suivantes : 
+Anonymisation
+Cloisonnement des données (par rapport au reste du système d’information)
+Contrôle des accès logiques
+Traçabilité (journalisation)
+Contrôle d’intégrité
+Archivage
+Sécurité des documents papier
+Sécurité de l’exploitation
+Lutte contre les logiciels malveillants
+Gestion des postes de travail
+Sécurité des sites web
+Maintenance
+Sécurité des canaux informatiques (réseaux)
+Sécurité des matériels
+Éloignement des sources de risques
+Protection contre les sources de risques non humaines
+Organisation
+Politique (gestion des règles)
+Gestion des risques
+Gestion des projets
+Gestion des incidents et des violations de données
+Gestion des personnels
+Relations avec les tiers
+Supervision
+(ii) et ajoute une partie permettant au client d’ajouter une mesure technique ou organisationnelle au moyen d’un texte libre et décrire cette mesure.
+Complète le développement de la partie validation et finalisation 
+La génération des propositions par IA ne fonctionne pas. Voici ce qu’il faut pour le prompt de chaque case : 
+Pour la “Description générale”, l’IA doit utiliser les informations présentes dans le registre des traitements. 
+Pour les “Finalités du traitement”, l’IA doit utiliser les informations présentes dans le registre des traitements. 
+Pour la partie “Responsables du traitement”, l’IA doit utiliser les informations présentes dans le registre des traitements. 
+Pour la partie “Sous-traitants”, l’IA doit utiliser les informations présentes dans le registre des traitements. Si cette information n’y figure pas, demander au client de le renseigner à la main.
+Pour la partie “Référentiels applicables”, l’IA doit recenser les éventuels référentiels applicables au traitement, utiles ou à respecter et certifications en matière de protection des données (art. 42 du RGPD), notamment les codes de conduite approuvés (art. 40 du RGPD). Ces référentiels et codes de conduite seront importés dans la partie “documents importés” de la partie administration (RAG), afin de permettre à l’IA de déterminer si ces référentiels sont applicables au traitement. 
+Pour la partie “Données personnelles traitées”, l’IA doit utiliser les informations présentes dans le registre des traitements. Si cette information n’y figure pas, demander au client de le renseigner à la main.
+Pour la partie justification des finalités, l’IA doit détailler, au regard des informations dont elle dispose, pourquoi chacune des finalités est déterminée, explicite et légitime. 
+Pour la partie explication et justification du fondement (Base légale), l’IA doit détailler, au regard des informations dont elle dispose, pourquoi la base légale choisie est appropriée pour le traitement. 
+Pour la partie “Explication et justification de la qualité des données”, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+Pour la partie “Détermination et description des mesures pour l'information des personnes”, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+Pour la partie “Détermination et description des mesures pour le recueil du consentement”, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+Pour la partie “Détermination et description des mesures pour les droits d’accès et à la portabilité”, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+Pour la partie “Détermination et description des mesures pour les droits de rectification et d’effacement”, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+Pour la partie “Détermination et description des mesures pour les droits de limitation du traitement et d'opposition, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+Pour la partie “Détermination et description des mesures pour la sous-traitance”, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+Pour la partie “Détermination et description des mesures pour le transfert de données hors de l’Union Européenne”, l’IA doit tenter d’apporter la réponse avec les éléments dont elle dispose. Dans la mesure où elle ne dispose pas d’éléments suffisants, l’IA doit indiquer qu’elle ne dispose pas d’éléments nécessaires pour y répondre. 
+   Pour chacune de ces cases, il faut permettre à l’administrateur de moduler les prompts dans la partie administration.   
