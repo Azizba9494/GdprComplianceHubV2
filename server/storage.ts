@@ -354,12 +354,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment> {
-    const [created] = await db.insert(dpiaAssessments).values({
-      ...assessment,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
+    const [created] = await db.insert(dpiaAssessments).values(assessment).returning();
     return created;
+  }
+
+  // DPIA Evaluations
+  async getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]> {
+    return await db.select().from(dpiaEvaluations).where(eq(dpiaEvaluations.companyId, companyId)).orderBy(desc(dpiaEvaluations.createdAt));
+  }
+
+  async createDpiaEvaluation(evaluation: InsertDpiaEvaluation): Promise<DpiaEvaluation> {
+    const [created] = await db.insert(dpiaEvaluations).values(evaluation).returning();
+    return created;
+  }
+
+  async updateDpiaEvaluation(id: number, updates: Partial<InsertDpiaEvaluation>): Promise<DpiaEvaluation> {
+    const [updated] = await db.update(dpiaEvaluations).set(updates).where(eq(dpiaEvaluations.id, id)).returning();
+    return updated;
+  }
+
+  async deleteDpiaEvaluation(id: number): Promise<void> {
+    await db.delete(dpiaEvaluations).where(eq(dpiaEvaluations.id, id));
   }
 
   async updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment> {
