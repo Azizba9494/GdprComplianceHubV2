@@ -986,7 +986,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.2.1 - Information measures */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.2.1 Détermination et description des mesures pour l'information des personnes</CardTitle>
+                  <CardTitle>Détermination et description des mesures pour l'information des personnes</CardTitle>
                   <CardDescription>
                     Les personnes concernées doivent être informées de manière claire et transparente du traitement de leurs données personnelles.
                   </CardDescription>
