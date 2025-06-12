@@ -449,59 +449,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive AI-assisted DPIA routes
   app.post("/api/dpia", async (req, res) => {
     try {
-      const { companyId, processingName, processingDescription } = req.body;
-      
-      const company = await storage.getCompany(companyId);
-      if (!company) {
-        return res.status(404).json({ error: "Entreprise non trouvée" });
-      }
+      const dpiaData = insertDpiaAssessmentSchema.parse(req.body);
+      const assessment = await storage.createDpiaAssessment(dpiaData);
+      res.json(assessment);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
 
-      // Get the DPIA generation prompt
-      const dpiaPrompt = await storage.getActivePromptByCategory("dpia_generation");
-      if (!dpiaPrompt) {
-        throw new Error("Prompt DPIA non configuré");
-      }
-
-      const riskAssessment = await geminiService.generateDPIA(processingName, processingDescription, company, dpiaPrompt.prompt);
-      
-      const assessment = await storage.createDpiaAssessment({
-        companyId,
-        processingName,
-        processingDescription,
-        riskAssessment,
-        measures: riskAssessment.measures,
-        status: "completed",
-      });
-
+  app.patch("/api/dpia/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const assessment = await storage.updateDpiaAssessment(id, updates);
       res.json(assessment);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.post("/api/dpia/assess", async (req, res) => {
+  // AI-assisted response generation for DPIA fields
+  app.post("/api/dpia/ai-assist", async (req, res) => {
     try {
-      const { companyId, processingName, processingDescription } = req.body;
+      const { questionField, companyId, existingDpiaData } = req.body;
       
       const company = await storage.getCompany(companyId);
       if (!company) {
         return res.status(404).json({ error: "Entreprise non trouvée" });
       }
 
-      const riskAssessment = await geminiService.assessDPIA(processingName, processingDescription, company);
+      // Get company processing records for context
+      const processingRecords = await storage.getProcessingRecords(companyId);
       
-      const assessment = await storage.createDpiaAssessment({
-        companyId,
-        processingName,
-        processingDescription,
-        riskAssessment,
-        measures: riskAssessment.measures,
-        status: "completed",
-      });
+      // Get RAG documents for knowledge base
+      const ragDocuments = await getRagDocuments();
+      
+      const { openaiService } = await import("./services/openai");
+      const aiResponse = await openaiService.generateDpiaResponse(
+        questionField,
+        company,
+        existingDpiaData,
+        processingRecords,
+        ragDocuments
+      );
 
-      res.json(assessment);
+      res.json(aiResponse);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Generate risk assessment with AI
+  app.post("/api/dpia/ai-risk-assessment", async (req, res) => {
+    try {
+      const { processingDescription, dataCategories, companyId } = req.body;
+      
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      const ragDocuments = await getRagDocuments();
+      
+      const { openaiService } = await import("./services/openai");
+      const riskAssessment = await openaiService.generateRiskAssessment(
+        processingDescription,
+        dataCategories,
+        company,
+        ragDocuments
+      );
+
+      res.json(riskAssessment);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

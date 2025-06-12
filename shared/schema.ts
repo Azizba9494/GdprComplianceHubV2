@@ -144,16 +144,59 @@ export const dataBreaches = pgTable("data_breaches", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// DPIA assessments
+// DPIA assessments - Comprehensive structure for the 4-part questionnaire
 export const dpiaAssessments = pgTable("dpia_assessments", {
   id: serial("id").primaryKey(),
   companyId: integer("company_id").notNull().references(() => companies.id),
-  processingName: text("processing_name").notNull(),
-  processingDescription: text("processing_description").notNull(),
-  riskAssessment: jsonb("risk_assessment"),
-  measures: jsonb("measures"),
-  status: text("status").notNull().default("draft"), // draft, inprogress, completed
+  processingRecordId: integer("processing_record_id").references(() => processingRecords.id),
+  
+  // Part 1: Context Description
+  generalDescription: text("general_description"),
+  processingPurposes: text("processing_purposes"),
+  dataController: text("data_controller"),
+  dataProcessors: text("data_processors"),
+  personalDataCategories: jsonb("personal_data_categories").$type<Array<{
+    category: string;
+    examples: string;
+    recipients: string;
+    retentionPeriod: string;
+  }>>(),
+  
+  // Part 2: Fundamental Principles Verification
+  dataMinimization: text("data_minimization"),
+  retentionJustification: text("retention_justification"),
+  rightsInformation: text("rights_information"),
+  rightsConsent: text("rights_consent"),
+  rightsAccess: text("rights_access"),
+  rightsRectification: text("rights_rectification"),
+  rightsOpposition: text("rights_opposition"),
+  
+  // Part 3: Privacy Risk Management
+  securityMeasures: text("security_measures"),
+  riskAssessment: jsonb("risk_assessment").$type<Array<{
+    riskType: "illegitimate_access" | "unwanted_modification" | "data_disappearance";
+    riskSources: string;
+    threats: string;
+    potentialImpacts: string;
+    severity: "negligible" | "limited" | "significant" | "maximum";
+    likelihood: "negligible" | "limited" | "significant" | "maximum";
+  }>>(),
+  
+  // Part 4: Validation
+  actionPlan: jsonb("action_plan").$type<Array<{
+    measure: string;
+    responsible: string;
+    deadline: string;
+    difficulty: string;
+    cost: string;
+    progress: string;
+  }>>(),
+  dpoAdvice: text("dpo_advice"),
+  controllerValidation: text("controller_validation"),
+  
+  status: text("status").notNull().default("draft"), // draft, inprogress, completed, validated
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // AI prompts management
@@ -298,6 +341,7 @@ export const insertDataBreachSchema = createInsertSchema(dataBreaches).omit({
 export const insertDpiaAssessmentSchema = createInsertSchema(dpiaAssessments).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertAiPromptSchema = createInsertSchema(aiPrompts).omit({

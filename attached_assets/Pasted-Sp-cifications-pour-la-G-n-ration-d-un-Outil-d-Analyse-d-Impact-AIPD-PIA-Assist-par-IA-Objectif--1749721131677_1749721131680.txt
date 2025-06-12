@@ -1,0 +1,172 @@
+Spécifications pour la Génération d'un Outil d'Analyse d'Impact (AIPD/PIA) Assisté par IA
+
+Objectif : Créer une interface de questionnaire dynamique pour la réalisation d'Analyses d'Impact sur la Protection des Données (AIPD), conformément à la méthodologie de la CNIL. L'outil doit guider les utilisateurs non-experts et proposer une assistance par intelligence artificielle pour la rédaction des réponses.
+
+Partie A : Structure et Contenu du Questionnaire (Interface Utilisateur)
+
+L'interface doit présenter un questionnaire divisé en quatre parties, chacune contenant des questions détaillées. Chaque champ de réponse doit proposer deux modes de saisie :
+
+Option 1 : Un champ de saisie libre (zone de texte, tableau, etc.) pour une rédaction manuelle.
+Option 2 : Un bouton libellé "Générer une proposition par l’IA".
+Le questionnaire doit se présenter comme suit :
+
+I. Partie 1 : Décrire le Contexte du Projet
+
+Objectif affiché à l'utilisateur : Avoir une vision claire et synthétique du traitement de données que vous envisagez. C'est la "carte d'identité" de votre projet.
+1.1 Vue d'ensemble
+
+1.1.1 Description générale du traitement
+
+Explication : Décrivez votre projet de manière simple. Il s'agit de présenter sa nature (de quoi s'agit-il ?), sa portée (qui est concerné, à quelle échelle ?) et son contexte général.
+
+Questions pour guider : Quel est le nom de votre projet ou traitement ? S'agit-il d'une nouvelle application mobile, d'un fichier client, d'un système de vidéosurveillance ? Qui va utiliser ce traitement (ex: les salariés, les clients, le grand public) ? Combien de personnes sont concernées ?
+Champ de réponse : Zone de texte libre.
+1.1.2 Finalités du traitement
+
+Explication : La finalité est l'objectif principal de votre traitement. Vous devez définir précisément à quoi vont servir les données collectées. Cet objectif doit être légal et clairement expliqué ("déterminé, explicite et légitime").
+Questions pour guider : Pourquoi mettez-vous en place ce traitement ? Quel est le but principal ? (ex: gérer la paie, fidéliser les clients, sécuriser les locaux). Y a-t-il des objectifs secondaires ? (ex: réaliser des statistiques, améliorer un service).
+Champ de réponse : Zone de texte libre.
+1.1.3 Responsable du traitement
+
+Explication : C'est l'entité (l'entreprise, l'association, l'organisme public, etc.) qui décide des objectifs et des moyens du traitement. C'est elle qui est légalement responsable de la protection des données.
+
+
+Questions pour guider : Quelle est l'entité juridique (ex: nom de l'entreprise) qui est à l'origine de ce projet et qui en définit les règles ?
+Champ de réponse : Zone de texte libre.
+1.1.4 Sous-traitant(s)
+
+Explication : Un sous-traitant est une société qui traite les données pour le compte du responsable de traitement (ex: un hébergeur de site web, un prestataire de service de paie, une agence marketing). Il est crucial de les identifier car vous devez encadrer leur intervention par un contrat.
+
+
+Questions pour guider : Faites-vous appel à des prestataires externes qui auront accès aux données ou qui les hébergeront ? Si oui, qui sont-ils et que font-ils ?
+Champ de réponse : Zone de texte libre.
+1.2 Données, Processus et Supports
+
+1.2.1 Données personnelles traitées
+Explication : Il s'agit ici de lister toutes les catégories de données personnelles que vous allez collecter, qui y aura accès (les destinataires) et pendant combien de temps vous les conserverez.
+Questions pour guider :
+Données : Quelles informations précises collectez-vous (ex: état-civil, email, adresse IP, données de santé, CV)? Soyez aussi précis que possible.
+Destinataires : Qui, au sein de votre organisme ou à l'extérieur, aura accès à ces données ? (ex: service RH, service marketing, prestataire X).
+Durées de conservation : Combien de temps gardez-vous chaque type de donnée avant de la supprimer ou de l'archiver? Cette durée doit être justifiée par votre objectif.
+Champ de réponse : Tableau avec les colonnes "Catégorie de Données", "Exemples de Données", "Destinataires", "Durée de conservation".
+II. Partie 2 : Vérifier le Respect des Principes Fondamentaux
+
+Objectif affiché à l'utilisateur : S'assurer que votre projet est conçu en respectant les règles de base de la protection des données et les droits des individus.
+2.1 Proportionnalité et Nécessité
+
+2.1.1 Minimisation des données
+
+Explication : Ce principe impose de ne collecter que les données strictement nécessaires à votre objectif. Les données doivent être "adéquates, pertinentes et limitées". On ne collecte pas une information "au cas où".
+Questions pour guider : Pour chaque donnée listée précédemment, pouvez-vous expliquer en quoi elle est indispensable pour atteindre votre finalité? Pourriez-vous atteindre votre objectif avec moins de données ? Par exemple, avez-vous besoin de la date de naissance complète ou juste de l'année de naissance ?
+Champ de réponse : Zone de texte libre.
+2.1.2 Durées de conservation
+
+Explication : Vous ne pouvez pas conserver les données indéfiniment. Une durée limitée doit être fixée en fonction de l'objectif du traitement ou d'obligations légales.
+Questions pour guider : Comment avez-vous déterminé les durées de conservation ? Y a-t-il une obligation légale (ex: conservation des factures) ? Existe-t-il un processus automatique ou manuel pour supprimer ou archiver les données une fois la durée atteinte?
+
+Champ de réponse : Zone de texte libre.
+2.2 Droits des Personnes
+
+Explication : Les personnes concernées par votre traitement ont des droits sur leurs données. Vous devez prévoir des procédures claires pour qu'elles puissent les exercer.
+Questions pour guider pour chaque droit (Information, Accès, Rectification, Opposition, etc.) :
+Information : Comment, quand et où les personnes seront-elles informées (ex: mention sur un formulaire, politique de confidentialité, affichage)? L'information est-elle complète (qui est responsable, pourquoi les données sont collectées, quels sont leurs droits, etc.)?
+
+
+Consentement (si applicable) : Si votre traitement repose sur le consentement, comment l'obtenez-vous (ex: case à cocher non pré-cochée)? Est-il facile pour la personne de retirer son consentement ?
+
+Accès, Rectification, etc. : Quelle est la procédure pour une personne qui souhaite accéder à ses données, les corriger ou les faire supprimer ? À qui doit-elle s'adresser (email, adresse postale) ? En combien de temps lui répondez-vous (le délai ne doit pas excéder un mois)?
+
+Champ de réponse : Zone de texte libre pour chaque droit.
+III. Partie 3 : Gérer les Risques pour la Vie Privée
+
+Objectif affiché à l'utilisateur : Anticiper les problèmes de sécurité potentiels (piratage, fuite, perte de données) et s'assurer que des mesures de protection adaptées sont en place.
+
+3.1 Mesures de Sécurité
+
+Explication : Listez ici toutes les mesures techniques et organisationnelles que vous avez prévues pour protéger les données.
+Questions pour guider :
+Contrôle d'accès : Qui a le droit d'accéder aux données? Comment gérez-vous les mots de passe et les habilitations?
+
+Traçabilité : Gardez-vous une trace de qui a consulté ou modifié les données?
+Chiffrement : Les données sont-elles chiffrées (rendues illisibles) lors de leur stockage ou de leur transfert sur internet?
+Sauvegardes : Des sauvegardes régulières sont-elles effectuées pour éviter la perte de données? Sont-elles sécurisées?
+
+Sécurité des locaux/matériels : Comment sont sécurisés les serveurs et les bureaux où se trouvent les données?
+Gestion des incidents : Avez-vous une procédure en cas de violation de données (ex: fuite de données)?
+Champ de réponse : Zone de texte libre.
+3.2 Appréciation des Risques
+
+Explication : Un risque est un scénario décrivant un problème potentiel et ses conséquences sur la vie privée des personnes. Vous devez évaluer la probabilité (vraisemblance) et l'impact (gravité) de trois grands types de risques.
+
+Questions pour guider pour chaque scénario :
+Scénario 1 : Accès illégitime.
+Que se passerait-il pour les personnes si leurs données étaient divulguées, volées, ou consultées par une personne non autorisée (atteinte à la confidentialité)  ? Pensez aux impacts : usurpation d'identité, chantage, discrimination, préjudice financier ou moral. Est-ce que ce serait juste un désagrément (Gravité : Négligeable)  ou cela pourrait avoir des conséquences irrémédiables (Gravité : Maximale)?
+
+
+
+
+Comment cela pourrait-il arriver  ? Est-ce facile (Vraisemblance : Maximale)  ou très difficile (Vraisemblance : Négligeable)?
+
+
+Scénario 2 : Modification non désirée.
+Que se passerait-il si les données étaient fausses ou altérées (atteinte à l'intégrité)? (ex: une décision injuste prise sur la base d'une information erronée). Évaluez la gravité.
+Scénario 3 : Disparition de données.
+Que se passerait-il si les données étaient perdues ou inaccessibles (atteinte à la disponibilité)? (ex: impossibilité de prouver un droit, perte d'un historique médical). Évaluez la gravité.
+Champ de réponse : Tableau avec les colonnes "Risque", "Sources de risques", "Menaces", "Impacts potentiels", "Gravité", "Vraisemblance".
+IV. Partie 4 : Valider l'Analyse
+
+Objectif affiché à l'utilisateur : Conclure l'AIPD, formaliser la décision du responsable de traitement et planifier les actions à mener.
+4.1 Plan d'action
+
+Explication : Si l'étape précédente a révélé des risques trop élevés, vous devez lister ici les mesures complémentaires à mettre en place pour les réduire.
+
+Questions pour guider : Quelles actions correctives allez-vous mettre en œuvre (ex: ajouter du chiffrement, renforcer les mots de passe, revoir une procédure) ? Qui est responsable de chaque action ? Pour quand doit-elle être terminée ?
+Champ de réponse : Tableau avec les colonnes "Mesures complémentaires", "Responsable", "Terme", "Difficulté", "Coût", "Avancement".
+4.2 Avis et Validation Formelle
+
+Avis du Délégué à la Protection des Données (DPO)
+
+Explication : Si votre organisme a un DPO, son avis doit être sollicité et formalisé.
+Champ de réponse : Zone de texte libre pour intégrer l'avis.
+Validation par le responsable de traitement
+
+Explication : C'est la conclusion officielle de l'AIPD. Le responsable de traitement décide, au vu de l'analyse, si le traitement peut être mis en œuvre, s'il doit être modifié, ou s'il doit être abandonné.
+Champ de réponse : Zone de texte libre pour la décision de validation.
+Partie B : Spécifications Techniques pour l'IA (Logique du Bouton)
+
+Le bouton "Générer une proposition par l’IA" doit déclencher un processus intelligent qui se base sur deux piliers de données.
+
+Pilier 1 : Analyse du Contexte de l'Entreprise (Données SaaS)
+
+L'IA doit pouvoir interroger et analyser en temps réel les informations contextuelles sur l'entreprise, stockées au sein de la solution SaaS.
+
+Profil de l'entreprise : Secteur d'activité, taille, etc.
+Registre des traitements / Historique des AIPD : Traitements déjà analysés, finalités récurrentes, types de données communs.
+Référentiel d'actifs et de prestataires : Logiciels (CRM, SIRH), hébergeurs (AWS, Azure, OVH), sous-traitants (prestataires de paie, agences marketing) déjà identifiés.
+Politiques internes : Politiques de sécurité, de conservation des données, ou chartes informatiques déjà renseignées par l'utilisateur.
+Pilier 2 : Exploitation de la Base de Connaissances Réglementaires (Guides CNIL)
+
+L'IA doit utiliser le contenu des documents fournis, et plus particulièrement le guide cnil-pia-3-fr-basesdeconnaissances.pdf, comme source de vérité pour les bonnes pratiques et recommandations.
+
+Synergie : Exemples de Génération de Propositions Personnalisées
+
+L'IA doit croiser les informations des deux piliers pour générer ses propositions.
+
+Exemple pour la question "Sous-traitant(s)" :
+
+Analyse (Pilier 1) : L'IA identifie que l'entreprise a déjà déclaré utiliser "Hébergeur X" et "CRM Y" dans 3 autres AIPD.
+Connaissances (Pilier 2) : L'IA sait (section 33 ) qu'un contrat est obligatoire.
+Proposition générée : "D'après nos informations, vous utilisez fréquemment 'Hébergeur X' et 'CRM Y'. Sont-ils impliqués dans ce projet ? Si oui, n'oubliez pas de vérifier que votre contrat de sous-traitance est à jour et conforme au RGPD. Avez-vous d'autres prestataires pour ce traitement ?"
+Exemple pour la question "Durées de conservation" :
+
+Analyse (Pilier 1) : L'IA sait que le traitement concerne la "prospection commerciale B2C".
+Connaissances (Pilier 2) : L'IA connaît la recommandation de la CNIL pour la prospection (3 ans après le dernier contact).
+Proposition générée : "Pour une finalité de prospection commerciale, la durée de conservation des données recommandée est de 3 ans à compter du dernier contact de la part du prospect. Passé ce délai, les données doivent être supprimées. Cette durée vous semble-t-elle pertinente pour votre objectif ?"
+Exemple pour la question "Mesures de Sécurité" :
+
+Analyse (Pilier 1) : L'IA a connaissance d'une politique de sécurité interne qui impose "mots de passe de 12 caractères" et "chiffrement des portables".
+Connaissances (Pilier 2) : L'IA utilise les sections 4 (Chiffrement)  et 8 (Contrôle d'accès) des "Bases de connaissances".
+
+Proposition générée : "En accord avec votre politique de sécurité, nous suggérons de mentionner :
+Contrôle d'accès : 'Accès aux données limité aux personnes habilitées via un identifiant unique et un mot de passe complexe de 12 caractères minimum, renouvelé périodiquement.'
+Chiffrement : 'Les postes de travail nomades sont systématiquement chiffrés pour prévenir les risques liés à la perte ou au vol.' Avez-vous prévu d'autres mesures, comme le chiffrement de la base de données elle-même ?"
