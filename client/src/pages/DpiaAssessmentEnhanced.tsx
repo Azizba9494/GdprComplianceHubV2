@@ -617,7 +617,7 @@ export default function DpiaAssessmentEnhanced() {
                     name="personalDataProcessed"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>1.2.1 Données personnelles traitées</FormLabel>
+                        <FormLabel>Données personnelles traitées</FormLabel>
                         <FormDescription>
                           Listez de manière détaillée toutes les catégories de données personnelles traitées, en précisant leur nature et leur utilisation.
                         </FormDescription>
