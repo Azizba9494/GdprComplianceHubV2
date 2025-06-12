@@ -449,6 +449,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/dpia/assessment/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const assessment = await storage.getDpiaAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ error: "AIPD non trouvée" });
+      }
+      res.json(assessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Comprehensive AI-assisted DPIA routes
   app.post("/api/dpia", async (req, res) => {
     try {
@@ -487,8 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get RAG documents for knowledge base
       const ragDocuments = await getRagDocuments();
       
-      const { openaiService } = await import("./services/openai");
-      const aiResponse = await openaiService.generateDpiaResponse(
+      const aiResponse = await geminiService.generateDpiaResponse(
         questionField,
         company,
         existingDpiaData,
@@ -514,8 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const ragDocuments = await getRagDocuments();
       
-      const { openaiService } = await import("./services/openai");
-      const riskAssessment = await openaiService.generateRiskAssessment(
+      const riskAssessment = await geminiService.generateRiskAssessment(
         processingDescription,
         dataCategories,
         company,
