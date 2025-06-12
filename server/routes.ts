@@ -903,42 +903,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test admin functionality endpoint
-  app.post("/api/test-admin", async (req, res) => {
+  // Fix chatbot prompt endpoint
+  app.post("/api/fix-chatbot", async (req, res) => {
     try {
-      const { testType } = req.body;
+      // Get current chatbot prompt
+      const chatbotPrompt = await storage.getActivePromptByCategory('chatbot');
       
-      if (testType === 'prompts') {
-        // Test prompt modification functionality
-        const prompts = await storage.getAiPrompts();
-        const activePrompts = prompts.filter(p => p.isActive);
-        const chatbotPrompt = await storage.getActivePromptByCategory('chatbot');
-        
-        res.json({
-          totalPrompts: prompts.length,
-          activePrompts: activePrompts.length,
-          chatbotPromptFound: !!chatbotPrompt,
-          chatbotPromptId: chatbotPrompt?.id,
-          message: `Prompts test: ${prompts.length} total, ${activePrompts.length} active, chatbot prompt ${chatbotPrompt ? 'found' : 'not found'}`
+      if (chatbotPrompt) {
+        // Update with a working prompt
+        const workingPrompt = `Vous êtes un assistant expert en conformité RGPD spécialisé pour les entreprises françaises VSE/PME.
+
+Votre rôle :
+- Répondre aux questions sur le RGPD de manière claire et pratique
+- Donner des conseils concrets adaptés aux ressources limitées des VSE/PME
+- Utiliser un langage accessible, éviter le jargon juridique complexe
+- Être professionnel mais bienveillant dans vos réponses
+
+Question de l'utilisateur : {{message}}
+
+Répondez de manière complète et utile à cette question.`;
+
+        await storage.updateAiPrompt(chatbotPrompt.id, {
+          prompt: workingPrompt,
+          description: "Prompt corrigé pour le chatbot RGPD"
         });
-      } else if (testType === 'llm') {
-        // Test LLM configuration functionality
-        const llmConfigs = await storage.getLlmConfigurations();
-        const activeLlm = await storage.getActiveLlmConfiguration();
         
         res.json({
-          totalConfigs: llmConfigs.length,
-          activeConfigFound: !!activeLlm,
-          activeConfigName: activeLlm?.name,
-          activeConfigProvider: activeLlm?.provider,
-          message: `LLM test: ${llmConfigs.length} configurations, active: ${activeLlm ? activeLlm.name : 'none'}`
+          success: true,
+          message: "Prompt chatbot corrigé",
+          promptId: chatbotPrompt.id
         });
       } else {
-        res.status(400).json({ error: 'Invalid test type. Use "prompts" or "llm"' });
+        res.status(404).json({ error: "Prompt chatbot non trouvé" });
       }
       
     } catch (error: any) {
-      console.error('Admin test error:', error);
+      console.error('Fix chatbot error:', error);
       res.status(500).json({ error: error.message });
     }
   });

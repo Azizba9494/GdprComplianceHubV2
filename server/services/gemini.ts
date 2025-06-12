@@ -151,18 +151,28 @@ Priorisez les actions selon leur urgence légale et leur impact sur la conformit
     // Récupérer le prompt actif pour le chatbot
     const activePrompt = await storage.getActivePromptByCategory('chatbot');
     
-    let prompt = activePrompt?.prompt || `L'utilisateur demande: ${message}
+    let basePrompt;
+    if (activePrompt?.prompt && activePrompt.prompt.trim().length > 10) {
+      basePrompt = activePrompt.prompt;
+      console.log(`[CHATBOT] Using custom prompt: ${activePrompt.name}`);
+    } else {
+      basePrompt = `Vous êtes un assistant IA expert en conformité RGPD pour les VSE/PME françaises. 
+Répondez de manière claire, pratique et professionnelle aux questions sur le RGPD.
+Donnez des conseils concrets adaptés au contexte français.
+Utilisez un langage accessible et évitez le jargon juridique complexe.
 
-Vous êtes un assistant IA spécialisé en conformité RGPD pour les VSE/PME françaises. 
-Répondez de manière claire et pratique, en donnant des conseils concrets et adaptés au contexte français.
-Utilisez un langage accessible et évitez le jargon juridique complexe.`;
+Question: {{message}}`;
+      console.log(`[CHATBOT] Using default prompt (custom prompt invalid or empty)`);
+    }
 
-    // Remplacer les variables dans le prompt
-    prompt = prompt.replace(/\{\{message\}\}/g, message);
+    // Construire le prompt final avec la question de l'utilisateur
+    const finalPrompt = basePrompt.includes('{{message}}') 
+      ? basePrompt.replace(/\{\{message\}\}/g, message)
+      : `${basePrompt}\n\nQuestion de l'utilisateur: ${message}`;
+
+    console.log(`[CHATBOT] Final prompt length: ${finalPrompt.length} chars`);
     
-    console.log(`[CHATBOT] Using prompt from database: ${activePrompt ? 'YES' : 'NO (fallback)'}`);
-
-    return await this.generateResponse(prompt, context, ragDocuments);
+    return await this.generateResponse(finalPrompt, context, ragDocuments);
   }
 
   async generatePrivacyPolicy(company: any, processingRecords: any[]): Promise<{ content: string }> {
