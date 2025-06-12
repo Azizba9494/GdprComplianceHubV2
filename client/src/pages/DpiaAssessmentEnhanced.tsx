@@ -1118,7 +1118,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.2.4 - Rectification and erasure rights */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.2.4 Détermination et description des mesures pour les droits de rectification et d'effacement</CardTitle>
+                  <CardTitle>Détermination et description des mesures pour les droits de rectification et d'effacement</CardTitle>
                   <CardDescription>
                     Les personnes peuvent demander la rectification de leurs données inexactes ou leur effacement dans certaines conditions.
                   </CardDescription>
