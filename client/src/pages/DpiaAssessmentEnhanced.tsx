@@ -1030,7 +1030,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.2.2 - Consent measures */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.2.2 Détermination et description des mesures pour le recueil du consentement</CardTitle>
+                  <CardTitle>Détermination et description des mesures pour le recueil du consentement</CardTitle>
                   <CardDescription>
                     Si votre base légale est le consentement, décrivez comment vous le recueillez de manière libre, spécifique, éclairée et univoque.
                   </CardDescription>
