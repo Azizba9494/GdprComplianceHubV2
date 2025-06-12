@@ -798,118 +798,38 @@ export default function DpiaAssessmentEnhanced() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* 1.2.2 Personal data categories, processes, supports, recipients and retention */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-base font-medium">Processus, supports, destinataires et durées de conservation</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const current = form.getValues("personalDataCategories") || [];
-                          form.setValue("personalDataCategories", [...current, {
-                            category: "",
-                            examples: "",
-                            recipients: "",
-                            retentionPeriod: ""
-                          }]);
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Ajouter une catégorie
-                      </Button>
-                    </div>
-
-                    {(form.watch("personalDataCategories") || []).map((_, index) => (
-                      <Card key={index} className="p-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <h4 className="font-medium">Catégorie {index + 1}</h4>
+                  <FormField
+                    control={form.control}
+                    name="personalDataProcessed"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Données personnelles traitées</FormLabel>
+                        <FormDescription>
+                          Décrivez les catégories de données personnelles, les processus de traitement, les supports utilisés, les destinataires et les durées de conservation.
+                        </FormDescription>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ex: Données d'identification (nom, prénom, email) collectées via formulaire web, stockées en base de données, transmises au service commercial, conservées 3 ans après fin de relation..."
+                            className="min-h-[150px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="flex gap-2">
                           <Button
                             type="button"
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            onClick={() => {
-                              const current = form.getValues("personalDataCategories") || [];
-                              form.setValue("personalDataCategories", current.filter((_, i) => i !== index));
-                            }}
+                            onClick={() => generateWithAI.mutate({ field: "personalDataProcessed" })}
+                            disabled={isGenerating}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Brain className="h-4 w-4 mr-2" />
+                            {isGenerating ? "Génération..." : "Générer avec l'IA"}
                           </Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name={`personalDataCategories.${index}.category`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Catégorie de données</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Ex: Données d'identification" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`personalDataCategories.${index}.examples`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Exemples et processus</FormLabel>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder="Ex: Nom, prénom, email - collecte via formulaire web, traitement automatisé, stockage base de données"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`personalDataCategories.${index}.recipients`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Destinataires</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Ex: Service commercial, partenaires" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`personalDataCategories.${index}.retentionPeriod`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Durée de conservation</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Ex: 3 ans après fin de relation" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </Card>
-                    ))}
-
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => generateWithAI.mutate({ field: "personalDataCategories" })}
-                        disabled={isGenerating}
-                      >
-                        <Brain className="h-4 w-4 mr-2" />
-                        Générer avec l'IA
-                      </Button>
-                    </div>
-                  </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

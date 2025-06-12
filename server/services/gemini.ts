@@ -157,6 +157,34 @@ L'avis doit porter sur:
 Adoptez un ton professionnel de DPO expérimenté.`;
         break;
 
+      case 'riskScenarios':
+        specificPrompt = `Analysez les risques pour les droits et libertés des personnes selon la méthodologie CNIL pour le traitement "${specificProcessingRecord?.name}".
+
+Évaluez les 3 scénarios de risque fondamentaux:
+
+1. ACCÈS ILLÉGITIME AUX DONNÉES
+- Impacts potentiels sur les personnes concernées
+- Menaces identifiées (piratage, vol, indiscrétion, etc.)
+- Sources de risque (humaines, techniques, organisationnelles)
+- Mesures existantes ou prévues
+
+2. MODIFICATION NON DÉSIRÉE DES DONNÉES
+- Impacts sur les personnes (erreurs, décisions erronées, etc.)
+- Menaces (erreurs humaines, bugs, malveillance, etc.)
+- Sources de risque spécifiques à l'intégrité
+- Mesures de protection
+
+3. DISPARITION DES DONNÉES
+- Conséquences pour les personnes concernées
+- Menaces (pannes, suppressions, catastrophes, etc.)
+- Sources de risque pour la disponibilité
+- Mesures de sauvegarde et continuité
+
+Pour chaque scénario, proposez une évaluation sur l'échelle CNIL: négligeable, limitée, importante, maximale.
+
+Répondez en format structuré avec des sections claires pour chaque scénario.`;
+        break;
+
       default:
         specificPrompt = `Analysez le champ "${questionField}" UNIQUEMENT pour le traitement "${specificProcessingRecord?.name}" en cours d'analyse.
 
