@@ -38,15 +38,27 @@ export class GeminiService {
     processingRecords: any[], 
     ragDocuments?: string[]
   ): Promise<{ response: string }> {
-    // Context analysis from company data
+    // Find the specific processing record for this DPIA
+    const specificProcessingRecord = processingRecords.find(r => r.id === existingDpiaData?.processingRecordId);
+    
+    // Context analysis focused on the specific treatment
     const companyContext = `
 Profil de l'entreprise:
 - Nom: ${companyInfo.name}
 - Secteur: ${companyInfo.sector || 'Non spécifié'}  
 - Taille: ${companyInfo.size || 'Non spécifiée'}
 
-Traitements existants: ${processingRecords.length} traitement(s) identifié(s)
-${processingRecords.map(r => `- ${r.name}: ${r.purpose}`).join('\n')}
+TRAITEMENT ANALYSÉ DANS CETTE AIPD:
+${specificProcessingRecord ? `
+- Nom: ${specificProcessingRecord.name}
+- Finalité: ${specificProcessingRecord.purpose}
+- Base légale: ${specificProcessingRecord.legalBasis || 'Non spécifiée'}
+- Catégories de données: ${specificProcessingRecord.dataCategories || 'Non spécifiées'}
+- Personnes concernées: ${specificProcessingRecord.dataSubjects || 'Non spécifiées'}
+- Durée de conservation: ${specificProcessingRecord.retentionPeriod || 'Non spécifiée'}
+` : 'Aucun traitement spécifique identifié'}
+
+IMPORTANT: Cette AIPD concerne UNIQUEMENT le traitement "${specificProcessingRecord?.name || 'en cours d\'analyse'}", pas l'ensemble des activités de l'entreprise.
 `;
 
     // Knowledge base from RAG documents
@@ -57,12 +69,16 @@ ${processingRecords.map(r => `- ${r.name}: ${r.purpose}`).join('\n')}
     
     switch (questionField) {
       case 'generalDescription':
-        specificPrompt = `En tant qu'expert DPIA, rédigez une description générale pour le traitement en cours d'analyse.
-        
-Basez-vous sur le profil de l'entreprise et les traitements existants pour proposer une description cohérente.
-Incluez: nature du projet, portée (qui est concerné, à quelle échelle), contexte général.
+        specificPrompt = `En tant qu'expert DPIA, rédigez une description générale UNIQUEMENT pour le traitement "${specificProcessingRecord?.name}" en cours d'analyse.
 
-Exemple pour une entreprise de e-commerce: "Mise en place d'un système de recommandations personnalisées pour notre boutique en ligne. Ce traitement concerne l'ensemble de nos clients (environ 10 000 utilisateurs actifs) et vise à améliorer leur expérience d'achat en proposant des produits adaptés à leurs préférences."`;
+ATTENTION: Ne mentionnez pas l'ensemble des traitements de l'entreprise. Concentrez-vous exclusivement sur ce traitement spécifique.
+
+Incluez pour ce traitement uniquement:
+- Nature précise du traitement analysé
+- Portée spécifique (qui est concerné par ce traitement particulier)
+- Contexte et objectifs de ce traitement
+
+Commencez par: "Le traitement '${specificProcessingRecord?.name}' consiste en..."`;
         break;
 
       case 'processingPurposes':
@@ -142,7 +158,11 @@ Adoptez un ton professionnel de DPO expérimenté.`;
         break;
 
       default:
-        specificPrompt = `Fournissez une réponse adaptée au champ "${questionField}" dans le contexte d'une AIPD RGPD.`;
+        specificPrompt = `Analysez le champ "${questionField}" UNIQUEMENT pour le traitement "${specificProcessingRecord?.name}" en cours d'analyse.
+
+IMPORTANT: Cette analyse concerne exclusivement ce traitement spécifique, pas l'ensemble des activités de l'entreprise.
+
+Fournissez une réponse adaptée dans le contexte d'une AIPD RGPD pour ce traitement particulier.`;
     }
 
     const fullPrompt = `${companyContext}${specificPrompt}${knowledgeBase}
