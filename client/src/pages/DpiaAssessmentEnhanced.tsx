@@ -606,7 +606,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 1.2 Personal data processed - Enhanced */}
               <Card>
                 <CardHeader>
-                  <CardTitle>1.2 Données personnelles traitées</CardTitle>
+                  <CardTitle>Données personnelles traitées</CardTitle>
                   <CardDescription>
                     Identifiez précisément les catégories de données personnelles concernées par le traitement.
                   </CardDescription>
