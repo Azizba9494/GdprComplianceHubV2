@@ -354,34 +354,57 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment> {
-    const [created] = await db.insert(dpiaAssessments).values(assessment).returning();
+    const cleanAssessment = {
+      ...assessment,
+      securityMeasures: assessment.securityMeasures || [],
+      customSecurityMeasures: assessment.customSecurityMeasures || [],
+      subcontractingMeasures: assessment.subcontractingMeasures || [],
+      internationalTransfersMeasures: assessment.internationalTransfersMeasures || [],
+      riskScenarios: assessment.riskScenarios || {},
+      proportionalityEvaluation: assessment.proportionalityEvaluation || {
+        finalities: { status: "acceptable", measures: "" },
+        legalBasis: { status: "acceptable", measures: "" },
+        dataMinimization: { status: "acceptable", measures: "" },
+        dataQuality: { status: "acceptable", measures: "" },
+        retentionPeriods: { status: "acceptable", measures: "" }
+      },
+      rightsProtectionEvaluation: assessment.rightsProtectionEvaluation || {
+        information: { status: "acceptable", measures: "" },
+        consent: { status: "acceptable", measures: "" },
+        accessPortability: { status: "acceptable", measures: "" },
+        rectificationErasure: { status: "acceptable", measures: "" },
+        limitationOpposition: { status: "acceptable", measures: "" },
+        subcontracting: { status: "acceptable", measures: "" },
+        internationalTransfers: { status: "acceptable", measures: "" }
+      }
+    };
+    
+    const [created] = await db.insert(dpiaAssessments).values(cleanAssessment).returning();
     return created;
   }
 
-  // DPIA Evaluations
-  async getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]> {
-    return await db.select().from(dpiaEvaluations).where(eq(dpiaEvaluations.companyId, companyId)).orderBy(desc(dpiaEvaluations.createdAt));
-  }
 
-  async createDpiaEvaluation(evaluation: InsertDpiaEvaluation): Promise<DpiaEvaluation> {
-    const [created] = await db.insert(dpiaEvaluations).values(evaluation).returning();
-    return created;
-  }
-
-  async updateDpiaEvaluation(id: number, updates: Partial<InsertDpiaEvaluation>): Promise<DpiaEvaluation> {
-    const [updated] = await db.update(dpiaEvaluations).set(updates).where(eq(dpiaEvaluations.id, id)).returning();
-    return updated;
-  }
-
-  async deleteDpiaEvaluation(id: number): Promise<void> {
-    await db.delete(dpiaEvaluations).where(eq(dpiaEvaluations.id, id));
-  }
 
   async updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment> {
-    const [updated] = await db.update(dpiaAssessments).set({
+    const cleanUpdates = {
       ...updates,
-      updatedAt: new Date()
-    }).where(eq(dpiaAssessments.id, id)).returning();
+      updatedAt: new Date(),
+      // Clean array fields to ensure proper serialization
+      ...(updates.securityMeasures && {
+        securityMeasures: Array.isArray(updates.securityMeasures) ? updates.securityMeasures : []
+      }),
+      ...(updates.customSecurityMeasures && {
+        customSecurityMeasures: Array.isArray(updates.customSecurityMeasures) ? updates.customSecurityMeasures : []
+      }),
+      ...(updates.subcontractingMeasures && {
+        subcontractingMeasures: Array.isArray(updates.subcontractingMeasures) ? updates.subcontractingMeasures : []
+      }),
+      ...(updates.internationalTransfersMeasures && {
+        internationalTransfersMeasures: Array.isArray(updates.internationalTransfersMeasures) ? updates.internationalTransfersMeasures : []
+      })
+    };
+    
+    const [updated] = await db.update(dpiaAssessments).set(cleanUpdates).where(eq(dpiaAssessments.id, id)).returning();
     return updated;
   }
 
