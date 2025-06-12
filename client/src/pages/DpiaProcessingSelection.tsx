@@ -27,19 +27,19 @@ export default function DpiaProcessingSelection() {
   const userId = parseInt(localStorage.getItem("userId") || "1");
   const { data: company } = useQuery({
     queryKey: [`/api/companies/${userId}`],
-  });
+  }) as { data: any };
 
   // Get processing records
   const { data: records = [], isLoading } = useQuery({
-    queryKey: [`/api/records/${company?.id}`],
-    enabled: !!company?.id,
-  });
+    queryKey: [`/api/records/${(company as any)?.id}`],
+    enabled: !!(company as any)?.id,
+  }) as { data: any[], isLoading: boolean };
 
   // Get existing DPIA evaluations to check which treatments require DPIA
   const { data: dpiaEvaluations = [] } = useQuery({
-    queryKey: [`/api/dpia-evaluations/${company?.id}`],
-    enabled: !!company?.id,
-  });
+    queryKey: [`/api/dpia-evaluations/${(company as any)?.id}`],
+    enabled: !!(company as any)?.id,
+  }) as { data: any[] };
 
   // Create new DPIA mutation
   const createDpiaMutation = useMutation({
@@ -85,7 +85,7 @@ export default function DpiaProcessingSelection() {
                          record.purpose?.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Check if this record has a preliminary evaluation suggesting DPIA is needed
-    const evaluation = dpiaEvaluations.find((eval: any) => eval.recordId === record.id);
+    const evaluation = dpiaEvaluations.find((evaluation: any) => evaluation.recordId === record.id);
     const needsDpia = evaluation && (
       evaluation.recommendation?.includes("obligatoire") ||
       evaluation.recommendation?.includes("recommandée")
@@ -95,7 +95,7 @@ export default function DpiaProcessingSelection() {
   });
 
   const getStatusBadge = (record: any) => {
-    const evaluation = dpiaEvaluations.find((eval: any) => eval.recordId === record.id);
+    const evaluation = dpiaEvaluations.find((evaluation: any) => evaluation.recordId === record.id);
     
     if (!evaluation) {
       return <Badge variant="secondary">Évaluation requise</Badge>;
@@ -183,7 +183,7 @@ export default function DpiaProcessingSelection() {
       ) : (
         <div className="grid gap-4">
           {filteredRecords.map((record: any) => {
-            const evaluation = dpiaEvaluations.find((eval: any) => eval.recordId === record.id);
+            const evaluation = (dpiaEvaluations as any[]).find((evaluation: any) => evaluation.recordId === record.id);
             
             return (
               <Card key={record.id} className="hover:shadow-md transition-shadow">

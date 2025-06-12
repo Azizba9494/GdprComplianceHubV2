@@ -15,6 +15,7 @@ import DPIA from "@/pages/dpia";
 import DpiaList from "@/pages/DpiaList";
 import DpiaAssessment from "@/pages/DpiaAssessment";
 import DpiaEvaluationOriginal from "@/pages/DpiaEvaluationOriginal";
+import DpiaProcessingSelection from "@/pages/DpiaProcessingSelection";
 import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
 import Sidebar from "@/components/layout/sidebar";
@@ -40,6 +41,7 @@ function Router() {
             <Route path="/rights" component={RightsManagement} />
             <Route path="/dpia" component={DpiaList} />
             <Route path="/dpia/evaluation" component={DpiaEvaluationOriginal} />
+            <Route path="/dpia/new" component={DpiaProcessingSelection} />
             <Route path="/dpia/:id" component={DpiaAssessment} />
             <Route path="/dpia-old" component={DPIA} />
             <Route path="/learning" component={Learning} />
