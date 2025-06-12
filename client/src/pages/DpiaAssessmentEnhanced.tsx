@@ -1471,7 +1471,7 @@ export default function DpiaAssessmentEnhanced() {
             <TabsContent value="security" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>3.1 Mesures de sécurité</CardTitle>
+                  <CardTitle>Mesures de sécurité</CardTitle>
                   <CardDescription>
                     Sélectionnez et décrivez les mesures techniques et organisationnelles appropriées pour garantir un niveau de sécurité adapté au risque.
                   </CardDescription>
