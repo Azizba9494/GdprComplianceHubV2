@@ -1,20 +1,42 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { storage } from '../storage';
 
 export class GeminiService {
   private client: GoogleGenerativeAI | null = null;
 
   constructor() {
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (apiKey) {
-      this.client = new GoogleGenerativeAI(apiKey);
-    }
+    // Constructor ne configure plus directement le client
+    // Il sera configuré dynamiquement selon la configuration active
   }
 
-  private ensureClient() {
-    if (!this.client) {
-      throw new Error('Google API key not configured');
+  private async getActiveClient() {
+    const activeLlmConfig = await storage.getActiveLlmConfiguration();
+    
+    if (!activeLlmConfig) {
+      // Fallback vers la variable d'environnement
+      const apiKey = process.env.GOOGLE_API_KEY;
+      if (apiKey) {
+        console.log('[LLM] Using fallback environment API key');
+        return new GoogleGenerativeAI(apiKey);
+      }
+      throw new Error('Aucune configuration LLM active trouvée');
     }
-    return this.client;
+
+    console.log(`[LLM] Using active configuration: ${activeLlmConfig.name} (${activeLlmConfig.provider})`);
+    
+    if (activeLlmConfig.provider === 'google') {
+      const apiKey = process.env[activeLlmConfig.apiKeyName] || process.env.GOOGLE_API_KEY;
+      if (apiKey) {
+        return new GoogleGenerativeAI(apiKey);
+      }
+      throw new Error(`Clé API non trouvée pour ${activeLlmConfig.apiKeyName}`);
+    }
+    
+    throw new Error(`Configuration LLM non supportée: ${activeLlmConfig.provider}`);
+  }
+
+  private async ensureClient() {
+    return await this.getActiveClient();
   }
 
   async generateResponse(prompt: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
@@ -135,11 +157,19 @@ Priorisez les actions selon leur urgence légale et leur impact sur la conformit
   }
 
   async getChatbotResponse(message: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
-    const prompt = `L'utilisateur demande: ${message}
+    // Récupérer le prompt actif pour le chatbot
+    const activePrompt = await storage.getActivePromptByCategory('chatbot');
+    
+    let prompt = activePrompt?.prompt || `L'utilisateur demande: ${message}
 
 Vous êtes un assistant IA spécialisé en conformité RGPD pour les VSE/PME françaises. 
 Répondez de manière claire et pratique, en donnant des conseils concrets et adaptés au contexte français.
 Utilisez un langage accessible et évitez le jargon juridique complexe.`;
+
+    // Remplacer les variables dans le prompt
+    prompt = prompt.replace(/\{\{message\}\}/g, message);
+    
+    console.log(`[CHATBOT] Using prompt from database: ${activePrompt ? 'YES' : 'NO (fallback)'}`);
 
     return await this.generateResponse(prompt, context, ragDocuments);
   }
