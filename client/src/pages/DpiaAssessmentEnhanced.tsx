@@ -436,12 +436,33 @@ export default function DpiaAssessmentEnhanced() {
   // Load form data when DPIA is fetched
   useEffect(() => {
     if (dpia) {
-      form.reset({
+      const cleanedData = {
         ...dpia,
         companyId: dpia.companyId || company?.id,
+        // Clean null values to prevent React warnings
+        generalDescription: dpia.generalDescription || "",
+        processingPurposes: dpia.processingPurposes || "",
+        dataController: dpia.dataController || "",
+        dataProcessors: dpia.dataProcessors || "",
+        applicableReferentials: dpia.applicableReferentials || "",
+        personalDataProcessed: dpia.personalDataProcessed || "",
+        dataMinimization: dpia.dataMinimization || "",
+        retentionJustification: dpia.retentionJustification || "",
+        finalitiesJustification: dpia.finalitiesJustification || "",
+        legalBasisJustification: dpia.legalBasisJustification || "",
+        dataQualityJustification: dpia.dataQualityJustification || "",
+        rightsInformation: dpia.rightsInformation || "",
+        rightsConsent: dpia.rightsConsent || "",
+        rightsAccess: dpia.rightsAccess || "",
+        rightsRectification: dpia.rightsRectification || "",
+        rightsOpposition: dpia.rightsOpposition || "",
+        dpoAdvice: dpia.dpoAdvice || "",
+        controllerValidation: dpia.controllerValidation || "",
         securityMeasures: dpia.securityMeasures || [],
+        customSecurityMeasures: dpia.customSecurityMeasures || [],
         subcontractingMeasures: dpia.subcontractingMeasures || [],
         internationalTransfersMeasures: dpia.internationalTransfersMeasures || [],
+        riskScenarios: dpia.riskScenarios || {},
         proportionalityEvaluation: dpia.proportionalityEvaluation || {
           finalities: { status: "acceptable", measures: "" },
           legalBasis: { status: "acceptable", measures: "" },
@@ -458,7 +479,8 @@ export default function DpiaAssessmentEnhanced() {
           subcontracting: { status: "acceptable", measures: "" },
           internationalTransfers: { status: "acceptable", measures: "" }
         }
-      });
+      };
+      form.reset(cleanedData);
     }
   }, [dpia, company, form]);
 
