@@ -176,6 +176,12 @@ const dpiaFormSchema = z.object({
     description: z.string(),
     implemented: z.boolean()
   })).optional(),
+  customSecurityMeasures: z.array(z.object({
+    name: z.string(),
+    category: z.string(),
+    description: z.string(),
+    implemented: z.boolean()
+  })).optional(),
   
   // Status
   status: z.enum(["draft", "inprogress", "completed", "validated"]).default("draft")
@@ -288,18 +294,62 @@ export default function DpiaAssessmentEnhanced() {
     },
   });
 
-  // AI generation mutation
+  // AI generation mutation with enhanced context
   const generateWithAI = useMutation({
     mutationFn: async ({ field, context }: { field: string, context?: any }) => {
       setIsGenerating(true);
+      
+      // Enhanced context with registry data and prompt type mapping
+      const registryData = {
+        name: processingRecord?.name,
+        description: processingRecord?.description,
+        purpose: processingRecord?.purpose,
+        legalBasis: processingRecord?.legalBasis,
+        dataCategories: processingRecord?.dataCategories,
+        recipients: processingRecord?.recipients,
+        retentionPeriod: processingRecord?.retentionPeriod,
+        dataController: company?.name,
+        dataProcessors: processingRecord?.processors,
+        isInternational: processingRecord?.isInternational,
+        securityMeasures: processingRecord?.securityMeasures
+      };
+
+      // Determine specialized prompt type for each field
+      const getPromptType = (fieldName: string): string => {
+        const promptMappings: Record<string, string> = {
+          'generalDescription': 'registry_based_description',
+          'purposes': 'registry_based_purposes', 
+          'dataController': 'registry_based_controller',
+          'dataProcessors': 'registry_based_processors',
+          'applicableReferentials': 'referentials_analysis',
+          'personalDataProcessed': 'registry_based_data',
+          'personalDataCategories': 'registry_based_categories',
+          'finalitiesJustification': 'finalities_justification',
+          'dataMinimization': 'data_minimization_analysis',
+          'retentionJustification': 'retention_justification',
+          'legalBasisJustification': 'legal_basis_justification',
+          'dataQualityJustification': 'insufficient_data_analysis',
+          'rightsInformation': 'insufficient_data_analysis',
+          'rightsConsent': 'insufficient_data_analysis',
+          'rightsAccess': 'insufficient_data_analysis',
+          'rightsRectification': 'insufficient_data_analysis',
+          'rightsOpposition': 'insufficient_data_analysis',
+          'subcontractingMeasures': 'insufficient_data_analysis',
+          'internationalTransfersMeasures': 'insufficient_data_analysis'
+        };
+        return promptMappings[fieldName] || 'general_analysis';
+      };
+
       const response = await fetch("/api/ai/generate-dpia-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           field,
+          promptType: getPromptType(field),
+          registryData,
           context: {
-            processingRecord,
             existingData: form.getValues(),
+            useRegistryData: true,
             ...context
           }
         })
@@ -1699,6 +1749,142 @@ export default function DpiaAssessmentEnhanced() {
                         </div>
                       )}
                     </div>
+
+                    <Separator />
+
+                    {/* Custom security measures */}
+                    <div>
+                      <div className="flex justify-between items-center mb-4">
+                        <Label className="text-base font-medium">
+                          Mesures techniques ou organisationnelles personnalisées
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const current = form.getValues("customSecurityMeasures") || [];
+                            form.setValue("customSecurityMeasures", [...current, {
+                              name: "",
+                              category: "",
+                              description: "",
+                              implemented: false
+                            }]);
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter une mesure personnalisée
+                        </Button>
+                      </div>
+
+                      <p className="text-sm text-gray-600 mb-4">
+                        Ajoutez vos propres mesures techniques ou organisationnelles spécifiques à votre organisation.
+                      </p>
+
+                      {(!form.watch("customSecurityMeasures") || form.watch("customSecurityMeasures")?.length === 0) ? (
+                        <p className="text-sm text-gray-500">
+                          Aucune mesure personnalisée ajoutée.
+                        </p>
+                      ) : (
+                        <div className="space-y-4">
+                          {form.watch("customSecurityMeasures")?.map((_, index) => (
+                            <Card key={index} className="p-4">
+                              <div className="flex justify-between items-center mb-4">
+                                <h4 className="font-medium">Mesure personnalisée {index + 1}</h4>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    const current = form.getValues("customSecurityMeasures") || [];
+                                    form.setValue("customSecurityMeasures", current.filter((_, i) => i !== index));
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4 mb-4">
+                                <FormField
+                                  control={form.control}
+                                  name={`customSecurityMeasures.${index}.name`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Nom de la mesure</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="Ex: Chiffrement des emails internes" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`customSecurityMeasures.${index}.category`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Catégorie</FormLabel>
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Sélectionnez une catégorie" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {SECURITY_CATEGORIES.map(category => (
+                                            <SelectItem key={category} value={category}>
+                                              {category}
+                                            </SelectItem>
+                                          ))}
+                                          <SelectItem value="Personnalisé">Personnalisé</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              <FormField
+                                control={form.control}
+                                name={`customSecurityMeasures.${index}.description`}
+                                render={({ field }) => (
+                                  <FormItem className="mb-4">
+                                    <FormLabel>Description de la mesure</FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        placeholder="Décrivez en détail cette mesure de sécurité et son fonctionnement..."
+                                        className="min-h-[100px]"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name={`customSecurityMeasures.${index}.implemented`}
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                    <FormLabel>
+                                      Cette mesure est mise en œuvre
+                                    </FormLabel>
+                                  </FormItem>
+                                )}
+                              />
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1706,20 +1892,153 @@ export default function DpiaAssessmentEnhanced() {
 
             {/* Tab 5: Validation */}
             <TabsContent value="validation" className="space-y-6">
+              {/* Validation summary */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Validation et finalisation</CardTitle>
+                  <CardTitle>Récapitulatif de l'AIPD</CardTitle>
                   <CardDescription>
-                    Finalisez votre AIPD et procédez à sa validation.
+                    Vérifiez l'exhaustivité de votre analyse d'impact avant validation finale.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">AIPD en cours de développement</h3>
-                    <p className="text-gray-600 mb-4">
-                      Cette section sera complétée avec les fonctionnalités de validation et de plan d'action.
-                    </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-green-700">Sections complétées</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">Vue d'ensemble du traitement</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">Données personnelles traitées</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">Mesures de proportionnalité</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">Protection des droits</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm">Mesures de sécurité</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-blue-700">Statistiques</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm">Mesures de sécurité sélectionnées:</span>
+                          <span className="font-medium">{form.watch("securityMeasures")?.length || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Mesures personnalisées:</span>
+                          <span className="font-medium">{form.watch("customSecurityMeasures")?.length || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Catégories de données:</span>
+                          <span className="font-medium">{form.watch("personalDataCategories")?.length || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Sous-traitants:</span>
+                          <span className="font-medium">{form.watch("subcontractingMeasures")?.length || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Action plan */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Plan d'action</CardTitle>
+                  <CardDescription>
+                    Définissez les actions à mettre en œuvre pour améliorer la conformité.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="border-l-4 border-orange-400 pl-4">
+                      <h4 className="font-medium text-orange-700 mb-2">Actions recommandées</h4>
+                      <ul className="space-y-2 text-sm">
+                        <li>• Finaliser la documentation des mesures de sécurité</li>
+                        <li>• Mettre en place un processus de révision périodique</li>
+                        <li>• Former les équipes aux procédures RGPD</li>
+                        <li>• Planifier des audits de conformité réguliers</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2">Prochaines étapes</h4>
+                      <ol className="space-y-1 text-sm list-decimal list-inside">
+                        <li>Valider cette AIPD avec votre DPO ou responsable conformité</li>
+                        <li>Intégrer les mesures dans votre système de management</li>
+                        <li>Planifier une révision dans 12 mois ou en cas de modification</li>
+                        <li>Conserver cette AIPD dans votre registre des traitements</li>
+                      </ol>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Final validation */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Validation finale</CardTitle>
+                  <CardDescription>
+                    Confirmez que l'AIPD est complète et prête pour validation officielle.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Statut de l'AIPD</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionnez le statut" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="draft">Brouillon</SelectItem>
+                              <SelectItem value="inprogress">En cours</SelectItem>
+                              <SelectItem value="completed">Terminée</SelectItem>
+                              <SelectItem value="validated">Validée</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Important</AlertTitle>
+                      <AlertDescription>
+                        Cette AIPD doit être revue et mise à jour en cas de modification substantielle du traitement 
+                        ou au minimum tous les 3 ans. Conservez ce document dans votre documentation RGPD.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="flex gap-4 pt-4">
+                      <Button type="button" variant="outline" className="flex-1">
+                        <Download className="h-4 w-4 mr-2" />
+                        Exporter en PDF
+                      </Button>
+                      <Button type="button" variant="outline" className="flex-1">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Générer le rapport
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
