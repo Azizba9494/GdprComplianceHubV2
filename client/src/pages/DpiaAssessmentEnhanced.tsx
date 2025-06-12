@@ -296,6 +296,43 @@ const dpiaFormSchema = z.object({
     implemented: z.boolean()
   })).optional(),
   
+  // Part 4: Risk Assessment - New section
+  riskScenarios: z.object({
+    illegitimateAccess: z.object({
+      impacts: z.string().optional(),
+      threats: z.string().optional(),
+      sources: z.string().optional(),
+      measures: z.string().optional(),
+      severity: z.enum(["undefined", "negligible", "limited", "important", "maximum"]).optional(),
+      severityJustification: z.string().optional(),
+      likelihood: z.enum(["undefined", "negligible", "limited", "important", "maximum"]).optional(),
+      likelihoodJustification: z.string().optional()
+    }).optional(),
+    unwantedModification: z.object({
+      impacts: z.string().optional(),
+      threats: z.string().optional(),
+      sources: z.string().optional(),
+      measures: z.string().optional(),
+      severity: z.enum(["undefined", "negligible", "limited", "important", "maximum"]).optional(),
+      severityJustification: z.string().optional(),
+      likelihood: z.enum(["undefined", "negligible", "limited", "important", "maximum"]).optional(),
+      likelihoodJustification: z.string().optional()
+    }).optional(),
+    dataDisappearance: z.object({
+      impacts: z.string().optional(),
+      threats: z.string().optional(),
+      sources: z.string().optional(),
+      measures: z.string().optional(),
+      severity: z.enum(["undefined", "negligible", "limited", "important", "maximum"]).optional(),
+      severityJustification: z.string().optional(),
+      likelihood: z.enum(["undefined", "negligible", "limited", "important", "maximum"]).optional(),
+      likelihoodJustification: z.string().optional()
+    }).optional()
+  }).optional(),
+  
+  // Data processing simplified
+  personalDataProcessed: z.string().optional(),
+  
   // Status
   status: z.enum(["draft", "inprogress", "completed", "validated"]).default("draft")
 });
@@ -571,11 +608,12 @@ export default function DpiaAssessmentEnhanced() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
               <TabsTrigger value="proportionality">Proportionnalité</TabsTrigger>
               <TabsTrigger value="rights">Droits</TabsTrigger>
               <TabsTrigger value="security">Sécurité</TabsTrigger>
+              <TabsTrigger value="risks">Risques</TabsTrigger>
               <TabsTrigger value="validation">Validation</TabsTrigger>
             </TabsList>
 
@@ -1594,7 +1632,7 @@ export default function DpiaAssessmentEnhanced() {
                       </Button>
                     </div>
 
-                    {form.watch("internationalTransfersMeasures")?.map((_, index) => (
+                    {(form.watch("internationalTransfersMeasures") || []).map((_, index) => (
                       <Card key={index} className="p-4">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-medium">Transfert {index + 1}</h4>

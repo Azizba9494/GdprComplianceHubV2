@@ -218,8 +218,6 @@ export default function DpiaProcessingSelection() {
                   
                   <div className="flex justify-between items-center">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      <p><strong>Catégories de données :</strong> {record.dataCategories?.join(", ") || "Non spécifiées"}</p>
-                      <p><strong>Durée de conservation :</strong> {record.retentionPeriod || "Non spécifiée"}</p>
                     </div>
                     
                     <Button
