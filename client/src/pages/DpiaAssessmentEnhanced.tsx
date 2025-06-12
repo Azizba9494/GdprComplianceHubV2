@@ -1205,7 +1205,7 @@ export default function DpiaAssessmentEnhanced() {
               {/* 2.2.6 - Subcontracting measures */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2.2.6 Détermination et description des mesures pour la sous-traitance</CardTitle>
+                  <CardTitle>Détermination et description des mesures pour la sous-traitance</CardTitle>
                   <CardDescription>
                     Lorsque vous faites appel à un prestataire (sous-traitant) qui traite des données pour vous, vous devez signer un contrat spécifique et détaillé. Ce contrat doit garantir que le sous-traitant présente des garanties suffisantes en matière de protection des données et qu'il ne traitera les données que sur vos instructions.
                   </CardDescription>
