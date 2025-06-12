@@ -473,6 +473,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/dpia/assessment/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const assessment = await storage.updateDpiaAssessment(id, updates);
+      res.json(assessment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.patch("/api/dpia/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

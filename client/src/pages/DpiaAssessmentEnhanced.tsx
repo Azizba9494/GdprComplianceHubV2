@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -368,6 +368,71 @@ export default function DpiaAssessmentEnhanced() {
     mode: "onChange"
   });
 
+  // Auto-save functionality
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-save mutation
+  const autoSaveMutation = useMutation({
+    mutationFn: async (data: DpiaFormData) => {
+      const url = id && id !== "new" ? `/api/dpia/assessment/${id}` : `/api/dpia`;
+      const method = id && id !== "new" ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, status: "draft" })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erreur lors de la sauvegarde automatique");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (savedDpia) => {
+      setLastSaved(new Date());
+      setIsAutoSaving(false);
+      queryClient.invalidateQueries({ queryKey: [`/api/dpia/assessment/${savedDpia.id}`] });
+      if (id === "new") {
+        // Update URL without triggering navigation
+        window.history.replaceState({}, '', `/dpia/${savedDpia.id}`);
+      }
+    },
+    onError: (error: any) => {
+      setIsAutoSaving(false);
+      console.error("Auto-save failed:", error);
+    },
+  });
+
+  // Trigger auto-save on form changes
+  const triggerAutoSave = useCallback((data: DpiaFormData) => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      setIsAutoSaving(true);
+      autoSaveMutation.mutate(data);
+    }, 2000); // Auto-save after 2 seconds of inactivity
+  }, [autoSaveMutation]);
+
+  // Watch form changes for auto-save
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      if (company?.id) {
+        const formData = {
+          ...value,
+          companyId: company.id,
+          processingRecordId: value.processingRecordId || processingRecord?.id
+        };
+        triggerAutoSave(formData);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch, company?.id, processingRecord?.id, triggerAutoSave]);
+
   // Load form data when DPIA is fetched
   useEffect(() => {
     if (dpia) {
@@ -600,6 +665,17 @@ export default function DpiaAssessmentEnhanced() {
           <Badge variant={dpia?.status === "completed" ? "default" : "secondary"}>
             {dpia?.status || "draft"}
           </Badge>
+          {isAutoSaving && (
+            <div className="flex items-center gap-2 text-sm text-blue-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Sauvegarde...
+            </div>
+          )}
+          {lastSaved && !isAutoSaving && (
+            <div className="text-sm text-green-600">
+              Sauvegardé à {lastSaved.toLocaleTimeString()}
+            </div>
+          )}
         </div>
       </div>
       <Form {...form}>
