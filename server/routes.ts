@@ -27,6 +27,39 @@ const upload = multer({
   }
 });
 
+// Helper function to get RAG documents for AI prompts
+async function getRagDocuments(): Promise<string[]> {
+  try {
+    const ragDocuments: string[] = [];
+    
+    // Get all active prompts
+    const allPrompts = await storage.getAiPrompts();
+    const activePrompts = allPrompts.filter(p => p.isActive);
+    
+    // For each active prompt, get associated documents
+    for (const prompt of activePrompts) {
+      const promptDocuments = await storage.getPromptDocuments(prompt.id);
+      if (promptDocuments.length > 0) {
+        const documentIds = promptDocuments
+          .sort((a, b) => a.priority - b.priority)
+          .map(pd => pd.documentId);
+        
+        for (const docId of documentIds) {
+          const document = await storage.getRagDocument(docId);
+          if (document && document.isActive && !ragDocuments.includes(document.content)) {
+            ragDocuments.push(document.content);
+          }
+        }
+      }
+    }
+    
+    return ragDocuments;
+  } catch (error) {
+    console.error('Error getting RAG documents:', error);
+    return [];
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication routes
@@ -853,30 +886,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Get ALL documents from active prompts for general chatbot usage
-      let ragDocuments: string[] = [];
-      
-      // Get all active prompts
-      const allPrompts = await storage.getAiPrompts();
-      const activePrompts = allPrompts.filter(p => p.isActive);
-      
-      // For each active prompt, get associated documents
-      for (const prompt of activePrompts) {
-        const promptDocuments = await storage.getPromptDocuments(prompt.id);
-        if (promptDocuments.length > 0) {
-          const documentIds = promptDocuments
-            .sort((a, b) => a.priority - b.priority)
-            .map(pd => pd.documentId);
-          
-          for (const docId of documentIds) {
-            const document = await storage.getRagDocument(docId);
-            if (document && document.isActive && !ragDocuments.includes(document.content)) {
-              ragDocuments.push(document.content);
-            }
-          }
-        }
-      }
-
+      // Get documents using helper function
+      const ragDocuments = await getRagDocuments();
       console.log(`[RAG] Found ${ragDocuments.length} documents for chatbot context`);
       
       const response = await geminiService.getChatbotResponse(message, context, ragDocuments);

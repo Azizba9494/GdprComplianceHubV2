@@ -48,7 +48,7 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
     }
   }
 
-  async generateStructuredResponse(prompt: string, schema: any, context?: any): Promise<any> {
+  async generateStructuredResponse(prompt: string, schema: any, context?: any, ragDocuments?: string[]): Promise<any> {
     const client = this.ensureClient();
     
     try {
@@ -60,7 +60,15 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
         }
       });
 
+      let contextSection = '';
+      if (ragDocuments && ragDocuments.length > 0) {
+        contextSection = `\n\nDocuments de référence à prioriser:\n${ragDocuments.join('\n\n---\n\n')}`;
+      }
+
       const fullPrompt = `Vous êtes un expert en conformité RGPD. Répondez uniquement avec un JSON valide selon le schéma demandé.
+
+${contextSection ? 'IMPORTANT: Utilisez en priorité les informations des documents de référence fournis.' : ''}
+${contextSection}
 
 ${prompt}
 
@@ -90,7 +98,7 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
     }
   }
 
-  async generateActionPlan(diagnosticData: any, companyInfo: any): Promise<{
+  async generateActionPlan(diagnosticData: any, companyInfo: any, ragDocuments?: string[]): Promise<{
     actions: Array<{
       title: string;
       description: string;
@@ -123,7 +131,7 @@ Priorisez les actions selon leur urgence légale et leur impact sur la conformit
       summary: "string"
     };
 
-    return await this.generateStructuredResponse(prompt, schema, { diagnosticData, companyInfo });
+    return await this.generateStructuredResponse(prompt, schema, { diagnosticData, companyInfo }, ragDocuments);
   }
 
   async getChatbotResponse(message: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
