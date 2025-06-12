@@ -68,7 +68,7 @@ export default function DpiaProcessingSelection() {
         description: "Vous pouvez maintenant commencer l'analyse d'impact.",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/dpia/${company?.id}`] });
-      setLocation(`/dpia/assessment/${newDpia.id}`);
+      setLocation(`/dpia/${newDpia.id}`);
     },
     onError: (error: any) => {
       toast({
