@@ -237,7 +237,24 @@ export default function DpiaEvaluationOriginal() {
         obstacleToRight: data.obstacleToRight === "oui"
       };
 
-      const score = Object.values(answers).filter(Boolean).length;
+      // Calcul du score avec pondération pour "incertain"
+      const uncertainAnswers = {
+        scoring: data.scoring === "incertain",
+        automatedDecision: data.automatedDecision === "incertain",
+        systematicMonitoring: data.systematicMonitoring === "incertain",
+        sensitiveData: data.sensitiveData === "incertain",
+        largeScale: data.largeScale === "incertain",
+        dataCombination: data.dataCombination === "incertain",
+        vulnerablePersons: data.vulnerablePersons === "incertain",
+        innovativeTechnology: data.innovativeTechnology === "incertain",
+        obstacleToRight: data.obstacleToRight === "incertain"
+      };
+
+      const yesCount = Object.values(answers).filter(Boolean).length;
+      const uncertainCount = Object.values(uncertainAnswers).filter(Boolean).length;
+      
+      // Score total : oui = 1 point, incertain = 0.5 point
+      const score = yesCount + (uncertainCount * 0.5);
       
       // Vérifier la liste CNIL
       const cnilMatch = await checkCnilMandatoryList(selectedRecord!);
@@ -250,13 +267,13 @@ export default function DpiaEvaluationOriginal() {
         justification = `Ce traitement figure dans la liste des types d'opérations de traitement pour lesquelles une AIPD est requise : "${cnilMatch}". Une AIPD est donc obligatoire selon l'article 35.4 du RGPD.`;
       } else if (score >= 2) {
         recommendation = "AIPD fortement recommandée / obligatoire";
-        justification = `Notre analyse préliminaire indique que ce traitement est susceptible d'engendrer un risque élevé. La réalisation d'une AIPD est nécessaire car le projet remplit ${score} des 9 critères de risque identifiés par les autorités de protection des données.`;
-      } else if (score === 1) {
+        justification = `Notre analyse préliminaire indique que ce traitement est susceptible d'engendrer un risque élevé. La réalisation d'une AIPD est nécessaire avec un score de ${score.toFixed(1)}/9 (réponses "Oui" = 1 point, "Incertain" = 0.5 point).`;
+      } else if (score >= 1) {
         recommendation = "Vigilance requise";
-        justification = `Une AIPD n'est pas strictement obligatoire sur la seule base de ces critères, mais la présence d'un facteur de risque justifie une analyse plus approfondie pour confirmer l'absence de risque élevé.`;
+        justification = `Une AIPD n'est pas strictement obligatoire sur la seule base de ces critères (score: ${score.toFixed(1)}/9), mais la présence de facteurs de risque justifie une analyse plus approfondie pour confirmer l'absence de risque élevé.`;
       } else {
         recommendation = "AIPD non requise à première vue";
-        justification = `Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement.`;
+        justification = `Aucun critère de risque majeur identifié (score: ${score.toFixed(1)}/9). Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement.`;
       }
 
       // Sauvegarder en base de données
@@ -466,8 +483,16 @@ export default function DpiaEvaluationOriginal() {
                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertDescription>
-                    Répondez à chaque critère en vous basant sur les caractéristiques de votre traitement. 
-                    Si au moins 2 critères sont remplis, une AIPD sera probablement obligatoire.
+                    <div className="space-y-2">
+                      <p>Répondez à chaque critère en vous basant sur les caractéristiques de votre traitement.</p>
+                      <p><strong>Système de notation :</strong></p>
+                      <ul className="list-disc list-inside text-sm space-y-1">
+                        <li><strong>Oui</strong> = 1 point (critère clairement présent)</li>
+                        <li><strong>Incertain</strong> = 0.5 point (critère possiblement présent, nécessite clarification)</li>
+                        <li><strong>Non</strong> = 0 point (critère absent)</li>
+                      </ul>
+                      <p>Si le score total atteint 2 points ou plus, une AIPD sera probablement obligatoire.</p>
+                    </div>
                   </AlertDescription>
                 </Alert>
 

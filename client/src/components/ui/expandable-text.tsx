@@ -55,9 +55,14 @@ export function ExpandableText({
       
       {needsTruncation && showToggleButton && (
         <Button
+          type="button"
           variant="ghost"
           size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
           className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
         >
           {isExpanded ? (
