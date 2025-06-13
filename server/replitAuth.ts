@@ -46,7 +46,7 @@ export async function setupAuth(app: Express) {
       
       return done(null, user);
     } catch (error) {
-      return done(error, null);
+      return done(error, false);
     }
   }));
 

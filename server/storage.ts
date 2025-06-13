@@ -3,8 +3,9 @@ import {
   processingRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
-  quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
+  quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments, invoices,
   type User, type InsertUser, type UpsertUser, type Company, type InsertCompany,
+  type Invoice, type InsertInvoice,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
   type ComplianceSnapshot, type InsertComplianceSnapshot,
@@ -32,16 +33,25 @@ import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
-  // Users - Updated for Replit Auth
+  // Users - Enhanced for multiple auth methods
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  createUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<UpsertUser>): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Companies
   getCompany(id: number): Promise<Company | undefined>;
   getCompanyByUserId(userId: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
+  
+  // Invoices
+  getInvoicesByUserId(userId: string): Promise<Invoice[]>;
+  getInvoice(id: number): Promise<Invoice | undefined>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoice(id: number, updates: Partial<InsertInvoice>): Promise<Invoice>;
   
   // Diagnostic Questions
   getDiagnosticQuestions(): Promise<DiagnosticQuestion[]>;
@@ -200,6 +210,28 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
+    return user || undefined;
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
   // Companies
   async getCompany(id: number): Promise<Company | undefined> {
     const [company] = await db.select().from(companies).where(eq(companies.id, id));
@@ -219,6 +251,26 @@ export class DatabaseStorage implements IStorage {
   async updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company> {
     const [company] = await db.update(companies).set(updates).where(eq(companies.id, id)).returning();
     return company;
+  }
+
+  // Invoices
+  async getInvoicesByUserId(userId: string): Promise<Invoice[]> {
+    return await db.select().from(invoices).where(eq(invoices.userId, userId)).orderBy(desc(invoices.createdAt));
+  }
+
+  async getInvoice(id: number): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return invoice || undefined;
+  }
+
+  async createInvoice(invoiceData: InsertInvoice): Promise<Invoice> {
+    const [invoice] = await db.insert(invoices).values(invoiceData).returning();
+    return invoice;
+  }
+
+  async updateInvoice(id: number, updates: Partial<InsertInvoice>): Promise<Invoice> {
+    const [invoice] = await db.update(invoices).set(updates).where(eq(invoices.id, id)).returning();
+    return invoice;
   }
 
   // Diagnostic Questions
