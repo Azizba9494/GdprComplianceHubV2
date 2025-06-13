@@ -3,8 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
 import { db, testDatabaseConnection } from "./db";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { devAuthMiddleware, isAuthenticatedDev } from "./devAuth";
+// Simple auth disabled for now
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
@@ -139,9 +138,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/profile/company', isAuthenticatedDev, async (req: any, res) => {
+  app.post('/api/profile/company', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "default-user";
       const companyData = req.body;
       
       const company = await storage.createCompany({
@@ -156,9 +155,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/profile/company', isAuthenticatedDev, async (req: any, res) => {
+  app.put('/api/profile/company', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "default-user";
       const companyData = req.body;
       
       const existingCompany = await storage.getCompanyByUserId(userId);
@@ -175,9 +174,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard stats route
-  app.get('/api/dashboard/stats', isAuthenticatedDev, async (req: any, res) => {
+  app.get('/api/dashboard/stats', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "default-user";
       let company = await storage.getCompanyByUserId(userId);
       
       if (!company) {
@@ -219,9 +218,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Invoices route
-  app.get('/api/invoices', isAuthenticatedDev, async (req: any, res) => {
+  app.get('/api/invoices', async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = "default-user";
       const invoices = await storage.getInvoices(userId);
       res.json(invoices);
     } catch (error) {
@@ -231,7 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Company routes - Protected
-  app.get("/api/companies/:userId", isAuthenticatedDev, async (req, res) => {
+  app.get("/api/companies/:userId", async (req, res) => {
     try {
       const userId = req.params.userId;
       const company = await storage.getCompanyByUserId(userId);
