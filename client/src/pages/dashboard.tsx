@@ -48,7 +48,7 @@ export default function Dashboard() {
     requests: requests || [],
   };
 
-  if (companyLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -101,7 +101,7 @@ export default function Dashboard() {
       <ComplianceOverview stats={stats} />
 
       {/* Risk Heat Map */}
-      <RiskHeatMap companyId={companyId} data={heatMapData} diagnosticData={stats} />
+      <RiskHeatMap companyId={COMPANY_ID} data={heatMapData} diagnosticData={stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -109,7 +109,7 @@ export default function Dashboard() {
         </div>
         <div className="space-y-6">
           <QuickActions stats={stats} />
-          <RiskTrends companyId={companyId} data={{ actions: actions || [], breaches: breaches || [], requests: requests || [] }} />
+          <RiskTrends companyId={COMPANY_ID} data={{ actions: actions || [], breaches: breaches || [], requests: requests || [] }} />
         </div>
       </div>
 

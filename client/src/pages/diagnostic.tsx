@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ArrowRight, ArrowLeft, FileText, Shield, Users, Settings, Book, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-import { useCompany } from "@/hooks/useCompany"; // Mock company ID
+const COMPANY_ID = 1; // Mock company ID
 
 const categoryIcons = {
   "Gouvernance": Settings,
@@ -39,7 +39,6 @@ export default function Diagnostic() {
   const [completedCategories, setCompletedCategories] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { companyId, isLoading: companyLoading } = useCompany();
 
   const { data: allQuestions, isLoading } = useQuery({
     queryKey: ['/api/diagnostic/questions'],

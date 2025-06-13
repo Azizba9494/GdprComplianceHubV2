@@ -121,13 +121,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/profile', isAuthenticatedDev, async (req: any, res) => {
+  app.put('/api/profile', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
       const { firstName, lastName, email } = req.body;
       
       const updatedUser = await storage.upsertUser({
-        id: userId,
+        id: "default-user",
         firstName,
         lastName,
         email
