@@ -82,6 +82,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile routes
+  app.get('/api/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      const company = await storage.getCompanyByUserId(userId);
+      
+      res.json({
+        user,
+        company
+      });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  app.put('/api/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { firstName, lastName, email, phone } = req.body;
+      
+      const updatedUser = await storage.updateUser(userId, {
+        firstName,
+        lastName,
+        email,
+        phone
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.post('/api/profile/company', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const companyData = req.body;
+      
+      const company = await storage.createCompany({
+        ...companyData,
+        userId
+      });
+      
+      res.json(company);
+    } catch (error) {
+      console.error("Error creating company:", error);
+      res.status(500).json({ message: "Failed to create company" });
+    }
+  });
+
+  app.put('/api/profile/company', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const companyData = req.body;
+      
+      const existingCompany = await storage.getCompanyByUserId(userId);
+      if (!existingCompany) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      const updatedCompany = await storage.updateCompany(existingCompany.id, companyData);
+      res.json(updatedCompany);
+    } catch (error) {
+      console.error("Error updating company:", error);
+      res.status(500).json({ message: "Failed to update company" });
+    }
+  });
+
+  // Dashboard stats route
+  app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const company = await storage.getCompanyByUserId(userId);
+      
+      if (!company) {
+        // Return default stats for users without companies
+        return res.json({
+          complianceScore: 0,
+          totalRecords: 0,
+          pendingRequests: 0,
+          activeActions: 0,
+          recentActivity: []
+        });
+      }
+      
+      const companyId = company.id;
+      const [actions, requests, responses, questions] = await Promise.all([
+        storage.getComplianceActions(companyId),
+        storage.getDataSubjectRequests(companyId),
+        storage.getDiagnosticResponses(companyId),
+        storage.getDiagnosticQuestions()
+      ]);
+      
+      // Calculate compliance score
+      const totalQuestions = questions.length;
+      const answeredQuestions = responses.length;
+      const positiveResponses = responses.filter(r => r.response.toLowerCase() === 'oui').length;
+      const complianceScore = answeredQuestions > 0 ? Math.round((positiveResponses / answeredQuestions) * 100) : 0;
+      
+      res.json({
+        complianceScore,
+        totalRecords: await storage.getProcessingRecords(companyId).then(records => records.length),
+        pendingRequests: requests.filter(r => r.status === 'pending').length,
+        activeActions: actions.filter(a => a.status !== 'completed').length,
+        recentActivity: []
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  // Invoices route
+  app.get('/api/invoices', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const invoices = await storage.getInvoices(userId);
+      res.json(invoices);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
   // Company routes - Protected
   app.get("/api/companies/:userId", isAuthenticated, async (req, res) => {
     try {

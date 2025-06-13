@@ -1,183 +1,280 @@
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Shield, TrendingUp, FileText, Users, AlertTriangle, LogOut } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { 
+  TrendingUp, 
+  FileText, 
+  Users, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  Play,
+  Plus,
+  BarChart3
+} from "lucide-react";
 import { Link } from "wouter";
-import type { User } from "@shared/schema";
+
+interface DashboardStats {
+  complianceScore: number;
+  totalRecords: number;
+  pendingRequests: number;
+  activeActions: number;
+  recentActivity: Array<{
+    id: number;
+    type: string;
+    title: string;
+    date: string;
+    status: string;
+  }>;
+}
 
 export default function Home() {
-  const { user, isLoading } = useAuth();
-  const userData = user as User;
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
+    queryKey: ["/api/dashboard/stats"],
+    retry: false,
+  });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="p-6 space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Shield className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">RGPD Manager</h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarImage src={userData?.profileImageUrl || ""} />
-              <AvatarFallback>
-                {userData?.firstName?.[0]}{userData?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="hidden md:block">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {userData?.firstName} {userData?.lastName}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{userData?.email}</p>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.href = '/api/logout'}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Déconnexion
-            </Button>
-          </div>
-        </div>
-      </header>
+  const complianceScore = stats?.complianceScore || 0;
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Bienvenue, {userData?.firstName}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            Tableau de bord de conformité RGPD pour votre entreprise
+  const getScoreLevel = (score: number) => {
+    if (score >= 80) return "Excellent";
+    if (score >= 60) return "Bon";
+    if (score >= 40) return "Moyen";
+    return "À améliorer";
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Tableau de bord</h1>
+          <p className="text-muted-foreground">
+            Vue d'ensemble de votre conformité RGPD
           </p>
         </div>
+        <Button className="btn-primary">
+          <Play className="w-4 h-4 mr-2" />
+          Nouveau diagnostic
+        </Button>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link href="/diagnostic">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <Shield className="w-5 h-5 mr-2 text-blue-600" />
-                  Diagnostic
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Évaluez votre conformité RGPD
-                </CardDescription>
-              </CardContent>
-            </Card>
-          </Link>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Score de Conformité</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${getScoreColor(complianceScore)}`}>
+              {complianceScore}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {getScoreLevel(complianceScore)}
+            </p>
+            <Progress value={complianceScore} className="mt-2" />
+          </CardContent>
+        </Card>
 
-          <Link href="/records">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <FileText className="w-5 h-5 mr-2 text-green-600" />
-                  Registre
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Gérez vos traitements de données
-                </CardDescription>
-              </CardContent>
-            </Card>
-          </Link>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Traitements</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalRecords || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Registre des activités
+            </p>
+          </CardContent>
+        </Card>
 
-          <Link href="/requests">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <Users className="w-5 h-5 mr-2 text-purple-600" />
-                  Demandes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Traitez les demandes des personnes
-                </CardDescription>
-              </CardContent>
-            </Card>
-          </Link>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Demandes en cours</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.pendingRequests || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              À traiter
+            </p>
+          </CardContent>
+        </Card>
 
-          <Link href="/actions">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-lg">
-                  <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
-                  Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Suivez votre plan d'actions
-                </CardDescription>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Actions actives</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.activeActions || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              Plan d'actions
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Dashboard Overview */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Compliance Score */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
-                Score de Conformité
+      {/* Quick Actions */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Link href="/diagnostic">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-lg">
+                <Play className="w-5 h-5 mr-2 text-blue-600" />
+                Diagnostic
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600 mb-2">--</div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Complétez le diagnostic pour voir votre score
-              </p>
+              <CardDescription>
+                Évaluez votre conformité RGPD
+              </CardDescription>
             </CardContent>
           </Card>
+        </Link>
 
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Activité Récente</CardTitle>
+        <Link href="/records">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-lg">
+                <FileText className="w-5 h-5 mr-2 text-green-600" />
+                Registre
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <CardDescription>
+                Gérez vos traitements de données
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/rights">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-lg">
+                <Users className="w-5 h-5 mr-2 text-purple-600" />
+                Demandes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Traitez les demandes des personnes
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/actions">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-lg">
+                <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
+                Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Suivez votre plan d'actions
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Activité récente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats?.recentActivity && stats.recentActivity.length > 0 ? (
+              <div className="space-y-4">
+                {stats.recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-4">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground">{activity.date}</p>
+                    </div>
+                    <Badge variant={activity.status === 'completed' ? 'default' : 'secondary'}>
+                      {activity.status === 'completed' ? 'Terminé' : 'En cours'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
                 Aucune activité récente
               </p>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Alerts */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
-                Alertes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Aucune alerte active
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+        <Card>
+          <CardHeader>
+            <CardTitle>Actions recommandées</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Complétez le diagnostic</p>
+                  <p className="text-xs text-muted-foreground">
+                    Obtenez votre score de conformité
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <Clock className="w-5 h-5 text-yellow-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Mise à jour du registre</p>
+                  <p className="text-xs text-muted-foreground">
+                    Ajoutez vos traitements de données
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <Plus className="w-5 h-5 text-blue-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Politique de confidentialité</p>
+                  <p className="text-xs text-muted-foreground">
+                    Générez votre politique
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
