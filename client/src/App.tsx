@@ -33,6 +33,9 @@ import Chatbot from "@/components/chatbot/chatbot";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Mode développement - accès direct sans authentification
+  const isDevelopment = import.meta.env.NODE_ENV === 'development';
+
   return (
     <Switch>
       {/* Public routes */}
@@ -40,7 +43,7 @@ function Router() {
       <Route path="/register" component={Register} />
       
       {/* Protected routes */}
-      {isLoading || !isAuthenticated ? (
+      {isLoading || (!isAuthenticated && !isDevelopment) ? (
         <Route path="/" component={Landing} />
       ) : (
         <>

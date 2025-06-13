@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
 import { db, testDatabaseConnection } from "./db";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { devAuthMiddleware, isAuthenticatedDev } from "./devAuth";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
@@ -70,10 +71,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Auth middleware
   await setupAuth(app);
+  
+  // Add development auth middleware
+  app.use(devAuthMiddleware);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
+      // Mode développement - utilisateur fictif
+      if (process.env.NODE_ENV === 'development' && !req.isAuthenticated()) {
+        const devUser = {
+          id: "dev-user-123",
+          email: "dev@example.com",
+          firstName: "Développeur",
+          lastName: "Mode",
+          profileImageUrl: null,
+          role: "user",
+          subscriptionTier: "free",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        return res.json(devUser);
+      }
+
+      // Mode production - authentification requise
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       res.json(user);
@@ -84,9 +109,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Profile routes
-  app.get('/api/profile', isAuthenticated, async (req: any, res) => {
+  app.get('/api/profile', isAuthenticatedDev, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // In development, create/get dev user and company if they don't exist
+      if (process.env.NODE_ENV === 'development' && userId === "dev-user-123") {
+        let user = await storage.getUser(userId);
+        if (!user) {
+          user = await storage.upsertUser({
+            id: userId,
+            email: "dev@example.com",
+            firstName: "Développeur",
+            lastName: "Mode"
+          });
+        }
+        
+        let company = await storage.getCompanyByUserId(userId);
+        if (!company) {
+          company = await storage.createCompany({
+            name: "Entreprise Dev",
+            siren: "123456789",
+            address: "123 Rue du Dev, 75001 Paris",
+            sector: "Services",
+            size: "petite",
+            phone: "01 23 45 67 89",
+            email: "contact@dev.com",
+            userId: userId
+          });
+        }
+        
+        return res.json({ user, company });
+      }
+      
       const user = await storage.getUser(userId);
       const company = await storage.getCompanyByUserId(userId);
       
@@ -100,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/profile', isAuthenticated, async (req: any, res) => {
+  app.put('/api/profile', isAuthenticatedDev, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { firstName, lastName, email } = req.body;
@@ -119,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/profile/company', isAuthenticated, async (req: any, res) => {
+  app.post('/api/profile/company', isAuthenticatedDev, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const companyData = req.body;
@@ -136,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/profile/company', isAuthenticated, async (req: any, res) => {
+  app.put('/api/profile/company', isAuthenticatedDev, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const companyData = req.body;
@@ -155,10 +210,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard stats route
-  app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/dashboard/stats', isAuthenticatedDev, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const company = await storage.getCompanyByUserId(userId);
+      let company = await storage.getCompanyByUserId(userId);
+      
+      // In development, create company if it doesn't exist
+      if (!company && process.env.NODE_ENV === 'development' && userId === "dev-user-123") {
+        company = await storage.createCompany({
+          name: "Entreprise Dev",
+          siren: "123456789",
+          address: "123 Rue du Dev, 75001 Paris",
+          sector: "Services",
+          size: "petite",
+          phone: "01 23 45 67 89",
+          email: "contact@dev.com",
+          userId: userId
+        });
+      }
       
       if (!company) {
         // Return default stats for users without companies
@@ -199,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Invoices route
-  app.get('/api/invoices', isAuthenticated, async (req: any, res) => {
+  app.get('/api/invoices', isAuthenticatedDev, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const invoices = await storage.getInvoices(userId);
@@ -211,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Company routes - Protected
-  app.get("/api/companies/:userId", isAuthenticated, async (req, res) => {
+  app.get("/api/companies/:userId", isAuthenticatedDev, async (req, res) => {
     try {
       const userId = req.params.userId;
       const company = await storage.getCompanyByUserId(userId);
