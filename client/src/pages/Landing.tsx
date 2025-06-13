@@ -100,12 +100,12 @@ export default function Landing() {
             <Button 
               size="lg" 
               variant="outline"
-              className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 text-lg"
+              className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-3 text-lg"
               onClick={() => {
                 window.location.href = '/dashboard';
               }}
             >
-              Mode Développement
+              ✓ Accès Développeur
             </Button>
           </div>
         </div>

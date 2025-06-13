@@ -31,19 +31,10 @@ import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Mode développement - accès direct sans authentification
   const isDevelopment = import.meta.env.DEV;
-  
-  // Debug logs
-  console.log('Router debug:', { 
-    isAuthenticated, 
-    isLoading, 
-    isDevelopment, 
-    user,
-    env: import.meta.env.DEV 
-  });
 
   return (
     <Switch>
