@@ -398,6 +398,12 @@ export default function DpiaList() {
     enabled: !!company?.id,
   }) as { data: any[] };
 
+  // Get DPIA evaluations
+  const { data: dpiaEvaluations = [] } = useQuery({
+    queryKey: [`/api/dpia-evaluations/${company?.id}`],
+    enabled: !!company?.id,
+  }) as { data: any[] };
+
   const getProcessingRecordName = (recordId: number) => {
     const record = processingRecords.find(r => r.id === recordId);
     return record?.name || "Traitement non trouvé";
@@ -510,7 +516,7 @@ export default function DpiaList() {
             </CardHeader>
             <CardContent>
               <ProcessingSelectionForEvaluation 
-                records={records}
+                records={processingRecords}
                 dpiaEvaluations={dpiaEvaluations}
                 companyId={company?.id}
               />
