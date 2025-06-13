@@ -149,10 +149,11 @@ export async function setupAuth(app: Express) {
       authenticatedUsers.set(token, user);
 
       res.cookie('auth_token', token, {
-        httpOnly: true,
+        httpOnly: false,
         secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
+        sameSite: 'lax',
+        path: '/'
       });
 
       // Redirect to the page where the user came from or home
@@ -198,12 +199,11 @@ export async function setupAuth(app: Express) {
       authenticatedUsers.set(token, demoUser);
 
       res.cookie('auth_token', token, {
-        httpOnly: true,
+        httpOnly: false, // Allow client-side access for debugging
         secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
         sameSite: 'lax',
-        path: '/',
-        domain: undefined
+        path: '/'
       });
 
       // Redirect to home instead of referer to ensure proper cookie handling
