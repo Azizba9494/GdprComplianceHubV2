@@ -88,7 +88,10 @@ export default function Landing() {
           <Button 
             size="lg" 
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => {
+              // Use a proper redirect that maintains cookies
+              window.location.assign('/api/login');
+            }}
           >
             Créer mon compte
           </Button>

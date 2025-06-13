@@ -201,12 +201,13 @@ export async function setupAuth(app: Express) {
         httpOnly: true,
         secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
+        sameSite: 'lax',
+        path: '/',
+        domain: undefined
       });
 
-      // Redirect to the page where the user came from or home
-      const returnTo = req.get('referer') || "/";
-      res.redirect(returnTo);
+      // Redirect to home instead of referer to ensure proper cookie handling
+      res.redirect("/");
     } catch (error) {
       console.error("Demo login error:", error);
       res.status(500).json({ message: "Login failed" });
