@@ -46,10 +46,7 @@ export default function Register() {
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterForm) => {
       const { confirmPassword, ...registerData } = data;
-      return apiRequest("/api/auth/register", {
-        method: "POST",
-        body: registerData
-      });
+      return apiRequest("/api/auth/register", "POST", registerData);
     },
     onSuccess: () => {
       toast({

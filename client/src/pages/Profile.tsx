@@ -68,13 +68,7 @@ export default function Profile() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileForm) => {
-      return apiRequest("/api/profile", {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
+      return apiRequest("/api/profile", "PUT", data);
     },
     onSuccess: () => {
       toast({
@@ -95,13 +89,7 @@ export default function Profile() {
   const updateCompanyMutation = useMutation({
     mutationFn: async (data: CompanyForm) => {
       const method = profileData?.company ? "PUT" : "POST";
-      return apiRequest("/api/profile/company", {
-        method,
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
+      return apiRequest("/api/profile/company", method as "POST" | "PUT", data);
     },
     onSuccess: () => {
       toast({
