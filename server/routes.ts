@@ -76,15 +76,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(devAuthMiddleware);
 
   // Auth routes
-  app.get('/api/auth/user', async (req: any, res) => {
+  app.get('/api/auth/user', isAuthenticatedDev, async (req: any, res) => {
     try {
-      // Mode développement - utilisateur fictif
-      if (process.env.NODE_ENV === 'development' && !req.isAuthenticated()) {
+      const userId = req.user.claims.sub;
+      
+      // En mode développement, retourner l'utilisateur du middleware
+      if (process.env.NODE_ENV === 'development' && userId === "dev-user-123") {
         const devUser = {
-          id: "dev-user-123",
-          email: "dev@example.com",
-          firstName: "Développeur",
-          lastName: "Mode",
+          id: userId,
+          email: req.user.claims.email,
+          firstName: req.user.claims.first_name,
+          lastName: req.user.claims.last_name,
           profileImageUrl: null,
           role: "user",
           subscriptionTier: "free",
@@ -94,12 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(devUser);
       }
 
-      // Mode production - authentification requise
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const userId = req.user.claims.sub;
+      // Mode production - récupérer l'utilisateur de la base
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
