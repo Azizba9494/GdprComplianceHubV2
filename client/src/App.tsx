@@ -31,22 +31,33 @@ import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   // Mode développement - accès direct sans authentification
   const isDevelopment = import.meta.env.DEV;
+  
+  // Debug logs
+  console.log('Router debug:', { 
+    isAuthenticated, 
+    isLoading, 
+    isDevelopment, 
+    user,
+    env: import.meta.env.DEV 
+  });
 
   return (
     <Switch>
-      {/* Public routes */}
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
-      
-      {/* Protected routes */}
+      {/* Show landing page only if not authenticated and not in development */}
       {isLoading || (!isAuthenticated && !isDevelopment) ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route path="/" component={Landing} />
+          <Route component={NotFound} />
+        </>
       ) : (
         <>
+          {/* Authenticated routes */}
           <Route path="/profile" component={Profile} />
           <Route path="/settings" component={Settings} />
           <Route path="*">
@@ -54,8 +65,6 @@ function Router() {
           </Route>
         </>
       )}
-      
-      <Route component={NotFound} />
     </Switch>
   );
 }
