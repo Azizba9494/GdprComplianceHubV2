@@ -12,33 +12,40 @@ import { ArrowRight, FileDown, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Mock company ID - in a real app, this would come from authentication
-const COMPANY_ID = 1;
+import { useCompany } from "@/hooks/useCompany";
 
 export default function Dashboard() {
+  const { companyId, isLoading: companyLoading } = useCompany();
+  
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['/api/dashboard', COMPANY_ID],
-    queryFn: () => dashboardApi.getStats(COMPANY_ID).then(res => res.json()),
+    queryKey: ['/api/dashboard', companyId],
+    queryFn: () => dashboardApi.getStats(companyId).then(res => res.json()),
+    enabled: !!companyId,
   });
 
   // Fetch additional data for heat map
   const { data: actions } = useQuery({
-    queryKey: ['/api/actions', COMPANY_ID],
-    queryFn: () => actionsApi.get(COMPANY_ID).then((res: any) => res.json()),
+    queryKey: ['/api/actions', companyId],
+    queryFn: () => actionsApi.get(companyId).then((res: any) => res.json()),
+    enabled: !!companyId,
   });
 
   const { data: breaches } = useQuery({
-    queryKey: ['/api/breaches', COMPANY_ID],
-    queryFn: () => breachApi.get(COMPANY_ID).then((res: any) => res.json()),
+    queryKey: ['/api/breaches', companyId],
+    queryFn: () => breachApi.get(companyId).then((res: any) => res.json()),
+    enabled: !!companyId,
   });
 
   const { data: records } = useQuery({
-    queryKey: ['/api/records', COMPANY_ID],
-    queryFn: () => recordsApi.get(COMPANY_ID).then((res: any) => res.json()),
+    queryKey: ['/api/records', companyId],
+    queryFn: () => recordsApi.get(companyId).then((res: any) => res.json()),
+    enabled: !!companyId,
   });
 
   const { data: requests } = useQuery({
-    queryKey: ['/api/requests', COMPANY_ID],
-    queryFn: () => requestsApi.get(COMPANY_ID).then((res: any) => res.json()),
+    queryKey: ['/api/requests', companyId],
+    queryFn: () => requestsApi.get(companyId).then((res: any) => res.json()),
+    enabled: !!companyId,
   });
 
   const heatMapData = {
@@ -48,7 +55,7 @@ export default function Dashboard() {
     requests: requests || [],
   };
 
-  if (isLoading) {
+  if (companyLoading || isLoading) {
     return (
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -101,7 +108,7 @@ export default function Dashboard() {
       <ComplianceOverview stats={stats} />
 
       {/* Risk Heat Map */}
-      <RiskHeatMap companyId={COMPANY_ID} data={heatMapData} diagnosticData={stats} />
+      <RiskHeatMap companyId={companyId} data={heatMapData} diagnosticData={stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -109,7 +116,7 @@ export default function Dashboard() {
         </div>
         <div className="space-y-6">
           <QuickActions stats={stats} />
-          <RiskTrends companyId={COMPANY_ID} data={{ actions: actions || [], breaches: breaches || [], requests: requests || [] }} />
+          <RiskTrends companyId={companyId} data={{ actions: actions || [], breaches: breaches || [], requests: requests || [] }} />
         </div>
       </div>
 

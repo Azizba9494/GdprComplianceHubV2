@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ArrowRight, ArrowLeft, FileText, Shield, Users, Settings, Book, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const COMPANY_ID = 1; // Mock company ID
+import { useCompany } from "@/hooks/useCompany"; // Mock company ID
 
 const categoryIcons = {
   "Gouvernance": Settings,

@@ -62,7 +62,7 @@ export default function PrivacyPolicy() {
 
   const activePolicy = policies?.find((p: PrivacyPolicy) => p.isActive);
 
-  if (isLoading) {
+  if (companyLoading || isLoading) {
     return (
       <div className="p-6">
         <Card>
