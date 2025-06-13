@@ -155,7 +155,10 @@ export async function setupAuth(app: Express) {
         sameSite: 'lax'
       });
 
-      res.redirect("/");
+      // Redirect to the page where the user came from or home
+      const returnTo = req.session?.returnTo || req.get('referer') || "/";
+      delete req.session?.returnTo;
+      res.redirect(returnTo);
     }
   );
 
@@ -186,7 +189,10 @@ export async function setupAuth(app: Express) {
         sameSite: 'lax'
       });
 
-      res.redirect("/");
+      // Redirect to the page where the user came from or home
+      const returnTo = req.session?.returnTo || req.get('referer') || "/";
+      delete req.session?.returnTo;
+      res.redirect(returnTo);
     } catch (error) {
       console.error("Demo login error:", error);
       res.status(500).json({ message: "Login failed" });

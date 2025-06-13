@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,23 +73,25 @@ export default function Profile() {
   });
 
   // Update form values when data loads
-  if (profileData && !profileLoading) {
-    profileForm.reset({
-      firstName: profileData.user?.firstName || "",
-      lastName: profileData.user?.lastName || "",
-      phone: profileData.user?.phone || ""
-    });
+  useEffect(() => {
+    if (profileData && !profileLoading) {
+      profileForm.reset({
+        firstName: profileData.user?.firstName || "",
+        lastName: profileData.user?.lastName || "",
+        phone: profileData.user?.phone || ""
+      });
 
-    companyForm.reset({
-      name: profileData.company?.name || "",
-      siren: profileData.company?.siren || "",
-      address: profileData.company?.address || "",
-      phone: profileData.company?.phone || "",
-      email: profileData.company?.email || "",
-      sector: profileData.company?.sector || "",
-      size: profileData.company?.size || ""
-    });
-  }
+      companyForm.reset({
+        name: profileData.company?.name || "",
+        siren: profileData.company?.siren || "",
+        address: profileData.company?.address || "",
+        phone: profileData.company?.phone || "",
+        email: profileData.company?.email || "",
+        sector: profileData.company?.sector || "",
+        size: profileData.company?.size || ""
+      });
+    }
+  }, [profileData, profileLoading, profileForm, companyForm]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileForm) => {
