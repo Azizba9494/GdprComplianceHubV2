@@ -315,7 +315,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
       ) : (
         <div className="grid gap-4">
           {filteredRecords.map((record: any) => {
-            const existingEvaluation = dpiaEvaluations?.find((eval: any) => eval.recordId === record.id);
+            const existingEvaluation = dpiaEvaluations?.find((evaluation: any) => evaluation.recordId === record.id);
             
             return (
               <Card key={record.id} className="hover:shadow-md transition-shadow">
