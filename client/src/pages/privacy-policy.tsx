@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2 } from "lucide-react";
-import { useCompany } from "@/hooks/useCompany";
+const COMPANY_ID = 1;
 
 interface PrivacyPolicy {
   id: number;
@@ -22,16 +22,14 @@ export default function PrivacyPolicy() {
   const [selectedPolicy, setSelectedPolicy] = useState<PrivacyPolicy | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { companyId, isLoading: companyLoading } = useCompany();
 
   const { data: policies, isLoading } = useQuery({
-    queryKey: ['/api/privacy-policies', companyId],
-    queryFn: () => privacyPolicyApi.get(companyId).then(res => res.json()),
-    enabled: !!companyId,
+    queryKey: ['/api/privacy-policies', COMPANY_ID],
+    queryFn: () => privacyPolicyApi.get(COMPANY_ID).then(res => res.json()),
   });
 
   const generateMutation = useMutation({
-    mutationFn: () => privacyPolicyApi.generate(companyId),
+    mutationFn: () => privacyPolicyApi.generate(COMPANY_ID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/privacy-policies'] });
       toast({
@@ -62,7 +60,7 @@ export default function PrivacyPolicy() {
 
   const activePolicy = policies?.find((p: PrivacyPolicy) => p.isActive);
 
-  if (companyLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="p-6">
         <Card>

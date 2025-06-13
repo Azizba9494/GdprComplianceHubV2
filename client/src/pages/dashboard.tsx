@@ -12,40 +12,33 @@ import { ArrowRight, FileDown, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Mock company ID - in a real app, this would come from authentication
-import { useCompany } from "@/hooks/useCompany";
+const COMPANY_ID = 1;
 
 export default function Dashboard() {
-  const { companyId, isLoading: companyLoading } = useCompany();
-  
   const { data: stats, isLoading, error } = useQuery({
-    queryKey: ['/api/dashboard', companyId],
-    queryFn: () => dashboardApi.getStats(companyId).then(res => res.json()),
-    enabled: !!companyId,
+    queryKey: ['/api/dashboard', COMPANY_ID],
+    queryFn: () => dashboardApi.getStats(COMPANY_ID).then(res => res.json()),
   });
 
   // Fetch additional data for heat map
   const { data: actions } = useQuery({
-    queryKey: ['/api/actions', companyId],
-    queryFn: () => actionsApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    queryKey: ['/api/actions', COMPANY_ID],
+    queryFn: () => actionsApi.get(COMPANY_ID).then((res: any) => res.json()),
   });
 
   const { data: breaches } = useQuery({
-    queryKey: ['/api/breaches', companyId],
-    queryFn: () => breachApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    queryKey: ['/api/breaches', COMPANY_ID],
+    queryFn: () => breachApi.get(COMPANY_ID).then((res: any) => res.json()),
   });
 
   const { data: records } = useQuery({
-    queryKey: ['/api/records', companyId],
-    queryFn: () => recordsApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    queryKey: ['/api/records', COMPANY_ID],
+    queryFn: () => recordsApi.get(COMPANY_ID).then((res: any) => res.json()),
   });
 
   const { data: requests } = useQuery({
-    queryKey: ['/api/requests', companyId],
-    queryFn: () => requestsApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    queryKey: ['/api/requests', COMPANY_ID],
+    queryFn: () => requestsApi.get(COMPANY_ID).then((res: any) => res.json()),
   });
 
   const heatMapData = {

@@ -69,117 +69,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('Database connection failed, some routes may not work properly');
   }
   
-  // Auth middleware
-  await setupAuth(app);
-  
-  // Add development auth middleware
-  app.use(devAuthMiddleware);
+  // Disable auth for now - use simple default user
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticatedDev, async (req: any, res) => {
+  // Auth routes - simple default user
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
-      // En mode développement, créer/récupérer l'utilisateur et l'entreprise
-      if (process.env.NODE_ENV === 'development' && userId === "dev-user-123") {
-        // Créer l'utilisateur s'il n'existe pas
-        let user = await storage.getUser(userId);
-        if (!user) {
-          user = await storage.upsertUser({
-            id: userId,
-            email: req.user.claims.email,
-            firstName: req.user.claims.first_name,
-            lastName: req.user.claims.last_name
-          });
-        }
-        
-        // Créer l'entreprise s'elle n'existe pas
-        let company = await storage.getCompanyByUserId(userId);
-        if (!company) {
-          try {
-            company = await storage.createCompany({
-              name: "Entreprise Dev",
-              siren: "987654321",
-              address: "123 Rue du Dev, 75001 Paris",
-              sector: "Services",
-              size: "petite",
-              phone: "01 23 45 67 89",
-              email: "contact@dev.com",
-              userId: userId
-            });
-          } catch (error) {
-            // L'entreprise existe peut-être déjà
-            company = await storage.getCompanyByUserId(userId);
-          }
-        }
-        
-        const devUser = {
-          id: userId,
-          email: req.user.claims.email,
-          firstName: req.user.claims.first_name,
-          lastName: req.user.claims.last_name,
-          profileImageUrl: null,
-          role: "user",
-          subscriptionTier: "free",
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        return res.json(devUser);
-      }
-
-      // Mode production - récupérer l'utilisateur de la base
-      const user = await storage.getUser(userId);
-      res.json(user);
+      // Return simple default user
+      const defaultUser = {
+        id: "default-user",
+        email: "user@example.com",
+        firstName: "Utilisateur",
+        lastName: "Demo",
+        profileImageUrl: null,
+        role: "user",
+        subscriptionTier: "free",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      res.json(defaultUser);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  // Profile routes
-  app.get('/api/profile', isAuthenticatedDev, async (req: any, res) => {
+  // Profile routes - return default company with ID 1
+  app.get('/api/profile', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
-      // In development, create/get dev user and company if they don't exist
-      if (process.env.NODE_ENV === 'development' && userId === "dev-user-123") {
-        let user = await storage.getUser(userId);
-        if (!user) {
-          user = await storage.upsertUser({
-            id: userId,
-            email: "dev@example.com",
-            firstName: "Développeur",
-            lastName: "Mode"
-          });
-        }
-        
-        let company = await storage.getCompanyByUserId(userId);
-        if (!company) {
-          try {
-            company = await storage.createCompany({
-              name: "Entreprise Dev",
-              siren: "987654321",
-              address: "123 Rue du Dev, 75001 Paris",
-              sector: "Services",
-              size: "petite",
-              phone: "01 23 45 67 89",
-              email: "contact@dev.com",
-              userId: userId
-            });
-          } catch (error) {
-            // Company might already exist with this SIREN, just continue without it
-            console.log("Company creation failed, continuing without company data");
-          }
-        }
-        
-        return res.json({ user, company });
-      }
-      
-      const user = await storage.getUser(userId);
-      const company = await storage.getCompanyByUserId(userId);
+      const defaultUser = {
+        id: "default-user",
+        email: "user@example.com",
+        firstName: "Utilisateur",
+        lastName: "Demo",
+        profileImageUrl: null,
+        role: "user",
+        subscriptionTier: "free",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Get existing company with ID 1
+      const company = await storage.getCompany(1);
       
       res.json({
-        user,
+        user: defaultUser,
         company
       });
     } catch (error) {
