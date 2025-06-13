@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Play, User, Settings, LogOut } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/useAuth";
+import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import { Link } from "wouter";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
@@ -47,7 +47,7 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
 
 export default function Header() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
 
   const getUserInitials = (firstName?: string, lastName?: string) => {

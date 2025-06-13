@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
+import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
@@ -31,31 +31,16 @@ import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // Mode développement - accès direct sans authentification
-  const isDevelopment = import.meta.env.DEV;
+  const { isAuthenticated, isLoading } = useSimpleAuth();
 
   return (
     <Switch>
-      {/* Show landing page only if not authenticated and not in development */}
-      {isLoading || (!isAuthenticated && !isDevelopment) ? (
-        <>
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-          <Route path="/" component={Landing} />
-          <Route component={NotFound} />
-        </>
-      ) : (
-        <>
-          {/* Authenticated routes */}
-          <Route path="/profile" component={Profile} />
-          <Route path="/settings" component={Settings} />
-          <Route path="*">
-            <AuthenticatedApp />
-          </Route>
-        </>
-      )}
+      {/* Always show authenticated app since we use simple auth */}
+      <Route path="/profile" component={Profile} />
+      <Route path="/settings" component={Settings} />
+      <Route path="*">
+        <AuthenticatedApp />
+      </Route>
     </Switch>
   );
 }

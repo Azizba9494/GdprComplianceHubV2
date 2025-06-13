@@ -16,10 +16,10 @@ import {
   User,
   Lock
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user } = useSimpleAuth();
 
   return (
     <div className="p-6 space-y-6">
