@@ -127,16 +127,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         let company = await storage.getCompanyByUserId(userId);
         if (!company) {
-          company = await storage.createCompany({
-            name: "Entreprise Dev",
-            siren: "123456789",
-            address: "123 Rue du Dev, 75001 Paris",
-            sector: "Services",
-            size: "petite",
-            phone: "01 23 45 67 89",
-            email: "contact@dev.com",
-            userId: userId
-          });
+          try {
+            company = await storage.createCompany({
+              name: "Entreprise Dev",
+              siren: "987654321",
+              address: "123 Rue du Dev, 75001 Paris",
+              sector: "Services",
+              size: "petite",
+              phone: "01 23 45 67 89",
+              email: "contact@dev.com",
+              userId: userId
+            });
+          } catch (error) {
+            // Company might already exist with this SIREN, just continue without it
+            console.log("Company creation failed, continuing without company data");
+          }
         }
         
         return res.json({ user, company });
@@ -214,20 +219,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       let company = await storage.getCompanyByUserId(userId);
-      
-      // In development, create company if it doesn't exist
-      if (!company && process.env.NODE_ENV === 'development' && userId === "dev-user-123") {
-        company = await storage.createCompany({
-          name: "Entreprise Dev",
-          siren: "123456789",
-          address: "123 Rue du Dev, 75001 Paris",
-          sector: "Services",
-          size: "petite",
-          phone: "01 23 45 67 89",
-          email: "contact@dev.com",
-          userId: userId
-        });
-      }
       
       if (!company) {
         // Return default stats for users without companies

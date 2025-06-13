@@ -85,16 +85,29 @@ export default function Landing() {
             Rejoignez des centaines d'entreprises qui font confiance à notre plateforme 
             pour leur mise en conformité RGPD.
           </p>
-          <Button 
-            size="lg" 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
-            onClick={() => {
-              // Use a proper redirect that maintains cookies
-              window.location.assign('/api/login');
-            }}
-          >
-            Créer mon compte
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              size="lg" 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+              onClick={() => {
+                // Use a proper redirect that maintains cookies
+                window.location.assign('/api/login');
+              }}
+            >
+              Créer mon compte
+            </Button>
+            
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 text-lg"
+              onClick={() => {
+                window.location.href = '/dashboard';
+              }}
+            >
+              Mode Développement
+            </Button>
+          </div>
         </div>
       </div>
     </div>

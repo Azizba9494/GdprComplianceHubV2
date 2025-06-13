@@ -34,7 +34,7 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   // Mode développement - accès direct sans authentification
-  const isDevelopment = import.meta.env.NODE_ENV === 'development';
+  const isDevelopment = import.meta.env.DEV;
 
   return (
     <Switch>
