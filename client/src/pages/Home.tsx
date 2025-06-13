@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Shield, TrendingUp, FileText, Users, AlertTriangle, LogOut } from "lucide-react";
 import { Link } from "wouter";
+import type { User } from "@shared/schema";
 
 export default function Home() {
   const { user, isLoading } = useAuth();
+  const userData = user as User;
 
   if (isLoading) {
     return (
@@ -28,16 +30,16 @@ export default function Home() {
           
           <div className="flex items-center space-x-4">
             <Avatar>
-              <AvatarImage src={user?.profileImageUrl || ""} />
+              <AvatarImage src={userData?.profileImageUrl || ""} />
               <AvatarFallback>
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {userData?.firstName?.[0]}{userData?.lastName?.[0]}
               </AvatarFallback>
             </Avatar>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.firstName} {user?.lastName}
+                {userData?.firstName} {userData?.lastName}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{userData?.email}</p>
             </div>
             <Button 
               variant="outline" 
@@ -56,7 +58,7 @@ export default function Home() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Bienvenue, {user?.firstName}
+            Bienvenue, {userData?.firstName}
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
             Tableau de bord de conformité RGPD pour votre entreprise
