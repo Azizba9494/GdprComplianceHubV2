@@ -39,6 +39,7 @@ export default function Diagnostic() {
   const [completedCategories, setCompletedCategories] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { companyId, isLoading: companyLoading } = useCompany();
 
   const { data: allQuestions, isLoading } = useQuery({
     queryKey: ['/api/diagnostic/questions'],
