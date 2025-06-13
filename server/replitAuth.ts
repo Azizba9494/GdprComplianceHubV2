@@ -162,14 +162,19 @@ export async function setupAuth(app: Express) {
   // Demo login route (keep for testing)
   app.get("/api/login", async (req, res) => {
     try {
-      const demoUser = await storage.upsertUser({
-        id: "demo-user-123",
-        email: "demo@example.com",
-        firstName: "Utilisateur",
-        lastName: "Demo",
-        profileImageUrl: null,
-        role: "user"
-      });
+      // Check if demo user exists, if not create it
+      let demoUser = await storage.getUserByEmail("demo@example.com");
+      
+      if (!demoUser) {
+        demoUser = await storage.createUser({
+          id: "demo-user-123",
+          email: "demo@example.com",
+          firstName: "Utilisateur",
+          lastName: "Demo",
+          profileImageUrl: null,
+          role: "user"
+        });
+      }
 
       const token = generateToken();
       authenticatedUsers.set(token, demoUser);
