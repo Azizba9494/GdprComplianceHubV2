@@ -3,14 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import NotFound from "@/pages/not-found";
-import Landing from "@/pages/Landing";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import Profile from "@/pages/Profile";
-import Settings from "@/pages/Settings";
-import Home from "@/pages/Home";
 import Dashboard from "@/pages/dashboard";
 import Diagnostic from "@/pages/diagnostic";
 import ActionPlan from "@/pages/action-plan";
@@ -31,21 +24,6 @@ import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useSimpleAuth();
-
-  return (
-    <Switch>
-      {/* Always show authenticated app since we use simple auth */}
-      <Route path="/profile" component={Profile} />
-      <Route path="/settings" component={Settings} />
-      <Route path="*">
-        <AuthenticatedApp />
-      </Route>
-    </Switch>
-  );
-}
-
-function AuthenticatedApp() {
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">
       <Sidebar />
@@ -55,8 +33,7 @@ function AuthenticatedApp() {
         
         <div className="flex-1 overflow-y-auto">
           <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/" component={Dashboard} />
             <Route path="/diagnostic" component={Diagnostic} />
             <Route path="/actions" component={ActionPlan} />
             <Route path="/records" component={Records} />

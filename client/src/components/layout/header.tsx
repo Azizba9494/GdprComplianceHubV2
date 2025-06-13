@@ -1,10 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Bell, Play, User, Settings, LogOut } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSimpleAuth } from "@/hooks/useSimpleAuth";
-import { Link } from "wouter";
+import { Bell, Play } from "lucide-react";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/": {
@@ -47,13 +43,7 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
 
 export default function Header() {
   const [location] = useLocation();
-  const { user } = useSimpleAuth();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
-
-  const getUserInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return "U";
-    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
-  };
 
   return (
     <header className="bg-background border-b border-border px-6 py-4">
@@ -77,49 +67,6 @@ export default function Header() {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
             </Button>
           </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || ""} />
-                  <AvatarFallback>
-                    {getUserInitials(user?.firstName, user?.lastName)}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <div className="flex flex-col space-y-1 p-2">
-                <p className="text-sm font-medium leading-none">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/profile" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Mon profil</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings" className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Paramètres</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <a href="/api/logout" className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Se déconnecter</span>
-                </a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </header>

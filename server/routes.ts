@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
 import { db, testDatabaseConnection } from "./db";
-// Simple auth disabled for now
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
@@ -68,171 +67,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('Database connection failed, some routes may not work properly');
   }
   
-  // Disable auth for now - use simple default user
-
-  // Auth routes - simple default user
-  app.get('/api/auth/user', async (req: any, res) => {
+  // Authentication routes
+  app.post("/api/auth/register", async (req, res) => {
     try {
-      // Return simple default user
-      const defaultUser = {
-        id: "default-user",
-        email: "user@example.com",
-        firstName: "Utilisateur",
-        lastName: "Demo",
-        profileImageUrl: null,
-        role: "user",
-        subscriptionTier: "free",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      res.json(defaultUser);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      const userData = insertUserSchema.parse(req.body);
+      const user = await storage.createUser(userData);
+      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email } });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
     }
   });
 
-  // Profile routes - return default company with ID 1
-  app.get('/api/profile', async (req: any, res) => {
+  app.post("/api/auth/login", async (req, res) => {
     try {
-      const defaultUser = {
-        id: "default-user",
-        email: "user@example.com",
-        firstName: "Utilisateur",
-        lastName: "Demo",
-        profileImageUrl: null,
-        role: "user",
-        subscriptionTier: "free",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      // Get existing company with ID 1
-      const company = await storage.getCompany(1);
+      const { username, password } = req.body;
+      const user = await storage.getUserByUsername(username);
       
-      res.json({
-        user: defaultUser,
-        company
-      });
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      res.status(500).json({ message: "Failed to fetch profile" });
-    }
-  });
-
-  app.put('/api/profile', async (req: any, res) => {
-    try {
-      const { firstName, lastName, email } = req.body;
-      
-      const updatedUser = await storage.upsertUser({
-        id: "default-user",
-        firstName,
-        lastName,
-        email
-      });
-      
-      res.json(updatedUser);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      res.status(500).json({ message: "Failed to update profile" });
-    }
-  });
-
-  app.post('/api/profile/company', async (req: any, res) => {
-    try {
-      const userId = "default-user";
-      const companyData = req.body;
-      
-      const company = await storage.createCompany({
-        ...companyData,
-        userId
-      });
-      
-      res.json(company);
-    } catch (error) {
-      console.error("Error creating company:", error);
-      res.status(500).json({ message: "Failed to create company" });
-    }
-  });
-
-  app.put('/api/profile/company', async (req: any, res) => {
-    try {
-      const userId = "default-user";
-      const companyData = req.body;
-      
-      const existingCompany = await storage.getCompanyByUserId(userId);
-      if (!existingCompany) {
-        return res.status(404).json({ message: "Company not found" });
+      if (!user || user.password !== password) {
+        return res.status(401).json({ error: "Identifiants invalides" });
       }
       
-      const updatedCompany = await storage.updateCompany(existingCompany.id, companyData);
-      res.json(updatedCompany);
-    } catch (error) {
-      console.error("Error updating company:", error);
-      res.status(500).json({ message: "Failed to update company" });
+      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 
-  // Dashboard stats route
-  app.get('/api/dashboard/stats', async (req: any, res) => {
-    try {
-      const userId = "default-user";
-      let company = await storage.getCompanyByUserId(userId);
-      
-      if (!company) {
-        // Return default stats for users without companies
-        return res.json({
-          complianceScore: 0,
-          totalRecords: 0,
-          pendingRequests: 0,
-          activeActions: 0,
-          recentActivity: []
-        });
-      }
-      
-      const companyId = company.id;
-      const [actions, requests, responses, questions] = await Promise.all([
-        storage.getComplianceActions(companyId),
-        storage.getDataSubjectRequests(companyId),
-        storage.getDiagnosticResponses(companyId),
-        storage.getDiagnosticQuestions()
-      ]);
-      
-      // Calculate compliance score
-      const totalQuestions = questions.length;
-      const answeredQuestions = responses.length;
-      const positiveResponses = responses.filter(r => r.response.toLowerCase() === 'oui').length;
-      const complianceScore = answeredQuestions > 0 ? Math.round((positiveResponses / answeredQuestions) * 100) : 0;
-      
-      res.json({
-        complianceScore,
-        totalRecords: await storage.getProcessingRecords(companyId).then(records => records.length),
-        pendingRequests: requests.filter(r => r.status === 'pending').length,
-        activeActions: actions.filter(a => a.status !== 'completed').length,
-        recentActivity: []
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-      res.status(500).json({ message: "Failed to fetch dashboard stats" });
-    }
-  });
-
-  // Invoices route
-  app.get('/api/invoices', async (req: any, res) => {
-    try {
-      const userId = "default-user";
-      const invoices = await storage.getInvoices(userId);
-      res.json(invoices);
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
-      res.status(500).json({ message: "Failed to fetch invoices" });
-    }
-  });
-
-  // Company routes - Protected
+  // Company routes
   app.get("/api/companies/:userId", async (req, res) => {
     try {
-      const userId = req.params.userId;
+      const userId = parseInt(req.params.userId);
       const company = await storage.getCompanyByUserId(userId);
       res.json(company);
     } catch (error: any) {
