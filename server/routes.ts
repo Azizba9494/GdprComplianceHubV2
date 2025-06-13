@@ -74,7 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const user = req.user;
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -85,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile routes
   app.get('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       const company = await storage.getCompanyByUserId(userId);
       
@@ -101,14 +102,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
-      const { firstName, lastName, email, phone } = req.body;
+      const userId = req.user.claims.sub;
+      const { firstName, lastName, email } = req.body;
       
-      const updatedUser = await storage.updateUser(userId, {
+      const updatedUser = await storage.upsertUser({
+        id: userId,
         firstName,
         lastName,
-        email,
-        phone
+        email
       });
       
       res.json(updatedUser);

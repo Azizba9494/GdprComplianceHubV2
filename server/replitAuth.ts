@@ -1,252 +1,180 @@
-import type { Express, RequestHandler } from "express";
-import bcrypt from "bcryptjs";
+import * as client from "openid-client";
+import { Strategy, type VerifyFunction } from "openid-client/passport";
 import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import session from "express-session";
+import type { Express, RequestHandler } from "express";
+import memoize from "memoizee";
+import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-// Enhanced authentication with multiple methods
-const authenticatedUsers = new Map<string, any>();
+if (!process.env.REPLIT_DOMAINS) {
+  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+}
 
-function generateToken() {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+const getOidcConfig = memoize(
+  async () => {
+    return await client.discovery(
+      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
+      process.env.REPL_ID!
+    );
+  },
+  { maxAge: 3600 * 1000 }
+);
+
+export function getSession() {
+  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: false,
+    ttl: sessionTtl,
+    tableName: "sessions",
+  });
+  return session({
+    secret: process.env.SESSION_SECRET!,
+    store: sessionStore,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: true,
+      maxAge: sessionTtl,
+    },
+  });
+}
+
+function updateUserSession(
+  user: any,
+  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
+) {
+  user.claims = tokens.claims();
+  user.access_token = tokens.access_token;
+  user.refresh_token = tokens.refresh_token;
+  user.expires_at = user.claims?.exp;
+}
+
+async function upsertUser(
+  claims: any,
+) {
+  await storage.upsertUser({
+    id: claims["sub"],
+    email: claims["email"],
+    firstName: claims["first_name"],
+    lastName: claims["last_name"],
+    profileImageUrl: claims["profile_image_url"],
+  });
 }
 
 export async function setupAuth(app: Express) {
-  // Passport configuration
-  passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID || "dummy",
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "dummy", 
-    callbackURL: "/api/auth/google/callback"
-  }, async (accessToken, refreshToken, profile, done) => {
-    try {
-      // Check if user exists with Google ID
-      let user = await storage.getUserByGoogleId(profile.id);
-      
-      if (!user) {
-        // Check if user exists with same email
-        user = await storage.getUserByEmail(profile.emails?.[0]?.value || "");
-        
-        if (user) {
-          // Link Google ID to existing account
-          await storage.updateUser(user.id, { googleId: profile.id });
-        } else {
-          // Create new user
-          user = await storage.createUser({
-            id: generateToken(),
-            email: profile.emails?.[0]?.value || "",
-            firstName: profile.name?.givenName || "",
-            lastName: profile.name?.familyName || "",
-            googleId: profile.id,
-            profileImageUrl: profile.photos?.[0]?.value,
-            emailVerified: new Date(),
-            role: "user"
-          });
-        }
-      }
-      
-      return done(null, user);
-    } catch (error) {
-      return done(error, false);
-    }
-  }));
-
+  app.set("trust proxy", 1);
+  app.use(getSession());
   app.use(passport.initialize());
+  app.use(passport.session());
 
-  // Email/Password Registration
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const { email, password, firstName, lastName, phone } = req.body;
-      
-      if (!email || !password || !firstName || !lastName) {
-        return res.status(400).json({ message: "Champs requis manquants" });
-      }
+  const config = await getOidcConfig();
 
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Un compte existe déjà avec cette adresse email" });
-      }
+  const verify: VerifyFunction = async (
+    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
+    verified: passport.AuthenticateCallback
+  ) => {
+    const user = {};
+    updateUserSession(user, tokens);
+    await upsertUser(tokens.claims());
+    verified(null, user);
+  };
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+  for (const domain of process.env
+    .REPLIT_DOMAINS!.split(",")) {
+    const strategy = new Strategy(
+      {
+        name: `replitauth:${domain}`,
+        config,
+        scope: "openid email profile offline_access",
+        callbackURL: `https://${domain}/api/callback`,
+      },
+      verify,
+    );
+    passport.use(strategy);
+  }
 
-      // Create user
-      const user = await storage.createUser({
-        id: generateToken(),
-        email,
-        firstName,
-        lastName,
-        phone,
-        password: hashedPassword,
-        role: "user"
-      });
+  passport.serializeUser((user: Express.User, cb) => cb(null, user));
+  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-      // Generate auth token
-      const token = generateToken();
-      authenticatedUsers.set(token, user);
-
-      res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: false,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
-      });
-
-      res.json({ message: "Inscription réussie", user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "Erreur lors de l'inscription" });
-    }
+  app.get("/api/login", (req, res, next) => {
+    passport.authenticate(`replitauth:${req.hostname}`, {
+      prompt: "login consent",
+      scope: ["openid", "email", "profile", "offline_access"],
+    })(req, res, next);
   });
 
-  // Email/Password Login
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email et mot de passe requis" });
-      }
-
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user || !user.password) {
-        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
-      }
-
-      // Verify password
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) {
-        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
-      }
-
-      // Generate auth token
-      const token = generateToken();
-      authenticatedUsers.set(token, user);
-
-      res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: false,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
-      });
-
-      res.json({ message: "Connexion réussie", user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Erreur lors de la connexion" });
-    }
+  app.get("/api/callback", (req, res, next) => {
+    passport.authenticate(`replitauth:${req.hostname}`, {
+      successReturnToOrRedirect: "/",
+      failureRedirect: "/api/login",
+    })(req, res, next);
   });
 
-  // Google OAuth routes
-  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-  app.get("/api/auth/google/callback", 
-    passport.authenticate("google", { session: false }),
-    (req, res) => {
-      const user = req.user as any;
-      const token = generateToken();
-      authenticatedUsers.set(token, user);
-
-      res.cookie('auth_token', token, {
-        httpOnly: false,
-        secure: false,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax',
-        path: '/'
-      });
-
-      // Redirect to the page where the user came from or home
-      const returnTo = req.get('referer') || "/";
-      res.redirect(returnTo);
-    }
-  );
-
-  // Demo login route (keep for testing)
-  app.get("/api/login", async (req, res) => {
-    try {
-      // Check if demo user exists, if not create it
-      let demoUser = await storage.getUserByEmail("demo@example.com");
-      
-      if (!demoUser) {
-        demoUser = await storage.createUser({
-          id: "demo-user-123",
-          email: "demo@example.com",
-          firstName: "Utilisateur",
-          lastName: "Demo",
-          profileImageUrl: null,
-          role: "user"
-        });
-
-        // Create demo company for the user
-        try {
-          await storage.createCompany({
-            name: "Entreprise Demo",
-            siren: "123456789",
-            address: "123 Rue de la Demo, 75001 Paris",
-            sector: "Services",
-            size: "petite",
-            phone: "01 23 45 67 89",
-            email: "contact@demo.com",
-            userId: demoUser.id
-          });
-        } catch (companyError) {
-          console.error("Failed to create demo company:", companyError);
-        }
-      }
-
-      const token = generateToken();
-      authenticatedUsers.set(token, demoUser);
-
-      res.cookie('auth_token', token, {
-        httpOnly: false, // Allow client-side access for debugging
-        secure: false,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: 'lax',
-        path: '/'
-      });
-
-      // Redirect to home instead of referer to ensure proper cookie handling
-      res.redirect("/");
-    } catch (error) {
-      console.error("Demo login error:", error);
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  // Logout
   app.get("/api/logout", (req, res) => {
-    const token = req.cookies?.auth_token;
-    if (token) {
-      authenticatedUsers.delete(token);
-    }
-    res.clearCookie('auth_token');
-    res.redirect("/");
+    req.logout(() => {
+      res.redirect(
+        client.buildEndSessionUrl(config, {
+          client_id: process.env.REPL_ID!,
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+        }).href
+      );
+    });
   });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const token = req.cookies?.auth_token;
+  const user = req.user as any;
 
-  if (!token) {
+  if (!req.isAuthenticated() || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const user = authenticatedUsers.get(token);
-  if (!user) {
-    return res.status(401).json({ message: "Unauthorized" });
+  const now = Math.floor(Date.now() / 1000);
+  if (now <= user.expires_at) {
+    return next();
   }
 
-  (req as any).user = user;
-  next();
+  const refreshToken = user.refresh_token;
+  if (!refreshToken) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
+  try {
+    const config = await getOidcConfig();
+    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+    updateUserSession(user, tokenResponse);
+    return next();
+  } catch (error) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
 };
 
 export const isSuperAdmin: RequestHandler = async (req, res, next) => {
-  const user = (req as any).user;
-  
-  if (!user || user.role !== "super_admin") {
-    return res.status(403).json({ message: "Super admin access required" });
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
+
+  const user = req.user as any;
+  const userId = user.claims?.sub;
   
-  next();
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const dbUser = await storage.getUser(userId);
+    if (!dbUser || dbUser.role !== "super_admin") {
+      return res.status(403).json({ message: "Forbidden: Super admin access required" });
+    }
+    next();
+  } catch (error) {
+    console.error("Error checking super admin status:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };

@@ -14,18 +14,14 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Users table - Enhanced for multiple auth methods
+// Users table - Enhanced for Replit Auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique().notNull(),
+  email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
-  password: varchar("password"), // For email/password auth
-  phone: varchar("phone"),
   profileImageUrl: varchar("profile_image_url"),
   role: text("role").notNull().default("user"), // user, admin, super_admin
-  googleId: varchar("google_id"), // For Google OAuth
-  emailVerified: timestamp("email_verified"),
   subscriptionTier: varchar("subscription_tier").default("free"), // free, basic, premium
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
