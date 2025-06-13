@@ -4,7 +4,7 @@ import {
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
   quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
-  type User, type InsertUser, type Company, type InsertCompany,
+  type User, type InsertUser, type UpsertUser, type Company, type InsertCompany,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
   type ComplianceSnapshot, type InsertComplianceSnapshot,
@@ -32,15 +32,14 @@ import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
-  // Users
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  // Users - Updated for Replit Auth
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
   
   // Companies
   getCompany(id: number): Promise<Company | undefined>;
-  getCompanyByUserId(userId: number): Promise<Company | undefined>;
+  getCompanyByUserId(userId: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
   
