@@ -14,26 +14,63 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Users table - Updated for Replit Auth
+// Users table - Enhanced for multiple auth methods
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
+  email: varchar("email").unique().notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  password: varchar("password"), // For email/password auth
+  phone: varchar("phone"),
   profileImageUrl: varchar("profile_image_url"),
-  role: text("role").notNull().default("user"), // user, admin
+  role: text("role").notNull().default("user"), // user, admin, super_admin
+  googleId: varchar("google_id"), // For Google OAuth
+  emailVerified: timestamp("email_verified"),
+  subscriptionTier: varchar("subscription_tier").default("free"), // free, basic, premium
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Companies table
+// Companies table - Enhanced with business info
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   sector: text("sector"),
   size: text("size"), // VSE, SME
+  siren: varchar("siren").unique(),
+  address: text("address"),
+  phone: varchar("phone"),
+  email: varchar("email"),
   userId: varchar("user_id").notNull().references(() => users.id),
+  subscriptionTier: varchar("subscription_tier").default("free"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Invoices for user subscriptions
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  companyId: integer("company_id").references(() => companies.id),
+  amount: integer("amount").notNull(), // in cents
+  currency: varchar("currency").default("EUR"),
+  status: varchar("status").notNull().default("pending"), // pending, paid, failed, cancelled
+  stripeInvoiceId: varchar("stripe_invoice_id"),
+  invoiceNumber: varchar("invoice_number").unique(),
+  description: text("description"),
+  periodStart: timestamp("period_start"),
+  periodEnd: timestamp("period_end"),
+  dueDate: timestamp("due_date"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User sessions for authentication
+export const userSessions = pgTable("user_sessions", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Diagnostic questionnaire questions
@@ -350,6 +387,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [companies.userId],
   }),
+  invoices: many(invoices),
+  sessions: many(userSessions),
   auditLogs: many(auditLogs),
 }));
 
@@ -405,6 +444,16 @@ export const upsertUserSchema = createInsertSchema(users).omit({
 
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserSessionSchema = createInsertSchema(userSessions).omit({
   createdAt: true,
 });
 
@@ -478,6 +527,10 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 export type DiagnosticQuestion = typeof diagnosticQuestions.$inferSelect;
 export type InsertDiagnosticQuestion = z.infer<typeof insertDiagnosticQuestionSchema>;
 export type DiagnosticResponse = typeof diagnosticResponses.$inferSelect;
