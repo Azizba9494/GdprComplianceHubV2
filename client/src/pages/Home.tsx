@@ -242,7 +242,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center space-x-4">
+              <Link href="/diagnostic" className="flex items-center space-x-4 hover:bg-muted p-2 rounded-md cursor-pointer transition-colors">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Complétez le diagnostic</p>
@@ -250,9 +250,9 @@ export default function Home() {
                     Obtenez votre score de conformité
                   </p>
                 </div>
-              </div>
+              </Link>
               
-              <div className="flex items-center space-x-4">
+              <Link href="/records" className="flex items-center space-x-4 hover:bg-muted p-2 rounded-md cursor-pointer transition-colors">
                 <Clock className="w-5 h-5 text-yellow-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Mise à jour du registre</p>
@@ -260,9 +260,9 @@ export default function Home() {
                     Ajoutez vos traitements de données
                   </p>
                 </div>
-              </div>
+              </Link>
               
-              <div className="flex items-center space-x-4">
+              <Link href="/privacy-policy" className="flex items-center space-x-4 hover:bg-muted p-2 rounded-md cursor-pointer transition-colors">
                 <Plus className="w-5 h-5 text-blue-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Politique de confidentialité</p>
@@ -270,7 +270,7 @@ export default function Home() {
                     Générez votre politique
                   </p>
                 </div>
-              </div>
+              </Link>
             </div>
           </CardContent>
         </Card>

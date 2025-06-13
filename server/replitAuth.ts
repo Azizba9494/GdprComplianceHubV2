@@ -156,8 +156,7 @@ export async function setupAuth(app: Express) {
       });
 
       // Redirect to the page where the user came from or home
-      const returnTo = req.session?.returnTo || req.get('referer') || "/";
-      delete req.session?.returnTo;
+      const returnTo = req.get('referer') || "/";
       res.redirect(returnTo);
     }
   );
@@ -177,6 +176,18 @@ export async function setupAuth(app: Express) {
           profileImageUrl: null,
           role: "user"
         });
+
+        // Create demo company for the user
+        await storage.createCompany({
+          name: "Entreprise Demo",
+          siren: "123456789",
+          address: "123 Rue de la Demo, 75001 Paris",
+          sector: "Services",
+          size: "petite",
+          phone: "01 23 45 67 89",
+          email: "contact@demo.com",
+          userId: demoUser.id
+        });
       }
 
       const token = generateToken();
@@ -190,8 +201,7 @@ export async function setupAuth(app: Express) {
       });
 
       // Redirect to the page where the user came from or home
-      const returnTo = req.session?.returnTo || req.get('referer') || "/";
-      delete req.session?.returnTo;
+      const returnTo = req.get('referer') || "/";
       res.redirect(returnTo);
     } catch (error) {
       console.error("Demo login error:", error);
