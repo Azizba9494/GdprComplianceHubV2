@@ -178,16 +178,20 @@ export async function setupAuth(app: Express) {
         });
 
         // Create demo company for the user
-        await storage.createCompany({
-          name: "Entreprise Demo",
-          siren: "123456789",
-          address: "123 Rue de la Demo, 75001 Paris",
-          sector: "Services",
-          size: "petite",
-          phone: "01 23 45 67 89",
-          email: "contact@demo.com",
-          userId: demoUser.id
-        });
+        try {
+          await storage.createCompany({
+            name: "Entreprise Demo",
+            siren: "123456789",
+            address: "123 Rue de la Demo, 75001 Paris",
+            sector: "Services",
+            size: "petite",
+            phone: "01 23 45 67 89",
+            email: "contact@demo.com",
+            userId: demoUser.id
+          });
+        } catch (companyError) {
+          console.error("Failed to create demo company:", companyError);
+        }
       }
 
       const token = generateToken();
