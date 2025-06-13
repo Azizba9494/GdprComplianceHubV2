@@ -80,8 +80,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // En mode développement, retourner l'utilisateur du middleware
+      // En mode développement, créer/récupérer l'utilisateur et l'entreprise
       if (process.env.NODE_ENV === 'development' && userId === "dev-user-123") {
+        // Créer l'utilisateur s'il n'existe pas
+        let user = await storage.getUser(userId);
+        if (!user) {
+          user = await storage.upsertUser({
+            id: userId,
+            email: req.user.claims.email,
+            firstName: req.user.claims.first_name,
+            lastName: req.user.claims.last_name
+          });
+        }
+        
+        // Créer l'entreprise s'elle n'existe pas
+        let company = await storage.getCompanyByUserId(userId);
+        if (!company) {
+          try {
+            company = await storage.createCompany({
+              name: "Entreprise Dev",
+              siren: "987654321",
+              address: "123 Rue du Dev, 75001 Paris",
+              sector: "Services",
+              size: "petite",
+              phone: "01 23 45 67 89",
+              email: "contact@dev.com",
+              userId: userId
+            });
+          } catch (error) {
+            // L'entreprise existe peut-être déjà
+            company = await storage.getCompanyByUserId(userId);
+          }
+        }
+        
         const devUser = {
           id: userId,
           email: req.user.claims.email,
