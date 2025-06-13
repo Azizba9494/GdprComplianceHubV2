@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/profile/company', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims.sub;
       const companyData = req.body;
       
       const company = await storage.createCompany({
@@ -138,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/profile/company', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims.sub;
       const companyData = req.body;
       
       const existingCompany = await storage.getCompanyByUserId(userId);
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats route
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user.claims.sub;
       const company = await storage.getCompanyByUserId(userId);
       
       if (!company) {
