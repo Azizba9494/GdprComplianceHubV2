@@ -1,6 +1,10 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Bell, Play } from "lucide-react";
+import { Bell, Play, User, Settings, LogOut } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/": {

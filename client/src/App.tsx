@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
 import Home from "@/pages/Home";
 import Dashboard from "@/pages/dashboard";
 import Diagnostic from "@/pages/diagnostic";
@@ -29,10 +32,30 @@ import Chatbot from "@/components/chatbot/chatbot";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading || !isAuthenticated) {
-    return <Route path="/" component={Landing} />;
-  }
+  return (
+    <Switch>
+      {/* Public routes */}
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      
+      {/* Protected routes */}
+      {isLoading || !isAuthenticated ? (
+        <Route path="/" component={Landing} />
+      ) : (
+        <>
+          <Route path="/profile" component={Profile} />
+          <Route path="*">
+            <AuthenticatedApp />
+          </Route>
+        </>
+      )}
+      
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
 
+function AuthenticatedApp() {
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">
       <Sidebar />
