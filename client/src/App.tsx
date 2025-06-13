@@ -9,6 +9,7 @@ import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 import Home from "@/pages/Home";
 import Dashboard from "@/pages/dashboard";
 import Diagnostic from "@/pages/diagnostic";
@@ -44,6 +45,7 @@ function Router() {
       ) : (
         <>
           <Route path="/profile" component={Profile} />
+          <Route path="/settings" component={Settings} />
           <Route path="*">
             <AuthenticatedApp />
           </Route>

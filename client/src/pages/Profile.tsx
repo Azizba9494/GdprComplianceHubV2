@@ -12,6 +12,7 @@ import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, User, Mail, Phone, Building2, MapPin, FileText, Download, Eye } from "lucide-react";
+import type { User as UserType, Company, Invoice } from "@shared/schema";
 
 const profileSchema = z.object({
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
@@ -32,39 +33,63 @@ const companySchema = z.object({
 type ProfileForm = z.infer<typeof profileSchema>;
 type CompanyForm = z.infer<typeof companySchema>;
 
+interface ProfileData {
+  user: UserType;
+  company?: Company;
+}
+
 export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: profileData, isLoading: profileLoading } = useQuery({
+  const { data: profileData, isLoading: profileLoading } = useQuery<ProfileData>({
     queryKey: ["/api/profile"]
   });
 
-  const { data: invoices, isLoading: invoicesLoading } = useQuery({
+  const { data: invoices, isLoading: invoicesLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"]
   });
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: profileData?.user?.firstName || "",
-      lastName: profileData?.user?.lastName || "",
-      phone: profileData?.user?.phone || ""
+      firstName: "",
+      lastName: "",
+      phone: ""
     }
   });
 
   const companyForm = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
     defaultValues: {
-      name: profileData?.company?.name || "",
-      siren: profileData?.company?.siren || "",
-      address: profileData?.company?.address || "",
-      phone: profileData?.company?.phone || "",
-      email: profileData?.company?.email || "",
-      sector: profileData?.company?.sector || "",
-      size: profileData?.company?.size || ""
+      name: "",
+      siren: "",
+      address: "",
+      phone: "",
+      email: "",
+      sector: "",
+      size: ""
     }
   });
+
+  // Update form values when data loads
+  if (profileData && !profileLoading) {
+    profileForm.reset({
+      firstName: profileData.user?.firstName || "",
+      lastName: profileData.user?.lastName || "",
+      phone: profileData.user?.phone || ""
+    });
+
+    companyForm.reset({
+      name: profileData.company?.name || "",
+      siren: profileData.company?.siren || "",
+      address: profileData.company?.address || "",
+      phone: profileData.company?.phone || "",
+      email: profileData.company?.email || "",
+      sector: profileData.company?.sector || "",
+      size: profileData.company?.size || ""
+    });
+  }
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileForm) => {
