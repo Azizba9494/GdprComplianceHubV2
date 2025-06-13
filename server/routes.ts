@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
 import { db, testDatabaseConnection } from "./db";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
@@ -67,36 +68,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('Database connection failed, some routes may not work properly');
   }
   
-  // Authentication routes
-  app.post("/api/auth/register", async (req, res) => {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
-      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email } });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
+  // Company routes - Protected
+  app.get("/api/companies/:userId", isAuthenticated, async (req, res) => {
     try {
-      const { username, password } = req.body;
-      const user = await storage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ error: "Identifiants invalides" });
-      }
-      
-      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Company routes
-  app.get("/api/companies/:userId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const company = await storage.getCompanyByUserId(userId);
       res.json(company);
     } catch (error: any) {

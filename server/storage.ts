@@ -174,25 +174,30 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // Users
-  async getUser(id: number): Promise<User | undefined> {
+  // Users - Updated for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return user;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
   }
 
   // Companies
@@ -201,7 +206,7 @@ export class DatabaseStorage implements IStorage {
     return company || undefined;
   }
 
-  async getCompanyByUserId(userId: number): Promise<Company | undefined> {
+  async getCompanyByUserId(userId: string): Promise<Company | undefined> {
     const [company] = await db.select().from(companies).where(eq(companies.userId, userId));
     return company || undefined;
   }
