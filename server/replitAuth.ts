@@ -1,23 +1,20 @@
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
-import connectPg from "connect-pg-simple";
+import MemoryStore from "memorystore";
 import { storage } from "./storage";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
+  const memoryStore = MemoryStore(session);
+  
   return session({
     secret: process.env.SESSION_SECRET!,
-    store: sessionStore,
-    resave: true, // Changed to true to force session save
-    saveUninitialized: true, // Changed to true
-    rolling: true, // Add rolling sessions
+    store: new memoryStore({
+      checkPeriod: sessionTtl, // prune expired entries every 24h
+    }),
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
     cookie: {
       httpOnly: true,
       secure: false, // Set to false for development
@@ -42,19 +39,13 @@ export async function setupAuth(app: Express) {
         profileImageUrl: null,
       });
 
-      console.log("Created demo user:", demoUser);
+      console.log("Setting user in session:", demoUser);
 
-      // Set user in session and save it
+      // Set user in session directly
       (req.session as any).user = demoUser;
       
-      req.session.save((err) => {
-        if (err) {
-          console.error("Session save error:", err);
-          return res.status(500).json({ message: "Session save failed" });
-        }
-        console.log("Session saved successfully");
-        res.redirect("/");
-      });
+      console.log("Session after setting user:", req.session);
+      res.redirect("/");
     } catch (error) {
       console.error("Demo login error:", error);
       res.status(500).json({ message: "Login failed" });
