@@ -628,6 +628,8 @@ export default function DpiaAssessmentEnhanced() {
   };
 
   const onSubmit = (data: DpiaFormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("Form errors:", form.formState.errors);
     saveMutation.mutate(data);
   };
 
@@ -2895,6 +2897,11 @@ export default function DpiaAssessmentEnhanced() {
             <Button
               type="submit"
               disabled={saveMutation.isPending}
+              onClick={(e) => {
+                console.log("Save button clicked");
+                console.log("Form valid:", form.formState.isValid);
+                console.log("Form errors:", form.formState.errors);
+              }}
             >
               {saveMutation.isPending ? (
                 <>
