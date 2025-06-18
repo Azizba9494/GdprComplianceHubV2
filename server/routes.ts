@@ -526,7 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysisResult = await geminiService.generateRiskAnalysis(
         riskCategory,
         section,
-        prompt.content,
+        prompt.prompt,
         company,
         processingRecord,
         ragDocuments

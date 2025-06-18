@@ -667,9 +667,11 @@ Informations complémentaires: ${data.additionalInfo}
                               onChange={(e) => {
                                 const currentCategories = manualForm.getValues('dataCategories') || [];
                                 if (e.target.checked) {
-                                  manualForm.setValue('dataCategories', [...(Array.isArray(currentCategories) ? currentCategories : []), category]);
+                                  const newCategories = Array.isArray(currentCategories) ? [...currentCategories, category] : [category];
+                                  manualForm.setValue('dataCategories', newCategories);
                                 } else {
-                                  manualForm.setValue('dataCategories', (Array.isArray(currentCategories) ? currentCategories : []).filter(c => c !== category));
+                                  const filteredCategories = Array.isArray(currentCategories) ? currentCategories.filter(c => c !== category) : [];
+                                  manualForm.setValue('dataCategories', filteredCategories);
                                 }
                               }}
                             />
@@ -683,7 +685,8 @@ Informations complémentaires: ${data.additionalInfo}
                           if (e.target.value.trim()) {
                             const newCategories = e.target.value.split(',').map(c => c.trim()).filter(c => c);
                             const currentCategories = manualForm.getValues('dataCategories') || [];
-                            manualForm.setValue('dataCategories', [...(Array.isArray(currentCategories) ? currentCategories : []), ...newCategories]);
+                            const combinedCategories = Array.isArray(currentCategories) ? [...currentCategories, ...newCategories] : newCategories;
+                            manualForm.setValue('dataCategories', combinedCategories);
                           }
                         }}
                       />
@@ -693,7 +696,7 @@ Informations complémentaires: ${data.additionalInfo}
                     <div className="space-y-3">
                       <Label>Destinataires</Label>
                       <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
-                        {RECIPIENTS.map((recipient) => (
+                        {RECIPIENT_TYPES.map((recipient) => (
                           <div key={recipient} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
@@ -702,9 +705,11 @@ Informations complémentaires: ${data.additionalInfo}
                               onChange={(e) => {
                                 const currentRecipients = manualForm.getValues('recipients') || [];
                                 if (e.target.checked) {
-                                  manualForm.setValue('recipients', [...(Array.isArray(currentRecipients) ? currentRecipients : []), recipient]);
+                                  const newRecipients = Array.isArray(currentRecipients) ? [...currentRecipients, recipient] : [recipient];
+                                  manualForm.setValue('recipients', newRecipients);
                                 } else {
-                                  manualForm.setValue('recipients', (Array.isArray(currentRecipients) ? currentRecipients : []).filter(r => r !== recipient));
+                                  const filteredRecipients = Array.isArray(currentRecipients) ? currentRecipients.filter(r => r !== recipient) : [];
+                                  manualForm.setValue('recipients', filteredRecipients);
                                 }
                               }}
                             />
@@ -718,7 +723,8 @@ Informations complémentaires: ${data.additionalInfo}
                           if (e.target.value.trim()) {
                             const newRecipients = e.target.value.split(',').map(r => r.trim()).filter(r => r);
                             const currentRecipients = manualForm.getValues('recipients') || [];
-                            manualForm.setValue('recipients', [...(Array.isArray(currentRecipients) ? currentRecipients : []), ...newRecipients]);
+                            const combinedRecipients = Array.isArray(currentRecipients) ? [...currentRecipients, ...newRecipients] : newRecipients;
+                            manualForm.setValue('recipients', combinedRecipients);
                           }
                         }}
                       />
@@ -737,9 +743,11 @@ Informations complémentaires: ${data.additionalInfo}
                               onChange={(e) => {
                                 const currentMeasures = manualForm.getValues('securityMeasures') || [];
                                 if (e.target.checked) {
-                                  manualForm.setValue('securityMeasures', [...(Array.isArray(currentMeasures) ? currentMeasures : []), measure]);
+                                  const newMeasures = Array.isArray(currentMeasures) ? [...currentMeasures, measure] : [measure];
+                                  manualForm.setValue('securityMeasures', newMeasures);
                                 } else {
-                                  manualForm.setValue('securityMeasures', (Array.isArray(currentMeasures) ? currentMeasures : []).filter(m => m !== measure));
+                                  const filteredMeasures = Array.isArray(currentMeasures) ? currentMeasures.filter(m => m !== measure) : [];
+                                  manualForm.setValue('securityMeasures', filteredMeasures);
                                 }
                               }}
                             />
@@ -753,7 +761,8 @@ Informations complémentaires: ${data.additionalInfo}
                           if (e.target.value.trim()) {
                             const newMeasures = e.target.value.split(',').map(m => m.trim()).filter(m => m);
                             const currentMeasures = manualForm.getValues('securityMeasures') || [];
-                            manualForm.setValue('securityMeasures', [...(Array.isArray(currentMeasures) ? currentMeasures : []), ...newMeasures]);
+                            const combinedMeasures = Array.isArray(currentMeasures) ? [...currentMeasures, ...newMeasures] : newMeasures;
+                            manualForm.setValue('securityMeasures', combinedMeasures);
                           }
                         }}
                       />
