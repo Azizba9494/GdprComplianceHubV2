@@ -946,18 +946,7 @@ export default function DpiaAssessmentEnhanced() {
                             {...field}
                           />
                         </FormControl>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "applicableReferentials" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
-                        </div>
+                        
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1725,7 +1714,7 @@ export default function DpiaAssessmentEnhanced() {
                       </Button>
                     </div>
 
-                    {(form.watch("internationalTransfersMeasures") || []).map((_, index) => (
+                    {Array.isArray(form.watch("internationalTransfersMeasures")) ? form.watch("internationalTransfersMeasures").map((_, index) => (
                       <Card key={index} className="p-4">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-medium">Transfert {index + 1}</h4>
