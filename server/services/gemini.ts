@@ -198,7 +198,7 @@ Fournissez une réponse adaptée dans le contexte d'une AIPD RGPD pour ce traite
 Répondez de manière professionnelle, précise et directement applicable. Citez les articles RGPD pertinents quand approprié.`;
 
     const client = await this.getClient();
-    const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
     const response = await model.generateContent(fullPrompt);
     return { response: response.response.text() || "" };
@@ -262,7 +262,7 @@ Répondez en JSON structuré:
 }`;
 
     const client = await this.getClient();
-    const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
     const response = await model.generateContent(prompt);
     
@@ -282,7 +282,7 @@ Répondez en JSON structuré:
     const client = await this.getClient();
     
     try {
-      const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       let contextSection = '';
       if (ragDocuments && ragDocuments.length > 0) {
@@ -314,7 +314,7 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
     
     try {
       const model = client.getGenerativeModel({ 
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.5-flash',
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: 3000,
