@@ -505,6 +505,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI-assisted risk analysis for DPIA
+  app.post("/api/dpia/ai-risk-analysis", async (req, res) => {
+    try {
+      const { companyId, dpiaId, riskCategory, section, promptKey, processingRecord } = req.body;
+      
+      // Get the specific prompt for this risk analysis
+      const prompt = await storage.getActivePromptByCategory(promptKey);
+      if (!prompt) {
+        return res.status(404).json({ error: "Prompt non trouvé" });
+      }
+
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      const ragDocuments = await getRagDocuments();
+      
+      const analysisResult = await geminiService.generateRiskAnalysis(
+        riskCategory,
+        section,
+        prompt.content,
+        company,
+        processingRecord,
+        ragDocuments
+      );
+
+      res.json({ analysis: analysisResult.analysis });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // AI-assisted response generation for DPIA fields
   app.post("/api/dpia/ai-assist", async (req, res) => {
     try {

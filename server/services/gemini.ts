@@ -325,6 +325,62 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
     }
   }
 
+  async generateRiskAnalysis(
+    riskCategory: string,
+    section: string,
+    promptTemplate: string,
+    company: any,
+    processingRecord: any,
+    ragDocuments?: string[]
+  ): Promise<{ analysis: string }> {
+    const client = await this.getClient();
+    
+    try {
+      const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      const contextInfo = `
+Entreprise: ${company.name} (${company.sector || 'Non spécifié'})
+Traitement analysé: ${processingRecord?.name || 'Non spécifié'}
+Finalité: ${processingRecord?.purpose || 'Non spécifiée'}
+Catégorie de risque: ${riskCategory}
+Section d'analyse: ${section}
+`;
+
+      const ragContext = ragDocuments && ragDocuments.length > 0 
+        ? `\n\nDocuments de référence CNIL:\n${ragDocuments.join('\n\n---\n\n')}` 
+        : '';
+
+      const fullPrompt = `${promptTemplate}
+
+${contextInfo}
+${ragContext}
+
+Répondez de manière structurée et professionnelle en français. Concentrez-vous spécifiquement sur ${section} pour le risque "${riskCategory}".`;
+
+      const result = await model.generateContent(fullPrompt);
+      const response = await result.response;
+      let text = response.text();
+
+      // Clean response by removing markdown formatting
+      text = text
+        .replace(/\*\*(.*?)\*\*/g, '$1') 
+        .replace(/###\s*(.*?)$/gm, '$1')
+        .replace(/##\s*(.*?)$/gm, '$1')
+        .replace(/^\*\s+/gm, '• ')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n\n');
+
+      return {
+        analysis: text || 'Impossible de générer une analyse pour cette section.'
+      };
+    } catch (error: any) {
+      console.error('Gemini API error:', error);
+      throw new Error(`Erreur Gemini API: ${error.message}`);
+    }
+  }
+
   async generateStructuredResponse(prompt: string, schema: any, context?: any, ragDocuments?: string[]): Promise<any> {
     const client = await this.getClient();
     
