@@ -233,13 +233,13 @@ const dpiaFormSchema = z.object({
     examples: z.string(),
     recipients: z.string(),
     retentionPeriod: z.string(),
-  })).optional(), // Processus, supports, destinataires et durées
+  })).optional().nullable(), // Processus, supports, destinataires et durées
   
   // Part 2.1: Proportionality and necessity measures - New sections
   finalitiesJustification: z.string().optional(), // 2.1.3
   dataMinimization: z.string().optional(), // Minimisation des données
   retentionJustification: z.string().optional(), // Durées de conservation
-  legalBasisType: z.enum(["consent", "contract", "legal_obligation", "public_task", "vital_interests", "legitimate_interests"]).optional(),
+  legalBasisType: z.enum(["consent", "contract", "legal_obligation", "public_task", "vital_interests", "legitimate_interests"]).optional().nullable(),
   legalBasisJustification: z.string().optional(), // 2.1.4
   dataQualityJustification: z.string().optional(), // 2.1.5
   proportionalityEvaluation: z.object({
