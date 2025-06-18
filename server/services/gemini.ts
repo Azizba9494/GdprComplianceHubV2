@@ -539,7 +539,7 @@ Question: {{message}}`;
       const model = client.getGenerativeModel({ 
         model: 'gemini-2.5-flash',
         generationConfig: {
-          maxOutputTokens: 8192,
+          maxOutputTokens: 16384, // Augmenté pour éviter la troncature
           temperature: 0.3,
         }
       });
@@ -616,13 +616,11 @@ Développez chaque section en détail avec des informations pratiques et juridiq
       const response = await result.response;
       let text = response.text();
 
-      // Améliorer le nettoyage du texte
+      // Améliorer le nettoyage du texte sans supprimer les titres de sections
       let cleanResponse = text
         .replace(/```json/g, '')
         .replace(/```/g, '')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/^###\s+/gm, '')
-        .replace(/^##\s+/gm, '')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/^\*\s+/gm, '• ')
         .replace(/^\-\s+/gm, '• ')
         .replace(/\n{3,}/g, '\n\n')
@@ -642,9 +640,7 @@ Développez chaque section en détail avec des informations pratiques et juridiq
           cleanResponse = retryText
             .replace(/```json/g, '')
             .replace(/```/g, '')
-            .replace(/\*\*(.*?)\*\*/g, '$1')
-            .replace(/^###\s+/gm, '')
-            .replace(/^##\s+/gm, '')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/^\*\s+/gm, '• ')
             .replace(/^\-\s+/gm, '• ')
             .replace(/\n{3,}/g, '\n\n')
