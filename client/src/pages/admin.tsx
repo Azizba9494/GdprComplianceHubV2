@@ -1892,6 +1892,45 @@ export default function Admin() {
                       onChange={(e) => setDocumentName(e.target.value)}
                     />
                   </div>
+                  
+                  <div>
+                    <Label htmlFor="document-category">Catégorie</Label>
+                    <Select value={documentCategory} onValueChange={setDocumentCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une catégorie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(documentCategories).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Tags (mots-clés)</Label>
+                    <div className="flex gap-2 mb-2">
+                      <Input
+                        placeholder="Ajouter un tag..."
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                      />
+                      <Button type="button" variant="outline" onClick={addTag}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {documentTags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {documentTags.map((tag, index) => (
+                          <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeTag(tag)}>
+                            {tag} <Trash2 className="w-3 h-3 ml-1" />
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
                   <div>
                     <Label htmlFor="file-upload">Fichier PDF</Label>
                     <Input
@@ -1914,6 +1953,9 @@ export default function Admin() {
                         setIsDocumentDialogOpen(false);
                         setSelectedFile(null);
                         setDocumentName("");
+                        setDocumentCategory("general");
+                        setDocumentTags([]);
+                        setNewTag("");
                       }}
                     >
                       Annuler
@@ -1940,6 +1982,40 @@ export default function Admin() {
           <Card>
             <CardHeader>
               <CardTitle>Documents importés</CardTitle>
+              <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Rechercher dans les documents..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les catégories</SelectItem>
+                      {Object.entries(documentCategories).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedTag} onValueChange={setSelectedTag}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Tag" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les tags</SelectItem>
+                      {allTags.map((tag) => (
+                        <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {documentsLoading ? (
@@ -1947,17 +2023,26 @@ export default function Admin() {
                   <Loader2 className="w-6 h-6 animate-spin mr-2" />
                   <p>Chargement des documents...</p>
                 </div>
-              ) : !documents || documents.length === 0 ? (
+              ) : !filteredDocuments || filteredDocuments.length === 0 ? (
                 <div className="text-center py-8">
                   <FileIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium">Aucun document</h3>
+                  <h3 className="text-lg font-medium">
+                    {documents && documents.length > 0 ? "Aucun document correspondant" : "Aucun document"}
+                  </h3>
                   <p className="text-muted-foreground">
-                    Téléchargez votre premier document PDF pour enrichir les réponses de l'IA.
+                    {documents && documents.length > 0 
+                      ? "Aucun document ne correspond aux critères de recherche."
+                      : "Téléchargez votre premier document PDF pour enrichir les réponses de l'IA."
+                    }
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {documents.map((document: RagDocument) => (
+                  <div className="text-sm text-muted-foreground mb-4">
+                    {filteredDocuments.length} document{filteredDocuments.length > 1 ? 's' : ''} trouvé{filteredDocuments.length > 1 ? 's' : ''}
+                    {documents && filteredDocuments.length !== documents.length && ` sur ${documents.length}`}
+                  </div>
+                  {filteredDocuments.map((document: RagDocument) => (
                     <div
                       key={document.id}
                       className="flex items-start justify-between p-4 border rounded-lg"
@@ -1969,10 +2054,22 @@ export default function Admin() {
                           <Badge variant="outline">
                             {(document.fileSize / 1024 / 1024).toFixed(2)} MB
                           </Badge>
+                          <Badge variant="secondary">
+                            {documentCategories[document.category as keyof typeof documentCategories] || document.category}
+                          </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mb-1">
                           Fichier: {document.filename}
                         </p>
+                        {document.tags && document.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {document.tags.map((tag, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                         <p className="text-sm text-muted-foreground">
                           Importé le {new Date(document.createdAt).toLocaleDateString('fr-FR')}
                         </p>
