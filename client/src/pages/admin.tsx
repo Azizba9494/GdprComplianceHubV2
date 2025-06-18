@@ -67,6 +67,8 @@ interface RagDocument {
   mimeType: string;
   content: string;
   uploadedBy: number;
+  category: string;
+  tags: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -90,6 +92,18 @@ const promptCategories = {
 };
 
 // DPIA-specific prompt subcategories
+// Document categories for RAG documents
+const documentCategories = {
+  general: "Général",
+  compliance: "Conformité RGPD",
+  security: "Sécurité",
+  legal: "Juridique",
+  dpia: "AIPD",
+  technical: "Technique",
+  training: "Formation",
+  templates: "Modèles",
+};
+
 const dpiaPromptSubcategories = {
   // Section 1: Information générale
   generalDescription: "Description générale",
@@ -146,6 +160,12 @@ export default function Admin() {
   const [editingQuestion, setEditingQuestion] = useState<DiagnosticQuestion | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentName, setDocumentName] = useState("");
+  const [documentCategory, setDocumentCategory] = useState("general");
+  const [documentTags, setDocumentTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
