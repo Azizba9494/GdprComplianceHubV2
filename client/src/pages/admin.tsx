@@ -408,9 +408,49 @@ export default function Admin() {
     if (documentName) {
       formData.append('name', documentName);
     }
+    formData.append('category', documentCategory);
+    formData.append('tags', JSON.stringify(documentTags));
 
     uploadDocumentMutation.mutate(formData);
   };
+
+  const addTag = () => {
+    if (newTag.trim() && !documentTags.includes(newTag.trim())) {
+      setDocumentTags([...documentTags, newTag.trim()]);
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setDocumentTags(documentTags.filter(tag => tag !== tagToRemove));
+  };
+
+  // Filter and search documents
+  const filteredDocuments = documents?.filter((doc: RagDocument) => {
+    const matchesSearch = !searchQuery || 
+      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.content?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedCategory === "all" || doc.category === selectedCategory;
+    
+    const matchesTag = selectedTag === "all" || 
+      (doc.tags && doc.tags.includes(selectedTag));
+    
+    return matchesSearch && matchesCategory && matchesTag;
+  });
+
+  // Get all unique tags from documents
+  const allTags = documents?.reduce((tags: string[], doc: RagDocument) => {
+    if (doc.tags) {
+      doc.tags.forEach(tag => {
+        if (!tags.includes(tag)) {
+          tags.push(tag);
+        }
+      });
+    }
+    return tags;
+  }, []) || [];
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -2009,7 +2049,7 @@ export default function Admin() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les tags</SelectItem>
-                      {allTags.map((tag) => (
+                      {allTags.map((tag: string) => (
                         <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                       ))}
                     </SelectContent>

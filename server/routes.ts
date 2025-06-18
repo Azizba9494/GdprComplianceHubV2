@@ -871,7 +871,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
         content: `Document uploaded: ${req.file.originalname}. Text extraction will be implemented.`,
-        uploadedBy: 1 // TODO: Get from authenticated user
+        uploadedBy: 1, // TODO: Get from authenticated user
+        category: req.body.category || 'general',
+        tags: req.body.tags ? JSON.parse(req.body.tags) : [],
       };
 
       const document = await storage.createRagDocument(documentData);

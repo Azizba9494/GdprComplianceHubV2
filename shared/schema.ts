@@ -682,6 +682,8 @@ export const ragDocuments = pgTable("rag_documents", {
   content: text("content").notNull(), // Extracted text content from PDF
   // chunks: jsonb("chunks").$type<Array<{ text: string; embedding?: number[] }>>().default([]),
   uploadedBy: integer("uploaded_by").notNull().references(() => users.id),
+  category: text("category").default("general"),
+  tags: text("tags").array().default([]),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
