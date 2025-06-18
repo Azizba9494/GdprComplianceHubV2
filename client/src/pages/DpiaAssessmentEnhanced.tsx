@@ -635,6 +635,51 @@ export default function DpiaAssessmentEnhanced() {
     }
   });
 
+  // Risk analysis AI generation
+  const generateRiskAnalysis = async (scenario: string, riskType: string) => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch("/api/dpia/ai-assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `Générez une analyse ${riskType} pour le scénario ${scenario}`,
+          processingRecord,
+          field: 'risks',
+          scenario,
+          riskType
+        })
+      });
+      
+      if (!response.ok) throw new Error("Erreur lors de la génération");
+      const data = await response.json();
+      
+      // Clean the response and remove markdown formatting
+      const cleanResponse = data.response
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/^### (.*$)/gm, '$1')
+        .replace(/^## (.*$)/gm, '$1')
+        .replace(/^# (.*$)/gm, '$1')
+        .trim();
+      
+      // Update the specific field with generated content
+      form.setValue(`riskScenarios.${scenario}.${riskType}`, cleanResponse);
+      
+      toast({
+        title: "Analyse générée",
+        description: "L'IA a généré l'analyse de risque pour vous.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de générer l'analyse",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const onSubmit = (data: DpiaFormData) => {
     saveMutation.mutate(data);
   };
@@ -2773,19 +2818,7 @@ export default function DpiaAssessmentEnhanced() {
                       </div>
                     </div>
 
-                    {/* AI Generation Button */}
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => generateWithAI.mutate({ field: "riskScenarios" })}
-                        disabled={isGenerating}
-                      >
-                        <Brain className="h-4 w-4 mr-2" />
-                        {isGenerating ? "Génération..." : "Générer une analyse de risques avec l'IA"}
-                      </Button>
-                    </div>
+                    
                   </div>
                 </CardContent>
               </Card>

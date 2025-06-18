@@ -551,28 +551,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI-assisted response generation for DPIA fields
   app.post("/api/dpia/ai-assist", async (req, res) => {
     try {
-      const { questionField, companyId, existingDpiaData } = req.body;
+      const { message, processingRecord, field, riskType, scenario } = req.body;
       
-      const company = await storage.getCompany(companyId);
-      if (!company) {
-        return res.status(404).json({ error: "Entreprise non trouvée" });
+      // Get specific prompt for this field and scenario
+      let promptCategory = 'dpia';
+      if (field === 'risks' && scenario && riskType) {
+        promptCategory = `dpia_${scenario}_${riskType}`;
       }
-
-      // Get company processing records for context
-      const processingRecords = await storage.getProcessingRecords(companyId);
       
-      // Get RAG documents for knowledge base
-      const ragDocuments = await getRagDocuments();
+      const response = await geminiService.getChatbotResponse(message, {
+        processingRecord,
+        field,
+        riskType,
+        scenario,
+        context: "dpia",
+        promptCategory
+      });
       
-      const aiResponse = await geminiService.generateDpiaResponse(
-        questionField,
-        company,
-        existingDpiaData,
-        processingRecords,
-        ragDocuments
-      );
-
-      res.json(aiResponse);
+      res.json(response);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
