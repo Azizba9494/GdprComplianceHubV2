@@ -330,6 +330,100 @@ const dpiaFormSchema = z.object({
     }).optional()
   }).optional(),
   
+  // Part 6: Evaluation section - New
+  evaluation: z.object({
+    generalDescription: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    dataProcesses: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    finalitiesExplanation: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    dataMinimizationExplanation: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    retentionExplanation: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    legalBasisExplanation: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    dataQualityExplanation: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    informationMeasures: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    consentMeasures: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    accessPortabilityMeasures: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    rectificationErasureMeasures: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    limitationOppositionMeasures: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    subcontractingMeasuresEval: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    internationalTransferMeasures: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    securityMeasuresEval: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    illegitimateAccess: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    unwantedModification: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional(),
+    dataDisappearance: z.object({
+      rating: z.enum(["unsatisfactory", "improvement_planned", "satisfactory"]).optional(),
+      justification: z.string().optional(),
+      additionalMeasures: z.string().optional()
+    }).optional()
+  }).optional(),
+
   // Status
   status: z.enum(["draft", "inprogress", "completed", "validated"]).default("draft")
 });
@@ -387,7 +481,8 @@ export default function DpiaAssessmentEnhanced() {
         limitationOpposition: { status: "acceptable", measures: "" },
         subcontracting: { status: "acceptable", measures: "" },
         internationalTransfers: { status: "acceptable", measures: "" }
-      }
+      },
+      evaluation: {}
     }
   });
 
@@ -442,7 +537,8 @@ export default function DpiaAssessmentEnhanced() {
           limitationOpposition: { status: "acceptable", measures: "" },
           subcontracting: { status: "acceptable", measures: "" },
           internationalTransfers: { status: "acceptable", measures: "" }
-        }
+        },
+        evaluation: dpia.evaluation || {}
       };
       form.reset(cleanedData);
     }
@@ -720,12 +816,13 @@ export default function DpiaAssessmentEnhanced() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
               <TabsTrigger value="proportionality">Proportionnalité</TabsTrigger>
               <TabsTrigger value="rights">Droits</TabsTrigger>
               <TabsTrigger value="security">Sécurité</TabsTrigger>
               <TabsTrigger value="risks">Risques</TabsTrigger>
+              <TabsTrigger value="evaluation">Evaluation</TabsTrigger>
               <TabsTrigger value="validation">Validation</TabsTrigger>
             </TabsList>
 
@@ -2730,7 +2827,130 @@ export default function DpiaAssessmentEnhanced() {
               </Card>
             </TabsContent>
 
-            {/* Tab 6: Validation */}
+            {/* Tab 6: Evaluation */}
+            <TabsContent value="evaluation" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Evaluation de l'AIPD</CardTitle>
+                  <CardDescription>
+                    Évaluez chaque section selon les critères : Insatisfaisant / Amélioration prévue / Satisfaisant
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  {/* Helper function component for evaluation fields */}
+                  {(() => {
+                    const EvaluationSection = ({ name, title, fieldPrefix }: { name: string, title: string, fieldPrefix: string }) => (
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{title}</h4>
+                        
+                        <FormField
+                          control={form.control}
+                          name={`evaluation.${fieldPrefix}.rating`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Évaluation</FormLabel>
+                              <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                className="flex space-x-6"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="unsatisfactory" id={`${fieldPrefix}-unsatisfactory`} />
+                                  <Label htmlFor={`${fieldPrefix}-unsatisfactory`} className="text-red-600">Insatisfaisant</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="improvement_planned" id={`${fieldPrefix}-improvement`} />
+                                  <Label htmlFor={`${fieldPrefix}-improvement`} className="text-orange-600">Amélioration prévue</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="satisfactory" id={`${fieldPrefix}-satisfactory`} />
+                                  <Label htmlFor={`${fieldPrefix}-satisfactory`} className="text-green-600">Satisfaisant</Label>
+                                </div>
+                              </RadioGroup>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name={`evaluation.${fieldPrefix}.justification`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Justification de l'évaluation</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Justifiez votre évaluation..."
+                                  className="min-h-[80px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {form.watch(`evaluation.${fieldPrefix}.rating`) === "improvement_planned" && (
+                          <FormField
+                            control={form.control}
+                            name={`evaluation.${fieldPrefix}.additionalMeasures`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Décrivez les mesures additionnelles à mettre en place pour améliorer la protection des données..."
+                                    className="min-h-[100px]"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </div>
+                    );
+
+                    const evaluationCriteria = [
+                      { name: "generalDescription", title: "Description générale du traitement", fieldPrefix: "generalDescription" },
+                      { name: "dataProcesses", title: "Données, processus et supports", fieldPrefix: "dataProcesses" },
+                      { name: "finalitiesExplanation", title: "Explication et justification des finalités", fieldPrefix: "finalitiesExplanation" },
+                      { name: "dataMinimizationExplanation", title: "Explication et justification de la minimisation des données", fieldPrefix: "dataMinimizationExplanation" },
+                      { name: "retentionExplanation", title: "Explication et justification des durées de conservation", fieldPrefix: "retentionExplanation" },
+                      { name: "legalBasisExplanation", title: "Explication et justification du fondement (Base légale)", fieldPrefix: "legalBasisExplanation" },
+                      { name: "dataQualityExplanation", title: "Explication et justification de la qualité des données", fieldPrefix: "dataQualityExplanation" },
+                      { name: "informationMeasures", title: "Détermination et description des mesures pour l'information des personnes", fieldPrefix: "informationMeasures" },
+                      { name: "consentMeasures", title: "Détermination et description des mesures pour le recueil du consentement", fieldPrefix: "consentMeasures" },
+                      { name: "accessPortabilityMeasures", title: "Détermination et description des mesures pour les droits d'accès et à la portabilité", fieldPrefix: "accessPortabilityMeasures" },
+                      { name: "rectificationErasureMeasures", title: "Détermination et description des mesures pour les droits de rectification et d'effacement", fieldPrefix: "rectificationErasureMeasures" },
+                      { name: "limitationOppositionMeasures", title: "Détermination et description des mesures pour les droits de limitation du traitement et d'opposition", fieldPrefix: "limitationOppositionMeasures" },
+                      { name: "subcontractingMeasuresEval", title: "Détermination et description des mesures pour la sous-traitance", fieldPrefix: "subcontractingMeasuresEval" },
+                      { name: "internationalTransferMeasures", title: "Détermination et description des mesures pour le transfert de données hors de l'Union européenne", fieldPrefix: "internationalTransferMeasures" },
+                      { name: "securityMeasuresEval", title: "Mesures de sécurité", fieldPrefix: "securityMeasuresEval" },
+                      { name: "illegitimateAccess", title: "Accès illégitime aux données", fieldPrefix: "illegitimateAccess" },
+                      { name: "unwantedModification", title: "Modification non désirée des données", fieldPrefix: "unwantedModification" },
+                      { name: "dataDisappearance", title: "Disparition des données", fieldPrefix: "dataDisappearance" }
+                    ];
+
+                    return (
+                      <div className="space-y-6">
+                        {evaluationCriteria.map((criterion) => (
+                          <EvaluationSection
+                            key={criterion.name}
+                            name={criterion.name}
+                            title={criterion.title}
+                            fieldPrefix={criterion.fieldPrefix}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tab 7: Validation */}
             <TabsContent value="validation" className="space-y-6">
               {/* Validation summary */}
               <Card>
