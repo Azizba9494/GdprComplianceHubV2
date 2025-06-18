@@ -91,6 +91,7 @@ export interface IStorage {
   createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment>;
   updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment>;
   deleteDpiaAssessment(id: number): Promise<void>;
+  deleteDpiaAssessment(id: number): Promise<void>;
   
   // AI Prompts
   getAiPrompts(): Promise<AiPrompt[]>;

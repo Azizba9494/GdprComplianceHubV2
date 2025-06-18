@@ -653,6 +653,111 @@ Informations complémentaires: ${data.additionalInfo}
                         </FormItem>
                       )}
                     />
+
+                    {/* Catégories de données - Liste de choix + texte libre */}
+                    <div className="space-y-3">
+                      <Label>Catégories de données</Label>
+                      <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
+                        {DATA_CATEGORIES.map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`category-${category}`}
+                              className="rounded"
+                              onChange={(e) => {
+                                const currentCategories = manualForm.getValues('dataCategories') || [];
+                                if (e.target.checked) {
+                                  manualForm.setValue('dataCategories', [...(Array.isArray(currentCategories) ? currentCategories : []), category]);
+                                } else {
+                                  manualForm.setValue('dataCategories', (Array.isArray(currentCategories) ? currentCategories : []).filter(c => c !== category));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`category-${category}`} className="text-sm">{category}</Label>
+                          </div>
+                        ))}
+                      </div>
+                      <Input 
+                        placeholder="Autres catégories de données (séparées par des virgules)"
+                        onChange={(e) => {
+                          if (e.target.value.trim()) {
+                            const newCategories = e.target.value.split(',').map(c => c.trim()).filter(c => c);
+                            const currentCategories = manualForm.getValues('dataCategories') || [];
+                            manualForm.setValue('dataCategories', [...(Array.isArray(currentCategories) ? currentCategories : []), ...newCategories]);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Destinataires - Liste de choix + texte libre */}
+                    <div className="space-y-3">
+                      <Label>Destinataires</Label>
+                      <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
+                        {RECIPIENTS.map((recipient) => (
+                          <div key={recipient} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`recipient-${recipient}`}
+                              className="rounded"
+                              onChange={(e) => {
+                                const currentRecipients = manualForm.getValues('recipients') || [];
+                                if (e.target.checked) {
+                                  manualForm.setValue('recipients', [...(Array.isArray(currentRecipients) ? currentRecipients : []), recipient]);
+                                } else {
+                                  manualForm.setValue('recipients', (Array.isArray(currentRecipients) ? currentRecipients : []).filter(r => r !== recipient));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`recipient-${recipient}`} className="text-sm">{recipient}</Label>
+                          </div>
+                        ))}
+                      </div>
+                      <Input 
+                        placeholder="Autres destinataires (séparés par des virgules)"
+                        onChange={(e) => {
+                          if (e.target.value.trim()) {
+                            const newRecipients = e.target.value.split(',').map(r => r.trim()).filter(r => r);
+                            const currentRecipients = manualForm.getValues('recipients') || [];
+                            manualForm.setValue('recipients', [...(Array.isArray(currentRecipients) ? currentRecipients : []), ...newRecipients]);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Mesures de sécurité - Liste de choix + texte libre */}
+                    <div className="space-y-3">
+                      <Label>Mesures de sécurité</Label>
+                      <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
+                        {SECURITY_MEASURES.map((measure) => (
+                          <div key={measure} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`security-${measure}`}
+                              className="rounded"
+                              onChange={(e) => {
+                                const currentMeasures = manualForm.getValues('securityMeasures') || [];
+                                if (e.target.checked) {
+                                  manualForm.setValue('securityMeasures', [...(Array.isArray(currentMeasures) ? currentMeasures : []), measure]);
+                                } else {
+                                  manualForm.setValue('securityMeasures', (Array.isArray(currentMeasures) ? currentMeasures : []).filter(m => m !== measure));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`security-${measure}`} className="text-sm">{measure}</Label>
+                          </div>
+                        ))}
+                      </div>
+                      <Input 
+                        placeholder="Autres mesures de sécurité (séparées par des virgules)"
+                        onChange={(e) => {
+                          if (e.target.value.trim()) {
+                            const newMeasures = e.target.value.split(',').map(m => m.trim()).filter(m => m);
+                            const currentMeasures = manualForm.getValues('securityMeasures') || [];
+                            manualForm.setValue('securityMeasures', [...(Array.isArray(currentMeasures) ? currentMeasures : []), ...newMeasures]);
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
 
 

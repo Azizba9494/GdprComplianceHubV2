@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FileText, Clock, CheckCircle, AlertCircle, Eye, Edit, BookOpen, Users, Shield, Globe, Search } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Eye, Edit, BookOpen, Users, Shield, Globe, Search, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -39,7 +39,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
         title: "AIPD supprimée",
         description: "L'analyse d'impact a été supprimée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${company?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${companyId}`] });
     },
     onError: (error: any) => {
       toast({
@@ -414,6 +414,38 @@ export default function DpiaList() {
   const { data: company } = useQuery({
     queryKey: [`/api/companies/${userId}`],
   }) as { data: any };
+
+  // Delete DPIA mutation
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  const deleteDpiaMutation = useMutation({
+    mutationFn: async (dpiaId: number) => {
+      const response = await fetch(`/api/dpia/${dpiaId}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de l'AIPD");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "AIPD supprimée",
+        description: "L'analyse d'impact a été supprimée avec succès.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${company?.id}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer l'AIPD",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Get all DPIA assessments
   const { data: dpias = [], isLoading } = useQuery({
