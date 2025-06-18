@@ -373,10 +373,10 @@ export class DatabaseStorage implements IStorage {
   async createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment> {
     const cleanAssessment = {
       ...assessment,
-      securityMeasures: assessment.securityMeasures || [],
-      customSecurityMeasures: assessment.customSecurityMeasures || [],
-      subcontractingMeasures: assessment.subcontractingMeasures || [],
-      internationalTransfersMeasures: assessment.internationalTransfersMeasures || [],
+      securityMeasures: Array.isArray(assessment.securityMeasures) ? assessment.securityMeasures : [],
+      customSecurityMeasures: Array.isArray(assessment.customSecurityMeasures) ? assessment.customSecurityMeasures : [],
+      subcontractingMeasures: Array.isArray(assessment.subcontractingMeasures) ? assessment.subcontractingMeasures : [],
+      internationalTransfersMeasures: Array.isArray(assessment.internationalTransfersMeasures) ? assessment.internationalTransfersMeasures : [],
       riskScenarios: assessment.riskScenarios || {},
       proportionalityEvaluation: assessment.proportionalityEvaluation || {
         finalities: { status: "acceptable", measures: "" },
@@ -393,7 +393,8 @@ export class DatabaseStorage implements IStorage {
         limitationOpposition: { status: "acceptable", measures: "" },
         subcontracting: { status: "acceptable", measures: "" },
         internationalTransfers: { status: "acceptable", measures: "" }
-      }
+      },
+      actionPlan: Array.isArray(assessment.actionPlan) ? assessment.actionPlan : []
     };
     
     const [created] = await db.insert(dpiaAssessments).values(cleanAssessment).returning();

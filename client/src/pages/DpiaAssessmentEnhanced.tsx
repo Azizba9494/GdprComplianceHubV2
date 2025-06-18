@@ -2481,7 +2481,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.dataDisappearance.impacts"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'impacts')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Décrivez les conséquences de la perte ou destruction des données..."
@@ -2499,7 +2511,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.dataDisappearance.threats"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Menaces identifiées</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Menaces identifiées</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'threats')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Listez les menaces qui pourraient conduire à la disparition des données..."
@@ -2517,7 +2541,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.dataDisappearance.sources"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sources de risque</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Sources de risque</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'sources')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Identifiez les sources potentielles de ce risque..."
@@ -2535,7 +2571,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.dataDisappearance.measures"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Mesures existantes ou prévues</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'measures')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
