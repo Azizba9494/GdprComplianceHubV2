@@ -379,14 +379,31 @@ export default function DpiaAssessmentEnhanced() {
       const url = id && id !== "new" ? `/api/dpia/assessment/${id}` : `/api/dpia`;
       const method = id && id !== "new" ? "PUT" : "POST";
       
+      // Clean data before sending
+      const cleanData = {
+        ...data,
+        status: "draft",
+        companyId: company?.id || 1,
+        securityMeasures: Array.isArray(data.securityMeasures) ? data.securityMeasures : [],
+        customSecurityMeasures: Array.isArray(data.customSecurityMeasures) ? data.customSecurityMeasures : [],
+        subcontractingMeasures: Array.isArray(data.subcontractingMeasures) ? data.subcontractingMeasures : [],
+        internationalTransfersMeasures: Array.isArray(data.internationalTransfersMeasures) ? data.internationalTransfersMeasures : [],
+        actionPlan: Array.isArray(data.actionPlan) ? data.actionPlan : []
+      };
+      
+      // Remove undefined/null values and problematic date fields
+      delete cleanData.createdAt;
+      delete cleanData.updatedAt;
+      
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, status: "draft" })
+        body: JSON.stringify(cleanData)
       });
       
       if (!response.ok) {
-        throw new Error("Erreur lors de la sauvegarde automatique");
+        const errorText = await response.text();
+        throw new Error(`Erreur lors de la sauvegarde automatique: ${errorText}`);
       }
       
       return response.json();
@@ -490,14 +507,30 @@ export default function DpiaAssessmentEnhanced() {
       const url = id && id !== "new" ? `/api/dpia/assessment/${id}` : `/api/dpia`;
       const method = id && id !== "new" ? "PUT" : "POST";
       
+      // Clean data before sending
+      const cleanData = {
+        ...data,
+        companyId: company?.id || 1,
+        securityMeasures: Array.isArray(data.securityMeasures) ? data.securityMeasures : [],
+        customSecurityMeasures: Array.isArray(data.customSecurityMeasures) ? data.customSecurityMeasures : [],
+        subcontractingMeasures: Array.isArray(data.subcontractingMeasures) ? data.subcontractingMeasures : [],
+        internationalTransfersMeasures: Array.isArray(data.internationalTransfersMeasures) ? data.internationalTransfersMeasures : [],
+        actionPlan: Array.isArray(data.actionPlan) ? data.actionPlan : []
+      };
+      
+      // Remove problematic date fields
+      delete cleanData.createdAt;
+      delete cleanData.updatedAt;
+      
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(cleanData)
       });
       
       if (!response.ok) {
-        throw new Error("Erreur lors de la sauvegarde");
+        const errorText = await response.text();
+        throw new Error(`Erreur lors de la sauvegarde: ${errorText}`);
       }
       
       return response.json();
@@ -2301,7 +2334,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.unwantedModification.impacts"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('unwantedModification', 'impacts')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Décrivez les conséquences d'une modification non autorisée des données..."
@@ -2319,7 +2364,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.unwantedModification.threats"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Menaces identifiées</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Menaces identifiées</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('unwantedModification', 'threats')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Listez les menaces qui pourraient conduire à une modification non désirée..."
@@ -2337,7 +2394,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.unwantedModification.sources"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sources de risque</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Sources de risque</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('unwantedModification', 'sources')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Identifiez les sources potentielles de ce risque..."
@@ -2355,7 +2424,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.unwantedModification.measures"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Mesures existantes ou prévues</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('unwantedModification', 'measures')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
