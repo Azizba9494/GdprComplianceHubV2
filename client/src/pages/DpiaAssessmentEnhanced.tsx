@@ -2841,7 +2841,10 @@ export default function DpiaAssessmentEnhanced() {
                 <CardContent className="space-y-8">
                   {/* Helper function component for evaluation fields */}
                   {(() => {
-                    const EvaluationSection = ({ name, title, fieldPrefix }: { name: string, title: string, fieldPrefix: string }) => (
+                    const EvaluationSection = ({ name, title, fieldPrefix }: { name: string, title: string, fieldPrefix: string }) => {
+                      const currentRating = form.watch(`evaluation.${fieldPrefix}.rating`);
+                      
+                      return (
                       <div className="border rounded-lg p-4 space-y-4">
                         <h4 className="font-medium text-gray-900 dark:text-gray-100">{title}</h4>
                         
@@ -2884,7 +2887,10 @@ export default function DpiaAssessmentEnhanced() {
                                 <Textarea
                                   placeholder="Justifiez votre évaluation..."
                                   className="min-h-[80px]"
-                                  {...field}
+                                  value={field.value || ""}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  name={field.name}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -2892,7 +2898,7 @@ export default function DpiaAssessmentEnhanced() {
                           )}
                         />
 
-                        {form.watch(`evaluation.${fieldPrefix}.rating`) === "improvement_planned" && (
+                        {currentRating === "improvement_planned" && (
                           <div className="animate-in slide-in-from-top-2 duration-200">
                             <FormField
                               control={form.control}
@@ -2904,12 +2910,10 @@ export default function DpiaAssessmentEnhanced() {
                                     <Textarea
                                       placeholder="Décrivez les mesures additionnelles à mettre en place pour améliorer la protection des données..."
                                       className="min-h-[100px]"
-                                      {...field}
-                                      onFocus={(e) => {
-                                        // Prevent automatic scroll to top
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                      }}
+                                      value={field.value || ""}
+                                      onChange={field.onChange}
+                                      onBlur={field.onBlur}
+                                      name={field.name}
                                     />
                                   </FormControl>
                                   <FormMessage />
