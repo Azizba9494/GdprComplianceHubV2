@@ -2988,6 +2988,412 @@ export default function DpiaAssessmentEnhanced() {
                       )}
                     </div>
 
+                    {/* Explication et justification des finalités */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Explication et justification des finalités</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.finalitiesExplanation.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="finalitiesExplanation-unsatisfactory" />
+                                <Label htmlFor="finalitiesExplanation-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="finalitiesExplanation-improvement" />
+                                <Label htmlFor="finalitiesExplanation-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="finalitiesExplanation-satisfactory" />
+                                <Label htmlFor="finalitiesExplanation-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.finalitiesExplanation.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.finalitiesExplanation.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.finalitiesExplanation.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Explication et justification de la minimisation des données */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Explication et justification de la minimisation des données</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.dataMinimizationExplanation.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="dataMinimizationExplanation-unsatisfactory" />
+                                <Label htmlFor="dataMinimizationExplanation-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="dataMinimizationExplanation-improvement" />
+                                <Label htmlFor="dataMinimizationExplanation-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="dataMinimizationExplanation-satisfactory" />
+                                <Label htmlFor="dataMinimizationExplanation-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.dataMinimizationExplanation.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.dataMinimizationExplanation.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.dataMinimizationExplanation.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Explication et justification des durées de conservation */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Explication et justification des durées de conservation</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.retentionExplanation.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="retentionExplanation-unsatisfactory" />
+                                <Label htmlFor="retentionExplanation-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="retentionExplanation-improvement" />
+                                <Label htmlFor="retentionExplanation-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="retentionExplanation-satisfactory" />
+                                <Label htmlFor="retentionExplanation-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.retentionExplanation.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.retentionExplanation.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.retentionExplanation.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Explication et justification du fondement (Base légale) */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Explication et justification du fondement (Base légale)</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.legalBasisExplanation.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="legalBasisExplanation-unsatisfactory" />
+                                <Label htmlFor="legalBasisExplanation-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="legalBasisExplanation-improvement" />
+                                <Label htmlFor="legalBasisExplanation-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="legalBasisExplanation-satisfactory" />
+                                <Label htmlFor="legalBasisExplanation-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.legalBasisExplanation.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.legalBasisExplanation.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.legalBasisExplanation.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Explication et justification de la qualité des données */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Explication et justification de la qualité des données</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.dataQualityExplanation.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="dataQualityExplanation-unsatisfactory" />
+                                <Label htmlFor="dataQualityExplanation-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="dataQualityExplanation-improvement" />
+                                <Label htmlFor="dataQualityExplanation-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="dataQualityExplanation-satisfactory" />
+                                <Label htmlFor="dataQualityExplanation-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.dataQualityExplanation.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.dataQualityExplanation.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.dataQualityExplanation.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Détermination et description des mesures pour l'information des personnes */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Détermination et description des mesures pour l'information des personnes</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.informationMeasures.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="informationMeasures-unsatisfactory" />
+                                <Label htmlFor="informationMeasures-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="informationMeasures-improvement" />
+                                <Label htmlFor="informationMeasures-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="informationMeasures-satisfactory" />
+                                <Label htmlFor="informationMeasures-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.informationMeasures.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.informationMeasures.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.informationMeasures.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Détermination et description des mesures pour le recueil du consentement */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Détermination et description des mesures pour le recueil du consentement</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.consentMeasures.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="consentMeasures-unsatisfactory" />
+                                <Label htmlFor="consentMeasures-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="consentMeasures-improvement" />
+                                <Label htmlFor="consentMeasures-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="consentMeasures-satisfactory" />
+                                <Label htmlFor="consentMeasures-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.consentMeasures.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.consentMeasures.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.consentMeasures.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
                     {/* Mesures de sécurité */}
                     <div className="border rounded-lg p-4 space-y-4">
                       <h4 className="font-medium text-gray-900 dark:text-gray-100">Mesures de sécurité</h4>
@@ -3054,6 +3460,470 @@ export default function DpiaAssessmentEnhanced() {
                                   value={field.value || ""}
                                   onChange={field.onChange}
                                 />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Détermination et description des mesures pour les droits d'accès et à la portabilité */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Détermination et description des mesures pour les droits d'accès et à la portabilité</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.accessPortabilityMeasures.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="accessPortabilityMeasures-unsatisfactory" />
+                                <Label htmlFor="accessPortabilityMeasures-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="accessPortabilityMeasures-improvement" />
+                                <Label htmlFor="accessPortabilityMeasures-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="accessPortabilityMeasures-satisfactory" />
+                                <Label htmlFor="accessPortabilityMeasures-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.accessPortabilityMeasures.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.accessPortabilityMeasures.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.accessPortabilityMeasures.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Détermination et description des mesures pour les droits de rectification et d'effacement */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Détermination et description des mesures pour les droits de rectification et d'effacement</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.rectificationErasureMeasures.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="rectificationErasureMeasures-unsatisfactory" />
+                                <Label htmlFor="rectificationErasureMeasures-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="rectificationErasureMeasures-improvement" />
+                                <Label htmlFor="rectificationErasureMeasures-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="rectificationErasureMeasures-satisfactory" />
+                                <Label htmlFor="rectificationErasureMeasures-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.rectificationErasureMeasures.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.rectificationErasureMeasures.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.rectificationErasureMeasures.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Détermination et description des mesures pour les droits de limitation du traitement et d'opposition */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Détermination et description des mesures pour les droits de limitation du traitement et d'opposition</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.limitationOppositionMeasures.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="limitationOppositionMeasures-unsatisfactory" />
+                                <Label htmlFor="limitationOppositionMeasures-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="limitationOppositionMeasures-improvement" />
+                                <Label htmlFor="limitationOppositionMeasures-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="limitationOppositionMeasures-satisfactory" />
+                                <Label htmlFor="limitationOppositionMeasures-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.limitationOppositionMeasures.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.limitationOppositionMeasures.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.limitationOppositionMeasures.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Détermination et description des mesures pour la sous-traitance */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Détermination et description des mesures pour la sous-traitance</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.subcontractingMeasuresEval.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="subcontractingMeasuresEval-unsatisfactory" />
+                                <Label htmlFor="subcontractingMeasuresEval-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="subcontractingMeasuresEval-improvement" />
+                                <Label htmlFor="subcontractingMeasuresEval-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="subcontractingMeasuresEval-satisfactory" />
+                                <Label htmlFor="subcontractingMeasuresEval-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.subcontractingMeasuresEval.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.subcontractingMeasuresEval.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.subcontractingMeasuresEval.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Détermination et description des mesures pour le transfert de données hors de l'Union européenne */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Détermination et description des mesures pour le transfert de données hors de l'Union européenne</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.internationalTransferMeasures.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="internationalTransferMeasures-unsatisfactory" />
+                                <Label htmlFor="internationalTransferMeasures-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="internationalTransferMeasures-improvement" />
+                                <Label htmlFor="internationalTransferMeasures-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="internationalTransferMeasures-satisfactory" />
+                                <Label htmlFor="internationalTransferMeasures-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.internationalTransferMeasures.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.internationalTransferMeasures.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.internationalTransferMeasures.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Accès illégitime aux données */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Accès illégitime aux données</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.illegitimateAccess.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="illegitimateAccess-unsatisfactory" />
+                                <Label htmlFor="illegitimateAccess-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="illegitimateAccess-improvement" />
+                                <Label htmlFor="illegitimateAccess-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="illegitimateAccess-satisfactory" />
+                                <Label htmlFor="illegitimateAccess-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.illegitimateAccess.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.illegitimateAccess.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.illegitimateAccess.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Modification non désirée des données */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Modification non désirée des données</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.unwantedModification.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="unwantedModification-unsatisfactory" />
+                                <Label htmlFor="unwantedModification-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="unwantedModification-improvement" />
+                                <Label htmlFor="unwantedModification-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="unwantedModification-satisfactory" />
+                                <Label htmlFor="unwantedModification-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.unwantedModification.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.unwantedModification.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.unwantedModification.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    {/* Disparition des données */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Disparition des données</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="evaluation.dataDisappearance.rating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Évaluation</FormLabel>
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="unsatisfactory" id="dataDisappearance-unsatisfactory" />
+                                <Label htmlFor="dataDisappearance-unsatisfactory" className="text-red-600">Insatisfaisant</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="improvement_planned" id="dataDisappearance-improvement" />
+                                <Label htmlFor="dataDisappearance-improvement" className="text-orange-600">Amélioration prévue</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="satisfactory" id="dataDisappearance-satisfactory" />
+                                <Label htmlFor="dataDisappearance-satisfactory" className="text-green-600">Satisfaisant</Label>
+                              </div>
+                            </RadioGroup>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="evaluation.dataDisappearance.justification"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Justification de l'évaluation</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Justifiez votre évaluation..." className="min-h-[80px]" value={field.value || ""} onChange={field.onChange} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("evaluation.dataDisappearance.rating") === "improvement_planned" && (
+                        <FormField
+                          control={form.control}
+                          name="evaluation.dataDisappearance.additionalMeasures"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Décrivez les mesures additionnelles..." className="min-h-[100px]" value={field.value || ""} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
