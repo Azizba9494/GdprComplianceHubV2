@@ -793,6 +793,518 @@ export default function Admin() {
           })}
         </TabsContent>
 
+        {/* DPIA Prompts Management */}
+        <TabsContent value="dpia-prompts" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Gestion des prompts AIPD</h3>
+              <p className="text-sm text-muted-foreground">
+                Configurez les prompts IA pour chaque section des analyses d'impact (AIPD)
+              </p>
+            </div>
+            <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => openPromptDialog()}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouveau prompt AIPD
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingPrompt ? "Modifier le prompt AIPD" : "Créer un nouveau prompt AIPD"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Configurez un prompt IA pour automatiser la génération de contenu dans les AIPD
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...promptForm}>
+                  <form onSubmit={promptForm.handleSubmit(onPromptSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={promptForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom du prompt</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: Description générale AIPD" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={promptForm.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Section AIPD</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Sélectionner une section" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="dpia">AIPD - Général</SelectItem>
+                                {Object.entries(dpiaPromptSubcategories).map(([key, label]) => (
+                                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={promptForm.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Description du rôle de ce prompt dans l'AIPD..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={promptForm.control}
+                      name="prompt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contenu du prompt</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Rédigez le prompt IA ici... Utilisez {{variableName}} pour les variables dynamiques"
+                              rows={12}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsPromptDialogOpen(false)}
+                      >
+                        Annuler
+                      </Button>
+                      <Button type="submit" disabled={createPromptMutation.isPending || updatePromptMutation.isPending}>
+                        {(createPromptMutation.isPending || updatePromptMutation.isPending) ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            {editingPrompt ? "Modification..." : "Création..."}
+                          </>
+                        ) : (
+                          editingPrompt ? "Modifier" : "Créer"
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* DPIA Prompts organized by sections */}
+          <div className="grid gap-6">
+            {/* Section 1: Information générale */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>Section 1 - Information générale</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {['generalDescription', 'purposes', 'dataController', 'dataProcessors', 'applicableReferentials'].map(key => {
+                    const prompt = prompts?.find((p: AiPrompt) => p.category === key);
+                    const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
+                    
+                    return (
+                      <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{label}</h4>
+                          {prompt ? (
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                                {prompt.isActive ? "Actif" : "Inactif"}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">{prompt.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Aucun prompt configuré</span>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          {prompt && (
+                            <Switch
+                              checked={prompt.isActive}
+                              onCheckedChange={() => togglePromptStatus(prompt)}
+                              disabled={updatePromptMutation.isPending}
+                            />
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (prompt) {
+                                openPromptDialog(prompt);
+                              } else {
+                                promptForm.reset({
+                                  name: `${label}`,
+                                  description: `Prompt pour générer ${label.toLowerCase()}`,
+                                  category: key,
+                                  prompt: ""
+                                });
+                                setEditingPrompt(null);
+                                setIsPromptDialogOpen(true);
+                              }
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            {prompt ? "Modifier" : "Créer"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 2: Justifications */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5" />
+                  <span>Section 2 - Justifications</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {['finalitiesJustification', 'dataMinimization', 'retentionJustification', 'legalBasisJustification'].map(key => {
+                    const prompt = prompts?.find((p: AiPrompt) => p.category === key);
+                    const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
+                    
+                    return (
+                      <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{label}</h4>
+                          {prompt ? (
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                                {prompt.isActive ? "Actif" : "Inactif"}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">{prompt.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Aucun prompt configuré</span>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          {prompt && (
+                            <Switch
+                              checked={prompt.isActive}
+                              onCheckedChange={() => togglePromptStatus(prompt)}
+                              disabled={updatePromptMutation.isPending}
+                            />
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (prompt) {
+                                openPromptDialog(prompt);
+                              } else {
+                                promptForm.reset({
+                                  name: `${label}`,
+                                  description: `Prompt pour générer ${label.toLowerCase()}`,
+                                  category: key,
+                                  prompt: ""
+                                });
+                                setEditingPrompt(null);
+                                setIsPromptDialogOpen(true);
+                              }
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            {prompt ? "Modifier" : "Créer"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 3: Mesures techniques et organisationnelles */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings className="w-5 h-5" />
+                  <span>Section 3 - Mesures techniques et organisationnelles</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {['dataQualityMeasures', 'informationMeasures', 'consentMeasures', 'accessMeasures', 'rectificationMeasures', 'oppositionMeasures'].map(key => {
+                    const prompt = prompts?.find((p: AiPrompt) => p.category === key);
+                    const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
+                    
+                    return (
+                      <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{label}</h4>
+                          {prompt ? (
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                                {prompt.isActive ? "Actif" : "Inactif"}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">{prompt.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Aucun prompt configuré</span>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          {prompt && (
+                            <Switch
+                              checked={prompt.isActive}
+                              onCheckedChange={() => togglePromptStatus(prompt)}
+                              disabled={updatePromptMutation.isPending}
+                            />
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (prompt) {
+                                openPromptDialog(prompt);
+                              } else {
+                                promptForm.reset({
+                                  name: `${label}`,
+                                  description: `Prompt pour générer ${label.toLowerCase()}`,
+                                  category: key,
+                                  prompt: ""
+                                });
+                                setEditingPrompt(null);
+                                setIsPromptDialogOpen(true);
+                              }
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            {prompt ? "Modifier" : "Créer"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section 4: Analyse des risques */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5" />
+                  <span>Section 4 - Analyse des risques</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Accès illégitime aux données */}
+                  <div>
+                    <h4 className="font-medium mb-3 text-red-600">Accès illégitime aux données</h4>
+                    <div className="grid gap-3">
+                      {['illegitimateAccessImpacts', 'illegitimateAccessThreats', 'illegitimateAccessSources', 'illegitimateAccessMeasures'].map(key => {
+                        const prompt = prompts?.find((p: AiPrompt) => p.category === key);
+                        const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
+                        
+                        return (
+                          <div key={key} className="flex items-center justify-between p-3 border rounded-lg bg-red-50/50">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-sm">{label}</h5>
+                              {prompt ? (
+                                <div className="flex items-center space-x-2 mt-1">
+                                  <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                                    {prompt.isActive ? "Actif" : "Inactif"}
+                                  </Badge>
+                                  <span className="text-sm text-muted-foreground">{prompt.name}</span>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Aucun prompt configuré</span>
+                              )}
+                            </div>
+                            <div className="flex space-x-2">
+                              {prompt && (
+                                <Switch
+                                  checked={prompt.isActive}
+                                  onCheckedChange={() => togglePromptStatus(prompt)}
+                                  disabled={updatePromptMutation.isPending}
+                                />
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (prompt) {
+                                    openPromptDialog(prompt);
+                                  } else {
+                                    promptForm.reset({
+                                      name: `${label}`,
+                                      description: `Prompt pour générer ${label.toLowerCase()}`,
+                                      category: key,
+                                      prompt: ""
+                                    });
+                                    setEditingPrompt(null);
+                                    setIsPromptDialogOpen(true);
+                                  }
+                                }}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                {prompt ? "Modifier" : "Créer"}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Modification non désirée des données */}
+                  <div>
+                    <h4 className="font-medium mb-3 text-orange-600">Modification non désirée des données</h4>
+                    <div className="grid gap-3">
+                      {['dataModificationImpacts', 'dataModificationThreats', 'dataModificationSources', 'dataModificationMeasures'].map(key => {
+                        const prompt = prompts?.find((p: AiPrompt) => p.category === key);
+                        const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
+                        
+                        return (
+                          <div key={key} className="flex items-center justify-between p-3 border rounded-lg bg-orange-50/50">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-sm">{label}</h5>
+                              {prompt ? (
+                                <div className="flex items-center space-x-2 mt-1">
+                                  <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                                    {prompt.isActive ? "Actif" : "Inactif"}
+                                  </Badge>
+                                  <span className="text-sm text-muted-foreground">{prompt.name}</span>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Aucun prompt configuré</span>
+                              )}
+                            </div>
+                            <div className="flex space-x-2">
+                              {prompt && (
+                                <Switch
+                                  checked={prompt.isActive}
+                                  onCheckedChange={() => togglePromptStatus(prompt)}
+                                  disabled={updatePromptMutation.isPending}
+                                />
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (prompt) {
+                                    openPromptDialog(prompt);
+                                  } else {
+                                    promptForm.reset({
+                                      name: `${label}`,
+                                      description: `Prompt pour générer ${label.toLowerCase()}`,
+                                      category: key,
+                                      prompt: ""
+                                    });
+                                    setEditingPrompt(null);
+                                    setIsPromptDialogOpen(true);
+                                  }
+                                }}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                {prompt ? "Modifier" : "Créer"}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Disparition des données */}
+                  <div>
+                    <h4 className="font-medium mb-3 text-blue-600">Disparition des données</h4>
+                    <div className="grid gap-3">
+                      {['dataDisappearanceImpacts', 'dataDisappearanceThreats', 'dataDisappearanceSources', 'dataDisappearanceMeasures'].map(key => {
+                        const prompt = prompts?.find((p: AiPrompt) => p.category === key);
+                        const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
+                        
+                        return (
+                          <div key={key} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50/50">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-sm">{label}</h5>
+                              {prompt ? (
+                                <div className="flex items-center space-x-2 mt-1">
+                                  <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                                    {prompt.isActive ? "Actif" : "Inactif"}
+                                  </Badge>
+                                  <span className="text-sm text-muted-foreground">{prompt.name}</span>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">Aucun prompt configuré</span>
+                              )}
+                            </div>
+                            <div className="flex space-x-2">
+                              {prompt && (
+                                <Switch
+                                  checked={prompt.isActive}
+                                  onCheckedChange={() => togglePromptStatus(prompt)}
+                                  disabled={updatePromptMutation.isPending}
+                                />
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (prompt) {
+                                    openPromptDialog(prompt);
+                                  } else {
+                                    promptForm.reset({
+                                      name: `${label}`,
+                                      description: `Prompt pour générer ${label.toLowerCase()}`,
+                                      category: key,
+                                      prompt: ""
+                                    });
+                                    setEditingPrompt(null);
+                                    setIsPromptDialogOpen(true);
+                                  }
+                                }}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                {prompt ? "Modifier" : "Créer"}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         {/* Diagnostic Questions Management */}
         <TabsContent value="questions" className="space-y-6">
           <div className="flex justify-between items-center">
