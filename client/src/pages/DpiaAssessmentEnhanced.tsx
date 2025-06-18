@@ -482,7 +482,8 @@ export default function DpiaAssessmentEnhanced() {
         subcontracting: { status: "acceptable", measures: "" },
         internationalTransfers: { status: "acceptable", measures: "" }
       },
-      evaluation: {}
+      evaluation: {},
+      actionPlan: []
     }
   });
 
@@ -538,7 +539,8 @@ export default function DpiaAssessmentEnhanced() {
           subcontracting: { status: "acceptable", measures: "" },
           internationalTransfers: { status: "acceptable", measures: "" }
         },
-        evaluation: dpia.evaluation || {}
+        evaluation: dpia.evaluation || {},
+        actionPlan: dpia.actionPlan || []
       };
       form.reset(cleanedData);
     }
@@ -2891,23 +2893,30 @@ export default function DpiaAssessmentEnhanced() {
                         />
 
                         {form.watch(`evaluation.${fieldPrefix}.rating`) === "improvement_planned" && (
-                          <FormField
-                            control={form.control}
-                            name={`evaluation.${fieldPrefix}.additionalMeasures`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Mesures additionnelles préconisées</FormLabel>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder="Décrivez les mesures additionnelles à mettre en place pour améliorer la protection des données..."
-                                    className="min-h-[100px]"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div className="animate-in slide-in-from-top-2 duration-200">
+                            <FormField
+                              control={form.control}
+                              name={`evaluation.${fieldPrefix}.additionalMeasures`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Mesures additionnelles préconisées</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Décrivez les mesures additionnelles à mettre en place pour améliorer la protection des données..."
+                                      className="min-h-[100px]"
+                                      {...field}
+                                      onFocus={(e) => {
+                                        // Prevent automatic scroll to top
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         )}
                       </div>
                     );
@@ -3023,15 +3032,99 @@ export default function DpiaAssessmentEnhanced() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    <div className="border-l-4 border-orange-400 pl-4">
-                      <h4 className="font-medium text-orange-700 mb-2">Actions recommandées</h4>
-                      <ul className="space-y-2 text-sm">
-                        <li>• Finaliser la documentation des mesures de sécurité</li>
-                        <li>• Mettre en place un processus de révision périodique</li>
-                        <li>• Former les équipes aux procédures RGPD</li>
-                        <li>• Planifier des audits de conformité réguliers</li>
-                      </ul>
-                    </div>
+                    {/* Actions recommandées basées sur l'évaluation */}
+                    {(() => {
+                      const evaluationData = form.watch("evaluation") || {};
+                      const additionalMeasures = [];
+                      
+                      // Collect all additional measures from evaluation
+                      Object.keys(evaluationData).forEach(key => {
+                        const section = evaluationData[key];
+                        if (section?.rating === "improvement_planned" && section?.additionalMeasures) {
+                          additionalMeasures.push({
+                            id: key,
+                            measure: section.additionalMeasures,
+                            section: key
+                          });
+                        }
+                      });
+
+                      return (
+                        <div className="border-l-4 border-orange-400 pl-4">
+                          <h4 className="font-medium text-orange-700 mb-4">Actions recommandées</h4>
+                          
+                          {additionalMeasures.length > 0 ? (
+                            <div className="space-y-4">
+                              <p className="text-sm text-gray-600 mb-3">Mesures identifiées lors de l'évaluation :</p>
+                              {additionalMeasures.map((measure, index) => (
+                                <div key={measure.id} className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg space-y-3">
+                                  <div className="font-medium text-sm text-orange-800 dark:text-orange-200">
+                                    {measure.measure}
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <FormField
+                                      control={form.control}
+                                      name={`actionPlan.${index}.responsible`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-xs">Responsable de mise en œuvre</FormLabel>
+                                          <FormControl>
+                                            <Input
+                                              placeholder="Ex: Responsable IT, DPO..."
+                                              className="text-sm"
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                    
+                                    <FormField
+                                      control={form.control}
+                                      name={`actionPlan.${index}.deadline`}
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-xs">Échéance</FormLabel>
+                                          <FormControl>
+                                            <Input
+                                              type="date"
+                                              className="text-sm"
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  {/* Hidden fields to store the measure details */}
+                                  <FormField
+                                    control={form.control}
+                                    name={`actionPlan.${index}.measure`}
+                                    render={({ field }) => (
+                                      <input type="hidden" {...field} value={measure.measure} />
+                                    )}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="space-y-2 text-sm">
+                              <p className="text-gray-600">Actions générales recommandées :</p>
+                              <ul className="space-y-1 ml-4">
+                                <li>• Finaliser la documentation des mesures de sécurité</li>
+                                <li>• Mettre en place un processus de révision périodique</li>
+                                <li>• Former les équipes aux procédures RGPD</li>
+                                <li>• Planifier des audits de conformité réguliers</li>
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                       <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2">Prochaines étapes</h4>
