@@ -397,7 +397,7 @@ export class DatabaseStorage implements IStorage {
       actionPlan: Array.isArray(assessment.actionPlan) ? assessment.actionPlan : []
     };
     
-    const [created] = await db.insert(dpiaAssessments).values(cleanAssessment).returning();
+    const [created] = await db.insert(dpiaAssessments).values([cleanAssessment]).returning();
     return created;
   }
 
@@ -408,16 +408,16 @@ export class DatabaseStorage implements IStorage {
       ...updates,
       updatedAt: new Date(),
       // Clean array fields to ensure proper serialization
-      ...(updates.securityMeasures && {
+      ...(updates.securityMeasures !== undefined && {
         securityMeasures: Array.isArray(updates.securityMeasures) ? updates.securityMeasures : []
       }),
-      ...(updates.customSecurityMeasures && {
+      ...(updates.customSecurityMeasures !== undefined && {
         customSecurityMeasures: Array.isArray(updates.customSecurityMeasures) ? updates.customSecurityMeasures : []
       }),
-      ...(updates.subcontractingMeasures && {
+      ...(updates.subcontractingMeasures !== undefined && {
         subcontractingMeasures: Array.isArray(updates.subcontractingMeasures) ? updates.subcontractingMeasures : []
       }),
-      ...(updates.internationalTransfersMeasures && {
+      ...(updates.internationalTransfersMeasures !== undefined && {
         internationalTransfersMeasures: Array.isArray(updates.internationalTransfersMeasures) ? updates.internationalTransfersMeasures : []
       })
     };
