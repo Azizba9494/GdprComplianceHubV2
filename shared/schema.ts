@@ -272,6 +272,15 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
   dpoAdvice: text("dpo_advice"),
   controllerValidation: text("controller_validation"),
   
+  // Part 6: Evaluation section with 18 criteria
+  evaluation: jsonb("evaluation").$type<{
+    [key: string]: {
+      rating?: "unsatisfactory" | "improvement_planned" | "satisfactory";
+      justification?: string;
+      additionalMeasures?: string;
+    }
+  }>(),
+  
   status: text("status").notNull().default("draft"), // draft, inprogress, completed, validated
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
