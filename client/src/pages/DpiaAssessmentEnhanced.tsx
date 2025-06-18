@@ -365,7 +365,30 @@ export default function DpiaAssessmentEnhanced() {
 
   const form = useForm<any>({
     resolver: zodResolver(dpiaFormSchema),
-    mode: "onChange"
+    mode: "onChange",
+    defaultValues: {
+      securityMeasures: [],
+      customSecurityMeasures: [],
+      subcontractingMeasures: [],
+      internationalTransfersMeasures: [],
+      riskScenarios: {},
+      proportionalityEvaluation: {
+        finalities: { status: "acceptable", measures: "" },
+        legalBasis: { status: "acceptable", measures: "" },
+        dataMinimization: { status: "acceptable", measures: "" },
+        dataQuality: { status: "acceptable", measures: "" },
+        retentionPeriods: { status: "acceptable", measures: "" }
+      },
+      rightsProtectionEvaluation: {
+        information: { status: "acceptable", measures: "" },
+        consent: { status: "acceptable", measures: "" },
+        accessPortability: { status: "acceptable", measures: "" },
+        rectificationErasure: { status: "acceptable", measures: "" },
+        limitationOpposition: { status: "acceptable", measures: "" },
+        subcontracting: { status: "acceptable", measures: "" },
+        internationalTransfers: { status: "acceptable", measures: "" }
+      }
+    }
   });
 
   // Auto-save functionality
@@ -1714,7 +1737,7 @@ export default function DpiaAssessmentEnhanced() {
                       </Button>
                     </div>
 
-                    {Array.isArray(form.watch("internationalTransfersMeasures")) ? form.watch("internationalTransfersMeasures").map((_, index) => (
+                    {(form.watch("internationalTransfersMeasures") || []).map((_: any, index: number) => (
                       <Card key={index} className="p-4">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-medium">Transfert {index + 1}</h4>
@@ -1878,7 +1901,7 @@ export default function DpiaAssessmentEnhanced() {
                                   size="sm"
                                   onClick={() => addSecurityMeasure(measure)}
                                   className="justify-start h-auto p-3 text-left"
-                                  disabled={form.watch("securityMeasures")?.some(m => m.id === measure.id)}
+                                  disabled={form.watch("securityMeasures")?.some((m: any) => m.id === measure.id)}
                                 >
                                   <div>
                                     <div className="font-medium text-sm">{measure.name}</div>
@@ -1908,7 +1931,7 @@ export default function DpiaAssessmentEnhanced() {
                         </p>
                       ) : (
                         <div className="space-y-4">
-                          {form.watch("securityMeasures")?.map((measure, index) => (
+                          {form.watch("securityMeasures")?.map((measure: any, index: number) => (
                             <Card key={measure.id} className="p-4">
                               <div className="flex justify-between items-start mb-3">
                                 <div>
@@ -2008,7 +2031,7 @@ export default function DpiaAssessmentEnhanced() {
                         </p>
                       ) : (
                         <div className="space-y-4">
-                          {form.watch("customSecurityMeasures")?.map((_, index) => (
+                          {form.watch("customSecurityMeasures")?.map((_: any, index: number) => (
                             <Card key={index} className="p-4">
                               <div className="flex justify-between items-center mb-4">
                                 <h4 className="font-medium">Mesure personnalisée {index + 1}</h4>
