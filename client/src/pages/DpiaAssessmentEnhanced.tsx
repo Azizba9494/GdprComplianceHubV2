@@ -1686,18 +1686,7 @@ export default function DpiaAssessmentEnhanced() {
                       </Card>
                     ))}
 
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => generateWithAI.mutate({ field: "subcontractingMeasures" })}
-                        disabled={isGenerating}
-                      >
-                        <Brain className="h-4 w-4 mr-2" />
-                        Générer une proposition par l'IA
-                      </Button>
-                    </div>
+                    
                   </div>
                 </CardContent>
               </Card>
@@ -1848,18 +1837,7 @@ export default function DpiaAssessmentEnhanced() {
                       </Card>
                     ))}
 
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => generateWithAI.mutate({ field: "internationalTransfersMeasures" })}
-                        disabled={isGenerating}
-                      >
-                        <Brain className="h-4 w-4 mr-2" />
-                        Générer une proposition par l'IA
-                      </Button>
-                    </div>
+                    
                   </div>
                 </CardContent>
               </Card>

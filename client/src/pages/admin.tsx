@@ -89,6 +89,46 @@ const promptCategories = {
   chatbot: "Chatbot",
 };
 
+// DPIA-specific prompt subcategories
+const dpiaPromptSubcategories = {
+  // Section 1: Information générale
+  generalDescription: "Description générale",
+  purposes: "Finalités du traitement", 
+  dataController: "Responsable du traitement",
+  dataProcessors: "Sous-traitants",
+  applicableReferentials: "Référentiels applicables",
+  
+  // Section 2: Justifications
+  finalitiesJustification: "Justification des finalités",
+  dataMinimization: "Justification de la minimisation des données",
+  retentionJustification: "Justification des durées de conservation",
+  legalBasisJustification: "Justification de la base légale choisie",
+  
+  // Section 3: Mesures techniques et organisationnelles
+  dataQualityMeasures: "Mesures de qualité des données",
+  informationMeasures: "Mesures d'information",
+  consentMeasures: "Mesures pour le consentement",
+  accessMeasures: "Mesures pour l'accès et la portabilité",
+  rectificationMeasures: "Mesures pour la rectification et l'effacement",
+  oppositionMeasures: "Mesures pour la limitation et l'opposition",
+  
+  // Section 4: Analyse des risques
+  illegitimateAccessImpacts: "Impacts - Accès illégitime aux données",
+  illegitimateAccessThreats: "Menaces - Accès illégitime aux données", 
+  illegitimateAccessSources: "Sources de risque - Accès illégitime aux données",
+  illegitimateAccessMeasures: "Mesures existantes - Accès illégitime aux données",
+  
+  dataModificationImpacts: "Impacts - Modification non désirée des données",
+  dataModificationThreats: "Menaces - Modification non désirée des données",
+  dataModificationSources: "Sources de risque - Modification non désirée des données", 
+  dataModificationMeasures: "Mesures existantes - Modification non désirée des données",
+  
+  dataDisappearanceImpacts: "Impacts - Disparition des données",
+  dataDisappearanceThreats: "Menaces - Disparition des données",
+  dataDisappearanceSources: "Sources de risque - Disparition des données",
+  dataDisappearanceMeasures: "Mesures existantes - Disparition des données"
+};
+
 const categoryIcons = {
   diagnostic: ClipboardList,
   records: FileText,
@@ -548,6 +588,10 @@ export default function Admin() {
           <TabsTrigger value="prompts" className="flex items-center space-x-2">
             <Brain className="w-4 h-4" />
             <span>Prompts IA</span>
+          </TabsTrigger>
+          <TabsTrigger value="dpia-prompts" className="flex items-center space-x-2">
+            <BarChart3 className="w-4 h-4" />
+            <span>Prompts AIPD</span>
           </TabsTrigger>
           <TabsTrigger value="questions" className="flex items-center space-x-2">
             <ClipboardList className="w-4 h-4" />
