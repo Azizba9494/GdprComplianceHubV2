@@ -2073,7 +2073,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.illegitimateAccess.impacts"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'impacts')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Décrivez les conséquences possibles d'un accès non autorisé aux données..."
@@ -2091,7 +2103,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.illegitimateAccess.threats"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Menaces identifiées</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Menaces identifiées</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'threats')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Listez les menaces qui pourraient conduire à un accès illégitime..."
@@ -2109,7 +2133,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.illegitimateAccess.sources"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Sources de risque</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Sources de risque</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'sources')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Identifiez les sources potentielles de ce risque..."
@@ -2127,7 +2163,19 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.illegitimateAccess.measures"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <div className="flex items-center justify-between mb-2">
+                                <FormLabel>Mesures existantes ou prévues</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'measures')}
+                                  disabled={isGenerating}
+                                >
+                                  <Brain className="h-4 w-4 mr-1" />
+                                  IA
+                                </Button>
+                              </div>
                               <FormControl>
                                 <Textarea
                                   placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."

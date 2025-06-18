@@ -626,9 +626,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/dpia-evaluations", async (req, res) => {
     try {
-      const evaluation = await storage.createDpiaEvaluation(req.body);
+      const evaluationData = {
+        ...req.body,
+        criteriaAnswers: JSON.stringify(req.body.criteriaAnswers || {}),
+        cnilListMatch: req.body.cnilListMatch || null,
+        largeScaleEstimate: req.body.largeScaleEstimate || null
+      };
+      const evaluation = await storage.createDpiaEvaluation(evaluationData);
       res.json(evaluation);
     } catch (error: any) {
+      console.error('Error creating DPIA evaluation:', error);
       res.status(500).json({ error: error.message });
     }
   });
