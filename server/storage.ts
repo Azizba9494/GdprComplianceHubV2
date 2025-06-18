@@ -78,7 +78,10 @@ export interface IStorage {
   // Privacy Policies
   getPrivacyPolicies(companyId: number): Promise<PrivacyPolicy[]>;
   getActivePrivacyPolicy(companyId: number): Promise<PrivacyPolicy | undefined>;
+  getPrivacyPolicy(id: number): Promise<PrivacyPolicy | undefined>;
   createPrivacyPolicy(policy: InsertPrivacyPolicy): Promise<PrivacyPolicy>;
+  updatePrivacyPolicy(id: number, updates: Partial<InsertPrivacyPolicy>): Promise<PrivacyPolicy>;
+  deletePrivacyPolicy(id: number): Promise<void>;
   
   // Data Breaches
   getDataBreaches(companyId: number): Promise<DataBreach[]>;
@@ -323,9 +326,23 @@ export class DatabaseStorage implements IStorage {
     return policy || undefined;
   }
 
+  async getPrivacyPolicy(id: number): Promise<PrivacyPolicy | undefined> {
+    const [policy] = await db.select().from(privacyPolicies).where(eq(privacyPolicies.id, id));
+    return policy || undefined;
+  }
+
   async createPrivacyPolicy(policy: InsertPrivacyPolicy): Promise<PrivacyPolicy> {
     const [created] = await db.insert(privacyPolicies).values(policy).returning();
     return created;
+  }
+
+  async updatePrivacyPolicy(id: number, updates: Partial<InsertPrivacyPolicy>): Promise<PrivacyPolicy> {
+    const [updated] = await db.update(privacyPolicies).set(updates).where(eq(privacyPolicies.id, id)).returning();
+    return updated;
+  }
+
+  async deletePrivacyPolicy(id: number): Promise<void> {
+    await db.delete(privacyPolicies).where(eq(privacyPolicies.id, id));
   }
 
   // Data Breaches

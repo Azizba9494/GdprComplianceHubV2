@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ExpandableText } from "@/components/ui/expandable-text";
-import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2 } from "lucide-react";
+import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const COMPANY_ID = 1; // Mock company ID
 
@@ -42,6 +43,29 @@ export default function PrivacyPolicy() {
       toast({
         title: "Erreur",
         description: error.message || "Impossible de générer la politique de confidentialité",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (policyId: number) => {
+      const response = await fetch(`/api/privacy-policies/${policyId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Erreur lors de la suppression");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/privacy-policies'] });
+      toast({
+        title: "Politique supprimée",
+        description: "La politique de confidentialité a été supprimée avec succès.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer la politique",
         variant: "destructive",
       });
     },
@@ -226,6 +250,35 @@ export default function PrivacyPolicy() {
                       <Download className="w-4 h-4 mr-2" />
                       Télécharger
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Supprimer
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer la politique</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Êtes-vous sûr de vouloir supprimer cette politique de confidentialité ? Cette action est irréversible.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMutation.mutate(policy.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Supprimer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}
@@ -263,7 +316,13 @@ export default function PrivacyPolicy() {
             <div className="p-6 overflow-y-auto max-h-[60vh]">
               <div 
                 className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: selectedPolicy.content }}
+                dangerouslySetInnerHTML={{ 
+                  __html: selectedPolicy.content
+                    .replace(/\n/g, '<br/>')
+                    .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-6 mb-4">$1</h1>')
+                    .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-5 mb-3">$1</h2>')
+                    .replace(/^### (.*$)/gm, '<h3 class="text-lg font-medium mt-4 mb-2">$1</h3>')
+                }}
               />
             </div>
           </div>

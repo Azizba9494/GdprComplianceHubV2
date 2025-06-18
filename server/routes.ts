@@ -329,6 +329,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/privacy-policies/:id", async (req, res) => {
+    try {
+      const policyId = parseInt(req.params.id);
+      await storage.deletePrivacyPolicy(policyId);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/privacy-policies/generate", async (req, res) => {
     try {
       const { companyId } = req.body;
