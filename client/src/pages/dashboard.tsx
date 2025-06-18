@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, FileDown, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import RecentActivity from "@/components/dashboard/recent-activity";
 
 // Mock company ID - in a real app, this would come from authentication
 const COMPANY_ID = 1;
@@ -113,60 +114,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Activité récente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Politique de confidentialité générée</span>
-                  {" "}pour votre site web
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Il y a 2 heures</p>
-              </div>
-              <Button variant="ghost" size="sm">
-                Voir
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Demande d'accès traitée</span>
-                  {" "}de client@example.com
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Il y a 1 jour</p>
-              </div>
-              <Button variant="ghost" size="sm">
-                Voir
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">Registre des traitements mis à jour</span>
-                  {" "}- Nouveau traitement ajouté
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Il y a 3 jours</p>
-              </div>
-              <Button variant="ghost" size="sm">
-                Voir
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Recent Activity - Dynamic */}
+      <RecentActivity companyId={COMPANY_ID} actions={actions} requests={requests} records={records} />
     </div>
   );
 }

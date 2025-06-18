@@ -300,8 +300,24 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
       const response = await result.response;
       const text = response.text();
 
+      // Clean response by removing markdown formatting
+      const cleanedText = text
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove **bold**
+        .replace(/###\s*(.*?)$/gm, '$1') // Remove ### headers
+        .replace(/##\s*(.*?)$/gm, '$1')  // Remove ## headers
+        .replace(/^\*\s+/gm, '• ')       // Convert * bullets to •
+        .replace(/^\d+\.\s+/gm, (match, offset, string) => {
+          const lineStart = string.lastIndexOf('\n', offset) + 1;
+          const isStartOfLine = offset === lineStart;
+          return isStartOfLine ? match : match;
+        })
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n\n'); // Add spacing between paragraphs
+
       return {
-        response: text || 'Désolé, je n\'ai pas pu générer une réponse.'
+        response: cleanedText || 'Désolé, je n\'ai pas pu générer une réponse.'
       };
     } catch (error: any) {
       console.error('Gemini API error:', error);

@@ -21,6 +21,35 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
+  // Delete DPIA mutation
+  const deleteDpiaMutation = useMutation({
+    mutationFn: async (dpiaId: number) => {
+      const response = await fetch(`/api/dpia/${dpiaId}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de l'AIPD");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "AIPD supprimée",
+        description: "L'analyse d'impact a été supprimée avec succès.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${company?.id}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer l'AIPD",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Create evaluation mutation
   const createEvaluationMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -596,6 +625,20 @@ export default function DpiaList() {
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Continuer
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm('Êtes-vous sûr de vouloir supprimer cette AIPD ?')) {
+                                  // Delete mutation to be implemented
+                                  deleteDpiaMutation.mutate(dpia.id);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Supprimer
                             </Button>
                           </div>
                         </TableCell>

@@ -495,6 +495,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/dpia/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteDpiaAssessment(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // AI-assisted response generation for DPIA fields
   app.post("/api/dpia/ai-assist", async (req, res) => {
     try {

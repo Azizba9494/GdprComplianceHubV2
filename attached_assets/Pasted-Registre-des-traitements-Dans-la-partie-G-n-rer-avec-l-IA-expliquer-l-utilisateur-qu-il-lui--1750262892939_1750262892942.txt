@@ -1,0 +1,15 @@
+Registre des traitements : 
+Dans la partie “Générer avec l’IA”, expliquer à l’utilisateur qu’il lui suffit simplement de renseigner les cases “Type de responsabilité” et “Description de l’activité” pour que l’IA génère un projet de fiche de traitement. Ce sont les deux seules cases obligatoires pour laquelle doit figurer “*” Lui expliquer peut toutefois renseigner les autres cases afin de fournir plus d’information à l’IA et obtenir une fiche de traitement plus complète.
+Dans la partie créer manuellement, permettre au client de compléter également les informations suivantes : Catégories de données, Destinataires, Mesures de sécurité à partir d’une liste de choix ou d’un texte libre.
+Analyses d’impact : 
+Dans l’onglet en cours, ajouter un bouton supprimer pour chacune des analyses d’impacts en cours, afin de permettre au client de supprimer les analyses qu’il souhaite supprimer. 
+Dans l’onglet nouvelle AIPD, dans la partie “Risques”, le bouton “générer une analyse de risque avec l’IA” ne doit pas être un bouton unique, mais doit se retrouver sous l’ensemble des questions suivantes, pour chacune des thématiques : 
+Impacts potentiels sur les personnes concernées
+Menaces identifiées
+Sources de risque
+Mesures existantes ou prévues
+Pour chacun de ces boutons, il faut créer un prompt spécifique qui se retrouvera dans la partie administration. 
+Par exemple, pour la partie accès illégitime aux données / impact potentiels sur les personnes concernées, il faut définir un prompt spécifique dans la partie administration. L’objet de ce prompt sera de demander à l’IA de 
+Les titres des textes générés par IA contiennent souvent des ** ** ou des ### . Expliques moi pourquoi, et fais en sorte que cela ne soit plus le cas. 
+Les réponses apportées par le chatbot sont souvent longues et affichées en un bloc. Est-il possible de sauter des lignes, ajouter des sous-parties lorsque la réponse est longue ? Si oui, fais-le.
+Dans le tableau de bord, la partie “activité récente” ainsi que la partie “progression par domaine”  semblent ne pas fonctionner de manière dynamique. Corriges le. 

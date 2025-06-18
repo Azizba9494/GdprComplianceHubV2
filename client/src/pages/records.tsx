@@ -730,6 +730,9 @@ Informations complémentaires: ${data.additionalInfo}
                               rows={3}
                             />
                           </FormControl>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            * Champ obligatoire pour la génération IA. Vous pouvez renseigner les autres champs pour obtenir une fiche plus complète.
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
