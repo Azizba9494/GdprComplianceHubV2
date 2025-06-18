@@ -496,6 +496,136 @@ Question: {{message}}`;
   }
 
   async generatePrivacyPolicy(company: any, processingRecords: any[]): Promise<{ content: string }> {
+    const client = await this.getClient();
+    
+    try {
+      const model = client.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
+        generationConfig: {
+          maxOutputTokens: 8192,
+          temperature: 0.3,
+        }
+      });
+
+      const ragDocuments = await this.getRagDocuments();
+      const ragContext = ragDocuments && ragDocuments.length > 0 
+        ? `\n\nDocuments de référence CNIL:\n${ragDocuments.join('\n\n---\n\n')}` 
+        : '';
+
+      const prompt = `Vous êtes un expert juridique en protection des données. Générez une politique de confidentialité COMPLÈTE et DÉTAILLÉE conforme au RGPD pour l'entreprise suivante.
+
+ENTREPRISE:
+- Nom: ${company.name}
+- Secteur: ${company.sector || 'Non spécifié'}
+- Taille: ${company.size || 'Non spécifiée'}
+- Adresse: ${company.address || 'Non spécifiée'}
+
+TRAITEMENTS DE DONNÉES:
+${processingRecords.map((record: any) => `
+• ${record.name}
+  Finalité: ${record.purpose}
+  Base légale: ${record.legalBasis}
+  Données: ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : 'Non spécifiées'}
+  Destinataires: ${Array.isArray(record.recipients) ? record.recipients.join(', ') : 'Non spécifiés'}
+  Conservation: ${record.retention || 'Non spécifiée'}
+`).join('')}
+
+${ragContext}
+
+INSTRUCTIONS IMPORTANTES:
+- Générez une politique d'au moins 3000 mots
+- Incluez TOUTES les sections obligatoires du RGPD
+- Adaptez le contenu aux traitements réels de l'entreprise
+- Utilisez un langage clair et accessible
+- Donnez des exemples concrets
+
+STRUCTURE OBLIGATOIRE:
+
+# POLITIQUE DE CONFIDENTIALITÉ
+
+## 1. IDENTITÉ DU RESPONSABLE DE TRAITEMENT
+[Détails complets avec coordonnées, représentant légal, etc.]
+
+## 2. DONNÉES PERSONNELLES COLLECTÉES
+[Liste détaillée par traitement avec exemples]
+
+## 3. FINALITÉS ET BASES LÉGALES
+[Pour chaque traitement, expliquer la finalité et la base légale RGPD]
+
+## 4. DESTINATAIRES ET TRANSFERTS
+[Qui peut accéder aux données, dans quelles conditions]
+
+## 5. DURÉES DE CONSERVATION
+[Périodes précises par type de données]
+
+## 6. VOS DROITS RGPD
+[Explication détaillée de chaque droit avec modalités d'exercice]
+
+## 7. SÉCURITÉ DES DONNÉES
+[Mesures techniques et organisationnelles]
+
+## 8. COOKIES ET TRACEURS
+[Si applicable selon l'activité]
+
+## 9. MODIFICATIONS
+[Comment les changements sont communiqués]
+
+## 10. CONTACT
+[DPO ou référent protection des données]
+
+Développez chaque section en détail avec des informations pratiques et juridiquement exactes.`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text();
+
+      // Améliorer le nettoyage du texte
+      let cleanResponse = text
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/^###\s+/gm, '')
+        .replace(/^##\s+/gm, '')
+        .replace(/^\*\s+/gm, '• ')
+        .replace(/^\-\s+/gm, '• ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      // Vérifier la longueur et regénérer si nécessaire
+      if (cleanResponse.length < 2000) {
+        console.log('Politique trop courte, régénération...');
+        
+        const detailedPrompt = `${prompt}\n\nIMPORTANT: La politique précédente était trop courte. Générez une version COMPLÈTE et DÉTAILLÉE d'au moins 3000 mots avec tous les détails juridiques et pratiques nécessaires.`;
+        
+        const retryResult = await model.generateContent(detailedPrompt);
+        const retryResponse = await retryResult.response;
+        const retryText = retryResponse.text();
+        
+        if (retryText && retryText.length > cleanResponse.length) {
+          cleanResponse = retryText
+            .replace(/```json/g, '')
+            .replace(/```/g, '')
+            .replace(/\*\*(.*?)\*\*/g, '$1')
+            .replace(/^###\s+/gm, '')
+            .replace(/^##\s+/gm, '')
+            .replace(/^\*\s+/gm, '• ')
+            .replace(/^\-\s+/gm, '• ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        }
+      }
+
+      return {
+        content: cleanResponse || 'Erreur lors de la génération de la politique de confidentialité.'
+      };
+    } catch (error: any) {
+      console.error('Gemini API error:', error);
+      throw new Error(`Erreur Gemini API: ${error.message}`);
+    }
+  }
+
+  // Version originale conservée pour compatibilité
+  async generatePrivacyPolicyOriginal(company: any, processingRecords: any[]): Promise<{ content: string }> {
     const prompt = `Générez une politique de confidentialité conforme au RGPD pour cette entreprise française.
 
 Informations de l'entreprise: ${JSON.stringify(company)}
