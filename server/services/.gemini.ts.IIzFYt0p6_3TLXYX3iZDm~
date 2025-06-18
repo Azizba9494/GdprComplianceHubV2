@@ -4,43 +4,6 @@ import { storage } from '../storage';
 export class GeminiService {
   constructor() {}
 
-  private async loadRagDocuments(): Promise<string[]> {
-    try {
-      // Cette méthode charge les documents RAG depuis la base de données
-      const ragDocuments: string[] = [];
-      
-      // Get all active prompts
-      const allPrompts = await storage.getAiPrompts();
-      const activePrompts = allPrompts.filter(p => p.isActive);
-      
-      // For each active prompt, get associated documents
-      for (const prompt of activePrompts) {
-        try {
-          const promptDocuments = await storage.getPromptDocuments(prompt.id);
-          if (promptDocuments.length > 0) {
-            const documentIds = promptDocuments
-              .sort((a, b) => a.priority - b.priority)
-              .map(pd => pd.documentId);
-            
-            for (const docId of documentIds) {
-              const document = await storage.getRagDocument(docId);
-              if (document && document.isActive && !ragDocuments.includes(document.content)) {
-                ragDocuments.push(document.content);
-              }
-            }
-          }
-        } catch (error) {
-          console.error(`Error loading documents for prompt ${prompt.id}:`, error);
-        }
-      }
-      
-      return ragDocuments;
-    } catch (error) {
-      console.error('Error loading RAG documents:', error);
-      return [];
-    }
-  }
-
   private async getClient(): Promise<GoogleGenerativeAI> {
     // Try to get active LLM configuration
     try {
@@ -257,6 +220,7 @@ Répondez de manière professionnelle, précise et directement applicable. Citez
       likelihood: string;
     }>;
   }> {
+    const ragDocuments = await this.loadRagDocuments();
     const knowledgeBase = ragDocuments && ragDocuments.length > 0 ? 
       `\n\nBase de connaissances CNIL:\n${ragDocuments.join('\n\n---\n\n')}` : '';
 
