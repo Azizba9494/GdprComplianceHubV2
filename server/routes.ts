@@ -551,25 +551,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI-assisted response generation for DPIA fields
   app.post("/api/dpia/ai-assist", async (req, res) => {
     try {
-      const { message, processingRecord, field, riskType, scenario } = req.body;
+      const { questionField, companyId, existingDpiaData } = req.body;
       
-      // Get specific prompt for this field and scenario
-      let promptCategory = 'dpia';
-      if (field === 'risks' && scenario && riskType) {
-        promptCategory = `dpia_${scenario}_${riskType}`;
+      console.log("[DPIA AI-ASSIST] Request:", { questionField, companyId });
+      
+      // Map questionField to prompt name
+      const fieldToPromptMap: Record<string, string> = {
+        'generalDescription': 'Description générale',
+        'processingPurposes': 'Finalités du traitement',
+        'dataController': 'Responsable de traitement',
+        'dataProcessors': 'Sous-traitants',
+        'applicableReferentials': 'Référentiels applicables',
+        'personalDataProcessed': 'Données personnelles traitées',
+        'personalDataCategories': 'Catégories de données',
+        'finalitiesJustification': 'Justification finalités',
+        'dataMinimization': 'Minimisation des données',
+        'retentionJustification': 'Justification conservation',
+        'legalBasisJustification': 'Justification base légale',
+        'dataQualityJustification': 'Justification qualité données',
+        'rightsInformation': 'Mesures information',
+        'rightsConsent': 'Mesures consentement',
+        'rightsAccess': 'Mesures accès portabilité',
+        'rightsRectification': 'Mesures rectification effacement',
+        'rightsOpposition': 'Mesures limitation opposition',
+        'subcontractingMeasures': 'Mesures sous-traitance',
+        'internationalTransfersMeasures': 'Mesures transferts internationaux'
+      };
+      
+      const promptName = fieldToPromptMap[questionField];
+      if (!promptName) {
+        console.log("[DPIA AI-ASSIST] No prompt mapping found for field:", questionField);
+        return res.status(400).json({ error: "Champ non supporté pour la génération IA" });
       }
       
-      const response = await geminiService.getChatbotResponse(message, {
-        processingRecord,
-        field,
-        riskType,
-        scenario,
-        context: "dpia",
-        promptCategory
-      });
+      // Get the specific prompt from database
+      const aiPrompt = await storage.getAiPromptByName(promptName);
+      if (!aiPrompt) {
+        console.log("[DPIA AI-ASSIST] No prompt found in database for:", promptName);
+        return res.status(404).json({ error: "Prompt IA non trouvé pour ce champ" });
+      }
       
+      console.log("[DPIA AI-ASSIST] Using prompt:", aiPrompt.name, "- Length:", aiPrompt.prompt.length);
+      
+      // Get company info for context
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+      
+      // Build context for AI
+      const context = {
+        company: {
+          name: company.name,
+          sector: company.sector,
+          size: company.size
+        },
+        existingData: existingDpiaData,
+        field: questionField
+      };
+      
+      // Use the custom prompt with Gemini
+      const response = await geminiService.generateDpiaResponse(
+        aiPrompt.prompt,
+        context,
+        []
+      );
+      
+      console.log("[DPIA AI-ASSIST] Response generated successfully");
       res.json(response);
+      
     } catch (error: any) {
+      console.error("[DPIA AI-ASSIST] Error:", error);
       res.status(500).json({ error: error.message });
     }
   });

@@ -97,6 +97,7 @@ export interface IStorage {
   
   // AI Prompts
   getAiPrompts(): Promise<AiPrompt[]>;
+  getAiPromptByName(name: string): Promise<AiPrompt | undefined>;
   getActivePromptByCategory(category: string): Promise<AiPrompt | undefined>;
   createAiPrompt(prompt: InsertAiPrompt): Promise<AiPrompt>;
   updateAiPrompt(id: number, updates: Partial<InsertAiPrompt>): Promise<AiPrompt>;
@@ -433,6 +434,11 @@ export class DatabaseStorage implements IStorage {
   // AI Prompts
   async getAiPrompts(): Promise<AiPrompt[]> {
     return await db.select().from(aiPrompts).orderBy(aiPrompts.category, aiPrompts.name);
+  }
+
+  async getAiPromptByName(name: string): Promise<AiPrompt | undefined> {
+    const [prompt] = await db.select().from(aiPrompts).where(and(eq(aiPrompts.name, name), eq(aiPrompts.isActive, true)));
+    return prompt;
   }
 
   async getActivePromptByCategory(category: string): Promise<AiPrompt | undefined> {
