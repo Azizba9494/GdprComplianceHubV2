@@ -871,6 +871,12 @@ Générez une DPIA complète selon la structure demandée.`;
   }> {
     try {
       console.log('[PROMPT OPTIMIZATION] Starting with Gemini 2.5 Flash...');
+      console.log('[PROMPT OPTIMIZATION] Prompt details:', {
+        id: prompt.id,
+        name: prompt.name,
+        category: prompt.category,
+        promptLength: prompt.prompt?.length || 0
+      });
       
       const client = await this.getClient();
       const model = client.getGenerativeModel({ 
@@ -934,10 +940,15 @@ IMPORTANT: Structurez votre réponse exactement comme suit:
 2. [Deuxième amélioration apportée]
 3. [Troisième amélioration apportée]`;
 
+      console.log('[PROMPT OPTIMIZATION] Sending request to Gemini...');
       const response = await model.generateContent(analysisPrompt);
       const responseText = response.response.text();
       
-      console.log('[PROMPT OPTIMIZATION] Gemini response received, parsing structured response...');
+      console.log('[PROMPT OPTIMIZATION] Gemini response received');
+      console.log('[PROMPT OPTIMIZATION] Response length:', responseText.length);
+      console.log('[PROMPT OPTIMIZATION] Response preview:', responseText.substring(0, 200) + '...');
+      
+      console.log('[PROMPT OPTIMIZATION] Parsing structured response...');
       
       // Parse the structured response
       const analysisMatch = responseText.match(/=== ANALYSE ===\s*([\s\S]*?)(?=\s*=== |$)/);
