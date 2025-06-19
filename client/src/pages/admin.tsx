@@ -383,15 +383,22 @@ export default function Admin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ improvementType })
-      }).then(res => res.json()),
+      }).then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || `Erreur HTTP ${res.status}`);
+        }
+        return res.json();
+      }),
     onSuccess: (data) => {
       setOptimizationDialog(prev => ({ ...prev, result: data }));
       toast({ title: "Analyse d'optimisation terminée avec succès" });
     },
     onError: (error: any) => {
+      console.error('Optimization error:', error);
       toast({ 
         title: "Erreur lors de l'optimisation", 
-        description: error.message || "Une erreur est survenue",
+        description: error.message || "Une erreur est survenue lors de l'optimisation",
         variant: "destructive" 
       });
     }
@@ -512,16 +519,26 @@ export default function Admin() {
   // Apply optimized prompt
   const applyOptimizedPrompt = () => {
     if (optimizationDialog.prompt && optimizationDialog.result?.optimizedPrompt) {
-      const updatedData = {
-        ...optimizationDialog.prompt,
-        prompt: optimizationDialog.result.optimizedPrompt,
-        description: optimizationDialog.prompt.description + " (Optimisé par IA)"
-      };
-      
-      updatePromptMutation.mutate({ 
-        id: optimizationDialog.prompt.id, 
-        data: updatedData 
-      });
+      // If we're in edit mode, update the form
+      if (editingPrompt && editingPrompt.id === optimizationDialog.prompt.id) {
+        promptForm.setValue('prompt', optimizationDialog.result.optimizedPrompt);
+        promptForm.setValue('description', 
+          (promptForm.getValues('description') || '') + " (Optimisé par IA)"
+        );
+        toast({ title: "Prompt optimisé appliqué au formulaire" });
+      } else {
+        // Otherwise update directly in database
+        const updatedData = {
+          ...optimizationDialog.prompt,
+          prompt: optimizationDialog.result.optimizedPrompt,
+          description: optimizationDialog.prompt.description + " (Optimisé par IA)"
+        };
+        
+        updatePromptMutation.mutate({ 
+          id: optimizationDialog.prompt.id, 
+          data: updatedData 
+        });
+      }
       
       setOptimizationDialog({ open: false, prompt: null, type: 'general', result: null });
     }
@@ -801,7 +818,31 @@ export default function Admin() {
                       name="prompt"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Contenu du prompt</FormLabel>
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Contenu du prompt</FormLabel>
+                            {editingPrompt && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOptimizePrompt(editingPrompt, 'general')}
+                                disabled={optimizeMutation.isPending}
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
+                              >
+                                {optimizeMutation.isPending ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Optimisation...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Optimiser avec IA
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
                           <FormControl>
                             <Textarea
                               placeholder="Rédigez le prompt IA ici..."
