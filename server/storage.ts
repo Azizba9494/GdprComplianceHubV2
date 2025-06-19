@@ -290,6 +290,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(processingRecords).where(eq(processingRecords.companyId, companyId)).orderBy(desc(processingRecords.createdAt));
   }
 
+  async getProcessingRecord(id: number): Promise<ProcessingRecord | undefined> {
+    const [record] = await db.select().from(processingRecords).where(eq(processingRecords.id, id));
+    return record;
+  }
+
   async createProcessingRecord(record: InsertProcessingRecord): Promise<ProcessingRecord> {
     const [created] = await db.insert(processingRecords).values(record).returning();
     return created;

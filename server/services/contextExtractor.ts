@@ -94,12 +94,12 @@ export class ContextExtractor {
         id: processingRecord.id,
         name: processingRecord.name,
         purpose: processingRecord.purpose,
-        dataCategories: processingRecord.dataCategories || '',
-        recipients: processingRecord.recipients || '',
-        legalBasis: processingRecord.legalBasis || '',
-        retentionPeriod: processingRecord.retentionPeriod || '',
+        dataCategories: processingRecord.dataCategories && typeof processingRecord.dataCategories === 'string' ? processingRecord.dataCategories : '',
+        recipients: processingRecord.recipients && typeof processingRecord.recipients === 'string' ? processingRecord.recipients : '',
+        legalBasis: processingRecord.legalBasis && typeof processingRecord.legalBasis === 'string' ? processingRecord.legalBasis : '',
+        retentionPeriod: processingRecord.retentionPeriod && typeof processingRecord.retentionPeriod === 'string' ? processingRecord.retentionPeriod : '',
         isInternational: processingRecord.isInternational || false,
-        securityMeasures: processingRecord.securityMeasures || '',
+        securityMeasures: processingRecord.securityMeasures && typeof processingRecord.securityMeasures === 'string' ? processingRecord.securityMeasures : '',
         riskLevel: this.assessProcessingRisk(processingRecord)
       } : undefined,
       relatedProcessingRecords: relatedRecords,
@@ -163,7 +163,7 @@ export class ContextExtractor {
       .map(record => ({
         name: record.name,
         purpose: record.purpose,
-        dataCategories: record.dataCategories || '',
+        dataCategories: record.dataCategories && typeof record.dataCategories === 'string' ? record.dataCategories : '',
         similarity: this.calculateSimilarity(currentRecord, record)
       }))
       .filter(record => record.similarity > 0.3)
@@ -187,8 +187,9 @@ export class ContextExtractor {
       factors += 0.4;
     }
 
-    // Data categories similarity
-    if (record1.dataCategories && record2.dataCategories) {
+    // Data categories similarity - handle null values
+    if (record1.dataCategories && record2.dataCategories && 
+        typeof record1.dataCategories === 'string' && typeof record2.dataCategories === 'string') {
       const data1 = record1.dataCategories.toLowerCase();
       const data2 = record2.dataCategories.toLowerCase();
       const commonWords = this.getCommonWords(data1, data2);
@@ -196,8 +197,9 @@ export class ContextExtractor {
       factors += 0.3;
     }
 
-    // Legal basis similarity
-    if (record1.legalBasis && record2.legalBasis) {
+    // Legal basis similarity - handle null values
+    if (record1.legalBasis && record2.legalBasis && 
+        typeof record1.legalBasis === 'string' && typeof record2.legalBasis === 'string') {
       score += record1.legalBasis === record2.legalBasis ? 0.3 : 0;
       factors += 0.3;
     }
@@ -224,9 +226,9 @@ export class ContextExtractor {
   private assessProcessingRisk(record: ProcessingRecord): string {
     let riskScore = 0;
 
-    // High-risk data categories
+    // High-risk data categories - handle null values
     const highRiskData = ['santé', 'biométrie', 'judiciaire', 'sensible', 'mineur'];
-    const dataCategories = (record.dataCategories || '').toLowerCase();
+    const dataCategories = (record.dataCategories && typeof record.dataCategories === 'string' ? record.dataCategories : '').toLowerCase();
     if (highRiskData.some(risk => dataCategories.includes(risk))) {
       riskScore += 3;
     }
@@ -242,7 +244,7 @@ export class ContextExtractor {
     }
 
     // No legal basis specified
-    if (!record.legalBasis) {
+    if (!record.legalBasis || typeof record.legalBasis !== 'string') {
       riskScore += 1;
     }
 
