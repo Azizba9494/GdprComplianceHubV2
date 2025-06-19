@@ -378,24 +378,39 @@ export default function Admin() {
 
   // Mutation for prompt optimization
   const optimizeMutation = useMutation({
-    mutationFn: ({ promptId, improvementType }: { promptId: number; improvementType: string }) => 
-      fetch(`/api/admin/prompts/${promptId}/optimize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ improvementType })
-      }).then(async res => {
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || `Erreur HTTP ${res.status}`);
+    mutationFn: async ({ promptId, improvementType }: { promptId: number; improvementType: string }) => {
+      try {
+        const response = await fetch(`/api/admin/prompts/${promptId}/optimize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ improvementType })
+        });
+        
+        const responseText = await response.text();
+        console.log('Raw API response:', responseText.substring(0, 200));
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        return res.json();
-      }),
+        
+        try {
+          return JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+          throw new Error('Réponse de l\'API invalide (non-JSON)');
+        }
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        throw fetchError;
+      }
+    },
     onSuccess: (data) => {
+      console.log('Optimization success:', data);
       setOptimizationDialog(prev => ({ ...prev, result: data }));
       toast({ title: "Analyse d'optimisation terminée avec succès" });
     },
     onError: (error: any) => {
-      console.error('Optimization error:', error);
+      console.error('Optimization mutation error:', error);
       toast({ 
         title: "Erreur lors de l'optimisation", 
         description: error.message || "Une erreur est survenue lors de l'optimisation",
