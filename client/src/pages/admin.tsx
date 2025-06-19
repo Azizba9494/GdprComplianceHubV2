@@ -17,8 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { 
   Settings, Plus, Edit, Brain, MessageSquare, ClipboardList, 
   FileText, AlertTriangle, BarChart3, Loader2, CheckCircle, Clock,
-  Upload, Trash2, Link, FileIcon, Sparkles, RefreshCw, Target, 
-  Zap, Shield, FileSearch, Layers
+  Upload, Trash2, Link, FileIcon
 } from "lucide-react";
 
 interface AiPrompt {
@@ -167,7 +166,6 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedTag, setSelectedTag] = useState<string>("all");
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -371,8 +369,6 @@ export default function Admin() {
     },
   });
 
-
-
   const onPromptSubmit = (data: any) => {
     if (editingPrompt) {
       updatePromptMutation.mutate({ id: editingPrompt.id, data });
@@ -471,45 +467,6 @@ export default function Admin() {
       if (!documentName) {
         setDocumentName(file.name.replace('.pdf', ''));
       }
-    }
-  };
-
-  // Handle prompt optimization
-  const handleOptimizePrompt = (prompt: AiPrompt, type: string) => {
-    setOptimizationDialog({
-      open: true,
-      prompt,
-      type,
-      result: null
-    });
-    optimizeMutation.mutate({ promptId: prompt.id, improvementType: type });
-  };
-
-  // Apply optimized prompt
-  const applyOptimizedPrompt = () => {
-    if (optimizationDialog.prompt && optimizationDialog.result?.optimizedPrompt) {
-      // If we're in edit mode, update the form
-      if (editingPrompt && editingPrompt.id === optimizationDialog.prompt.id) {
-        promptForm.setValue('prompt', optimizationDialog.result.optimizedPrompt);
-        promptForm.setValue('description', 
-          (promptForm.getValues('description') || '') + " (Optimisé par IA)"
-        );
-        toast({ title: "Prompt optimisé appliqué au formulaire" });
-      } else {
-        // Otherwise update directly in database
-        const updatedData = {
-          ...optimizationDialog.prompt,
-          prompt: optimizationDialog.result.optimizedPrompt,
-          description: optimizationDialog.prompt.description + " (Optimisé par IA)"
-        };
-        
-        updatePromptMutation.mutate({ 
-          id: optimizationDialog.prompt.id, 
-          data: updatedData 
-        });
-      }
-      
-      setOptimizationDialog({ open: false, prompt: null, type: 'general', result: null });
     }
   };
 
@@ -787,31 +744,7 @@ export default function Admin() {
                       name="prompt"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="flex items-center justify-between">
-                            <FormLabel>Contenu du prompt</FormLabel>
-                            {editingPrompt && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleOptimizePrompt(editingPrompt, 'general')}
-                                disabled={optimizeMutation.isPending}
-                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
-                              >
-                                {optimizeMutation.isPending ? (
-                                  <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Optimisation...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles className="w-4 h-4 mr-2" />
-                                    Optimiser avec IA
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
+                          <FormLabel>Contenu du prompt</FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Rédigez le prompt IA ici..."
@@ -902,16 +835,6 @@ export default function Admin() {
                             onCheckedChange={() => togglePromptStatus(prompt)}
                             disabled={updatePromptMutation.isPending}
                           />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOptimizePrompt(prompt, 'general')}
-                            title="Optimiser avec l'IA"
-                            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
-                          >
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            Optimiser
-                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -2329,160 +2252,6 @@ export default function Admin() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Prompt Optimization Dialog */}
-      <Dialog open={optimizationDialog.open} onOpenChange={(open) => 
-        setOptimizationDialog(prev => ({ ...prev, open }))
-      }>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Sparkles className="w-5 h-5 text-blue-500" />
-              <span>Optimisation IA du prompt</span>
-            </DialogTitle>
-            <DialogDescription>
-              Analyse et suggestions d'amélioration pour: {optimizationDialog.prompt?.name}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Optimization Type Selector */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'general', label: 'Général', icon: RefreshCw },
-                { key: 'clarity', label: 'Clarté', icon: Target },
-                { key: 'specificity', label: 'Spécificité', icon: Zap },
-                { key: 'context', label: 'Contexte', icon: Layers },
-                { key: 'compliance', label: 'Conformité', icon: Shield },
-                { key: 'structure', label: 'Structure', icon: FileSearch }
-              ].map(({ key, label, icon: Icon }) => (
-                <Button
-                  key={key}
-                  variant={optimizationDialog.type === key ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setOptimizationDialog(prev => ({ ...prev, type: key, result: null }));
-                    if (optimizationDialog.prompt) {
-                      optimizeMutation.mutate({ 
-                        promptId: optimizationDialog.prompt.id, 
-                        improvementType: key 
-                      });
-                    }
-                  }}
-                  disabled={optimizeMutation.isPending}
-                  className="flex items-center space-x-1"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{label}</span>
-                </Button>
-              ))}
-            </div>
-
-            {/* Loading State */}
-            {optimizeMutation.isPending && (
-              <div className="flex items-center justify-center py-8">
-                <div className="flex items-center space-x-3">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                  <span className="text-sm text-gray-600">
-                    Analyse en cours avec Gemini 2.5 Flash...
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Optimization Results */}
-            {optimizationDialog.result && (
-              <div className="space-y-6">
-                {/* Analysis */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Analyse du prompt actuel</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                      {optimizationDialog.result.analysis}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Suggestions */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Suggestions d'amélioration</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {optimizationDialog.result.suggestions?.map((suggestion: string, index: number) => (
-                        <li key={index} className="flex items-start space-x-2">
-                          <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{suggestion}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-
-                {/* Optimized Prompt */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Prompt optimisé</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <Textarea
-                        value={optimizationDialog.result.optimizedPrompt}
-                        readOnly
-                        rows={12}
-                        className="font-mono text-sm"
-                      />
-                      
-                      {/* Improvements Made */}
-                      <div>
-                        <h4 className="font-medium mb-2">Améliorations apportées:</h4>
-                        <ul className="space-y-1">
-                          {optimizationDialog.result.improvements?.map((improvement: string, index: number) => (
-                            <li key={index} className="flex items-start space-x-2">
-                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-sm text-gray-700">{improvement}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setOptimizationDialog({ open: false, prompt: null, type: 'general', result: null })}
-                  >
-                    Fermer
-                  </Button>
-                  <Button
-                    onClick={applyOptimizedPrompt}
-                    disabled={updatePromptMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {updatePromptMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Application...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Appliquer l'optimisation
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
