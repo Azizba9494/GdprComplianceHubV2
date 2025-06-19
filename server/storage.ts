@@ -66,6 +66,7 @@ export interface IStorage {
   
   // Processing Records
   getProcessingRecords(companyId: number): Promise<ProcessingRecord[]>;
+  getProcessingRecord(id: number): Promise<ProcessingRecord | undefined>;
   createProcessingRecord(record: InsertProcessingRecord): Promise<ProcessingRecord>;
   updateProcessingRecord(id: number, updates: Partial<InsertProcessingRecord>): Promise<ProcessingRecord>;
   deleteProcessingRecord(id: number): Promise<void>;

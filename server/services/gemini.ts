@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { storage } from '../storage';
+import { contextExtractor, type AIContext } from './contextExtractor';
 
 export class GeminiService {
   constructor() {}
@@ -362,68 +363,48 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
     }
   }
 
-  // DPIA specific response generation using custom prompts
-  async generateDpiaResponse(customPrompt: string, context: any, ragDocuments: string[] = []): Promise<{ response: string }> {
+  // DPIA specific response generation using custom prompts with automated context extraction
+  async generateDpiaResponse(customPrompt: string, context: AIContext, ragDocuments: string[] = []): Promise<{ response: string }> {
     try {
       const client = await this.getClient();
       const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-      // Build comprehensive context string
-      const contextString = `
-INFORMATIONS DE L'ENTREPRISE:
-- Nom: ${context.company?.name || 'Non spécifié'}
-- Secteur d'activité: ${context.company?.sector || 'Non spécifié'}
-- Taille: ${context.company?.size || 'Non spécifiée'}
-
-TRAITEMENT ANALYSÉ DANS CETTE AIPD:
-${context.currentProcessing ? `
-- Nom du traitement: ${context.currentProcessing.name}
-- Finalité: ${context.currentProcessing.purpose}
-- Catégories de données: ${context.currentProcessing.dataCategories}
-- Destinataires: ${context.currentProcessing.recipients || 'Non spécifié'}
-- Base légale: ${context.currentProcessing.legalBasis || 'Non spécifiée'}
-- Durée de conservation: ${context.currentProcessing.retentionPeriod || 'Non spécifiée'}
-- Transferts internationaux: ${context.currentProcessing.isInternational ? 'Oui' : 'Non'}
-- Mesures de sécurité existantes: ${context.currentProcessing.securityMeasures || 'Non spécifiées'}
-` : 'Aucun traitement spécifique sélectionné'}
-
-AUTRES TRAITEMENTS DE L'ENTREPRISE (pour contexte):
-${context.allProcessingRecords?.length ? context.allProcessingRecords.map(record => 
-  `- ${record.name}: ${record.purpose}`
-).join('\n') : 'Aucun autre traitement enregistré'}
-
-DONNÉES DÉJÀ SAISIES DANS L'AIPD:
-${Object.keys(context.existingData || {}).length ? Object.entries(context.existingData)
-  .filter(([key, value]) => value && value !== '' && value !== null)
-  .map(([key, value]) => `- ${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`)
-  .join('\n') : 'Aucune donnée préalablement saisie'}
-
-CHAMP À COMPLÉTER: ${context.field}
-`;
+      // Use the context extractor to format comprehensive context
+      const contextString = contextExtractor.formatContextForAI(context);
 
       // Add RAG documents if available
       const ragContext = ragDocuments && ragDocuments.length > 0 
-        ? `\n\nDocuments de référence CNIL:\n${ragDocuments.join('\n\n---\n\n')}` 
+        ? `\n\nDOCUMENTS DE RÉFÉRENCE CNIL (à prioriser dans votre réponse):\n${ragDocuments.join('\n\n---\n\n')}` 
         : '';
 
-      // Combine custom prompt with context
+      // Enhanced prompt with intelligent context integration
       const finalPrompt = `${customPrompt}
 
-CONSIGNES IMPORTANTES:
+CONSIGNES IMPORTANTES POUR LA GÉNÉRATION:
 - Utilisez OBLIGATOIREMENT les informations réelles fournies dans le contexte ci-dessous
-- Remplacez tous les placeholders comme {{treatmentName}} par les vraies données
-- Basez votre réponse sur le traitement spécifique analysé
-- Adaptez votre réponse au secteur d'activité de l'entreprise
-- Tenez compte des données déjà saisies dans l'AIPD
+- Remplacez tous les placeholders comme {{treatmentName}}, {{companyName}}, etc. par les vraies données
+- Adaptez votre réponse au secteur d'activité spécifique (${context.company.sector})
+- Tenez compte du niveau de risque du traitement ${context.currentProcessing?.riskLevel ? `(${context.currentProcessing.riskLevel})` : ''}
+- Intégrez les bonnes pratiques sectorielles quand pertinentes
+- Considérez le contexte de conformité existant de l'entreprise
+- Utilisez les traitements similaires comme référence si approprié
 
 ${contextString}${ragContext}
 
+CHAMP À COMPLÉTER: ${context.field}
+
 RÉPONSE ATTENDUE:
-Rédigez une réponse précise et personnalisée pour le champ "${context.field}" en utilisant exclusivement les informations réelles fournies ci-dessus.`;
+Rédigez une réponse précise, personnalisée et professionnelle qui:
+1. Utilise exclusivement les données réelles fournies
+2. S'adapte au contexte sectoriel et aux risques identifiés
+3. Propose des éléments concrets et actionnables
+4. Respecte la méthodologie CNIL pour les AIPD`;
       
-      console.log("[DPIA AI] Using custom prompt for field:", context.field);
-      console.log("[DPIA AI] Prompt length:", customPrompt.length, "chars");
-      console.log("[DPIA AI] Context includes processing:", context.currentProcessing?.name || 'None');
+      console.log("[DPIA AI] Using automated context extraction for field:", context.field);
+      console.log("[DPIA AI] Custom prompt length:", customPrompt.length, "chars");
+      console.log("[DPIA AI] Processing:", context.currentProcessing?.name || 'None');
+      console.log("[DPIA AI] Industry context:", context.industryContext ? 'Available' : 'Generic');
+      console.log("[DPIA AI] Related records:", context.relatedProcessingRecords.length);
       
       const response = await model.generateContent(finalPrompt);
       

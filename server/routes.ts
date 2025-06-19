@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
 import { db, testDatabaseConnection } from "./db";
+import { contextExtractor } from "./services/contextExtractor";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
@@ -593,49 +594,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("[DPIA AI-ASSIST] Using prompt:", aiPrompt.name, "- Length:", aiPrompt.prompt.length);
       
-      // Get company info for context
-      const company = await storage.getCompany(companyId);
-      if (!company) {
-        return res.status(404).json({ error: "Entreprise non trouvée" });
-      }
-
-      // Get processing record if available
-      let processingRecord = null;
-      if (existingDpiaData?.processingRecordId) {
-        processingRecord = await storage.getProcessingRecord(existingDpiaData.processingRecordId);
-      }
-
-      // Get all processing records for the company to provide broader context
-      const allProcessingRecords = await storage.getProcessingRecords(companyId);
+      // Extract comprehensive context using the new context extractor
+      const context = await contextExtractor.extractContext(
+        companyId, 
+        questionField, 
+        existingDpiaData
+      );
 
       // Get RAG documents for enhanced context
       const ragDocuments = await getRagDocuments();
-      
-      // Build comprehensive context for AI
-      const context = {
-        company: {
-          name: company.name,
-          sector: company.sector,
-          size: company.size
-        },
-        currentProcessing: processingRecord ? {
-          name: processingRecord.name,
-          purpose: processingRecord.purpose,
-          dataCategories: processingRecord.dataCategories,
-          recipients: processingRecord.recipients,
-          legalBasis: processingRecord.legalBasis,
-          retentionPeriod: processingRecord.retentionPeriod,
-          isInternational: processingRecord.isInternational,
-          securityMeasures: processingRecord.securityMeasures
-        } : null,
-        allProcessingRecords: allProcessingRecords.map(record => ({
-          name: record.name,
-          purpose: record.purpose,
-          dataCategories: record.dataCategories
-        })),
-        existingData: existingDpiaData,
-        field: questionField
-      };
       
       // Use the custom prompt with Gemini
       const response = await geminiService.generateDpiaResponse(
