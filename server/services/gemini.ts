@@ -362,6 +362,47 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
     }
   }
 
+  // DPIA specific response generation using custom prompts
+  async generateDpiaResponse(customPrompt: string, context: any, ragDocuments: string[] = []): Promise<{ response: string }> {
+    try {
+      const client = await this.getClient();
+      const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      // Build context string
+      const contextString = `
+Contexte de l'entreprise:
+- Nom: ${context.company?.name || 'Non spécifié'}
+- Secteur: ${context.company?.sector || 'Non spécifié'}
+- Taille: ${context.company?.size || 'Non spécifiée'}
+
+Champ à remplir: ${context.field}
+
+Données existantes de l'AIPD:
+${JSON.stringify(context.existingData, null, 2)}
+`;
+
+      // Add RAG documents if available
+      const ragContext = ragDocuments && ragDocuments.length > 0 
+        ? `\n\nDocuments de référence CNIL:\n${ragDocuments.join('\n\n---\n\n')}` 
+        : '';
+
+      // Combine custom prompt with context
+      const finalPrompt = `${customPrompt}\n\nContexte:\n${contextString}${ragContext}`;
+      
+      console.log("[DPIA AI] Using custom prompt for field:", context.field);
+      console.log("[DPIA AI] Prompt length:", customPrompt.length, "chars");
+      
+      const response = await model.generateContent(finalPrompt);
+      
+      return {
+        response: response.response.text() || "Impossible de générer une réponse pour ce champ."
+      };
+    } catch (error: any) {
+      console.error('Gemini DPIA response error:', error);
+      throw new Error(`Erreur lors de la génération: ${error.message}`);
+    }
+  }
+
   async generateRiskAnalysis(
     riskCategory: string,
     section: string,

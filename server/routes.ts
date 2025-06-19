@@ -555,39 +555,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("[DPIA AI-ASSIST] Request:", { questionField, companyId });
       
-      // Map questionField to prompt name
-      const fieldToPromptMap: Record<string, string> = {
-        'generalDescription': 'Description générale',
-        'processingPurposes': 'Finalités du traitement',
-        'dataController': 'Responsable de traitement',
-        'dataProcessors': 'Sous-traitants',
-        'applicableReferentials': 'Référentiels applicables',
-        'personalDataProcessed': 'Données personnelles traitées',
-        'personalDataCategories': 'Catégories de données',
-        'finalitiesJustification': 'Justification finalités',
-        'dataMinimization': 'Minimisation des données',
-        'retentionJustification': 'Justification conservation',
-        'legalBasisJustification': 'Justification base légale',
-        'dataQualityJustification': 'Justification qualité données',
-        'rightsInformation': 'Mesures information',
-        'rightsConsent': 'Mesures consentement',
-        'rightsAccess': 'Mesures accès portabilité',
-        'rightsRectification': 'Mesures rectification effacement',
-        'rightsOpposition': 'Mesures limitation opposition',
-        'subcontractingMeasures': 'Mesures sous-traitance',
-        'internationalTransfersMeasures': 'Mesures transferts internationaux'
+      // Map questionField to prompt category (more reliable than name)
+      const fieldToCategoryMap: Record<string, string> = {
+        'generalDescription': 'generalDescription',
+        'processingPurposes': 'purposes',
+        'dataController': 'dataController',
+        'dataProcessors': 'dataProcessors',
+        'applicableReferentials': 'applicableReferentials',
+        'personalDataProcessed': 'personalDataProcessed',
+        'personalDataCategories': 'personalDataCategories',
+        'finalitiesJustification': 'finalitiesJustification',
+        'dataMinimization': 'dataMinimization',
+        'retentionJustification': 'retentionJustification',
+        'legalBasisJustification': 'legalBasisJustification',
+        'dataQualityJustification': 'dataQualityMeasures',
+        'rightsInformation': 'informationMeasures',
+        'rightsConsent': 'consentMeasures',
+        'rightsAccess': 'accessMeasures',
+        'rightsRectification': 'rectificationMeasures',
+        'rightsOpposition': 'oppositionMeasures',
+        'subcontractingMeasures': 'subcontractingMeasures',
+        'internationalTransfersMeasures': 'internationalTransferMeasures'
       };
       
-      const promptName = fieldToPromptMap[questionField];
-      if (!promptName) {
+      const promptCategory = fieldToCategoryMap[questionField];
+      if (!promptCategory) {
         console.log("[DPIA AI-ASSIST] No prompt mapping found for field:", questionField);
         return res.status(400).json({ error: "Champ non supporté pour la génération IA" });
       }
       
-      // Get the specific prompt from database
-      const aiPrompt = await storage.getAiPromptByName(promptName);
+      // Get the specific prompt from database using category
+      const aiPrompt = await storage.getAiPromptByCategory(promptCategory);
       if (!aiPrompt) {
-        console.log("[DPIA AI-ASSIST] No prompt found in database for:", promptName);
+        console.log("[DPIA AI-ASSIST] No prompt found in database for category:", promptCategory);
         return res.status(404).json({ error: "Prompt IA non trouvé pour ce champ" });
       }
       
