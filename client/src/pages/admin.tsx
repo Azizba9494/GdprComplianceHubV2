@@ -895,6 +895,16 @@ export default function Admin() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleOptimizePrompt(prompt, 'general')}
+                            title="Optimiser avec l'IA"
+                            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700"
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Optimiser
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => openPromptDialog(prompt)}
                           >
                             <Edit className="w-4 h-4 mr-2" />
