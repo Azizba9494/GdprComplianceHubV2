@@ -17,7 +17,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { 
   Settings, Plus, Edit, Brain, MessageSquare, ClipboardList, 
   FileText, AlertTriangle, BarChart3, Loader2, CheckCircle, Clock,
-  Upload, Trash2, Link, FileIcon
+  Upload, Trash2, Link, FileIcon, Sparkles, RefreshCw, Target, 
+  Zap, Shield, FileSearch, Layers
 } from "lucide-react";
 
 interface AiPrompt {
