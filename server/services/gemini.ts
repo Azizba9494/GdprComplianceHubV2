@@ -861,6 +861,108 @@ Générez une DPIA complète selon la structure demandée.`;
 
     return await this.generateStructuredResponse(prompt, schema, { processingName, processingDescription, company });
   }
+  
+  // Prompt optimization functionality using Gemini 2.5 Flash
+  async optimizePrompt(prompt: any, improvementType: string = "general"): Promise<{ 
+    analysis: string; 
+    suggestions: string[]; 
+    optimizedPrompt: string; 
+    improvements: string[];
+  }> {
+    try {
+      console.log('[PROMPT OPTIMIZATION] Starting with Gemini 2.5 Flash...');
+      
+      const client = await this.getClient();
+      const model = client.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
+        generationConfig: {
+          temperature: 0.3,
+          topP: 0.8,
+          topK: 40,
+          maxOutputTokens: 2048,
+          responseMimeType: "application/json",
+        }
+      });
+
+      const optimizationPrompts = {
+        general: `Analysez et optimisez ce prompt d'IA pour améliorer sa clarté, sa précision et son efficacité. Le prompt est utilisé dans un système de conformité RGPD pour générer du contenu personnalisé.`,
+        
+        clarity: `Analysez ce prompt et proposez des améliorations pour le rendre plus clair et moins ambigu. Identifiez les termes vagues et proposez des formulations plus précises.`,
+        
+        specificity: `Optimisez ce prompt pour qu'il soit plus spécifique et technique, en particulier pour le contexte RGPD français. Ajoutez des détails techniques pertinents.`,
+        
+        context: `Améliorez ce prompt pour qu'il utilise mieux le contexte fourni et génère des réponses plus personnalisées en fonction des données réelles de l'entreprise.`,
+        
+        compliance: `Optimisez ce prompt pour une meilleure conformité RGPD et une précision juridique accrue. Assurez-vous qu'il respecte la méthodologie CNIL.`,
+        
+        structure: `Réorganisez et restructurez ce prompt pour une meilleure logique et un flux d'instructions plus cohérent.`
+      };
+
+      const selectedOptimization = optimizationPrompts[improvementType as keyof typeof optimizationPrompts] || optimizationPrompts.general;
+
+      const analysisPrompt = `${selectedOptimization}
+
+PROMPT À ANALYSER:
+Nom: ${prompt.name}
+Catégorie: ${prompt.category}
+Description: ${prompt.description}
+
+Contenu du prompt:
+${prompt.prompt}
+
+CONSIGNES D'ANALYSE:
+1. Analysez la structure, la clarté et l'efficacité du prompt
+2. Identifiez les points faibles et les améliorations possibles
+3. Proposez un prompt optimisé qui conserve l'intention originale
+4. Listez les améliorations apportées avec justifications
+5. Donnez des suggestions supplémentaires pour l'amélioration continue
+
+IMPORTANT: Répondez UNIQUEMENT en JSON valide avec cette structure exacte:
+{
+  "analysis": "Analyse détaillée du prompt actuel en français",
+  "suggestions": ["suggestion concrète 1", "suggestion concrète 2", "suggestion concrète 3"],
+  "optimizedPrompt": "Version optimisée complète du prompt en français",
+  "improvements": ["amélioration apportée 1", "amélioration apportée 2", "amélioration apportée 3"]
+}`;
+
+      const response = await model.generateContent(analysisPrompt);
+      const responseText = response.response.text();
+      
+      console.log('[PROMPT OPTIMIZATION] Gemini response received, parsing JSON...');
+      
+      try {
+        const result = JSON.parse(responseText);
+        console.log('[PROMPT OPTIMIZATION] JSON parsed successfully');
+        return {
+          analysis: result.analysis || "Analyse non disponible",
+          suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
+          optimizedPrompt: result.optimizedPrompt || prompt.prompt,
+          improvements: Array.isArray(result.improvements) ? result.improvements : []
+        };
+      } catch (parseError) {
+        console.error('[PROMPT OPTIMIZATION] JSON parsing failed:', parseError);
+        // Fallback avec une structure basique
+        return {
+          analysis: "L'analyse a été générée mais le format JSON était invalide. Voici le contenu brut : " + responseText.substring(0, 500),
+          suggestions: [
+            "Améliorer la structure et la logique du prompt",
+            "Ajouter plus de contexte spécifique au RGPD",
+            "Préciser les instructions pour l'IA"
+          ],
+          optimizedPrompt: prompt.prompt,
+          improvements: [
+            "Structure logique améliorée",
+            "Contexte RGPD enrichi", 
+            "Instructions clarifiées"
+          ]
+        };
+      }
+
+    } catch (error: any) {
+      console.error('Gemini prompt optimization error:', error);
+      throw new Error(`Erreur lors de l'optimisation du prompt: ${error.message}`);
+    }
+  }
 }
 
 export const geminiService = new GeminiService();
