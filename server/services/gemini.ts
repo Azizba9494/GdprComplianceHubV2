@@ -880,7 +880,6 @@ Générez une DPIA complète selon la structure demandée.`;
           topP: 0.8,
           topK: 40,
           maxOutputTokens: 2048,
-          responseMimeType: "application/json",
         }
       });
 
@@ -917,46 +916,69 @@ CONSIGNES D'ANALYSE:
 4. Listez les améliorations apportées avec justifications
 5. Donnez des suggestions supplémentaires pour l'amélioration continue
 
-IMPORTANT: Répondez UNIQUEMENT en JSON valide avec cette structure exacte:
-{
-  "analysis": "Analyse détaillée du prompt actuel en français",
-  "suggestions": ["suggestion concrète 1", "suggestion concrète 2", "suggestion concrète 3"],
-  "optimizedPrompt": "Version optimisée complète du prompt en français",
-  "improvements": ["amélioration apportée 1", "amélioration apportée 2", "amélioration apportée 3"]
-}`;
+IMPORTANT: Structurez votre réponse exactement comme suit:
+
+=== ANALYSE ===
+[Votre analyse détaillée du prompt actuel]
+
+=== SUGGESTIONS ===
+1. [Première suggestion concrète]
+2. [Deuxième suggestion concrète]  
+3. [Troisième suggestion concrète]
+
+=== PROMPT_OPTIMISE ===
+[Version complète optimisée du prompt]
+
+=== AMELIORATIONS ===
+1. [Première amélioration apportée]
+2. [Deuxième amélioration apportée]
+3. [Troisième amélioration apportée]`;
 
       const response = await model.generateContent(analysisPrompt);
       const responseText = response.response.text();
       
-      console.log('[PROMPT OPTIMIZATION] Gemini response received, parsing JSON...');
+      console.log('[PROMPT OPTIMIZATION] Gemini response received, parsing structured response...');
       
-      try {
-        const result = JSON.parse(responseText);
-        console.log('[PROMPT OPTIMIZATION] JSON parsed successfully');
-        return {
-          analysis: result.analysis || "Analyse non disponible",
-          suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
-          optimizedPrompt: result.optimizedPrompt || prompt.prompt,
-          improvements: Array.isArray(result.improvements) ? result.improvements : []
-        };
-      } catch (parseError) {
-        console.error('[PROMPT OPTIMIZATION] JSON parsing failed:', parseError);
-        // Fallback avec une structure basique
-        return {
-          analysis: "L'analyse a été générée mais le format JSON était invalide. Voici le contenu brut : " + responseText.substring(0, 500),
-          suggestions: [
-            "Améliorer la structure et la logique du prompt",
-            "Ajouter plus de contexte spécifique au RGPD",
-            "Préciser les instructions pour l'IA"
-          ],
-          optimizedPrompt: prompt.prompt,
-          improvements: [
-            "Structure logique améliorée",
-            "Contexte RGPD enrichi", 
-            "Instructions clarifiées"
-          ]
-        };
-      }
+      // Parse the structured response
+      const analysisMatch = responseText.match(/=== ANALYSE ===\s*([\s\S]*?)(?=\s*=== |$)/);
+      const suggestionsMatch = responseText.match(/=== SUGGESTIONS ===\s*([\s\S]*?)(?=\s*=== |$)/);
+      const optimizedMatch = responseText.match(/=== PROMPT_OPTIMISE ===\s*([\s\S]*?)(?=\s*=== |$)/);
+      const improvementsMatch = responseText.match(/=== AMELIORATIONS ===\s*([\s\S]*?)(?=\s*=== |$)/);
+      
+      const analysis = analysisMatch ? analysisMatch[1].trim() : "Analyse non disponible";
+      
+      const suggestionsText = suggestionsMatch ? suggestionsMatch[1].trim() : "";
+      const suggestions = suggestionsText
+        .split(/\d+\.\s+/)
+        .filter(s => s.trim().length > 0)
+        .map(s => s.trim())
+        .slice(0, 5);
+      
+      const optimizedPrompt = optimizedMatch ? optimizedMatch[1].trim() : prompt.prompt;
+      
+      const improvementsText = improvementsMatch ? improvementsMatch[1].trim() : "";
+      const improvements = improvementsText
+        .split(/\d+\.\s+/)
+        .filter(s => s.trim().length > 0)
+        .map(s => s.trim())
+        .slice(0, 5);
+      
+      console.log('[PROMPT OPTIMIZATION] Structured response parsed successfully');
+      
+      return {
+        analysis,
+        suggestions: suggestions.length > 0 ? suggestions : [
+          "Améliorer la structure et la logique du prompt",
+          "Ajouter plus de contexte spécifique au RGPD",
+          "Préciser les instructions pour l'IA"
+        ],
+        optimizedPrompt,
+        improvements: improvements.length > 0 ? improvements : [
+          "Structure logique améliorée",
+          "Contexte RGPD enrichi", 
+          "Instructions clarifiées"
+        ]
+      };
 
     } catch (error: any) {
       console.error('Gemini prompt optimization error:', error);
