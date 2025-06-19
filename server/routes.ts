@@ -598,14 +598,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!company) {
         return res.status(404).json({ error: "Entreprise non trouvée" });
       }
+
+      // Get processing record if available
+      let processingRecord = null;
+      if (existingDpiaData?.processingRecordId) {
+        processingRecord = await storage.getProcessingRecord(existingDpiaData.processingRecordId);
+      }
+
+      // Get all processing records for the company to provide broader context
+      const allProcessingRecords = await storage.getProcessingRecords(companyId);
+
+      // Get RAG documents for enhanced context
+      const ragDocuments = await getRagDocuments();
       
-      // Build context for AI
+      // Build comprehensive context for AI
       const context = {
         company: {
           name: company.name,
           sector: company.sector,
           size: company.size
         },
+        currentProcessing: processingRecord ? {
+          name: processingRecord.name,
+          purpose: processingRecord.purpose,
+          dataCategories: processingRecord.dataCategories,
+          recipients: processingRecord.recipients,
+          legalBasis: processingRecord.legalBasis,
+          retentionPeriod: processingRecord.retentionPeriod,
+          isInternational: processingRecord.isInternational,
+          securityMeasures: processingRecord.securityMeasures
+        } : null,
+        allProcessingRecords: allProcessingRecords.map(record => ({
+          name: record.name,
+          purpose: record.purpose,
+          dataCategories: record.dataCategories
+        })),
         existingData: existingDpiaData,
         field: questionField
       };
@@ -614,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const response = await geminiService.generateDpiaResponse(
         aiPrompt.prompt,
         context,
-        []
+        ragDocuments
       );
       
       console.log("[DPIA AI-ASSIST] Response generated successfully");

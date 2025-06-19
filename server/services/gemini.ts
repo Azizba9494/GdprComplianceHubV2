@@ -368,17 +368,37 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
       const client = await this.getClient();
       const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-      // Build context string
+      // Build comprehensive context string
       const contextString = `
-Contexte de l'entreprise:
+INFORMATIONS DE L'ENTREPRISE:
 - Nom: ${context.company?.name || 'Non spécifié'}
-- Secteur: ${context.company?.sector || 'Non spécifié'}
+- Secteur d'activité: ${context.company?.sector || 'Non spécifié'}
 - Taille: ${context.company?.size || 'Non spécifiée'}
 
-Champ à remplir: ${context.field}
+TRAITEMENT ANALYSÉ DANS CETTE AIPD:
+${context.currentProcessing ? `
+- Nom du traitement: ${context.currentProcessing.name}
+- Finalité: ${context.currentProcessing.purpose}
+- Catégories de données: ${context.currentProcessing.dataCategories}
+- Destinataires: ${context.currentProcessing.recipients || 'Non spécifié'}
+- Base légale: ${context.currentProcessing.legalBasis || 'Non spécifiée'}
+- Durée de conservation: ${context.currentProcessing.retentionPeriod || 'Non spécifiée'}
+- Transferts internationaux: ${context.currentProcessing.isInternational ? 'Oui' : 'Non'}
+- Mesures de sécurité existantes: ${context.currentProcessing.securityMeasures || 'Non spécifiées'}
+` : 'Aucun traitement spécifique sélectionné'}
 
-Données existantes de l'AIPD:
-${JSON.stringify(context.existingData, null, 2)}
+AUTRES TRAITEMENTS DE L'ENTREPRISE (pour contexte):
+${context.allProcessingRecords?.length ? context.allProcessingRecords.map(record => 
+  `- ${record.name}: ${record.purpose}`
+).join('\n') : 'Aucun autre traitement enregistré'}
+
+DONNÉES DÉJÀ SAISIES DANS L'AIPD:
+${Object.keys(context.existingData || {}).length ? Object.entries(context.existingData)
+  .filter(([key, value]) => value && value !== '' && value !== null)
+  .map(([key, value]) => `- ${key}: ${typeof value === 'string' ? value : JSON.stringify(value)}`)
+  .join('\n') : 'Aucune donnée préalablement saisie'}
+
+CHAMP À COMPLÉTER: ${context.field}
 `;
 
       // Add RAG documents if available
@@ -387,10 +407,23 @@ ${JSON.stringify(context.existingData, null, 2)}
         : '';
 
       // Combine custom prompt with context
-      const finalPrompt = `${customPrompt}\n\nContexte:\n${contextString}${ragContext}`;
+      const finalPrompt = `${customPrompt}
+
+CONSIGNES IMPORTANTES:
+- Utilisez OBLIGATOIREMENT les informations réelles fournies dans le contexte ci-dessous
+- Remplacez tous les placeholders comme {{treatmentName}} par les vraies données
+- Basez votre réponse sur le traitement spécifique analysé
+- Adaptez votre réponse au secteur d'activité de l'entreprise
+- Tenez compte des données déjà saisies dans l'AIPD
+
+${contextString}${ragContext}
+
+RÉPONSE ATTENDUE:
+Rédigez une réponse précise et personnalisée pour le champ "${context.field}" en utilisant exclusivement les informations réelles fournies ci-dessus.`;
       
       console.log("[DPIA AI] Using custom prompt for field:", context.field);
       console.log("[DPIA AI] Prompt length:", customPrompt.length, "chars");
+      console.log("[DPIA AI] Context includes processing:", context.currentProcessing?.name || 'None');
       
       const response = await model.generateContent(finalPrompt);
       
