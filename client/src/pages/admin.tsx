@@ -167,12 +167,7 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedTag, setSelectedTag] = useState<string>("all");
-  const [optimizationDialog, setOptimizationDialog] = useState<{
-    open: boolean;
-    prompt: AiPrompt | null;
-    type: string;
-    result: any;
-  }>({ open: false, prompt: null, type: 'general', result: null });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -376,48 +371,7 @@ export default function Admin() {
     },
   });
 
-  // Mutation for prompt optimization
-  const optimizeMutation = useMutation({
-    mutationFn: async ({ promptId, improvementType }: { promptId: number; improvementType: string }) => {
-      try {
-        const response = await fetch(`/api/admin/prompts/${promptId}/optimize`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ improvementType })
-        });
-        
-        const responseText = await response.text();
-        console.log('Raw API response:', responseText.substring(0, 200));
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        try {
-          return JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError);
-          throw new Error('Réponse de l\'API invalide (non-JSON)');
-        }
-      } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
-        throw fetchError;
-      }
-    },
-    onSuccess: (data) => {
-      console.log('Optimization success:', data);
-      setOptimizationDialog(prev => ({ ...prev, result: data }));
-      toast({ title: "Analyse d'optimisation terminée avec succès" });
-    },
-    onError: (error: any) => {
-      console.error('Optimization mutation error:', error);
-      toast({ 
-        title: "Erreur lors de l'optimisation", 
-        description: error.message || "Une erreur est survenue lors de l'optimisation",
-        variant: "destructive" 
-      });
-    }
-  });
+
 
   const onPromptSubmit = (data: any) => {
     if (editingPrompt) {
