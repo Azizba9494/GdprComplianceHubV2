@@ -1293,6 +1293,86 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
+  // AI content generation for risk assessment
+  app.post('/api/ai/generate-risk-content', async (req, res) => {
+    try {
+      const { field, companyId, processingRecordId, riskType } = req.body;
+      
+      console.log('[RISK AI] Request:', { field, companyId, processingRecordId, riskType });
+      
+      // Get processing record and company data for context
+      const processingRecord = processingRecordId ? await storage.getProcessingRecord(processingRecordId) : null;
+      const company = await storage.getCompany(companyId);
+      
+      // Build context-specific prompt for risk assessment
+      let basePrompt = '';
+      
+      // Handle different risk sections
+      if (field === 'potentialImpacts') {
+        basePrompt = `Analysez les impacts potentiels sur les personnes concernées pour le traitement "${processingRecord?.name || 'Non spécifié'}" dans le contexte du risque "${riskType}".
+
+Contexte du traitement:
+- Secteur: ${company?.sector || 'Non spécifié'}
+- Finalités: ${processingRecord?.purposes?.join(', ') || 'Non spécifiées'}
+- Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spécifiées'}
+- Personnes concernées: ${processingRecord?.dataSubjects?.join(', ') || 'Non spécifiées'}
+
+Décrivez les conséquences possibles pour les individus en cas de réalisation de ce risque, en tenant compte des vulnérabilités spécifiques et de la gravité des impacts.`;
+      } else if (field === 'threats') {
+        basePrompt = `Identifiez les menaces spécifiques liées au risque "${riskType}" pour le traitement "${processingRecord?.name || 'Non spécifié'}".
+
+Analysez:
+- Les sources de menaces internes et externes
+- Les vecteurs d'attaque possibles
+- Les vulnérabilités exploitables
+- Les scénarios de menaces réalistes
+
+Contexte technique:
+- Systèmes utilisés: ${processingRecord?.systems || 'Non spécifiés'}
+- Mesures de sécurité existantes: ${processingRecord?.securityMeasures?.join(', ') || 'Non spécifiées'}`;
+      } else if (field === 'riskSources') {
+        basePrompt = `Identifiez les sources et origines du risque "${riskType}" pour le traitement "${processingRecord?.name || 'Non spécifié'}".
+
+Analysez:
+- Les causes racines du risque
+- Les facteurs internes et externes
+- Les défaillances organisationnelles possibles
+- Les lacunes techniques ou humaines
+
+Soyez spécifique au contexte du secteur ${company?.sector || 'générique'}.`;
+      } else if (field === 'existingMeasures') {
+        basePrompt = `Proposez des mesures préventives et correctives pour atténuer le risque "${riskType}" dans le traitement "${processingRecord?.name || 'Non spécifié'}".
+
+Incluez:
+- Mesures techniques de protection
+- Mesures organisationnelles
+- Procédures de détection et réaction
+- Mécanismes de surveillance
+
+Adaptez les recommandations au secteur ${company?.sector || 'générique'} et aux contraintes opérationnelles.`;
+      } else {
+        basePrompt = `Générez du contenu d'évaluation des risques RGPD pour le champ "${field}" dans le contexte du risque "${riskType}".
+
+Traitement: ${processingRecord?.name || 'Non spécifié'}
+Secteur: ${company?.sector || 'Non spécifié'}
+Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spécifiées'}`;
+      }
+      
+      // Generate content with AI
+      const aiResponse = await generateAIContent(basePrompt);
+      
+      console.log('[RISK AI] Response generated successfully');
+      
+      res.json({ 
+        content: aiResponse,
+        field: field
+      });
+    } catch (error: any) {
+      console.error('Risk content generation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -130,11 +130,50 @@ export default function DpiaRiskAssessment({ dpiaId, companyId, processingRecord
     const key = `${riskCategory}-${section}`;
     setLoadingPrompts(prev => ({ ...prev, [key]: true }));
     
-    generateRiskAnalysisMutation.mutate({
-      riskCategory,
-      section,
-      promptKey
-    });
+    try {
+      // Call AI generation API directly
+      const response = await fetch('/api/ai/generate-risk-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          field: section,
+          companyId,
+          processingRecordId: dpiaId,
+          riskType: riskCategory
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la génération');
+      }
+      
+      const data = await response.json();
+      
+      // Update the risk data
+      setRiskData(prev => ({
+        ...prev,
+        [riskCategory]: {
+          ...prev[riskCategory],
+          [section]: data.content
+        }
+      }));
+      
+      toast({ 
+        title: "Contenu généré avec succès",
+        description: "L'analyse de risque a été générée par l'IA."
+      });
+      
+    } catch (error: any) {
+      console.error('AI generation error:', error);
+      toast({ 
+        title: "Erreur lors de la génération", 
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive" 
+      });
+    } finally {
+      setLoadingPrompts(prev => ({ ...prev, [key]: false }));
+    }
   };
 
   const handleTextChange = (riskCategory: string, section: string, value: string) => {
