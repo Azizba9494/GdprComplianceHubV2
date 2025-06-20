@@ -50,7 +50,8 @@ export class ContextExtractor {
   async extractContext(
     companyId: number, 
     questionField: string, 
-    existingDpiaData: any
+    existingDpiaData: any,
+    processingRecordId?: number
   ): Promise<AIContext> {
     
     // Get company information
@@ -59,10 +60,11 @@ export class ContextExtractor {
       throw new Error('Company not found');
     }
 
-    // Get processing record if available
+    // Get processing record if available - prioritize provided processingRecordId
     let processingRecord = null;
-    if (existingDpiaData?.processingRecordId) {
-      processingRecord = await storage.getProcessingRecord(existingDpiaData.processingRecordId);
+    const recordId = processingRecordId || existingDpiaData?.processingRecordId;
+    if (recordId) {
+      processingRecord = await storage.getProcessingRecord(recordId);
     }
 
     // Get all processing records for context
@@ -102,7 +104,7 @@ export class ContextExtractor {
         securityMeasures: processingRecord.securityMeasures && typeof processingRecord.securityMeasures === 'string' ? processingRecord.securityMeasures : '',
         riskLevel: this.assessProcessingRisk(processingRecord)
       } : undefined,
-      relatedProcessingRecords: relatedRecords,
+      relatedProcessingRecords: relatedRecords.slice(0, 3), // Limit to top 3 for relevance
       existingDpiaData,
       field: questionField,
       companyContext,

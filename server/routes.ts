@@ -616,7 +616,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const context = await contextExtractor.extractContext(
         companyId, 
         questionField, 
-        existingDpiaData
+        existingDpiaData,
+        req.body.processingRecordId
       );
 
       // Get RAG documents for enhanced context
