@@ -649,7 +649,7 @@ Informations complémentaires: ${data.additionalInfo}
                               onCheckedChange={field.onChange}
                             />
                           </FormControl>
-                          <FormLabel>Transferts hors UE</FormLabel>
+                          <FormLabel>Transferts hors UE *</FormLabel>
                         </FormItem>
                       )}
                     />
