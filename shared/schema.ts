@@ -712,6 +712,59 @@ export const promptDocuments = pgTable("prompt_documents", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Subscriptions table for multi-tenant billing
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  planName: text("plan_name").notNull(), // Standard, Premium, Enterprise
+  maxCompanies: integer("max_companies").notNull().default(1),
+  monthlyPrice: numeric("monthly_price", { precision: 10, scale: 2 }),
+  status: text("status").notNull().default("active"), // active, cancelled, expired
+  startDate: timestamp("start_date").defaultNow().notNull(),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// User company access (for collaborators)
+export const userCompanyAccess = pgTable("user_company_access", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  role: text("role").notNull().default("collaborator"), // owner, admin, collaborator
+  permissions: text("permissions").array(), // Array of permission strings
+  invitedBy: integer("invited_by").references(() => users.id),
+  invitedAt: timestamp("invited_at").defaultNow(),
+  status: text("status").notNull().default("active"), // active, pending, revoked
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Invitations table for pending collaborator invites
+export const invitations = pgTable("invitations", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  invitedBy: integer("invited_by").notNull().references(() => users.id),
+  permissions: text("permissions").array(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  status: text("status").notNull().default("pending"), // pending, accepted, expired
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Billing invoices table
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  subscriptionId: integer("subscription_id").notNull().references(() => subscriptions.id),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"), // pending, paid, failed, cancelled
+  issuedAt: timestamp("issued_at").defaultNow().notNull(),
+  paidAt: timestamp("paid_at"),
+  dueDate: timestamp("due_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertRagDocumentSchema = createInsertSchema(ragDocuments).omit({
   id: true,
   createdAt: true,
@@ -723,8 +776,38 @@ export const insertPromptDocumentSchema = createInsertSchema(promptDocuments).om
   createdAt: true,
 });
 
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserCompanyAccessSchema = createInsertSchema(userCompanyAccess).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInvitationSchema = createInsertSchema(invitations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+});
+
 // RAG Document types
 export type RagDocument = typeof ragDocuments.$inferSelect;
 export type InsertRagDocument = z.infer<typeof insertRagDocumentSchema>;
 export type PromptDocument = typeof promptDocuments.$inferSelect;
 export type InsertPromptDocument = z.infer<typeof insertPromptDocumentSchema>;
+
+// Multi-tenant types
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type UserCompanyAccess = typeof userCompanyAccess.$inferSelect;
+export type InsertUserCompanyAccess = z.infer<typeof insertUserCompanyAccessSchema>;
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
