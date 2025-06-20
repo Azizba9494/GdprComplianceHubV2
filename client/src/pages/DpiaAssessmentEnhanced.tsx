@@ -680,23 +680,61 @@ export default function DpiaAssessmentEnhanced() {
     }
   });
 
-  // Risk analysis AI generation
-  const generateRiskAnalysis = async (scenario: string, riskType: string) => {
+  // Risk analysis AI generation using DPIA prompts
+  const handleRiskAIGenerate = async (scenario: string, riskType: string) => {
+    if (!company?.id) {
+      console.error('Missing company ID for risk AI generation');
+      return;
+    }
+    
     setIsGenerating(true);
+    
     try {
-      const response = await fetch("/api/dpia/ai-assist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      // Map scenario and riskType to the correct questionField for DPIA prompts
+      const fieldMapping: Record<string, Record<string, string>> = {
+        'illegitimateAccess': {
+          'impacts': 'illegitimateAccessImpacts',
+          'threats': 'illegitimateAccessThreats', 
+          'sources': 'illegitimateAccessSources',
+          'measures': 'illegitimateAccessMeasures'
+        },
+        'unwantedModification': {
+          'impacts': 'dataModificationImpacts',
+          'threats': 'dataModificationThreats',
+          'sources': 'dataModificationSources', 
+          'measures': 'dataModificationMeasures'
+        },
+        'dataDisappearance': {
+          'impacts': 'dataDisappearanceImpacts',
+          'threats': 'dataDisappearanceThreats',
+          'sources': 'dataDisappearanceSources',
+          'measures': 'dataDisappearanceMeasures'
+        }
+      };
+      
+      const questionField = fieldMapping[scenario]?.[riskType];
+      
+      if (!questionField) {
+        throw new Error(`Mapping non trouvé pour ${scenario}.${riskType}`);
+      }
+      
+      console.log('Risk AI Generate request:', { scenario, riskType, questionField, companyId: company.id });
+      
+      const response = await fetch('/api/dpia/ai-assist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Générez une analyse ${riskType} pour le scénario ${scenario}`,
-          processingRecord,
-          field: 'risks',
-          scenario,
-          riskType
+          questionField: questionField,
+          companyId: company.id,
+          processingRecordId: dpia?.processingRecordId
         })
       });
       
-      if (!response.ok) throw new Error("Erreur lors de la génération");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la génération');
+      }
+      
       const data = await response.json();
       
       // Clean the response and remove markdown formatting
@@ -715,14 +753,20 @@ export default function DpiaAssessmentEnhanced() {
         description: "L'IA a généré l'analyse de risque pour vous.",
       });
     } catch (error: any) {
+      console.error('Risk AI generation error:', error);
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de générer l'analyse",
+        title: "Erreur lors de la génération",
+        description: error.message || "Erreur lors de la génération de l'analyse.",
         variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  // Legacy function kept for compatibility
+  const generateRiskAnalysis = async (scenario: string, riskType: string) => {
+    return handleRiskAIGenerate(scenario, riskType);
   };
 
   const onSubmit = (data: DpiaFormData) => {
