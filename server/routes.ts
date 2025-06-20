@@ -275,6 +275,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dataControllerAddress: company.address,
         dataControllerPhone: company.phone,
         dataControllerEmail: company.email,
+        // Include DPO fields from request data if provided
+        hasDpo: req.body.hasDpo || false,
+        dpoName: req.body.dpoName || null,
+        dpoPhone: req.body.dpoPhone || null,
+        dpoEmail: req.body.dpoEmail || null,
       });
 
       res.json(record);

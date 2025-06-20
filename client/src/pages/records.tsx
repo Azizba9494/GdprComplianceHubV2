@@ -144,6 +144,16 @@ export default function Records() {
       securityMeasures: "",
       thirdCountries: "",
       additionalInfo: "",
+      // Data Controller fields
+      dataControllerName: "",
+      dataControllerAddress: "",
+      dataControllerPhone: "",
+      dataControllerEmail: "",
+      // DPO fields
+      hasDpo: false,
+      dpoName: "",
+      dpoPhone: "",
+      dpoEmail: "",
     },
   });
 
@@ -168,6 +178,16 @@ export default function Records() {
       hasVulnerablePersons: false,
       hasInnovativeTechnology: false,
       preventsRightsExercise: false,
+      // Data Controller fields
+      dataControllerName: "",
+      dataControllerAddress: "",
+      dataControllerPhone: "",
+      dataControllerEmail: "",
+      // DPO fields
+      hasDpo: false,
+      dpoName: "",
+      dpoPhone: "",
+      dpoEmail: "",
     },
   });
 
@@ -175,6 +195,33 @@ export default function Records() {
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => recordsApi.get(COMPANY_ID).then(res => res.json()),
   });
+
+  // Get company data for auto-filling
+  const { data: company } = useQuery({
+    queryKey: ['/api/companies', COMPANY_ID],
+    queryFn: () => companyApi.get(COMPANY_ID).then(res => res.json()),
+  });
+
+  // Auto-fill company data when forms open
+  const handleOpenCreateDialog = () => {
+    if (company) {
+      manualForm.setValue('dataControllerName', company.name || '');
+      manualForm.setValue('dataControllerAddress', company.address || '');
+      manualForm.setValue('dataControllerPhone', company.phone || '');
+      manualForm.setValue('dataControllerEmail', company.email || '');
+    }
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleOpenGenerateDialog = () => {
+    if (company) {
+      generateForm.setValue('dataControllerName', company.name || '');
+      generateForm.setValue('dataControllerAddress', company.address || '');
+      generateForm.setValue('dataControllerPhone', company.phone || '');
+      generateForm.setValue('dataControllerEmail', company.email || '');
+    }
+    setIsGenerateDialogOpen(true);
+  };
 
   const generateMutation = useMutation({
     mutationFn: (data: any) =>
@@ -539,7 +586,7 @@ Informations complémentaires: ${data.additionalInfo}
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleOpenCreateDialog}>
                 <Plus className="w-4 h-4 mr-2" />
                 Créer manuellement
               </Button>
@@ -777,9 +824,147 @@ Informations complémentaires: ${data.additionalInfo}
                         }}
                       />
                     </div>
+
+                    {/* Section Responsable de traitement */}
+                    <Separator className="my-6" />
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Building className="w-4 h-4" />
+                        <Label className="text-base font-semibold">Responsable de traitement</Label>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+                        <FormField
+                          control={manualForm.control}
+                          name="dataControllerName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Dénomination</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nom de l'entreprise..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="dataControllerAddress"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Adresse</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Adresse complète..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="dataControllerPhone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Téléphone</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Numéro de téléphone..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="dataControllerEmail"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Adresse email..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Section DPO */}
+                    <Separator className="my-6" />
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4" />
+                        <Label className="text-base font-semibold">Délégué à la Protection des Données (DPO)</Label>
+                      </div>
+                      
+                      <div className="pl-6 space-y-4">
+                        <FormField
+                          control={manualForm.control}
+                          name="hasDpo"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel>L'entreprise dispose-t-elle d'un DPO ?</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        {manualForm.watch('hasDpo') && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <FormField
+                              control={manualForm.control}
+                              name="dpoName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nom du DPO</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Nom complet du DPO..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={manualForm.control}
+                              name="dpoPhone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Téléphone DPO</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Téléphone du DPO..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={manualForm.control}
+                              name="dpoEmail"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Email DPO</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Email du DPO..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-
-
 
                   <div className="flex justify-end space-x-2 pt-4 border-t">
                     <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -803,7 +988,7 @@ Informations complémentaires: ${data.additionalInfo}
 
           <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={handleOpenGenerateDialog}>
                 <Plus className="w-4 h-4 mr-2" />
                 Générer avec l'IA
               </Button>
@@ -1010,6 +1195,146 @@ Informations complémentaires: ${data.additionalInfo}
                         </FormItem>
                       )}
                     />
+
+                    {/* Section Responsable de traitement */}
+                    <Separator className="md:col-span-2 my-6" />
+                    <div className="md:col-span-2 space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Building className="w-4 h-4" />
+                        <Label className="text-base font-semibold">Responsable de traitement</Label>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+                        <FormField
+                          control={generateForm.control}
+                          name="dataControllerName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Dénomination</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nom de l'entreprise..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={generateForm.control}
+                          name="dataControllerAddress"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Adresse</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Adresse complète..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={generateForm.control}
+                          name="dataControllerPhone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Téléphone</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Numéro de téléphone..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={generateForm.control}
+                          name="dataControllerEmail"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Adresse email..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Section DPO */}
+                    <Separator className="md:col-span-2 my-6" />
+                    <div className="md:col-span-2 space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4" />
+                        <Label className="text-base font-semibold">Délégué à la Protection des Données (DPO)</Label>
+                      </div>
+                      
+                      <div className="pl-6 space-y-4">
+                        <FormField
+                          control={generateForm.control}
+                          name="hasDpo"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel>L'entreprise dispose-t-elle d'un DPO ?</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+
+                        {generateForm.watch('hasDpo') && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <FormField
+                              control={generateForm.control}
+                              name="dpoName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Nom du DPO</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Nom complet du DPO..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={generateForm.control}
+                              name="dpoPhone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Téléphone DPO</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Téléphone du DPO..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={generateForm.control}
+                              name="dpoEmail"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Email DPO</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Email du DPO..." {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex justify-end space-x-4">
@@ -1067,7 +1392,7 @@ Informations complémentaires: ${data.additionalInfo}
             <p className="text-muted-foreground mb-4">
               Commencez par créer votre première fiche de traitement avec l'IA
             </p>
-            <Button onClick={() => setIsGenerateDialogOpen(true)}>
+            <Button onClick={handleOpenGenerateDialog}>
               <Plus className="w-4 h-4 mr-2" />
               Créer ma première fiche
             </Button>
