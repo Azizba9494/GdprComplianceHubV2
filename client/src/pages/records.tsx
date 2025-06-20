@@ -432,6 +432,62 @@ Informations complémentaires: ${data.additionalInfo}
     }));
   };
 
+  const handleFieldChange = (recordId: number, field: string, value: any) => {
+    setEditingValues(prev => ({
+      ...prev,
+      [`${recordId}_${field}`]: value
+    }));
+  };
+
+  const saveAllChanges = (recordId: number) => {
+    const changes: any = {};
+    Object.keys(editingValues).forEach(key => {
+      if (key.startsWith(`${recordId}_`)) {
+        const field = key.split('_')[1];
+        changes[field] = editingValues[key];
+      }
+    });
+
+    if (Object.keys(changes).length > 0) {
+      updateMutation.mutate({
+        id: recordId,
+        data: changes,
+      });
+    }
+
+    // Clear editing values for this record
+    setEditingValues(prev => {
+      const newValues = { ...prev };
+      Object.keys(newValues).forEach(key => {
+        if (key.startsWith(`${recordId}_`)) {
+          delete newValues[key];
+        }
+      });
+      return newValues;
+    });
+
+    setEditingRecord(null);
+  };
+
+  const cancelEdit = (recordId: number) => {
+    // Clear editing values for this record
+    setEditingValues(prev => {
+      const newValues = { ...prev };
+      Object.keys(newValues).forEach(key => {
+        if (key.startsWith(`${recordId}_`)) {
+          delete newValues[key];
+        }
+      });
+      return newValues;
+    });
+    setEditingRecord(null);
+  };
+
+  const getFieldValue = (record: any, field: string) => {
+    const editKey = `${record.id}_${field}`;
+    return editingValues[editKey] !== undefined ? editingValues[editKey] : record[field];
+  };
+
   const handleFieldUpdate = (recordId: number, field: string, value: any) => {
     updateMutation.mutate({
       id: recordId,
