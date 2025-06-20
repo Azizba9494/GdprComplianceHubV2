@@ -110,6 +110,16 @@ interface ProcessingRecord {
   hasVulnerablePersons?: boolean;
   hasInnovativeTechnology?: boolean;
   preventsRightsExercise?: boolean;
+  // Data Controller Information
+  dataControllerName?: string;
+  dataControllerAddress?: string;
+  dataControllerPhone?: string;
+  dataControllerEmail?: string;
+  // DPO Information  
+  hasDpo?: boolean;
+  dpoName?: string;
+  dpoPhone?: string;
+  dpoEmail?: string;
 }
 
 export default function Records() {

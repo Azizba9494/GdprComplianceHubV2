@@ -24,6 +24,8 @@ export const companies = pgTable("companies", {
   size: text("size"), // VSE, SME
   rcsNumber: text("rcs_number"), // Numéro RCS
   address: text("address"), // Adresse complète du siège social
+  phone: text("phone"), // Téléphone de l'entreprise
+  email: text("email"), // Email de contact de l'entreprise
   userId: integer("user_id").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -104,6 +106,19 @@ export const processingRecords = pgTable("processing_records", {
   hasVulnerablePersons: boolean("has_vulnerable_persons"), // Personnes vulnérables
   hasInnovativeTechnology: boolean("has_innovative_technology"), // Usage innovant/nouvelles technologies
   preventsRightsExercise: boolean("prevents_rights_exercise"), // Empêche l'exercice de droits
+  
+  // Data Controller Information
+  dataControllerName: text("data_controller_name"),
+  dataControllerAddress: text("data_controller_address"),
+  dataControllerPhone: text("data_controller_phone"),
+  dataControllerEmail: text("data_controller_email"),
+  
+  // DPO Information
+  hasDpo: boolean("has_dpo").default(false),
+  dpoName: text("dpo_name"),
+  dpoPhone: text("dpo_phone"),
+  dpoEmail: text("dpo_email"),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
