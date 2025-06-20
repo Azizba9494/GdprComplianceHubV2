@@ -656,7 +656,7 @@ Informations complémentaires: ${data.additionalInfo}
 
                     {/* Catégories de données - Liste de choix + texte libre */}
                     <div className="space-y-3">
-                      <Label>Catégories de données</Label>
+                      <Label>Catégories de données *</Label>
                       <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
                         {DATA_CATEGORIES.map((category) => (
                           <div key={category} className="flex items-center space-x-2">
