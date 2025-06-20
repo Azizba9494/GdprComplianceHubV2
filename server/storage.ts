@@ -859,6 +859,108 @@ export class DatabaseStorage implements IStorage {
       )
     );
   }
+
+  // Multi-tenant implementations
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
+    const [updated] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    return updated;
+  }
+
+  async getUserSubscription(userId: number): Promise<Subscription | undefined> {
+    const [subscription] = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
+    return subscription;
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const [created] = await db.insert(subscriptions).values(subscription).returning();
+    return created;
+  }
+
+  async updateSubscription(id: number, updates: Partial<InsertSubscription>): Promise<Subscription> {
+    const [updated] = await db.update(subscriptions).set(updates).where(eq(subscriptions.id, id)).returning();
+    return updated;
+  }
+
+  async getUserCompanyAccess(userId: number): Promise<UserCompanyAccess[]> {
+    return await db.select({
+      id: userCompanyAccess.id,
+      userId: userCompanyAccess.userId,
+      companyId: userCompanyAccess.companyId,
+      role: userCompanyAccess.role,
+      permissions: userCompanyAccess.permissions,
+      invitedBy: userCompanyAccess.invitedBy,
+      invitedAt: userCompanyAccess.invitedAt,
+      status: userCompanyAccess.status,
+      createdAt: userCompanyAccess.createdAt,
+      company: {
+        id: companies.id,
+        name: companies.name,
+        sector: companies.sector,
+        size: companies.size,
+        rcsNumber: companies.rcsNumber,
+        address: companies.address,
+      }
+    })
+    .from(userCompanyAccess)
+    .leftJoin(companies, eq(userCompanyAccess.companyId, companies.id))
+    .where(eq(userCompanyAccess.userId, userId));
+  }
+
+  async createUserCompanyAccess(access: InsertUserCompanyAccess): Promise<UserCompanyAccess> {
+    const [created] = await db.insert(userCompanyAccess).values(access).returning();
+    return created;
+  }
+
+  async deleteUserCompanyAccess(id: number): Promise<void> {
+    await db.delete(userCompanyAccess).where(eq(userCompanyAccess.id, id));
+  }
+
+  async getCompanyCollaborators(companyId: number): Promise<UserCompanyAccess[]> {
+    return await db.select({
+      id: userCompanyAccess.id,
+      userId: userCompanyAccess.userId,
+      companyId: userCompanyAccess.companyId,
+      role: userCompanyAccess.role,
+      permissions: userCompanyAccess.permissions,
+      invitedBy: userCompanyAccess.invitedBy,
+      invitedAt: userCompanyAccess.invitedAt,
+      status: userCompanyAccess.status,
+      createdAt: userCompanyAccess.createdAt,
+      user: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      }
+    })
+    .from(userCompanyAccess)
+    .leftJoin(users, eq(userCompanyAccess.userId, users.id))
+    .where(eq(userCompanyAccess.companyId, companyId));
+  }
+
+  async createInvitation(invitation: InsertInvitation): Promise<Invitation> {
+    const [created] = await db.insert(invitations).values(invitation).returning();
+    return created;
+  }
+
+  async getInvitationByToken(token: string): Promise<Invitation | undefined> {
+    const [invitation] = await db.select().from(invitations).where(eq(invitations.token, token));
+    return invitation;
+  }
+
+  async updateInvitation(id: number, updates: Partial<InsertInvitation>): Promise<Invitation> {
+    const [updated] = await db.update(invitations).set(updates).where(eq(invitations.id, id)).returning();
+    return updated;
+  }
+
+  async getUserInvoices(userId: number): Promise<Invoice[]> {
+    return await db.select().from(invoices).where(eq(invoices.userId, userId)).orderBy(desc(invoices.createdAt));
+  }
+
+  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
+    const [created] = await db.insert(invoices).values(invoice).returning();
+    return created;
+  }
 }
 
 export const storage = new DatabaseStorage();

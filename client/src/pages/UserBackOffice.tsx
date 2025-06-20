@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Building2, Users, CreditCard, User, Plus, Mail, Trash2, Settings } from "lucide-react";
+import React from "react";
 
 // Form schemas
 const profileSchema = z.object({
@@ -126,8 +127,16 @@ export default function UserBackOffice() {
     resolver: zodResolver(inviteSchema),
     defaultValues: {
       permissions: [],
+      companyId: selectedCompanyId || 0,
     },
   });
+
+  // Update company ID when selection changes
+  React.useEffect(() => {
+    if (selectedCompanyId) {
+      inviteForm.setValue('companyId', selectedCompanyId);
+    }
+  }, [selectedCompanyId, inviteForm]);
 
   // Mutations
   const updateProfileMutation = useMutation({
@@ -290,40 +299,54 @@ export default function UserBackOffice() {
             )}
           </div>
 
-          {canAddCompany && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Ajouter une Société</CardTitle>
-                <CardDescription>Créez une nouvelle société dans votre compte</CardDescription>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Ajouter une Société</CardTitle>
+              <CardDescription>
+                Créez une nouvelle société dans votre compte
+                {subscription && (
+                  <span className="block text-xs text-muted-foreground mt-1">
+                    {ownedCompanies.length} / {subscription.maxCompanies} sociétés utilisées
+                  </span>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {canAddCompany ? (
                 <form onSubmit={companyForm.handleSubmit((data) => createCompanyMutation.mutate(data))} className="space-y-4">
                   <div>
                     <Label htmlFor="companyName">Dénomination sociale *</Label>
-                    <Input id="companyName" {...companyForm.register("name")} />
+                    <Input id="companyName" {...companyForm.register("name")} placeholder="Ex: Ma Société SARL" />
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <Label htmlFor="rcsNumber">Numéro RCS</Label>
-                      <Input id="rcsNumber" {...companyForm.register("rcsNumber")} />
+                      <Input id="rcsNumber" {...companyForm.register("rcsNumber")} placeholder="Ex: 123 456 789 R.C.S. Paris" />
                     </div>
                     <div>
                       <Label htmlFor="sector">Secteur d'activité</Label>
-                      <Input id="sector" {...companyForm.register("sector")} />
+                      <Input id="sector" {...companyForm.register("sector")} placeholder="Ex: Services informatiques" />
                     </div>
                   </div>
                   <div>
                     <Label htmlFor="address">Adresse du siège social</Label>
-                    <Input id="address" {...companyForm.register("address")} />
+                    <Input id="address" {...companyForm.register("address")} placeholder="Ex: 123 rue de la République, 75001 Paris" />
                   </div>
-                  <Button type="submit" disabled={createCompanyMutation.isPending}>
+                  <Button type="submit" disabled={createCompanyMutation.isPending} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
-                    Ajouter la société
+                    {createCompanyMutation.isPending ? "Création en cours..." : "Ajouter la société"}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <Alert>
+                  <AlertDescription>
+                    Vous avez atteint la limite de {subscription?.maxCompanies} sociétés pour votre abonnement {subscription?.planName}.
+                    Contactez-nous pour upgrader votre forfait.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
 
           <div className="grid gap-4">
             <h3 className="text-lg font-medium">Mes Sociétés</h3>
@@ -331,13 +354,29 @@ export default function UserBackOffice() {
               <Card key={access.companyId}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-semibold">{access.company.name}</h4>
                       <p className="text-sm text-muted-foreground">
                         {access.company.sector} • {access.company.size}
                       </p>
+                      {access.company.rcsNumber && (
+                        <p className="text-xs text-muted-foreground">RCS: {access.company.rcsNumber}</p>
+                      )}
+                      {access.company.address && (
+                        <p className="text-xs text-muted-foreground">{access.company.address}</p>
+                      )}
                     </div>
-                    <Badge>Propriétaire</Badge>
+                    <div className="flex items-center gap-3">
+                      <Badge>Propriétaire</Badge>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -351,13 +390,25 @@ export default function UserBackOffice() {
                   <Card key={access.companyId}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <h4 className="font-semibold">{access.company.name}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Rôle: {access.role} • Permissions: {access.permissions?.join(', ')}
+                            Rôle: {access.role}
                           </p>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {access.permissions?.map((perm) => (
+                              <Badge key={perm} variant="outline" className="text-xs">
+                                {AVAILABLE_PERMISSIONS.find(p => p.id === perm)?.label || perm}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                        <Badge variant="secondary">Collaborateur</Badge>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="secondary">Collaborateur</Badge>
+                          <Button variant="outline" size="sm">
+                            Quitter
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -385,12 +436,12 @@ export default function UserBackOffice() {
             </Select>
           </div>
 
-          {selectedCompanyId && (
+          {selectedCompanyId ? (
             <>
               <Card>
                 <CardHeader>
                   <CardTitle>Inviter un Collaborateur</CardTitle>
-                  <CardDescription>Envoyez une invitation par email</CardDescription>
+                  <CardDescription>Envoyez une invitation par email à un nouveau collaborateur</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={inviteForm.handleSubmit((data) => inviteCollaboratorMutation.mutate(data))} className="space-y-4">
@@ -452,9 +503,9 @@ export default function UserBackOffice() {
                         </div>
                       </div>
                     </div>
-                    <Button type="submit" disabled={inviteCollaboratorMutation.isPending}>
+                    <Button type="submit" disabled={inviteCollaboratorMutation.isPending} className="w-full">
                       <Mail className="w-4 h-4 mr-2" />
-                      Envoyer l'invitation
+                      {inviteCollaboratorMutation.isPending ? "Envoi en cours..." : "Envoyer l'invitation"}
                     </Button>
                   </form>
                 </CardContent>
@@ -514,6 +565,12 @@ export default function UserBackOffice() {
                 </CardContent>
               </Card>
             </>
+          ) : (
+            <Alert>
+              <AlertDescription>
+                Sélectionnez une société dans la liste déroulante ci-dessus pour gérer ses collaborateurs.
+              </AlertDescription>
+            </Alert>
           )}
         </TabsContent>
 
