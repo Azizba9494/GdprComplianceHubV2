@@ -985,7 +985,7 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4">
-                  {['generalDescription', 'purposes', 'dataController', 'dataProcessors', 'applicableReferentials'].map(key => {
+                  {['generalDescription', 'purposes', 'personalDataProcessed', 'dataController', 'dataProcessors', 'applicableReferentials'].map(key => {
                     const prompt = prompts?.find((p: AiPrompt) => p.category === key);
                     const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
                     
