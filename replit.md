@@ -144,6 +144,7 @@ This is a GDPR (General Data Protection Regulation) compliance platform designed
 - June 18, 2025. Initial setup
 - June 18, 2025. Migrated from Gemini 2.0 Flash Experimental to Gemini 2.5 Flash for improved performance and stability
 - June 19, 2025. Implemented Automated Contextual Data Extraction for AI Prompts - comprehensive context analysis including industry-specific recommendations, processing record similarity analysis, compliance context, and intelligent data integration
+- June 20, 2025. Enhanced Processing Records with Data Controller and DPO information - automatic filling of data controller details from company profile, added DPO contact information fields, improved UI with proper badges and sections
 
 ## User Preferences
 
