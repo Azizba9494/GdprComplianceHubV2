@@ -73,58 +73,7 @@ export default function DpiaRiskAssessment({ dpiaId, companyId, processingRecord
     enabled: !!dpiaId,
   });
 
-  // AI-assisted risk analysis mutation
-  const generateRiskAnalysisMutation = useMutation({
-    mutationFn: async ({ riskCategory, section, promptKey }: { 
-      riskCategory: string; 
-      section: string; 
-      promptKey: string; 
-    }) => {
-      const response = await fetch("/api/ai/generate-risk-content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          field: fieldType,
-          companyId,
-          processingRecordId: dpiaId,
-          riskType: riskCategoryId
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error("Erreur lors de la génération de l'analyse");
-      }
-      
-      return response.json();
-    },
-    onSuccess: (data, variables) => {
-      setRiskData(prev => ({
-        ...prev,
-        [variables.riskCategory]: {
-          ...prev[variables.riskCategory],
-          [variables.section]: data.analysis
-        }
-      }));
-      
-      toast({
-        title: "Analyse générée",
-        description: "L'analyse de risque a été générée avec succès.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de générer l'analyse",
-        variant: "destructive",
-      });
-    },
-    onSettled: (data, error, variables) => {
-      setLoadingPrompts(prev => ({
-        ...prev,
-        [`${variables.riskCategory}-${variables.section}`]: false
-      }));
-    },
-  });
+  // Remove unused mutation - using direct API calls now
 
   const handleGenerateAnalysis = async (riskCategory: string, section: string, promptKey: string) => {
     const key = `${riskCategory}-${section}`;

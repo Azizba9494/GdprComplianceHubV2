@@ -1330,7 +1330,7 @@ Analysez:
 Contexte technique:
 - Systèmes utilisés: ${processingRecord?.systems || 'Non spécifiés'}
 - Mesures de sécurité existantes: ${processingRecord?.securityMeasures?.join(', ') || 'Non spécifiées'}`;
-      } else if (field === 'riskSources') {
+      } else if (field === 'riskSources' || field === 'sources') {
         basePrompt = `Identifiez les sources et origines du risque "${riskType}" pour le traitement "${processingRecord?.name || 'Non spécifié'}".
 
 Analysez:
@@ -1340,7 +1340,7 @@ Analysez:
 - Les lacunes techniques ou humaines
 
 Soyez spécifique au contexte du secteur ${company?.sector || 'générique'}.`;
-      } else if (field === 'existingMeasures') {
+      } else if (field === 'existingMeasures' || field === 'measures') {
         basePrompt = `Proposez des mesures préventives et correctives pour atténuer le risque "${riskType}" dans le traitement "${processingRecord?.name || 'Non spécifié'}".
 
 Incluez:
