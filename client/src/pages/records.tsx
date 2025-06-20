@@ -129,6 +129,7 @@ export default function Records() {
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [showJustification, setShowJustification] = useState<{[key: string]: boolean}>({});
   const [dpiaResults, setDpiaResults] = useState<{[key: number]: {required: boolean, justification: string}}>({});
+  const [editingValues, setEditingValues] = useState<{[key: string]: any}>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -1420,13 +1421,36 @@ Informations complémentaires: ${data.additionalInfo}
                       {record.type === "controller" ? "Responsable" : "Sous-traitant"}
                     </Badge>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setEditingRecord(editingRecord === record.id ? null : record.id)}
-                  >
-                    {editingRecord === record.id ? <Save className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
-                  </Button>
+                  <div className="flex gap-2">
+                    {editingRecord === record.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => saveAllChanges(record.id)}
+                        >
+                          <Save className="w-4 h-4 mr-1" />
+                          Enregistrer
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => cancelEdit(record.id)}
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Annuler
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingRecord(record.id)}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1575,8 +1599,8 @@ Informations complémentaires: ${data.additionalInfo}
                       <Label className="text-sm font-medium">Dénomination</Label>
                       {editingRecord === record.id ? (
                         <Input
-                          defaultValue={record.dataControllerName || ""}
-                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerName', e.target.value)}
+                          defaultValue={getFieldValue(record, 'dataControllerName') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerName', e.target.value)}
                           className="mt-1"
                         />
                       ) : (
@@ -1587,8 +1611,8 @@ Informations complémentaires: ${data.additionalInfo}
                       <Label className="text-sm font-medium">Adresse</Label>
                       {editingRecord === record.id ? (
                         <Input
-                          defaultValue={record.dataControllerAddress || ""}
-                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerAddress', e.target.value)}
+                          defaultValue={getFieldValue(record, 'dataControllerAddress') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerAddress', e.target.value)}
                           className="mt-1"
                         />
                       ) : (
@@ -1599,8 +1623,8 @@ Informations complémentaires: ${data.additionalInfo}
                       <Label className="text-sm font-medium">Téléphone</Label>
                       {editingRecord === record.id ? (
                         <Input
-                          defaultValue={record.dataControllerPhone || ""}
-                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerPhone', e.target.value)}
+                          defaultValue={getFieldValue(record, 'dataControllerPhone') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerPhone', e.target.value)}
                           className="mt-1"
                         />
                       ) : (
@@ -1611,8 +1635,8 @@ Informations complémentaires: ${data.additionalInfo}
                       <Label className="text-sm font-medium">Email</Label>
                       {editingRecord === record.id ? (
                         <Input
-                          defaultValue={record.dataControllerEmail || ""}
-                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerEmail', e.target.value)}
+                          defaultValue={getFieldValue(record, 'dataControllerEmail') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerEmail', e.target.value)}
                           className="mt-1"
                         />
                       ) : (
@@ -1633,8 +1657,8 @@ Informations complémentaires: ${data.additionalInfo}
                       <Label className="text-sm font-medium">L'entreprise dispose-t-elle d'un DPO ?</Label>
                       {editingRecord === record.id ? (
                         <Switch
-                          checked={record.hasDpo || false}
-                          onCheckedChange={(checked) => handleFieldUpdate(record.id, 'hasDpo', checked)}
+                          checked={getFieldValue(record, 'hasDpo') || false}
+                          onCheckedChange={(checked) => handleFieldChange(record.id, 'hasDpo', checked)}
                         />
                       ) : (
                         <Badge variant={record.hasDpo ? "default" : "secondary"}>
@@ -1643,14 +1667,14 @@ Informations complémentaires: ${data.additionalInfo}
                       )}
                     </div>
                     
-                    {record.hasDpo && (
+                    {(editingRecord === record.id ? getFieldValue(record, 'hasDpo') : record.hasDpo) && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <Label className="text-sm font-medium">Nom du DPO</Label>
                           {editingRecord === record.id ? (
                             <Input
-                              defaultValue={record.dpoName || ""}
-                              onBlur={(e) => handleFieldUpdate(record.id, 'dpoName', e.target.value)}
+                              defaultValue={getFieldValue(record, 'dpoName') || ""}
+                              onChange={(e) => handleFieldChange(record.id, 'dpoName', e.target.value)}
                               className="mt-1"
                             />
                           ) : (
@@ -1661,8 +1685,8 @@ Informations complémentaires: ${data.additionalInfo}
                           <Label className="text-sm font-medium">Téléphone DPO</Label>
                           {editingRecord === record.id ? (
                             <Input
-                              defaultValue={record.dpoPhone || ""}
-                              onBlur={(e) => handleFieldUpdate(record.id, 'dpoPhone', e.target.value)}
+                              defaultValue={getFieldValue(record, 'dpoPhone') || ""}
+                              onChange={(e) => handleFieldChange(record.id, 'dpoPhone', e.target.value)}
                               className="mt-1"
                             />
                           ) : (
@@ -1673,8 +1697,8 @@ Informations complémentaires: ${data.additionalInfo}
                           <Label className="text-sm font-medium">Email DPO</Label>
                           {editingRecord === record.id ? (
                             <Input
-                              defaultValue={record.dpoEmail || ""}
-                              onBlur={(e) => handleFieldUpdate(record.id, 'dpoEmail', e.target.value)}
+                              defaultValue={getFieldValue(record, 'dpoEmail') || ""}
+                              onChange={(e) => handleFieldChange(record.id, 'dpoEmail', e.target.value)}
                               className="mt-1"
                             />
                           ) : (
