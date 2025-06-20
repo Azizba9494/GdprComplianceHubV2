@@ -47,7 +47,7 @@ export const recordsApi = {
   get: (companyId: number) =>
     apiRequest("GET", `/api/records/${companyId}`),
   
-  generate: (data: { companyId: number; processingType: string; description: string }) =>
+  generate: (data: any) =>
     apiRequest("POST", "/api/records/generate", data),
   
   create: (recordData: any) =>

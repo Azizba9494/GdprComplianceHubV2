@@ -225,8 +225,8 @@ export default function Records() {
   };
 
   const generateMutation = useMutation({
-    mutationFn: (data: any) =>
-      recordsApi.generate({
+    mutationFn: (data: any) => {
+      const requestData = {
         companyId: COMPANY_ID,
         processingType: data.processingType,
         description: `
@@ -239,8 +239,21 @@ Durée de conservation: ${data.retentionPeriod}
 Mesures de sécurité: ${data.securityMeasures}
 Transferts pays tiers: ${data.thirdCountries}
 Informations complémentaires: ${data.additionalInfo}
-        `,
-      }),
+        `.trim(),
+        // Include data controller and DPO information
+        dataControllerName: data.dataControllerName,
+        dataControllerAddress: data.dataControllerAddress,
+        dataControllerPhone: data.dataControllerPhone,
+        dataControllerEmail: data.dataControllerEmail,
+        hasDpo: data.hasDpo,
+        dpoName: data.dpoName,
+        dpoPhone: data.dpoPhone,
+        dpoEmail: data.dpoEmail,
+      };
+      
+      console.log('Sending generateMutation data:', requestData);
+      return recordsApi.generate(requestData).then(res => res.json());
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/records'] });
       setIsGenerateDialogOpen(false);
