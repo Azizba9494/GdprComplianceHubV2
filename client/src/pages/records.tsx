@@ -629,7 +629,7 @@ Informations complémentaires: ${data.additionalInfo}
                       name="retention"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Durée de conservation</FormLabel>
+                          <FormLabel>Durée de conservation *</FormLabel>
                           <FormControl>
                             <Input placeholder="Ex: 3 ans après fin du contrat..." {...field} />
                           </FormControl>
