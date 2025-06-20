@@ -90,10 +90,10 @@ export default function UserBackOffice() {
     queryKey: ['/api/user/subscription'],
   });
 
-  // Fetch collaborators for selected company
+  // Fetch collaborators for the user's company
   const { data: collaborators } = useQuery({
-    queryKey: ['/api/user/collaborators', selectedCompanyId],
-    enabled: !!selectedCompanyId,
+    queryKey: ['/api/user/collaborators', userAccess?.[0]?.companyId],
+    enabled: !!userAccess?.[0]?.companyId,
   });
 
   // Fetch invoices
@@ -143,12 +143,12 @@ export default function UserBackOffice() {
     },
   });
 
-  // Update company ID when selection changes
+  // Update company ID when user access loads
   React.useEffect(() => {
-    if (selectedCompanyId) {
-      inviteForm.setValue('companyId', selectedCompanyId);
+    if (userAccess?.[0]?.companyId) {
+      inviteForm.setValue('companyId', userAccess[0].companyId);
     }
-  }, [selectedCompanyId, inviteForm]);
+  }, [userAccess, inviteForm]);
 
   // Mutations
   const updateProfileMutation = useMutation({
@@ -194,7 +194,7 @@ export default function UserBackOffice() {
     mutationFn: (data: InviteForm) => apiRequest('/api/user/invite', 'POST', data),
     onSuccess: () => {
       toast({ title: "Invitation envoyée avec succès" });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/collaborators', selectedCompanyId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/collaborators', userAccess?.[0]?.companyId] });
       inviteForm.reset();
     },
     onError: (error: any) => {
@@ -210,7 +210,7 @@ export default function UserBackOffice() {
     mutationFn: (accessId: number) => apiRequest(`/api/user/access/${accessId}`, 'DELETE'),
     onSuccess: () => {
       toast({ title: "Accès révoqué avec succès" });
-      queryClient.invalidateQueries({ queryKey: ['/api/user/collaborators', selectedCompanyId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/collaborators', userAccess?.[0]?.companyId] });
     },
     onError: (error: any) => {
       toast({ 
@@ -221,27 +221,17 @@ export default function UserBackOffice() {
     },
   });
 
-  const ownedCompanies = userAccess?.filter(access => access.role === 'owner') || [];
-  const collaboratingCompanies = userAccess?.filter(access => access.role !== 'owner') || [];
-  const canAddCompany = subscription && ownedCompanies.length < subscription.maxCompanies;
+  const currentCompany = userAccess?.[0]; // Single company model
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Mon Espace Utilisateur</h1>
-        {userAccess && userAccess.length > 1 && (
-          <Select value={selectedCompanyId?.toString()} onValueChange={(value) => setSelectedCompanyId(Number(value))}>
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="Sélectionner une société" />
-            </SelectTrigger>
-            <SelectContent>
-              {userAccess.map((access) => (
-                <SelectItem key={access.companyId} value={access.companyId.toString()}>
-                  {access.company.name} ({access.role})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {currentCompany && (
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">Société actuelle</p>
+            <p className="font-medium">{currentCompany.company.name}</p>
+          </div>
         )}
       </div>
 
@@ -251,9 +241,9 @@ export default function UserBackOffice() {
             <User className="w-4 h-4" />
             Mon Compte
           </TabsTrigger>
-          <TabsTrigger value="companies" className="flex items-center gap-2">
+          <TabsTrigger value="company" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
-            Sociétés
+            Ma Société
           </TabsTrigger>
           <TabsTrigger value="collaborators" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
@@ -328,31 +318,71 @@ export default function UserBackOffice() {
           </div>
         </TabsContent>
 
-        {/* Companies Tab */}
-        <TabsContent value="companies" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Gestion des Sociétés</h2>
-            {subscription && (
-              <Badge variant="outline">
-                {ownedCompanies.length} / {subscription.maxCompanies} sociétés
-              </Badge>
-            )}
-          </div>
+        {/* Company Tab */}
+        <TabsContent value="company" className="space-y-6">
+          <h2 className="text-2xl font-semibold">Informations de la Société</h2>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Ajouter une Société</CardTitle>
-              <CardDescription>
-                Créez une nouvelle société dans votre compte
-                {subscription && (
-                  <span className="block text-xs text-muted-foreground mt-1">
-                    {ownedCompanies.length} / {subscription.maxCompanies} sociétés utilisées
-                  </span>
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {canAddCompany ? (
+          {/* Fetch current company data */}
+          {userAccess && userAccess.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Modifier les informations de votre société</CardTitle>
+                <CardDescription>Mettez à jour les détails de votre entreprise</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={companyForm.handleSubmit((data) => createCompanyMutation.mutate(data))} className="space-y-4">
+                  <div>
+                    <Label htmlFor="companyName">Dénomination sociale *</Label>
+                    <Input 
+                      id="companyName" 
+                      {...companyForm.register("name")} 
+                      placeholder="Ex: Ma Société SARL"
+                      defaultValue={userAccess[0]?.company?.name || ""}
+                    />
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="rcsNumber">Numéro RCS</Label>
+                      <Input 
+                        id="rcsNumber" 
+                        {...companyForm.register("rcsNumber")} 
+                        placeholder="Ex: 123 456 789 R.C.S. Paris"
+                        defaultValue={userAccess[0]?.company?.rcsNumber || ""}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sector">Secteur d'activité</Label>
+                      <Input 
+                        id="sector" 
+                        {...companyForm.register("sector")} 
+                        placeholder="Ex: Services informatiques"
+                        defaultValue={userAccess[0]?.company?.sector || ""}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="address">Adresse du siège social</Label>
+                    <Input 
+                      id="address" 
+                      {...companyForm.register("address")} 
+                      placeholder="Ex: 123 rue de la République, 75001 Paris"
+                      defaultValue={userAccess[0]?.company?.address || ""}
+                    />
+                  </div>
+                  <Button type="submit" disabled={createCompanyMutation.isPending} className="w-full">
+                    <Settings className="w-4 h-4 mr-2" />
+                    {createCompanyMutation.isPending ? "Mise à jour..." : "Mettre à jour la société"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Créer votre société</CardTitle>
+                <CardDescription>Configurez les informations de votre entreprise</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <form onSubmit={companyForm.handleSubmit((data) => createCompanyMutation.mutate(data))} className="space-y-4">
                   <div>
                     <Label htmlFor="companyName">Dénomination sociale *</Label>
@@ -374,109 +404,19 @@ export default function UserBackOffice() {
                   </div>
                   <Button type="submit" disabled={createCompanyMutation.isPending} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
-                    {createCompanyMutation.isPending ? "Création en cours..." : "Ajouter la société"}
+                    {createCompanyMutation.isPending ? "Création en cours..." : "Créer la société"}
                   </Button>
                 </form>
-              ) : (
-                <Alert>
-                  <AlertDescription>
-                    Vous avez atteint la limite de {subscription?.maxCompanies} sociétés pour votre abonnement {subscription?.planName}.
-                    Contactez-nous pour upgrader votre forfait.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4">
-            <h3 className="text-lg font-medium">Mes Sociétés</h3>
-            {ownedCompanies.map((access) => (
-              <Card key={access.companyId}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{access.company.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {access.company.sector} • {access.company.size}
-                      </p>
-                      {access.company.rcsNumber && (
-                        <p className="text-xs text-muted-foreground">RCS: {access.company.rcsNumber}</p>
-                      )}
-                      {access.company.address && (
-                        <p className="text-xs text-muted-foreground">{access.company.address}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge>Propriétaire</Badge>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {collaboratingCompanies.length > 0 && (
-              <>
-                <Separator />
-                <h3 className="text-lg font-medium">Sociétés Collaboratives</h3>
-                {collaboratingCompanies.map((access) => (
-                  <Card key={access.companyId}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{access.company.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Rôle: {access.role}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {access.permissions?.map((perm) => (
-                              <Badge key={perm} variant="outline" className="text-xs">
-                                {AVAILABLE_PERMISSIONS.find(p => p.id === perm)?.label || perm}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge variant="secondary">Collaborateur</Badge>
-                          <Button variant="outline" size="sm">
-                            Quitter
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </>
-            )}
-          </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Collaborators Tab */}
         <TabsContent value="collaborators" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Gestion des Collaborateurs</h2>
-            <Select value={selectedCompanyId?.toString()} onValueChange={(value) => setSelectedCompanyId(Number(value))}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Sélectionner une société" />
-              </SelectTrigger>
-              <SelectContent>
-                {ownedCompanies.map((access) => (
-                  <SelectItem key={access.companyId} value={access.companyId.toString()}>
-                    {access.company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <h2 className="text-2xl font-semibold">Gestion des Collaborateurs</h2>
 
-          {selectedCompanyId ? (
+          {userAccess && userAccess.length > 0 ? (
             <>
               <Card>
                 <CardHeader>
@@ -600,7 +540,7 @@ export default function UserBackOffice() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">Aucun collaborateur pour cette société</p>
+                    <p className="text-muted-foreground">Aucun collaborateur pour votre société</p>
                   )}
                 </CardContent>
               </Card>
@@ -608,7 +548,7 @@ export default function UserBackOffice() {
           ) : (
             <Alert>
               <AlertDescription>
-                Sélectionnez une société dans la liste déroulante ci-dessus pour gérer ses collaborateurs.
+                Veuillez d'abord configurer votre société dans l'onglet "Ma Société" pour pouvoir inviter des collaborateurs.
               </AlertDescription>
             </Alert>
           )}
