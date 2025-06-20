@@ -270,6 +270,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyId,
         ...recordTemplate,
         type: processingType,
+        // Auto-fill data controller information from company data
+        dataControllerName: company.name,
+        dataControllerAddress: company.address,
+        dataControllerPhone: company.phone,
+        dataControllerEmail: company.email,
       });
 
       res.json(record);
@@ -281,6 +286,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/records", async (req, res) => {
     try {
       const recordData = insertProcessingRecordSchema.parse(req.body);
+      
+      // Auto-fill data controller information from company data if not provided
+      if (!recordData.dataControllerName || !recordData.dataControllerAddress) {
+        const company = await storage.getCompany(recordData.companyId);
+        if (company) {
+          recordData.dataControllerName = recordData.dataControllerName || company.name;
+          recordData.dataControllerAddress = recordData.dataControllerAddress || company.address;
+          recordData.dataControllerPhone = recordData.dataControllerPhone || company.phone;
+          recordData.dataControllerEmail = recordData.dataControllerEmail || company.email;
+        }
+      }
+      
       const record = await storage.createProcessingRecord(recordData);
       res.json(record);
     } catch (error: any) {

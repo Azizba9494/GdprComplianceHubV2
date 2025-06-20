@@ -1239,6 +1239,128 @@ Informations complémentaires: ${data.additionalInfo}
                   </div>
                 </div>
 
+                {/* Responsable de traitement */}
+                <div className="pt-4 border-t">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Building className="w-4 h-4" />
+                    <Label className="font-medium text-base">Responsable de traitement</Label>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+                    <div>
+                      <Label className="text-sm font-medium">Dénomination</Label>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={record.dataControllerName || ""}
+                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerName', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerName || "Non renseigné"}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Adresse</Label>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={record.dataControllerAddress || ""}
+                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerAddress', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerAddress || "Non renseigné"}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Téléphone</Label>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={record.dataControllerPhone || ""}
+                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerPhone', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerPhone || "Non renseigné"}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Email</Label>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={record.dataControllerEmail || ""}
+                          onBlur={(e) => handleFieldUpdate(record.id, 'dataControllerEmail', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerEmail || "Non renseigné"}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* DPO */}
+                <div className="pt-4 border-t">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Users className="w-4 h-4" />
+                    <Label className="font-medium text-base">Délégué à la Protection des Données (DPO)</Label>
+                  </div>
+                  <div className="pl-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Label className="text-sm font-medium">L'entreprise dispose-t-elle d'un DPO ?</Label>
+                      {editingRecord === record.id ? (
+                        <Switch
+                          checked={record.hasDpo || false}
+                          onCheckedChange={(checked) => handleFieldUpdate(record.id, 'hasDpo', checked)}
+                        />
+                      ) : (
+                        <Badge variant={record.hasDpo ? "default" : "secondary"}>
+                          {record.hasDpo ? "Oui" : "Non"}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {record.hasDpo && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label className="text-sm font-medium">Nom du DPO</Label>
+                          {editingRecord === record.id ? (
+                            <Input
+                              defaultValue={record.dpoName || ""}
+                              onBlur={(e) => handleFieldUpdate(record.id, 'dpoName', e.target.value)}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm mt-1">{record.dpoName || "Non renseigné"}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Téléphone DPO</Label>
+                          {editingRecord === record.id ? (
+                            <Input
+                              defaultValue={record.dpoPhone || ""}
+                              onBlur={(e) => handleFieldUpdate(record.id, 'dpoPhone', e.target.value)}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm mt-1">{record.dpoPhone || "Non renseigné"}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium">Email DPO</Label>
+                          {editingRecord === record.id ? (
+                            <Input
+                              defaultValue={record.dpoEmail || ""}
+                              onBlur={(e) => handleFieldUpdate(record.id, 'dpoEmail', e.target.value)}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm mt-1">{record.dpoEmail || "Non renseigné"}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="pt-4 border-t">
                   <Label className="font-medium">Mesures de sécurité</Label>
                   <EditableList
