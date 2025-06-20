@@ -200,11 +200,20 @@ export class ContextExtractor {
       factors += 0.3;
     }
 
+    // Recipients similarity - handle arrays
+    if (Array.isArray(record1.recipients) && Array.isArray(record2.recipients)) {
+      const recipients1 = record1.recipients.join(' ').toLowerCase();
+      const recipients2 = record2.recipients.join(' ').toLowerCase();
+      const commonWords = this.getCommonWords(recipients1, recipients2);
+      score += commonWords * 0.2;
+      factors += 0.2;
+    }
+
     // Legal basis similarity - handle null values
     if (record1.legalBasis && record2.legalBasis && 
         typeof record1.legalBasis === 'string' && typeof record2.legalBasis === 'string') {
-      score += record1.legalBasis === record2.legalBasis ? 0.3 : 0;
-      factors += 0.3;
+      score += record1.legalBasis === record2.legalBasis ? 0.1 : 0;
+      factors += 0.1;
     }
 
     return factors > 0 ? score / factors : 0;
