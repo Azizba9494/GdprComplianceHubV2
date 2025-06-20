@@ -875,7 +875,7 @@ Informations complémentaires: ${data.additionalInfo}
                       name="purposes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Finalités du traitement *</FormLabel>
+                          <FormLabel>Finalités du traitement </FormLabel>
                           <FormControl>
                             <Textarea 
                               placeholder="Pourquoi collectez-vous ces données ? (gestion RH, facturation, marketing, etc.)"
@@ -1023,7 +1023,6 @@ Informations complémentaires: ${data.additionalInfo}
           </Dialog>
         </div>
       </div>
-
       {/* Filtres */}
       <Card>
         <CardContent className="p-6">
@@ -1044,7 +1043,6 @@ Informations complémentaires: ${data.additionalInfo}
           </div>
         </CardContent>
       </Card>
-
       {/* Liste des fiches */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
