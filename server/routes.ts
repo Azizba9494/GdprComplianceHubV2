@@ -581,7 +581,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'rightsRectification': 'rectificationMeasures',
         'rightsOpposition': 'oppositionMeasures',
         'subcontractingMeasures': 'subcontractingMeasures',
-        'internationalTransfersMeasures': 'internationalTransferMeasures'
+        'internationalTransfersMeasures': 'internationalTransferMeasures',
+        // Risk analysis fields
+        'illegitimateAccessImpacts': 'illegitimateAccessImpacts',
+        'illegitimateAccessThreats': 'illegitimateAccessThreats',
+        'illegitimateAccessSources': 'illegitimateAccessSources',
+        'illegitimateAccessMeasures': 'illegitimateAccessMeasures',
+        'dataModificationImpacts': 'dataModificationImpacts',
+        'dataModificationThreats': 'dataModificationThreats',
+        'dataModificationSources': 'dataModificationSources',
+        'dataModificationMeasures': 'dataModificationMeasures',
+        'dataDisappearanceImpacts': 'dataDisappearanceImpacts',
+        'dataDisappearanceThreats': 'dataDisappearanceThreats',
+        'dataDisappearanceSources': 'dataDisappearanceSources',
+        'dataDisappearanceMeasures': 'dataDisappearanceMeasures'
       };
       
       const promptCategory = fieldToCategoryMap[questionField];
