@@ -164,7 +164,11 @@ router.post('/companies', async (req, res) => {
     
     // Create company
     const company = await storage.createCompany({
-      ...validatedData,
+      name: validatedData.name,
+      sector: validatedData.sector || null,
+      size: "small", // Default size
+      rcsNumber: validatedData.rcsNumber || null,
+      address: validatedData.address || null,
       userId: userId
     });
 
@@ -201,7 +205,7 @@ router.get('/invoices', async (req, res) => {
 });
 
 // GET /api/company/collaborators/:companyId - Get company collaborators
-router.get('/company/collaborators/:companyId', async (req, res) => {
+router.get('/collaborators/:companyId', async (req, res) => {
   try {
     const userId = 1; // req.session?.user?.id || 1;
     const companyId = parseInt(req.params.companyId);
@@ -229,7 +233,7 @@ router.get('/company/collaborators/:companyId', async (req, res) => {
 });
 
 // POST /api/company/invite - Invite collaborator
-router.post('/company/invite', async (req, res) => {
+router.post('/invite', async (req, res) => {
   try {
     const userId = 1; // req.session?.user?.id || 1;
     if (!userId) {
@@ -276,7 +280,7 @@ router.post('/company/invite', async (req, res) => {
 });
 
 // DELETE /api/company/access/:accessId - Revoke access
-router.delete('/company/access/:accessId', async (req, res) => {
+router.delete('/access/:accessId', async (req, res) => {
   try {
     const userId = 1; // req.session?.user?.id || 1;
     const accessId = parseInt(req.params.accessId);

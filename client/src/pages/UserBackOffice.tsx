@@ -92,7 +92,7 @@ export default function UserBackOffice() {
 
   // Fetch collaborators for selected company
   const { data: collaborators } = useQuery({
-    queryKey: ['/api/company/collaborators', selectedCompanyId],
+    queryKey: ['/api/user/collaborators', selectedCompanyId],
     enabled: !!selectedCompanyId,
   });
 
@@ -105,12 +105,24 @@ export default function UserBackOffice() {
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      phoneNumber: user?.phoneNumber || "",
-      email: user?.email || "",
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
+      email: "",
     },
   });
+
+  // Update form when user data loads
+  React.useEffect(() => {
+    if (user) {
+      profileForm.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        phoneNumber: user.phoneNumber || "",
+        email: user.email || "",
+      });
+    }
+  }, [user, profileForm]);
 
   // Password form
   const passwordForm = useForm<PasswordForm>({
@@ -145,6 +157,13 @@ export default function UserBackOffice() {
       toast({ title: "Profil mis à jour avec succès" });
       queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
     },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erreur lors de la mise à jour", 
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive"
+      });
+    },
   });
 
   const updatePasswordMutation = useMutation({
@@ -162,22 +181,43 @@ export default function UserBackOffice() {
       queryClient.invalidateQueries({ queryKey: ['/api/user/company-access'] });
       companyForm.reset();
     },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erreur lors de la création", 
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive"
+      });
+    },
   });
 
   const inviteCollaboratorMutation = useMutation({
-    mutationFn: (data: InviteForm) => apiRequest('/api/company/invite', 'POST', data),
+    mutationFn: (data: InviteForm) => apiRequest('/api/user/invite', 'POST', data),
     onSuccess: () => {
       toast({ title: "Invitation envoyée avec succès" });
-      queryClient.invalidateQueries({ queryKey: ['/api/company/collaborators', selectedCompanyId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/collaborators', selectedCompanyId] });
       inviteForm.reset();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erreur lors de l'invitation", 
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive"
+      });
     },
   });
 
   const revokeAccessMutation = useMutation({
-    mutationFn: (accessId: number) => apiRequest(`/api/company/access/${accessId}`, 'DELETE'),
+    mutationFn: (accessId: number) => apiRequest(`/api/user/access/${accessId}`, 'DELETE'),
     onSuccess: () => {
       toast({ title: "Accès révoqué avec succès" });
-      queryClient.invalidateQueries({ queryKey: ['/api/company/collaborators', selectedCompanyId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/collaborators', selectedCompanyId] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erreur lors de la révocation", 
+        description: error.message || "Une erreur est survenue",
+        variant: "destructive"
+      });
     },
   });
 
@@ -254,7 +294,7 @@ export default function UserBackOffice() {
                     <Input id="email" type="email" {...profileForm.register("email")} />
                   </div>
                   <Button type="submit" disabled={updateProfileMutation.isPending}>
-                    Mettre à jour
+                    {updateProfileMutation.isPending ? "Mise à jour..." : "Mettre à jour"}
                   </Button>
                 </form>
               </CardContent>
@@ -280,7 +320,7 @@ export default function UserBackOffice() {
                     <Input id="confirmPassword" type="password" {...passwordForm.register("confirmPassword")} />
                   </div>
                   <Button type="submit" disabled={updatePasswordMutation.isPending}>
-                    Changer le mot de passe
+                    {updatePasswordMutation.isPending ? "Modification..." : "Changer le mot de passe"}
                   </Button>
                 </form>
               </CardContent>
