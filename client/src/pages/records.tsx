@@ -857,7 +857,7 @@ Informations complémentaires: ${data.additionalInfo}
                       name="dataTypes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Types de données collectées *</FormLabel>
+                          <FormLabel>Types de données collectées </FormLabel>
                           <FormControl>
                             <Textarea 
                               placeholder="Listez les catégories de données : identité, contact, données professionnelles, données sensibles, etc."
