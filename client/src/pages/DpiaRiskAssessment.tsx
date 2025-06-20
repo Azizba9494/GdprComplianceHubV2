@@ -80,16 +80,14 @@ export default function DpiaRiskAssessment({ dpiaId, companyId, processingRecord
       section: string; 
       promptKey: string; 
     }) => {
-      const response = await fetch("/api/dpia/ai-risk-analysis", {
+      const response = await fetch("/api/ai/generate-risk-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          field: fieldType,
           companyId,
-          dpiaId,
-          riskCategory,
-          section,
-          promptKey,
-          processingRecord
+          processingRecordId: dpiaId,
+          riskType: riskCategoryId
         }),
       });
       
