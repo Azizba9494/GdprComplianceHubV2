@@ -2173,7 +2173,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'impacts')}
+                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'impacts')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2203,7 +2203,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'threats')}
+                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'threats')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2233,7 +2233,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'sources')}
+                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'sources')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2263,7 +2263,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('illegitimateAccess', 'measures')}
+                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'measures')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2401,7 +2401,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('unwantedModification', 'impacts')}
+                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'impacts')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2431,7 +2431,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('unwantedModification', 'threats')}
+                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'threats')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2461,7 +2461,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('unwantedModification', 'sources')}
+                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'sources')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2491,7 +2491,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('unwantedModification', 'measures')}
+                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'measures')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2629,7 +2629,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'impacts')}
+                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'impacts')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2659,7 +2659,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'threats')}
+                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'threats')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2689,7 +2689,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'sources')}
+                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'sources')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
@@ -2719,7 +2719,7 @@ export default function DpiaAssessmentEnhanced() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => generateRiskAnalysis('dataDisappearance', 'measures')}
+                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'measures')}
                                   disabled={isGenerating}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
