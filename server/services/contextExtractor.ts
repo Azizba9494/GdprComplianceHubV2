@@ -13,18 +13,19 @@ export interface AIContext {
     id: number;
     name: string;
     purpose: string;
-    dataCategories: string;
-    recipients: string;
+    dataCategories: string[];
+    recipients: string[];
     legalBasis: string;
     retentionPeriod: string;
-    isInternational: boolean;
-    securityMeasures: string;
+    transfersOutsideEU: boolean;
+    securityMeasures: string[];
     riskLevel?: string;
   };
   relatedProcessingRecords: Array<{
     name: string;
     purpose: string;
-    dataCategories: string;
+    dataCategories: string[];
+    recipients: string[];
     similarity: number;
   }>;
   existingDpiaData: any;
@@ -96,12 +97,12 @@ export class ContextExtractor {
         id: processingRecord.id,
         name: processingRecord.name,
         purpose: processingRecord.purpose,
-        dataCategories: processingRecord.dataCategories && typeof processingRecord.dataCategories === 'string' ? processingRecord.dataCategories : '',
-        recipients: processingRecord.recipients && typeof processingRecord.recipients === 'string' ? processingRecord.recipients : '',
-        legalBasis: processingRecord.legalBasis && typeof processingRecord.legalBasis === 'string' ? processingRecord.legalBasis : '',
-        retentionPeriod: processingRecord.retentionPeriod && typeof processingRecord.retentionPeriod === 'string' ? processingRecord.retentionPeriod : '',
-        isInternational: processingRecord.isInternational || false,
-        securityMeasures: processingRecord.securityMeasures && typeof processingRecord.securityMeasures === 'string' ? processingRecord.securityMeasures : '',
+        dataCategories: Array.isArray(processingRecord.dataCategories) ? processingRecord.dataCategories : [],
+        recipients: Array.isArray(processingRecord.recipients) ? processingRecord.recipients : [],
+        legalBasis: processingRecord.legalBasis || '',
+        retentionPeriod: processingRecord.retention || '',
+        transfersOutsideEU: processingRecord.transfersOutsideEU || false,
+        securityMeasures: Array.isArray(processingRecord.securityMeasures) ? processingRecord.securityMeasures : [],
         riskLevel: this.assessProcessingRisk(processingRecord)
       } : undefined,
       relatedProcessingRecords: relatedRecords.slice(0, 3), // Limit to top 3 for relevance
@@ -165,7 +166,8 @@ export class ContextExtractor {
       .map(record => ({
         name: record.name,
         purpose: record.purpose,
-        dataCategories: record.dataCategories && typeof record.dataCategories === 'string' ? record.dataCategories : '',
+        dataCategories: Array.isArray(record.dataCategories) ? record.dataCategories : [],
+        recipients: Array.isArray(record.recipients) ? record.recipients : [],
         similarity: this.calculateSimilarity(currentRecord, record)
       }))
       .filter(record => record.similarity > 0.3)
@@ -189,11 +191,10 @@ export class ContextExtractor {
       factors += 0.4;
     }
 
-    // Data categories similarity - handle null values
-    if (record1.dataCategories && record2.dataCategories && 
-        typeof record1.dataCategories === 'string' && typeof record2.dataCategories === 'string') {
-      const data1 = record1.dataCategories.toLowerCase();
-      const data2 = record2.dataCategories.toLowerCase();
+    // Data categories similarity - handle arrays
+    if (Array.isArray(record1.dataCategories) && Array.isArray(record2.dataCategories)) {
+      const data1 = record1.dataCategories.join(' ').toLowerCase();
+      const data2 = record2.dataCategories.join(' ').toLowerCase();
       const commonWords = this.getCommonWords(data1, data2);
       score += commonWords * 0.3;
       factors += 0.3;
@@ -368,24 +369,46 @@ ${context.company.complianceScore ? `- Score de conformité actuel: ${context.co
 
     // Current processing being analyzed
     if (context.currentProcessing) {
+      const dataCategories = Array.isArray(context.currentProcessing.dataCategories) 
+        ? context.currentProcessing.dataCategories.join(', ') 
+        : context.currentProcessing.dataCategories || 'Non spécifiées';
+      
+      const recipients = Array.isArray(context.currentProcessing.recipients) 
+        ? context.currentProcessing.recipients.join(', ') 
+        : context.currentProcessing.recipients || 'Non spécifiés';
+      
+      const securityMeasures = Array.isArray(context.currentProcessing.securityMeasures) 
+        ? context.currentProcessing.securityMeasures.join(', ') 
+        : context.currentProcessing.securityMeasures || 'Non spécifiées';
+
       sections.push(`TRAITEMENT ANALYSÉ DANS CETTE AIPD:
 - Nom du traitement: ${context.currentProcessing.name}
 - Finalité: ${context.currentProcessing.purpose}
-- Catégories de données: ${context.currentProcessing.dataCategories}
-- Destinataires: ${context.currentProcessing.recipients || 'Non spécifiés'}
+- Catégories de données: ${dataCategories}
+- Destinataires: ${recipients}
 - Base légale: ${context.currentProcessing.legalBasis || 'Non spécifiée'}
 - Durée de conservation: ${context.currentProcessing.retentionPeriod || 'Non spécifiée'}
-- Transferts internationaux: ${context.currentProcessing.isInternational ? 'Oui' : 'Non'}
-- Mesures de sécurité existantes: ${context.currentProcessing.securityMeasures || 'Non spécifiées'}
+- Transferts hors UE: ${context.currentProcessing.transfersOutsideEU ? 'Oui' : 'Non'}
+- Mesures de sécurité existantes: ${securityMeasures}
 - Niveau de risque estimé: ${context.currentProcessing.riskLevel}`);
     }
 
     // Related processing records
     if (context.relatedProcessingRecords.length > 0) {
       sections.push(`TRAITEMENTS SIMILAIRES DANS L'ENTREPRISE:
-${context.relatedProcessingRecords.map(record => 
-  `- ${record.name}: ${record.purpose} (similarité: ${Math.round(record.similarity * 100)}%)`
-).join('\n')}`);
+${context.relatedProcessingRecords.map(record => {
+  const dataCategories = Array.isArray(record.dataCategories) 
+    ? record.dataCategories.join(', ') 
+    : 'Non spécifiées';
+  const recipients = Array.isArray(record.recipients) 
+    ? record.recipients.join(', ') 
+    : 'Non spécifiés';
+  
+  return `- ${record.name}: ${record.purpose}
+  Catégories de données: ${dataCategories}
+  Destinataires: ${recipients}
+  (similarité: ${Math.round(record.similarity * 100)}%)`;
+}).join('\n')}`);
     }
 
     // Company compliance context
