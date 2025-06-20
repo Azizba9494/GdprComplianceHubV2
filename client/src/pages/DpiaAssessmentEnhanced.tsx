@@ -984,7 +984,18 @@ export default function DpiaAssessmentEnhanced() {
                             {...field}
                           />
                         </FormControl>
-                        
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateWithAI.mutate({ field: "applicableReferentials" })}
+                            disabled={isGenerating}
+                          >
+                            <Brain className="h-4 w-4 mr-2" />
+                            Générer avec l'IA
+                          </Button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
