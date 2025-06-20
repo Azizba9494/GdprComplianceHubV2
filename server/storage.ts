@@ -4,7 +4,10 @@ import {
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
   quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
+  subscriptions, userCompanyAccess, invitations, invoices,
   type User, type InsertUser, type Company, type InsertCompany,
+  type Subscription, type InsertSubscription, type UserCompanyAccess, type InsertUserCompanyAccess,
+  type Invitation, type InsertInvitation, type Invoice, type InsertInvoice,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
   type ComplianceSnapshot, type InsertComplianceSnapshot,
@@ -178,6 +181,21 @@ export interface IStorage {
   getDocumentPrompts(documentId: number): Promise<PromptDocument[]>;
   createPromptDocument(association: InsertPromptDocument): Promise<PromptDocument>;
   deletePromptDocument(promptId: number, documentId: number): Promise<void>;
+
+  // Multi-tenant methods
+  updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
+  getUserSubscription(userId: number): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(id: number, updates: Partial<InsertSubscription>): Promise<Subscription>;
+  getUserCompanyAccess(userId: number): Promise<UserCompanyAccess[]>;
+  createUserCompanyAccess(access: InsertUserCompanyAccess): Promise<UserCompanyAccess>;
+  deleteUserCompanyAccess(id: number): Promise<void>;
+  getCompanyCollaborators(companyId: number): Promise<UserCompanyAccess[]>;
+  createInvitation(invitation: InsertInvitation): Promise<Invitation>;
+  getInvitationByToken(token: string): Promise<Invitation | undefined>;
+  updateInvitation(id: number, updates: Partial<InsertInvitation>): Promise<Invitation>;
+  getUserInvoices(userId: number): Promise<Invoice[]>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
 }
 
 export class DatabaseStorage implements IStorage {

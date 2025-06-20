@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { 
   Shield, Home, ClipboardList, Book, FileText, 
-  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap 
+  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap, User 
 } from "lucide-react";
 
 const navigation = [
