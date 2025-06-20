@@ -694,7 +694,7 @@ Informations complémentaires: ${data.additionalInfo}
 
                     {/* Destinataires - Liste de choix + texte libre */}
                     <div className="space-y-3">
-                      <Label>Destinataires</Label>
+                      <Label>Destinataires *</Label>
                       <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
                         {RECIPIENT_TYPES.map((recipient) => (
                           <div key={recipient} className="flex items-center space-x-2">
