@@ -52,14 +52,23 @@ type CompanyForm = z.infer<typeof companySchema>;
 type InviteForm = z.infer<typeof inviteSchema>;
 
 const AVAILABLE_PERMISSIONS = [
-  { id: 'records', label: 'Registre des traitements' },
-  { id: 'dpia', label: 'Analyses d\'impact (AIPD)' },
-  { id: 'policies', label: 'Politiques de confidentialité' },
-  { id: 'breaches', label: 'Gestion des violations' },
-  { id: 'requests', label: 'Demandes d\'exercice de droits' },
-  { id: 'actions', label: 'Plan d\'actions' },
-  { id: 'invite', label: 'Inviter des collaborateurs' },
+  { id: 'all', label: 'Accès complet (Administrateur)' },
+  { id: 'records', label: 'Registre des traitements', actions: ['read', 'write', 'delete'] },
+  { id: 'dpia', label: 'Analyses d\'impact (AIPD)', actions: ['read', 'write', 'delete'] },
+  { id: 'policies', label: 'Politiques de confidentialité', actions: ['read', 'write', 'delete'] },
+  { id: 'breaches', label: 'Gestion des violations', actions: ['read', 'write', 'delete'] },
+  { id: 'requests', label: 'Demandes d\'exercice de droits', actions: ['read', 'write', 'delete'] },
+  { id: 'actions', label: 'Plan d\'actions', actions: ['read', 'write', 'delete'] },
+  { id: 'diagnostic', label: 'Diagnostic de conformité', actions: ['read', 'write'] },
+  { id: 'invite', label: 'Inviter des collaborateurs', actions: ['write'] },
+  { id: 'billing', label: 'Facturation et abonnements', actions: ['read'] },
 ];
+
+const ROLE_PERMISSIONS = {
+  'owner': ['all'],
+  'admin': ['records', 'dpia', 'policies', 'breaches', 'requests', 'actions', 'diagnostic', 'invite'],
+  'collaborator': ['records', 'dpia', 'policies', 'requests', 'actions']
+};
 
 export default function UserBackOffice() {
   const { toast } = useToast();
@@ -390,18 +399,57 @@ export default function UserBackOffice() {
                       <Input id="inviteEmail" type="email" {...inviteForm.register("email")} />
                     </div>
                     <div>
-                      <Label>Permissions</Label>
-                      <div className="grid gap-2 mt-2">
-                        {AVAILABLE_PERMISSIONS.map((permission) => (
-                          <label key={permission.id} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              value={permission.id}
-                              {...inviteForm.register("permissions")}
-                            />
-                            <span className="text-sm">{permission.label}</span>
-                          </label>
-                        ))}
+                      <Label>Rôle et Permissions</Label>
+                      <div className="space-y-4 mt-2">
+                        <div>
+                          <Label htmlFor="role">Rôle</Label>
+                          <Select onValueChange={(value) => {
+                            const defaultPermissions = ROLE_PERMISSIONS[value as keyof typeof ROLE_PERMISSIONS] || [];
+                            inviteForm.setValue('permissions', defaultPermissions);
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner un rôle" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">Administrateur</SelectItem>
+                              <SelectItem value="collaborator">Collaborateur</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label>Permissions détaillées</Label>
+                          <div className="grid gap-3 mt-2 max-h-48 overflow-y-auto border rounded p-3">
+                            {AVAILABLE_PERMISSIONS.map((permission) => (
+                              <div key={permission.id} className="space-y-2">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    value={permission.id}
+                                    {...inviteForm.register("permissions")}
+                                    className="rounded"
+                                  />
+                                  <span className="font-medium text-sm">{permission.label}</span>
+                                </label>
+                                {permission.actions && (
+                                  <div className="ml-6 space-y-1">
+                                    {permission.actions.map((action) => (
+                                      <label key={`${permission.id}_${action}`} className="flex items-center space-x-2">
+                                        <input
+                                          type="checkbox"
+                                          value={`${permission.id}_${action}`}
+                                          {...inviteForm.register("permissions")}
+                                          className="rounded text-xs"
+                                        />
+                                        <span className="text-xs text-muted-foreground capitalize">{action}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <Button type="submit" disabled={inviteCollaboratorMutation.isPending}>
@@ -421,20 +469,42 @@ export default function UserBackOffice() {
                     <div className="space-y-4">
                       {collaborators.map((collaborator) => (
                         <div key={collaborator.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <p className="font-medium">{collaborator.user.firstName} {collaborator.user.lastName}</p>
-                            <p className="text-sm text-muted-foreground">{collaborator.user.email}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Permissions: {collaborator.permissions?.join(', ')}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{collaborator.user.firstName} {collaborator.user.lastName}</p>
+                                <p className="text-sm text-muted-foreground">{collaborator.user.email}</p>
+                              </div>
+                              <Badge variant={collaborator.role === 'admin' ? 'default' : 'secondary'}>
+                                {collaborator.role}
+                              </Badge>
+                            </div>
+                            <div className="mt-2">
+                              <p className="text-xs font-medium text-muted-foreground">Permissions:</p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {collaborator.permissions?.map((perm) => (
+                                  <Badge key={perm} variant="outline" className="text-xs">
+                                    {AVAILABLE_PERMISSIONS.find(p => p.id === perm)?.label || perm}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Invité le {new Date(collaborator.invitedAt || '').toLocaleDateString()}
                             </p>
                           </div>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => revokeAccessMutation.mutate(collaborator.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              <Settings className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => revokeAccessMutation.mutate(collaborator.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
