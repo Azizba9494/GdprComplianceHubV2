@@ -271,10 +271,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...recordTemplate,
         type: processingType,
         // Auto-fill data controller information from company data
-        dataControllerName: company.name,
-        dataControllerAddress: company.address,
-        dataControllerPhone: company.phone,
-        dataControllerEmail: company.email,
+        dataControllerName: req.body.dataControllerName || company.name,
+        dataControllerAddress: req.body.dataControllerAddress || company.address,
+        dataControllerPhone: req.body.dataControllerPhone || company.phone,
+        dataControllerEmail: req.body.dataControllerEmail || company.email,
         // Include DPO fields from request data if provided
         hasDpo: req.body.hasDpo || false,
         dpoName: req.body.dpoName || null,
