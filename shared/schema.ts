@@ -9,6 +9,9 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
+  firstName: text("first_name"),
+  lastName: text("last_name"), 
+  phoneNumber: text("phone_number"),
   role: text("role").notNull().default("user"), // user, admin
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -19,6 +22,8 @@ export const companies = pgTable("companies", {
   name: text("name").notNull(),
   sector: text("sector"),
   size: text("size"), // VSE, SME
+  rcsNumber: text("rcs_number"), // Numéro RCS
+  address: text("address"), // Adresse complète du siège social
   userId: integer("user_id").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
