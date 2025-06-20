@@ -732,7 +732,7 @@ Informations complémentaires: ${data.additionalInfo}
 
                     {/* Mesures de sécurité - Liste de choix + texte libre */}
                     <div className="space-y-3">
-                      <Label>Mesures de sécurité</Label>
+                      <Label>Mesures de sécurité *</Label>
                       <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
                         {SECURITY_MEASURES.map((measure) => (
                           <div key={measure} className="flex items-center space-x-2">
