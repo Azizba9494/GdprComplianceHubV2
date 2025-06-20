@@ -48,6 +48,7 @@ function Router() {
             <Route path="/dpia-old" component={DPIA} />
             <Route path="/learning" component={Learning} />
             <Route path="/admin" component={Admin} />
+            <Route path="/user-settings" component={UserBackOffice} />
             <Route component={NotFound} />
           </Switch>
         </div>

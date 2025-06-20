@@ -63,6 +63,10 @@ async function getRagDocuments(): Promise<string[]> {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register user management routes first
+  app.use("/api/user", userRoutes);
+  app.use("/api/company", userRoutes);
+
   // Test database connection before setting up routes
   const dbConnected = await testDatabaseConnection();
   if (!dbConnected) {
