@@ -148,3 +148,20 @@ This is a GDPR (General Data Protection Regulation) compliance platform designed
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Upcoming Features
+
+### Multi-Tenant Back-Office System
+- **Priority**: High
+- **Status**: Requirements received
+- **Key Requirements**:
+  - Strict data separation between companies (multi-tenancy)
+  - User profile management (Mon Compte)
+  - Multi-company management with subscription limits
+  - Collaborative access with RBAC permissions
+  - Subscription and billing management
+- **Architecture Notes**: 
+  - All data must be filtered by company_id
+  - Company selector in header for switching between managed companies
+  - Role-based access control for collaborators
+  - Email invitation workflow for team members

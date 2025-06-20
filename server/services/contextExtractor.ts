@@ -180,8 +180,8 @@ export class ContextExtractor {
 
     // Purpose similarity
     if (record1.purpose && record2.purpose) {
-      const purpose1 = record1.purpose.toLowerCase();
-      const purpose2 = record2.purpose.toLowerCase();
+      const purpose1 = String(record1.purpose).toLowerCase();
+      const purpose2 = String(record2.purpose).toLowerCase();
       const commonWords = this.getCommonWords(purpose1, purpose2);
       score += commonWords * 0.4;
       factors += 0.4;

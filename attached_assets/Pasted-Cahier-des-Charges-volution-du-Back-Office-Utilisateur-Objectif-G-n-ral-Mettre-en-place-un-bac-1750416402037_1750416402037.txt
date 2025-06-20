@@ -1,0 +1,82 @@
+Cahier des Charges : Évolution du Back-Office Utilisateur
+
+Objectif Général : Mettre en place un back-office (espace utilisateur) dédié et sécurisé pour chaque client, lui permettant de gérer son profil, ses sociétés, ses collaborateurs, et son abonnement de manière autonome et intuitive.
+
+Principe Clé d'Architecture : Cloisonnement des Données (Multi-Tenancy)
+
+C'est le pré-requis le plus important. L'architecture doit garantir une séparation stricte des données entre les différentes sociétés.
+
+Règle d'or : Un utilisateur de la Société A ne doit, par défaut, avoir aucun accès aux données (registres, configurations, collaborateurs, etc.) de la Société B.
+Implémentation suggérée : Chaque donnée sensible dans la base de données (ex: traitements, documents, etc.) doit être systématiquement associée à un identifiant unique de société (company_id). Toutes les requêtes de l'application devront filtrer sur cet identifiant pour s'assurer que seuls les utilisateurs autorisés de la société concernée puissent y accéder.
+L'accès inter-sociétés ne sera possible que via le mécanisme de gestion des collaborateurs décrit plus bas, où un utilisateur peut être explicitement invité sur le périmètre d'une autre société.
+Structure du Back-Office Utilisateur
+
+Le back-office sera organisé en plusieurs sections (ou modules) claires.
+
+1. Module : Mon Compte
+
+Cette section regroupe les informations personnelles de l'utilisateur connecté.
+
+Informations Personnelles :
+Champs à afficher et à rendre modifiables :
+Nom
+Prénom
+Numéro de téléphone
+Adresse e-mail (qui sert d'identifiant de connexion)
+Sécurité du Compte :
+Une section dédiée pour la modification du mot de passe, avec les champs :
+Mot de passe actuel
+Nouveau mot de passe
+Confirmation du nouveau mot de passe
+2. Module : Gestion des Sociétés
+
+Cette section est le cœur de la gestion multi-entités.
+
+Lien avec l'Abonnement : Le nombre de sociétés qu'un utilisateur peut ajouter est directement lié à la formule de son abonnement (ex: "Formule Standard" = 1 société, "Formule Premium" = 5 sociétés). L'interface doit clairement indiquer le nombre de "slots" de sociétés disponibles et utilisés.
+Ajout d'une Société :
+Un bouton "Ajouter une société" (visible uniquement si le plan d'abonnement le permet).
+Un formulaire d'ajout demandant les informations suivantes :
+Dénomination sociale
+Numéro RCS (ou équivalent selon le pays)
+Adresse complète du siège social
+Secteur d’activité (suggérer une liste déroulante ou un champ libre)
+Liste des Sociétés :
+Un tableau de bord affichant toutes les sociétés gérées par l'utilisateur, avec la possibilité de modifier leurs informations ou de les archiver/supprimer.
+Sélecteur de Société Active :
+Crucial pour l'UX : Un menu déroulant, clairement visible et accessible en permanence dans l'en-tête du back-office, doit permettre à l'utilisateur de passer d'une société à l'autre.
+Le changement de société via ce sélecteur doit recharger l'ensemble de l'interface du back-office (registres, collaborateurs, etc.) avec les données de la nouvelle société sélectionnée.
+3. Module : Gestion des Collaborateurs
+
+Cette section permet au client (l'administrateur du compte) de déléguer des accès à son équipe.
+
+Workflow d'Invitation :
+L'administrateur clique sur "Inviter un collaborateur".
+Il saisit l'adresse e-mail du futur collaborateur.
+Il associe cette invitation à une société spécifique parmi celles qu'il gère.
+Le système envoie un e-mail d'invitation à l'adresse fournie, contenant un lien unique pour créer son compte.
+Lorsque le collaborateur finalise son inscription via ce lien, son compte est automatiquement rattaché à la société de l'administrateur, avec les droits définis.
+Gestion des Droits d'Accès (Permissions fines - RBAC) :
+Lors de l'invitation (et à tout moment par la suite), l'administrateur doit pouvoir définir les permissions du collaborateur pour la société concernée.
+Prévoir une interface claire (ex: une liste de cases à cocher) pour chaque collaborateur, listant tous les modules disponibles via l'abonnement.
+L'administrateur peut cocher les modules auxquels le collaborateur aura accès (ex: "Accès au registre des traitements", "Gestion des factures", "Peut inviter d'autres collaborateurs", etc.).
+Tableau de Bord des Collaborateurs :
+Afficher un tableau listant tous les collaborateurs invités, regroupés par société.
+Pour chaque collaborateur, afficher : son nom/prénom, son e-mail, les droits qui lui sont attribués.
+Prévoir des boutons d'action pour chaque ligne :
+Modifier les droits : Ouvre la vue de gestion des permissions (cases à cocher).
+Supprimer l'accès : Révoque entièrement les droits du collaborateur pour cette société.
+4. Module : Mon Abonnement & Facturation
+
+Cette section offre une transparence totale sur l'aspect financier.
+
+Section "Mon Abonnement" :
+Affichage clair des informations de l'abonnement en cours :
+Nom de la formule (ex: "Premium")
+Prix mensuel ou annuel
+Date de fin de la période en cours ou date de prochain renouvellement
+Statut (Actif, Annulé, etc.)
+Boutons d'action (ex: "Changer de formule", "Annuler mon abonnement").
+Section "Mes Factures" :
+Un tableau listant l'historique de toutes les factures.
+Pour chaque facture : numéro, date d'émission, montant, statut (Payée, En attente).
+Un bouton "Télécharger" (au format PDF) pour chaque facture.
