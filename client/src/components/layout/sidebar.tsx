@@ -15,6 +15,7 @@ const navigation = [
   { name: "Demandes des personnes", href: "/rights", icon: ShieldX },
   { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3 },
   { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap },
+  { name: "👤 Mon Compte", href: "/user-settings", icon: User },
   { name: "⚙️ Administration", href: "/admin", icon: Settings },
 ];
 

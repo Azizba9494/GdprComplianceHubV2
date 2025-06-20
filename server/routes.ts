@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
 import { db, testDatabaseConnection } from "./db";
 import { contextExtractor } from "./services/contextExtractor";
+import userRoutes from "./routes/userRoutes";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
