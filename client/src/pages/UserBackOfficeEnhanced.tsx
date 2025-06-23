@@ -123,10 +123,11 @@ export default function UserBackOfficeEnhanced() {
         description: "Les informations de l'entreprise ont été sauvegardées avec succès.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Company update error:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour l'entreprise.",
+        description: error?.message || "Impossible de mettre à jour l'entreprise.",
         variant: "destructive",
       });
     },

@@ -40,45 +40,45 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Companies
   getCompany(id: number): Promise<Company | undefined>;
   getCompanyByUserId(userId: number): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
-  
+
   // Diagnostic Questions
   getDiagnosticQuestions(): Promise<DiagnosticQuestion[]>;
   createDiagnosticQuestion(question: InsertDiagnosticQuestion): Promise<DiagnosticQuestion>;
   updateDiagnosticQuestion(id: number, updates: Partial<InsertDiagnosticQuestion>): Promise<DiagnosticQuestion>;
   deleteDiagnosticQuestion(id: number): Promise<void>;
-  
+
   // Diagnostic Responses
   getDiagnosticResponses(companyId: number): Promise<DiagnosticResponse[]>;
   createDiagnosticResponse(response: InsertDiagnosticResponse): Promise<DiagnosticResponse>;
-  
+
   // Compliance Snapshots
   getComplianceSnapshots(companyId: number, limit?: number): Promise<ComplianceSnapshot[]>;
   createComplianceSnapshot(snapshot: InsertComplianceSnapshot): Promise<ComplianceSnapshot>;
-  
+
   // Compliance Actions
   getComplianceActions(companyId: number): Promise<ComplianceAction[]>;
   createComplianceAction(action: InsertComplianceAction): Promise<ComplianceAction>;
   updateComplianceAction(id: number, updates: Partial<InsertComplianceAction>): Promise<ComplianceAction>;
   deleteComplianceAction(id: number): Promise<void>;
-  
+
   // Processing Records
   getProcessingRecords(companyId: number): Promise<ProcessingRecord[]>;
   getProcessingRecord(id: number): Promise<ProcessingRecord | undefined>;
   createProcessingRecord(record: InsertProcessingRecord): Promise<ProcessingRecord>;
   updateProcessingRecord(id: number, updates: Partial<InsertProcessingRecord>): Promise<ProcessingRecord>;
   deleteProcessingRecord(id: number): Promise<void>;
-  
+
   // Data Subject Requests
   getDataSubjectRequests(companyId: number): Promise<DataSubjectRequest[]>;
   createDataSubjectRequest(request: InsertDataSubjectRequest): Promise<DataSubjectRequest>;
   updateDataSubjectRequest(id: number, updates: Partial<InsertDataSubjectRequest>): Promise<DataSubjectRequest>;
-  
+
   // Privacy Policies
   getPrivacyPolicies(companyId: number): Promise<PrivacyPolicy[]>;
   getActivePrivacyPolicy(companyId: number): Promise<PrivacyPolicy | undefined>;
@@ -86,19 +86,19 @@ export interface IStorage {
   createPrivacyPolicy(policy: InsertPrivacyPolicy): Promise<PrivacyPolicy>;
   updatePrivacyPolicy(id: number, updates: Partial<InsertPrivacyPolicy>): Promise<PrivacyPolicy>;
   deletePrivacyPolicy(id: number): Promise<void>;
-  
+
   // Data Breaches
   getDataBreaches(companyId: number): Promise<DataBreach[]>;
   createDataBreach(breach: InsertDataBreach): Promise<DataBreach>;
   updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach>;
-  
+
   // DPIA Assessments
   getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]>;
   getDpiaAssessment(id: number): Promise<DpiaAssessment | undefined>;
   createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment>;
   updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment>;
   deleteDpiaAssessment(id: number): Promise<void>;
-  
+
   // AI Prompts
   getAiPrompts(): Promise<AiPrompt[]>;
   getAiPromptByName(name: string): Promise<AiPrompt | undefined>;
@@ -106,18 +106,18 @@ export interface IStorage {
   getActivePromptByCategory(category: string): Promise<AiPrompt | undefined>;
   createAiPrompt(prompt: InsertAiPrompt): Promise<AiPrompt>;
   updateAiPrompt(id: number, updates: Partial<InsertAiPrompt>): Promise<AiPrompt>;
-  
+
   // Audit Logs
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(companyId?: number): Promise<AuditLog[]>;
-  
+
   // LLM Configurations
   getLlmConfigurations(): Promise<LlmConfiguration[]>;
   getActiveLlmConfiguration(): Promise<LlmConfiguration | undefined>;
   createLlmConfiguration(config: InsertLlmConfiguration): Promise<LlmConfiguration>;
   updateLlmConfiguration(id: number, updates: Partial<InsertLlmConfiguration>): Promise<LlmConfiguration>;
   deleteLlmConfiguration(id: number): Promise<void>;
-  
+
   // Learning Modules
   getLearningModules(): Promise<LearningModule[]>;
   getLearningModule(id: number): Promise<LearningModule | undefined>;
@@ -125,28 +125,28 @@ export interface IStorage {
   createLearningModule(module: InsertLearningModule): Promise<LearningModule>;
   updateLearningModule(id: number, updates: Partial<InsertLearningModule>): Promise<LearningModule>;
   deleteLearningModule(id: number): Promise<void>;
-  
+
   // User Progress & Gamification
   getUserProgress(userId: number): Promise<UserProgress | undefined>;
   createUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
   updateUserProgress(userId: number, updates: Partial<InsertUserProgress>): Promise<UserProgress>;
   addExperience(userId: number, xp: number): Promise<UserProgress>;
   updateStreak(userId: number): Promise<UserProgress>;
-  
+
   // Achievements
   getAchievements(): Promise<Achievement[]>;
   getAchievement(id: number): Promise<Achievement | undefined>;
   getUserAchievements(userId: number): Promise<UserAchievement[]>;
   unlockAchievement(userId: number, achievementId: number): Promise<UserAchievement>;
   checkAndUnlockAchievements(userId: number): Promise<UserAchievement[]>;
-  
+
   // Module Progress
   getModuleProgress(userId: number, moduleId: number): Promise<ModuleProgress | undefined>;
   getUserModuleProgress(userId: number): Promise<ModuleProgress[]>;
   createModuleProgress(progress: InsertModuleProgress): Promise<ModuleProgress>;
   updateModuleProgress(id: number, updates: Partial<InsertModuleProgress>): Promise<ModuleProgress>;
   completeModule(userId: number, moduleId: number): Promise<ModuleProgress>;
-  
+
   // Quizzes
   getQuizzes(): Promise<Quiz[]>;
   getQuiz(id: number): Promise<Quiz | undefined>;
@@ -154,27 +154,27 @@ export interface IStorage {
   createQuiz(quiz: InsertQuiz): Promise<Quiz>;
   updateQuiz(id: number, updates: Partial<InsertQuiz>): Promise<Quiz>;
   deleteQuiz(id: number): Promise<void>;
-  
+
   // Quiz Attempts
   getQuizAttempts(userId: number, quizId: number): Promise<QuizAttempt[]>;
   getUserQuizAttempts(userId: number): Promise<QuizAttempt[]>;
   createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
   getLeaderboard(limit?: number): Promise<UserProgress[]>;
-  
+
   // DPIA Evaluations
   getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]>;
   getDpiaEvaluation(recordId: number): Promise<DpiaEvaluation | undefined>;
   createDpiaEvaluation(evaluation: InsertDpiaEvaluation): Promise<DpiaEvaluation>;
   updateDpiaEvaluation(id: number, updates: Partial<InsertDpiaEvaluation>): Promise<DpiaEvaluation>;
   deleteDpiaEvaluation(id: number): Promise<void>;
-  
+
   // RAG Documents
   getRagDocuments(): Promise<RagDocument[]>;
   getRagDocument(id: number): Promise<RagDocument | undefined>;
   createRagDocument(document: InsertRagDocument): Promise<RagDocument>;
   updateRagDocument(id: number, updates: Partial<InsertRagDocument>): Promise<RagDocument>;
   deleteRagDocument(id: number): Promise<void>;
-  
+
   // Prompt-Document associations
   getAllPromptDocuments(): Promise<PromptDocument[]>;
   getPromptDocuments(promptId: number): Promise<PromptDocument[]>;
@@ -422,7 +422,7 @@ export class DatabaseStorage implements IStorage {
       },
       actionPlan: Array.isArray(assessment.actionPlan) ? assessment.actionPlan : []
     };
-    
+
     const [created] = await db.insert(dpiaAssessments).values([cleanAssessment]).returning();
     return created;
   }
@@ -447,7 +447,7 @@ export class DatabaseStorage implements IStorage {
         internationalTransfersMeasures: Array.isArray(updates.internationalTransfersMeasures) ? updates.internationalTransfersMeasures : []
       })
     };
-    
+
     const [updated] = await db.update(dpiaAssessments).set(cleanUpdates).where(eq(dpiaAssessments.id, id)).returning();
     return updated;
   }
