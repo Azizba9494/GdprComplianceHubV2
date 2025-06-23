@@ -182,7 +182,7 @@ export interface IStorage {
   createPromptDocument(association: InsertPromptDocument): Promise<PromptDocument>;
   deletePromptDocument(promptId: number, documentId: number): Promise<void>;
 
-  // Multi-tenant methods
+  // User update methods
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
   getUserSubscription(userId: number): Promise<Subscription | undefined>;
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;

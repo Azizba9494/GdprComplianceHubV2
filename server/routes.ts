@@ -1444,6 +1444,30 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
+  // Authentication middleware for protected routes
+  const requireAuth = (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication requise" });
+    }
+    next();
+  };
+
+  // Apply authentication middleware to protected routes
+  app.use([
+    '/api/companies',
+    '/api/diagnostic',
+    '/api/actions',
+    '/api/records',
+    '/api/privacy-policies',
+    '/api/breaches',
+    '/api/requests',
+    '/api/dpia',
+    '/api/admin',
+    '/api/learning',
+    '/api/gamification',
+    '/api/user'
+  ], requireAuth);
+
   // Compliance snapshots routes
   app.get("/api/compliance-snapshots/:companyId", async (req, res) => {
     try {
