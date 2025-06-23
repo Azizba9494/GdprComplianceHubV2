@@ -17,6 +17,15 @@ import multer from "multer";
 // import pdfParse from "pdf-parse";
 import { Request, Response, NextFunction } from 'express';
 
+// Extend Express Request interface to include userId
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: number;
+    }
+  }
+}
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -62,6 +71,34 @@ async function getRagDocuments(): Promise<string[]> {
     return [];
   }
 }
+
+// Authentication middleware for protected routes
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  const session = req.session as any;
+  if (!session?.userId) {
+    return res.status(401).json({ error: "Authentification requise" });
+  }
+  (req as any).userId = session.userId;
+  next();
+};
+
+// Utility function to check if user has access to a company
+const checkCompanyAccess = async (userId: number, companyId: number): Promise<boolean> => {
+  try {
+    // Check if user owns the company
+    const company = await storage.getCompanyByUserId(userId);
+    if (company && company.id === companyId) {
+      return true;
+    }
+
+    // Check if user has access through company access table
+    const access = await storage.getUserCompanyAccess(userId, companyId);
+    return access && access.status === 'active';
+  } catch (error) {
+    console.error('Error checking company access:', error);
+    return false;
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register user management routes first
@@ -1608,16 +1645,6 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  // Authentication middleware for protected routes
-  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-    const session = req.session as any;
-    if (!session?.userId) {
-      return res.status(401).json({ error: "Authentification requise" });
-    }
-    req.userId = session.userId;
-    next();
-  };
-
   // Utility function to get user's company
   const getUserCompany = async (userId: number): Promise<number | null> => {
     try {
@@ -1637,17 +1664,6 @@ Répondez de manière complète et utile à cette question.`;
     } catch (error) {
       console.error('Error getting user company:', error);
       return null;
-    }
-  };
-
-  // Utility function to check if user has access to company
-  const checkCompanyAccess = async (userId: number, companyId: number): Promise<boolean> => {
-    try {
-      const userCompanyId = await getUserCompany(userId);
-      return userCompanyId === companyId;
-    } catch (error) {
-      console.error('Error checking company access:', error);
-      return false;
     }
   };
 
