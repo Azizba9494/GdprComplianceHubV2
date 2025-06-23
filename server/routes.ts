@@ -1757,9 +1757,7 @@ Répondez de manière complète et utile à cette question.`;
       // Build context-specific prompt for risk assessment
       let basePrompt = '';
 
-      // Handle different riskThis commit applies the `requireAdmin` middleware to secure the prompt-document association routes, restricting access to administrators only.
-```typescript
- sections
+      // Handle different risk sections
       if (field === 'potentialImpacts') {
         basePrompt = `Analysez les impacts potentiels sur les personnes concernées pour le traitement "${processingRecord?.name || 'Non spécifié'}" dans le contexte du risque "${riskType}".
 
