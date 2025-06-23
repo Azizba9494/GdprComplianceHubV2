@@ -54,10 +54,10 @@ function AuthenticatedApp() {
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">
       <Sidebar />
-      
+
       <main className="flex-1 flex flex-col overflow-hidden ml-64">
         <Header />
-        
+
         <div className="flex-1 overflow-y-auto">
           <Switch>
             <Route path="/login" component={() => { window.location.href = '/'; return null; }} />
@@ -81,7 +81,7 @@ function AuthenticatedApp() {
           </Switch>
         </div>
       </main>
-      
+
       <Chatbot />
     </div>
   );

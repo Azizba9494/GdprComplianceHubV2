@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, Play, User, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/": {
@@ -51,8 +52,27 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
 
 export default function Header() {
   const { user, logout } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { toast } = useToast();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
+
+  const handleProfileClick = () => {
+    setLocation("/user-backoffice");
+  };
+
+  const handleSettingsClick = () => {
+    toast({
+      title: "Paramètres",
+      description: "Cette fonctionnalité sera bientôt disponible.",
+    });
+  };
+
+  const handleHelpClick = () => {
+    toast({
+      title: "Aide",
+      description: "Consultez notre documentation ou contactez le support.",
+    });
+  };
 
   return (
     <header className="bg-background border-b border-border px-6 py-4">
@@ -94,16 +114,16 @@ export default function Header() {
               </div>
               <div className="px-2 py-1.5 text-xs text-gray-500">{user?.email}</div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfileClick}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSettingsClick}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Paramètres</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleHelpClick}>
                 <HelpCircle className="mr-2 h-4 w-4" />
                 <span>Aide</span>
               </DropdownMenuItem>

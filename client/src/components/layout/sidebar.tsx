@@ -23,7 +23,7 @@ const navigation = [
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
-  
+
   // Generate user initials
   const getUserInitials = () => {
     if (user?.firstName && user?.lastName) {
@@ -34,7 +34,7 @@ export default function Sidebar() {
     }
     return "U";
   };
-  
+
   // Get display name
   const getDisplayName = () => {
     if (user?.firstName && user?.lastName) {
@@ -42,7 +42,7 @@ export default function Sidebar() {
     }
     return user?.username || "Utilisateur";
   };
-  
+
   // Get user role display
   const getRoleDisplay = () => {
     switch (user?.role) {
@@ -67,13 +67,13 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-      
+
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
-          
+
           return (
             <Link 
               key={item.name} 
@@ -91,7 +91,7 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      
+
       {/* User Profile */}
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center space-x-3">
