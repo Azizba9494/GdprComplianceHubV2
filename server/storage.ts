@@ -961,6 +961,16 @@ export class DatabaseStorage implements IStorage {
     const [created] = await db.insert(invoices).values(invoice).returning();
     return created;
   }
+
+  // User update method implementation
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
 }
 
 export const storage = new DatabaseStorage();

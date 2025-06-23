@@ -1,6 +1,14 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Bell, Play } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Bell, Play, User, Settings, HelpCircle, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/": {
@@ -42,6 +50,7 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
 };
 
 export default function Header() {
+  const { user, logout } = useAuth();
   const [location] = useLocation();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
 
@@ -67,6 +76,44 @@ export default function Header() {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
             </Button>
           </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="hidden sm:inline font-medium">
+                  {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.username || 'Utilisateur'}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 text-sm font-medium">
+                {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.username}
+              </div>
+              <div className="px-2 py-1.5 text-xs text-gray-500">{user?.email}</div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profil</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Paramètres</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>Aide</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => logout()} className="text-red-600 dark:text-red-400">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Déconnexion</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

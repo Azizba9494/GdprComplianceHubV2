@@ -147,13 +147,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Identifiants invalides" });
       }
       
+      // Update last login time
+      await storage.updateUser(user.id, { lastLoginAt: new Date() });
+      
       // Store user session
       (req.session as any).userId = user.id;
       (req.session as any).user = {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName
       };
       
       res.json({ 
