@@ -22,7 +22,7 @@ import DpiaEvaluationOriginal from "@/pages/DpiaEvaluationOriginal";
 import DpiaProcessingSelection from "@/pages/DpiaProcessingSelection";
 import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
-import UserBackOffice from "@/pages/UserBackOffice";
+import UserBackOfficeEnhanced from "@/pages/UserBackOfficeEnhanced";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";

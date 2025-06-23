@@ -862,7 +862,10 @@ export class DatabaseStorage implements IStorage {
 
   // Multi-tenant implementations
   async updateUser(id: number, updates: Partial<InsertUser>): Promise<User> {
-    const [updated] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    const [updated] = await db.update(users).set({
+      ...updates,
+      updatedAt: new Date()
+    }).where(eq(users.id, id)).returning();
     return updated;
   }
 

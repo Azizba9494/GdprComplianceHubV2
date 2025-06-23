@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("user"), // user, admin
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Companies table
