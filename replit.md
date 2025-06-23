@@ -157,7 +157,9 @@ Preferred communication style: Simple, everyday language.
 ## Known Issues and Solutions
 
 ### Session Management
-- Login credentials: aziz.bena94@gmail.com / secret (working)
+- Login credentials: aziz.bena94@gmail.com / secret (FIXED - corrupted hash resolved)
+- Issue: Password hash was truncated (17 chars instead of 60) causing bcrypt failures
+- Fix: Generated proper bcrypt hash and added validation to prevent future corruption
 - Session persistence confirmed functional with proper session.save()
 - Permission system fully operational: API endpoints, database operations, UI integration
 - All permission tables configured with proper data relationships
