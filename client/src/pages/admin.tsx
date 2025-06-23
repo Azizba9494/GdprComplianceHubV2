@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
-import { useAuth } from "@/hooks/useAuth";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { 
   Settings, Plus, Edit, Brain, MessageSquare, ClipboardList, 
@@ -154,7 +153,6 @@ const categoryIcons = {
 };
 
 export default function Admin() {
-  const { user } = useAuth();
   const [isPromptDialogOpen, setIsPromptDialogOpen] = useState(false);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
   const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
@@ -616,27 +614,6 @@ export default function Admin() {
       data: { isActive: !prompt.isActive }
     });
   };
-
-  // Check if user has admin access
-  if (!user || user.email !== 'aziz.bena94@gmail.com') {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center">
-              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <div className="text-center">
-                <h3 className="text-lg font-medium">Accès refusé</h3>
-                <p className="text-muted-foreground">
-                  Vous n'avez pas les droits d'accès à cette section.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (promptsLoading || questionsLoading || llmLoading) {
     return (

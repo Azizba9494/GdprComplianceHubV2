@@ -1,29 +1,32 @@
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { db } from "./db";
 
 const app = express();
 
 // Trust proxy for secure cookies in production
 app.set('trust proxy', 1);
 
-// Session configuration with better settings
+// Session configuration
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+
+const PgSession = connectPgSimple(session);
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'gdpr-suite-secret-key-2024-dev',
-  resave: true,
+  store: new PgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'sessions',
+    createTableIfMissing: false
+  }),
+  secret: process.env.SESSION_SECRET || 'gdpr-compliance-platform-secret-key',
+  resave: false,
   saveUninitialized: false,
-  name: 'gdpr.sid',
-  cookie: { 
-    secure: false, // Set to false for development
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax'
-  },
-  // Force session to be saved even if unmodified
-  rolling: true
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 app.use(express.json());
@@ -66,7 +69,7 @@ app.use((req, res, next) => {
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-
+      
       console.error('Error:', err);
       res.status(status).json({ message });
     });

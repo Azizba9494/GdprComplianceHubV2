@@ -73,12 +73,6 @@ export default function Sidebar() {
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
-            
-          const shouldShowAdmin = user?.email === 'aziz.bena94@gmail.com' && item.name === "⚙️ Administration";
-
-          if (item.name === "⚙️ Administration" && !shouldShowAdmin) {
-            return null;
-          }
 
           return (
             <Link 

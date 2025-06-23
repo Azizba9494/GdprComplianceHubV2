@@ -17,15 +17,6 @@ import multer from "multer";
 // import pdfParse from "pdf-parse";
 import { Request, Response, NextFunction } from 'express';
 
-// Extend Express Request interface to include userId
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: number;
-    }
-  }
-}
-
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -71,71 +62,6 @@ async function getRagDocuments(): Promise<string[]> {
     return [];
   }
 }
-
-// Authentication middleware for protected routes
-const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  const session = req.session as any;
-  console.log('[AUTH] Session check:', { 
-    sessionExists: !!session, 
-    userId: session?.userId,
-    userEmail: session?.user?.email,
-    authenticated: session?.user ? true : false,
-    sessionId: req.sessionID
-  });
-  
-  if (!session?.userId || !session?.user) {
-    console.log('[AUTH] Authentication failed - no valid session');
-    return res.status(401).json({ error: "Authentification requise" });
-  }
-  
-  (req as any).userId = session.userId;
-  (req as any).user = session.user;
-  next();
-};
-
-// Utility function to check if user has access to a company
-const checkCompanyAccess = async (userId: number, companyId: number): Promise<boolean> => {
-  try {
-    // Check if user owns the company
-    const company = await storage.getCompanyByUserId(userId);
-    if (company && company.id === companyId) {
-      return true;
-    }
-
-    // Check if user has access through company access table
-    const access = await storage.getUserCompanyAccess(userId, companyId);
-    return access && access.status === 'active';
-  } catch (error) {
-    console.error('Error checking company access:', error);
-    return false;
-  }
-};
-
-// Admin authentication middleware
-const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-  const session = req.session as any;
-  const user = session?.user;
-
-  console.log('[ADMIN] Admin check:', {
-    hasSession: !!session,
-    hasUser: !!user,
-    userEmail: user?.email,
-    isAdmin: user?.email === 'aziz.bena94@gmail.com'
-  });
-
-  if (!session?.userId || !user) {
-    console.log('[ADMIN] No valid session for admin access');
-    return res.status(401).json({ error: "Authentification requise" });
-  }
-
-  if (user.email !== 'aziz.bena94@gmail.com') {
-    console.log('[ADMIN] User', user.email, 'denied admin access');
-    return res.status(403).json({ error: "Accès administrateur requis" });
-  }
-
-  console.log('[ADMIN] Admin access granted to:', user.email);
-  next();
-};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register user management routes first
@@ -246,8 +172,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update last login time
       await storage.updateUser(user.id, { lastLoginAt: new Date() });
 
-      // Store user session with proper data
-      const sessionData = {
+      // Store user session
+      (req.session as any).userId = user.id;
+      (req.session as any).user = {
         id: user.id,
         username: user.username,
         email: user.email,
@@ -256,26 +183,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName
       };
 
-      // Set session data and force save
-      (req.session as any).userId = user.id;
-      (req.session as any).user = sessionData;
-
-      // Save session explicitly
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) {
-            console.error('[AUTH] Session save error:', err);
-            reject(err);
-          } else {
-            console.log('[AUTH] Session saved successfully for user:', user.email);
-            resolve();
-          }
-        });
-      });
-      
       res.json({ 
         success: true, 
-        user: sessionData
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email, 
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName
+        } 
       });
     } catch (error: any) {
       console.error('Login error:', error);
@@ -288,28 +205,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (err) {
         return res.status(500).json({ error: "Erreur lors de la déconnexion" });
       }
-      res.clearCookie('gdpr.sid'); // Use the correct cookie name
+      res.clearCookie('connect.sid');
       res.json({ success: true, message: "Déconnexion réussie" });
     });
   });
 
   app.get("/api/auth/me", (req, res) => {
-    const session = req.session as any;
-    console.log('[AUTH] /me endpoint - session check:', {
-      sessionExists: !!session,
-      hasUserId: !!session?.userId,
-      hasUser: !!session?.user,
-      userEmail: session?.user?.email
-    });
-
-    if (session?.userId && session?.user) {
-      console.log('[AUTH] /me endpoint - returning user data for:', session.user.email);
+    if ((req.session as any)?.userId) {
       res.json({ 
-        user: session.user,
+        user: (req.session as any).user,
         authenticated: true 
       });
     } else {
-      console.log('[AUTH] /me endpoint - no valid session found');
       res.json({ authenticated: false });
     }
   });
@@ -1185,7 +1092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Prompts management (Admin only)
-  app.get("/api/admin/prompts", requireAdmin, async (req, res) => {
+  app.get("/api/admin/prompts", async (req, res) => {
     try {
       const prompts = await storage.getAiPrompts();
       res.json(prompts);
@@ -1194,7 +1101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/prompts", requireAdmin, async (req, res) => {
+  app.post("/api/admin/prompts", async (req, res) => {
     try {
       const promptData = insertAiPromptSchema.parse(req.body);
       const prompt = await storage.createAiPrompt(promptData);
@@ -1204,7 +1111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/prompts/:id", requireAdmin, async (req, res) => {
+  app.put("/api/admin/prompts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1216,7 +1123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Diagnostic Questions management (Admin only)
-  app.post("/api/admin/questions", requireAdmin, async (req, res) => {
+  app.post("/api/admin/questions", async (req, res) => {
     try {
       const questionData = insertDiagnosticQuestionSchema.parse(req.body);
       const question = await storage.createDiagnosticQuestion(questionData);
@@ -1226,7 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/questions/:id", requireAdmin, async (req, res) => {
+  app.put("/api/admin/questions/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1237,7 +1144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/questions/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/admin/questions/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteDiagnosticQuestion(id);
@@ -1248,7 +1155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // RAG Documents management (Admin only)
-  app.get("/api/admin/documents", requireAdmin, async (req, res) => {
+  app.get("/api/admin/documents", async (req, res) => {
     try {
       const documents = await storage.getRagDocuments();
       res.json(documents);
@@ -1257,7 +1164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/documents", upload.single('file'), requireAdmin, async (req, res) => {
+  app.post("/api/admin/documents", upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -1282,7 +1189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/documents/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/admin/documents/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteRagDocument(id);
@@ -1293,7 +1200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Prompt-Document associations
-  app.get("/api/admin/prompt-documents/:promptId", requireAdmin, async (req, res) => {
+  app.get("/api/admin/prompt-documents/:promptId", async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const associations = await storage.getPromptDocuments(promptId);
@@ -1303,7 +1210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/prompt-documents", requireAdmin, async (req, res) => {
+  app.post("/api/admin/prompt-documents", async (req, res) => {
     try {
       const associationData = insertPromptDocumentSchema.parse(req.body);
       const association = await storage.createPromptDocument(associationData);
@@ -1313,7 +1220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/prompt-documents/:promptId/:documentId", requireAdmin, async (req, res) => {
+  app.delete("/api/admin/prompt-documents/:promptId/:documentId", async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const documentId = parseInt(req.params.documentId);
@@ -1325,7 +1232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Associate prompt with document
-  app.post("/api/admin/prompt-documents", requireAdmin, async (req, res) => {
+  app.post("/api/admin/prompt-documents", async (req, res) => {
     try {
       const { promptId, documentId, priority } = req.body;
 
@@ -1347,7 +1254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all prompt-document associations
-  app.get("/api/admin/prompt-documents", requireAdmin, async (req, res) => {
+  app.get("/api/admin/prompt-documents", async (req, res) => {
     try {
       // Récupérer toutes les associations via une requête SQL directe
       const allAssociations = await storage.getAllPromptDocuments();
@@ -1359,7 +1266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get prompt-document associations for specific prompt
-  app.get("/api/admin/prompt-documents/:promptId", requireAdmin, async (req, res) => {
+  app.get("/api/admin/prompt-documents/:promptId", async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const associations = await storage.getPromptDocuments(promptId);
@@ -1371,7 +1278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete prompt-document association
-  app.delete("/api/admin/prompt-documents/:promptId/:documentId", requireAdmin, async (req, res) => {
+  app.delete("/api/admin/prompt-documents/:promptId/:documentId", async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const documentId = parseInt(req.params.documentId);
@@ -1453,7 +1360,7 @@ Répondez de manière complète et utile à cette question.`;
     try {
       const userId = (req as any).userId;
       let companyId = await getUserCompany(userId);
-
+      
       // If user doesn't have a company, create one
       if (!companyId) {
         const user = await storage.getUser(userId);
@@ -1661,7 +1568,7 @@ Répondez de manière complète et utile à cette question.`;
   });
 
   // LLM Configuration routes
-  app.get("/api/admin/llm-configs", requireAdmin, async (req, res) => {
+  app.get("/api/admin/llm-configs", async (req, res) => {
     try {
       const configs = await storage.getLlmConfigurations();
       res.json(configs);
@@ -1670,7 +1577,7 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  app.post("/api/admin/llm-configs", requireAdmin, async (req, res) => {
+  app.post("/api/admin/llm-configs", async (req, res) => {
     try {
       const configData = insertLlmConfigurationSchema.parse(req.body);
       const config = await storage.createLlmConfiguration(configData);
@@ -1680,7 +1587,7 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  app.put("/api/admin/llm-configs/:id", requireAdmin, async (req, res) => {
+  app.put("/api/admin/llm-configs/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = insertLlmConfigurationSchema.partial().parse(req.body);
@@ -1691,7 +1598,7 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  app.delete("/api/admin/llm-configs/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/admin/llm-configs/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteLlmConfiguration(id);
@@ -1700,6 +1607,16 @@ Répondez de manière complète et utile à cette question.`;
       res.status(500).json({ error: error.message });
     }
   });
+
+  // Authentication middleware for protected routes
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    const session = req.session as any;
+    if (!session?.userId) {
+      return res.status(401).json({ error: "Authentification requise" });
+    }
+    req.userId = session.userId;
+    next();
+  };
 
   // Utility function to get user's company
   const getUserCompany = async (userId: number): Promise<number | null> => {
@@ -1720,6 +1637,17 @@ Répondez de manière complète et utile à cette question.`;
     } catch (error) {
       console.error('Error getting user company:', error);
       return null;
+    }
+  };
+
+  // Utility function to check if user has access to company
+  const checkCompanyAccess = async (userId: number, companyId: number): Promise<boolean> => {
+    try {
+      const userCompanyId = await getUserCompany(userId);
+      return userCompanyId === companyId;
+    } catch (error) {
+      console.error('Error checking company access:', error);
+      return false;
     }
   };
 
@@ -1869,9 +1797,4 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
 
   const httpServer = createServer(app);
   return httpServer;
-}
-
-async function generateAIContent(prompt: string): Promise<string> {
-  // Placeholder implementation: replace with actual AI content generation logic
-  return `Generated content for: ${prompt}`;
 }
