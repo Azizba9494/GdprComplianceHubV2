@@ -231,42 +231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user profile route
-  app.put("/api/user/profile", requireAuth, async (req, res) => {
-    try {
-      const userId = (req.session as any).userId;
-      const { firstName, lastName, phoneNumber } = req.body;
-      
-      const updatedUser = await storage.updateUser(userId, {
-        firstName,
-        lastName,
-        phoneNumber
-      });
-      
-      // Update session user data
-      (req.session as any).user = {
-        ...(req.session as any).user,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName
-      };
-      
-      res.json({
-        success: true,
-        user: {
-          id: updatedUser.id,
-          username: updatedUser.username,
-          email: updatedUser.email,
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-          phoneNumber: updatedUser.phoneNumber,
-          role: updatedUser.role
-        }
-      });
-    } catch (error: any) {
-      console.error('Update profile error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
+
 
   // Company routes
   app.get("/api/companies/:userId", async (req, res) => {
