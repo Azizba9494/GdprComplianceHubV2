@@ -3,55 +3,33 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   Shield, Home, ClipboardList, Book, FileText, 
-  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap, User 
+  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap, User, Crown, Key 
 } from "lucide-react";
 
-const navigation = [
-  { name: "Tableau de bord", href: "/", icon: Home },
-  { name: "Diagnostic initial", href: "/diagnostic", icon: ClipboardList },
-  { name: "Plan d'actions", href: "/actions", icon: BarChart3 },
-  { name: "Registre des traitements", href: "/records", icon: Book },
-  { name: "Politique de confidentialité", href: "/privacy-policy", icon: FileText },
-  { name: "Analyse de violations", href: "/breach-analysis", icon: AlertTriangle },
-  { name: "Demandes des personnes", href: "/rights", icon: ShieldX },
-  { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3 },
-  { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap },
-  { name: "👤 Mon Compte", href: "/user-back-office", icon: User },
-  { name: "⚙️ Administration", href: "/admin", icon: Settings },
-];
+const getNavigation = (userRole: string) => {
+  const baseNavigation = [
+    { name: "Tableau de bord", href: "/", icon: Home, roles: ["user", "admin", "super_admin"] },
+    { name: "Diagnostic initial", href: "/diagnostic", icon: ClipboardList, roles: ["user", "admin", "super_admin"] },
+    { name: "Plan d'actions", href: "/actions", icon: BarChart3, roles: ["user", "admin", "super_admin"] },
+    { name: "Registre des traitements", href: "/records", icon: Book, roles: ["user", "admin", "super_admin"] },
+    { name: "Politique de confidentialité", href: "/privacy-policy", icon: FileText, roles: ["user", "admin", "super_admin"] },
+    { name: "Analyse de violations", href: "/breach-analysis", icon: AlertTriangle, roles: ["user", "admin", "super_admin"] },
+    { name: "Demandes des personnes", href: "/rights", icon: ShieldX, roles: ["user", "admin", "super_admin"] },
+    { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3, roles: ["user", "admin", "super_admin"] },
+    { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap, roles: ["user", "admin", "super_admin"] },
+    { name: "👤 Mon Compte", href: "/user-back-office", icon: User, roles: ["user", "admin", "super_admin"] },
+
+    { name: "🔐 Permissions", href: "/permissions", icon: Key, roles: ["super_admin"] },
+    { name: "⚙️ Administration", href: "/admin", icon: Settings, roles: ["admin", "super_admin"] },
+  ];
+
+  return baseNavigation.filter(item => item.roles.includes(userRole));
+};
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
-
-  // Generate user initials
-  const getUserInitials = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
-    }
-    if (user?.username) {
-      return user.username.substring(0, 2).toUpperCase();
-    }
-    return "U";
-  };
-
-  // Get display name
-  const getDisplayName = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    }
-    return user?.username || "Utilisateur";
-  };
-
-  // Get user role display
-  const getRoleDisplay = () => {
-    switch (user?.role) {
-      case 'admin': return 'Administrateur';
-      case 'owner': return 'Propriétaire';
-      case 'collaborator': return 'Collaborateur';
-      default: return 'Utilisateur';
-    }
-  };
+  const navigation = getNavigation(user?.role || "user");
 
   return (
     <aside className="w-64 bg-sidebar-background border-r border-sidebar-border flex flex-col fixed h-full z-30">
@@ -67,13 +45,13 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-
+      
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
-
+          
           return (
             <Link 
               key={item.name} 
@@ -91,25 +69,34 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
+      
       {/* User Profile */}
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-sidebar-accent rounded-full flex items-center justify-center">
-            <span className="text-sidebar-accent-foreground text-sm font-medium">
-              {getUserInitials()}
-            </span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-sidebar-foreground">
-              {getDisplayName()}
-            </p>
-            <p className="text-xs text-sidebar-foreground/60">
-              {getRoleDisplay()}
-            </p>
+      {user && (
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-sidebar-accent rounded-full flex items-center justify-center">
+              <span className="text-sidebar-accent-foreground text-sm font-medium">
+                {user.firstName?.[0]}{user.lastName?.[0]}
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-sidebar-foreground">
+                {user.firstName} {user.lastName}
+              </p>
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-sidebar-foreground/60">
+                  {user.role === 'super_admin' ? 'Super Admin' : 
+                   user.role === 'admin' ? 'Administrateur' : 
+                   'Utilisateur'}
+                </p>
+                {(user.role === 'admin' || user.role === 'super_admin') && (
+                  <Crown className="w-3 h-3 text-yellow-500" />
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 }

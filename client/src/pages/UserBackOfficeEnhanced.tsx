@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { getRoleDisplayName, getRoleBadgeVariant } from "@/lib/permissions";
+import { RoleBadge } from "@/components/ui/role-badge";
 import { 
   User, 
   Building, 
@@ -38,13 +40,11 @@ export default function UserBackOfficeEnhanced() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [editingProfile, setEditingProfile] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<number | null>(null);
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
     phoneNumber: "",
   });
-  const [companyData, setCompanyData] = useState<{[key: number]: any}>({});
 
   // Fetch user subscription
   const { data: subscription } = useQuery({
@@ -103,36 +103,6 @@ export default function UserBackOfficeEnhanced() {
     },
   });
 
-  // Update company mutation
-  const updateCompanyMutation = useMutation({
-    mutationFn: async ({ companyId, data }: { companyId: number, data: any }) => {
-      const response = await fetch(`/api/companies/${companyId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to update company');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/company-access'] });
-      setEditingCompany(null);
-      toast({
-        title: "Entreprise mise à jour",
-        description: "Les informations de l'entreprise ont été sauvegardées avec succès.",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Company update error:', error);
-      toast({
-        title: "Erreur",
-        description: error?.message || "Impossible de mettre à jour l'entreprise.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleSaveProfile = () => {
     updateProfileMutation.mutate({
       firstName: profileData.firstName,
@@ -150,31 +120,6 @@ export default function UserBackOfficeEnhanced() {
         phoneNumber: "",
       });
     }
-  };
-
-  const handleEditCompany = (access: any) => {
-    setEditingCompany(access.companyId);
-    setCompanyData({
-      ...companyData,
-      [access.companyId]: {
-        name: access.company?.name || "",
-        sector: access.company?.sector || "",
-        address: access.company?.address || "",
-        rcsNumber: access.company?.rcsNumber || "",
-      }
-    });
-  };
-
-  const handleSaveCompany = (companyId: number) => {
-    const data = companyData[companyId];
-    if (data) {
-      updateCompanyMutation.mutate({ companyId, data });
-    }
-  };
-
-  const handleCancelCompanyEdit = () => {
-    setEditingCompany(null);
-    setCompanyData({});
   };
 
   if (!user) {
@@ -337,120 +282,21 @@ export default function UserBackOfficeEnhanced() {
               {companyAccess && companyAccess.length > 0 ? (
                 <div className="space-y-4">
                   {companyAccess.map((access: any) => (
-                    <div key={access.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <Building className="w-8 h-8 text-blue-600" />
-                          <div>
-                            <Badge variant="outline" className="mb-2">
-                              {access.role}
-                            </Badge>
-                            <Badge variant={access.status === 'active' ? 'default' : 'secondary'}>
-                              {access.status === 'active' ? 'Actif' : 'Inactif'}
-                            </Badge>
-                          </div>
+                    <div key={access.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <Building className="w-8 h-8 text-blue-600" />
+                        <div>
+                          <h4 className="font-medium">{access.company?.name}</h4>
+                          <p className="text-sm text-gray-600">{access.company?.sector}</p>
+                          <Badge variant="outline" className="mt-1">
+                            {access.role}
+                          </Badge>
                         </div>
-                        {(['owner', 'admin'].includes(access.role)) && (
-                          <div className="flex gap-2">
-                            {editingCompany === access.companyId ? (
-                              <>
-                                <Button 
-                                  onClick={() => handleSaveCompany(access.companyId)} 
-                                  disabled={updateCompanyMutation.isPending}
-                                  size="sm"
-                                >
-                                  <Save className="w-4 h-4 mr-2" />
-                                  Sauvegarder
-                                </Button>
-                                <Button variant="outline" onClick={handleCancelCompanyEdit} size="sm">
-                                  <X className="w-4 h-4 mr-2" />
-                                  Annuler
-                                </Button>
-                              </>
-                            ) : (
-                              <Button onClick={() => handleEditCompany(access)} size="sm">
-                                <Edit className="w-4 h-4 mr-2" />
-                                Modifier
-                              </Button>
-                            )}
-                          </div>
-                        )}
                       </div>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Nom de l'entreprise</Label>
-                          <Input
-                            value={editingCompany === access.companyId 
-                              ? companyData[access.companyId]?.name || ""
-                              : access.company?.name || ""
-                            }
-                            onChange={(e) => setCompanyData({
-                              ...companyData,
-                              [access.companyId]: {
-                                ...companyData[access.companyId],
-                                name: e.target.value
-                              }
-                            })}
-                            disabled={editingCompany !== access.companyId}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label>Secteur d'activité</Label>
-                            <Input
-                              value={editingCompany === access.companyId 
-                                ? companyData[access.companyId]?.sector || ""
-                                : access.company?.sector || ""
-                              }
-                              onChange={(e) => setCompanyData({
-                                ...companyData,
-                                [access.companyId]: {
-                                  ...companyData[access.companyId],
-                                  sector: e.target.value
-                                }
-                              })}
-                              disabled={editingCompany !== access.companyId}
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label>Numéro RCS</Label>
-                            <Input
-                              value={editingCompany === access.companyId 
-                                ? companyData[access.companyId]?.rcsNumber || ""
-                                : access.company?.rcsNumber || ""
-                              }
-                              onChange={(e) => setCompanyData({
-                                ...companyData,
-                                [access.companyId]: {
-                                  ...companyData[access.companyId],
-                                  rcsNumber: e.target.value
-                                }
-                              })}
-                              disabled={editingCompany !== access.companyId}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <Label>Adresse</Label>
-                          <Input
-                            value={editingCompany === access.companyId 
-                              ? companyData[access.companyId]?.address || ""
-                              : access.company?.address || ""
-                            }
-                            onChange={(e) => setCompanyData({
-                              ...companyData,
-                              [access.companyId]: {
-                                ...companyData[access.companyId],
-                                address: e.target.value
-                              }
-                            })}
-                            disabled={editingCompany !== access.companyId}
-                          />
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={access.status === 'active' ? 'default' : 'secondary'}>
+                          {access.status === 'active' ? 'Actif' : 'Inactif'}
+                        </Badge>
                       </div>
                     </div>
                   ))}

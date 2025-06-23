@@ -5,6 +5,7 @@ import {
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
   quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
   subscriptions, userCompanyAccess, invitations, invoices,
+  permissionCategories, rolePermissions, userPermissions,
   type User, type InsertUser, type Company, type InsertCompany,
   type Subscription, type InsertSubscription, type UserCompanyAccess, type InsertUserCompanyAccess,
   type Invitation, type InsertInvitation, type Invoice, type InsertInvoice,
@@ -29,10 +30,13 @@ import {
   type QuizAttempt, type InsertQuizAttempt,
   type DpiaEvaluation, type InsertDpiaEvaluation,
   type RagDocument, type InsertRagDocument,
-  type PromptDocument, type InsertPromptDocument
+  type PromptDocument, type InsertPromptDocument,
+  type PermissionCategory, type RolePermission, type UserPermission
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
+
+
 
 export interface IStorage {
   // Users
@@ -40,45 +44,45 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-
+  
   // Companies
   getCompany(id: number): Promise<Company | undefined>;
   getCompanyByUserId(userId: number): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
-
+  
   // Diagnostic Questions
   getDiagnosticQuestions(): Promise<DiagnosticQuestion[]>;
   createDiagnosticQuestion(question: InsertDiagnosticQuestion): Promise<DiagnosticQuestion>;
   updateDiagnosticQuestion(id: number, updates: Partial<InsertDiagnosticQuestion>): Promise<DiagnosticQuestion>;
   deleteDiagnosticQuestion(id: number): Promise<void>;
-
+  
   // Diagnostic Responses
   getDiagnosticResponses(companyId: number): Promise<DiagnosticResponse[]>;
   createDiagnosticResponse(response: InsertDiagnosticResponse): Promise<DiagnosticResponse>;
-
+  
   // Compliance Snapshots
   getComplianceSnapshots(companyId: number, limit?: number): Promise<ComplianceSnapshot[]>;
   createComplianceSnapshot(snapshot: InsertComplianceSnapshot): Promise<ComplianceSnapshot>;
-
+  
   // Compliance Actions
   getComplianceActions(companyId: number): Promise<ComplianceAction[]>;
   createComplianceAction(action: InsertComplianceAction): Promise<ComplianceAction>;
   updateComplianceAction(id: number, updates: Partial<InsertComplianceAction>): Promise<ComplianceAction>;
   deleteComplianceAction(id: number): Promise<void>;
-
+  
   // Processing Records
   getProcessingRecords(companyId: number): Promise<ProcessingRecord[]>;
   getProcessingRecord(id: number): Promise<ProcessingRecord | undefined>;
   createProcessingRecord(record: InsertProcessingRecord): Promise<ProcessingRecord>;
   updateProcessingRecord(id: number, updates: Partial<InsertProcessingRecord>): Promise<ProcessingRecord>;
   deleteProcessingRecord(id: number): Promise<void>;
-
+  
   // Data Subject Requests
   getDataSubjectRequests(companyId: number): Promise<DataSubjectRequest[]>;
   createDataSubjectRequest(request: InsertDataSubjectRequest): Promise<DataSubjectRequest>;
   updateDataSubjectRequest(id: number, updates: Partial<InsertDataSubjectRequest>): Promise<DataSubjectRequest>;
-
+  
   // Privacy Policies
   getPrivacyPolicies(companyId: number): Promise<PrivacyPolicy[]>;
   getActivePrivacyPolicy(companyId: number): Promise<PrivacyPolicy | undefined>;
@@ -86,19 +90,19 @@ export interface IStorage {
   createPrivacyPolicy(policy: InsertPrivacyPolicy): Promise<PrivacyPolicy>;
   updatePrivacyPolicy(id: number, updates: Partial<InsertPrivacyPolicy>): Promise<PrivacyPolicy>;
   deletePrivacyPolicy(id: number): Promise<void>;
-
+  
   // Data Breaches
   getDataBreaches(companyId: number): Promise<DataBreach[]>;
   createDataBreach(breach: InsertDataBreach): Promise<DataBreach>;
   updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach>;
-
+  
   // DPIA Assessments
   getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]>;
   getDpiaAssessment(id: number): Promise<DpiaAssessment | undefined>;
   createDpiaAssessment(assessment: InsertDpiaAssessment): Promise<DpiaAssessment>;
   updateDpiaAssessment(id: number, updates: Partial<InsertDpiaAssessment>): Promise<DpiaAssessment>;
   deleteDpiaAssessment(id: number): Promise<void>;
-
+  
   // AI Prompts
   getAiPrompts(): Promise<AiPrompt[]>;
   getAiPromptByName(name: string): Promise<AiPrompt | undefined>;
@@ -106,18 +110,18 @@ export interface IStorage {
   getActivePromptByCategory(category: string): Promise<AiPrompt | undefined>;
   createAiPrompt(prompt: InsertAiPrompt): Promise<AiPrompt>;
   updateAiPrompt(id: number, updates: Partial<InsertAiPrompt>): Promise<AiPrompt>;
-
+  
   // Audit Logs
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(companyId?: number): Promise<AuditLog[]>;
-
+  
   // LLM Configurations
   getLlmConfigurations(): Promise<LlmConfiguration[]>;
   getActiveLlmConfiguration(): Promise<LlmConfiguration | undefined>;
   createLlmConfiguration(config: InsertLlmConfiguration): Promise<LlmConfiguration>;
   updateLlmConfiguration(id: number, updates: Partial<InsertLlmConfiguration>): Promise<LlmConfiguration>;
   deleteLlmConfiguration(id: number): Promise<void>;
-
+  
   // Learning Modules
   getLearningModules(): Promise<LearningModule[]>;
   getLearningModule(id: number): Promise<LearningModule | undefined>;
@@ -125,28 +129,28 @@ export interface IStorage {
   createLearningModule(module: InsertLearningModule): Promise<LearningModule>;
   updateLearningModule(id: number, updates: Partial<InsertLearningModule>): Promise<LearningModule>;
   deleteLearningModule(id: number): Promise<void>;
-
+  
   // User Progress & Gamification
   getUserProgress(userId: number): Promise<UserProgress | undefined>;
   createUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
   updateUserProgress(userId: number, updates: Partial<InsertUserProgress>): Promise<UserProgress>;
   addExperience(userId: number, xp: number): Promise<UserProgress>;
   updateStreak(userId: number): Promise<UserProgress>;
-
+  
   // Achievements
   getAchievements(): Promise<Achievement[]>;
   getAchievement(id: number): Promise<Achievement | undefined>;
   getUserAchievements(userId: number): Promise<UserAchievement[]>;
   unlockAchievement(userId: number, achievementId: number): Promise<UserAchievement>;
   checkAndUnlockAchievements(userId: number): Promise<UserAchievement[]>;
-
+  
   // Module Progress
   getModuleProgress(userId: number, moduleId: number): Promise<ModuleProgress | undefined>;
   getUserModuleProgress(userId: number): Promise<ModuleProgress[]>;
   createModuleProgress(progress: InsertModuleProgress): Promise<ModuleProgress>;
   updateModuleProgress(id: number, updates: Partial<InsertModuleProgress>): Promise<ModuleProgress>;
   completeModule(userId: number, moduleId: number): Promise<ModuleProgress>;
-
+  
   // Quizzes
   getQuizzes(): Promise<Quiz[]>;
   getQuiz(id: number): Promise<Quiz | undefined>;
@@ -154,27 +158,27 @@ export interface IStorage {
   createQuiz(quiz: InsertQuiz): Promise<Quiz>;
   updateQuiz(id: number, updates: Partial<InsertQuiz>): Promise<Quiz>;
   deleteQuiz(id: number): Promise<void>;
-
+  
   // Quiz Attempts
   getQuizAttempts(userId: number, quizId: number): Promise<QuizAttempt[]>;
   getUserQuizAttempts(userId: number): Promise<QuizAttempt[]>;
   createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
   getLeaderboard(limit?: number): Promise<UserProgress[]>;
-
+  
   // DPIA Evaluations
   getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]>;
   getDpiaEvaluation(recordId: number): Promise<DpiaEvaluation | undefined>;
   createDpiaEvaluation(evaluation: InsertDpiaEvaluation): Promise<DpiaEvaluation>;
   updateDpiaEvaluation(id: number, updates: Partial<InsertDpiaEvaluation>): Promise<DpiaEvaluation>;
   deleteDpiaEvaluation(id: number): Promise<void>;
-
+  
   // RAG Documents
   getRagDocuments(): Promise<RagDocument[]>;
   getRagDocument(id: number): Promise<RagDocument | undefined>;
   createRagDocument(document: InsertRagDocument): Promise<RagDocument>;
   updateRagDocument(id: number, updates: Partial<InsertRagDocument>): Promise<RagDocument>;
   deleteRagDocument(id: number): Promise<void>;
-
+  
   // Prompt-Document associations
   getAllPromptDocuments(): Promise<PromptDocument[]>;
   getPromptDocuments(promptId: number): Promise<PromptDocument[]>;
@@ -422,7 +426,7 @@ export class DatabaseStorage implements IStorage {
       },
       actionPlan: Array.isArray(assessment.actionPlan) ? assessment.actionPlan : []
     };
-
+    
     const [created] = await db.insert(dpiaAssessments).values([cleanAssessment]).returning();
     return created;
   }
@@ -447,7 +451,7 @@ export class DatabaseStorage implements IStorage {
         internationalTransfersMeasures: Array.isArray(updates.internationalTransfersMeasures) ? updates.internationalTransfersMeasures : []
       })
     };
-
+    
     const [updated] = await db.update(dpiaAssessments).set(cleanUpdates).where(eq(dpiaAssessments.id, id)).returning();
     return updated;
   }
@@ -867,6 +871,196 @@ export class DatabaseStorage implements IStorage {
       updatedAt: new Date()
     }).where(eq(users.id, id)).returning();
     return updated;
+  }
+
+  // Permission Management - using raw SQL for reliability
+  async getAllUsersWithPermissions() {
+    const result = await db.execute(sql`SELECT * FROM get_all_users_with_permissions()`);
+    return result.rows;
+  }
+
+  async getUserPermissions(userId: number) {
+    const result = await db.execute(sql`
+      SELECT * FROM user_permissions 
+      WHERE user_id = ${userId}
+    `);
+    return result.rows;
+  }
+
+  async getUserEffectivePermissions(userId: number): Promise<string[]> {
+    const result = await db.execute(sql`
+      SELECT DISTINCT COALESCE(up.permission, rp.permission) as permission
+      FROM users u
+      LEFT JOIN user_permissions up ON u.id = up.user_id AND up.granted = true
+      LEFT JOIN role_permissions rp ON u.role = rp.role
+      WHERE u.id = ${userId} AND COALESCE(up.permission, rp.permission) IS NOT NULL
+    `);
+    return result.rows.map((row: any) => row.permission);
+  }
+
+  async grantUserPermission(data: any): Promise<UserPermission> {
+    const [permission] = await db.insert(userPermissions)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: data.granted,
+          grantedBy: data.grantedBy,
+          grantedAt: new Date(),
+          reason: data.reason,
+          expiresAt: data.expiresAt,
+        }
+      })
+      .returning();
+    return permission;
+  }
+
+  async revokeUserPermission(userId: number, permission: string, revokedBy: number, reason?: string) {
+    await db.execute(sql`
+      INSERT INTO user_permissions (user_id, permission, granted, granted_by, granted_at, reason)
+      VALUES (${userId}, ${permission}, false, ${revokedBy}, NOW(), ${reason || 'Permission revoked'})
+      ON CONFLICT (user_id, permission) 
+      DO UPDATE SET 
+        granted = false,
+        granted_by = ${revokedBy},
+        granted_at = NOW(),
+        reason = ${reason || 'Permission revoked'}
+    `);
+  }
+
+  async getAllUsers() {
+    const result = await db.execute(sql`
+      SELECT * FROM users 
+      ORDER BY first_name, last_name
+    `);
+    return result.rows;
+  }
+
+  async getRolePermissions(role: string): Promise<RolePermission[]> {
+    return await db.select().from(rolePermissions).where(eq(rolePermissions.role, role));
+  }
+
+  async getPermissionCategories(): Promise<PermissionCategory[]> {
+    return await db.select().from(permissionCategories).orderBy(permissionCategories.order);
+  }
+
+  async updateRolePermission(role: string, permission: string, granted: boolean): Promise<void> {
+    if (granted) {
+      await db.insert(rolePermissions)
+        .values({ role, permission, isDefault: true })
+        .onConflictDoNothing();
+    } else {
+      await db.delete(rolePermissions)
+        .where(and(
+          eq(rolePermissions.role, role),
+          eq(rolePermissions.permission, permission)
+        ));
+    }
+  }
+
+  // Permission Management
+  async getUserPermissions(userId: number): Promise<UserPermission[]> {
+    return await db.select().from(userPermissions).where(eq(userPermissions.userId, userId));
+  }
+
+  async getUserEffectivePermissions(userId: number): Promise<string[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    // Get role-based permissions
+    const rolePerms = await db.select()
+      .from(rolePermissions)
+      .where(eq(rolePermissions.role, user.role));
+
+    // Get user-specific permissions
+    const userPerms = await db.select()
+      .from(userPermissions)
+      .where(eq(userPermissions.userId, userId));
+
+    // Combine role permissions with user-specific overrides
+    const rolePermissions = rolePerms.map(p => p.permission);
+    const userOverrides = userPerms.reduce((acc, p) => {
+      acc[p.permission] = p.granted;
+      return acc;
+    }, {} as Record<string, boolean>);
+
+    // Apply user overrides to role permissions
+    const effectivePermissions = rolePermissions.filter(perm => {
+      return userOverrides[perm] !== false; // Only exclude if explicitly set to false
+    });
+
+    // Add user-specific granted permissions not in role
+    userPerms.forEach(p => {
+      if (p.granted && !rolePermissions.includes(p.permission)) {
+        effectivePermissions.push(p.permission);
+      }
+    });
+
+    return [...new Set(effectivePermissions)]; // Remove duplicates
+  }
+
+  async grantUserPermission(data: InsertUserPermission): Promise<UserPermission> {
+    const [permission] = await db.insert(userPermissions)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: data.granted,
+          grantedBy: data.grantedBy,
+          grantedAt: new Date(),
+          reason: data.reason,
+          expiresAt: data.expiresAt,
+        }
+      })
+      .returning();
+    return permission;
+  }
+
+  async revokeUserPermission(userId: number, permission: string, revokedBy: number, reason?: string): Promise<void> {
+    await db.insert(userPermissions)
+      .values({
+        userId,
+        permission,
+        granted: false,
+        grantedBy: revokedBy,
+        grantedAt: new Date(),
+        reason: reason || 'Permission revoked'
+      })
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: false,
+          grantedBy: revokedBy,
+          grantedAt: new Date(),
+          reason: reason || 'Permission revoked'
+        }
+      });
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.firstName, users.lastName);
+  }
+
+  async getRolePermissions(role: string): Promise<RolePermission[]> {
+    return await db.select().from(rolePermissions).where(eq(rolePermissions.role, role));
+  }
+
+  async getPermissionCategories(): Promise<PermissionCategory[]> {
+    return await db.select().from(permissionCategories).orderBy(permissionCategories.order);
+  }
+
+  async updateRolePermission(role: string, permission: string, granted: boolean): Promise<void> {
+    if (granted) {
+      await db.insert(rolePermissions)
+        .values({ role, permission, isDefault: true })
+        .onConflictDoNothing();
+    } else {
+      await db.delete(rolePermissions)
+        .where(and(
+          eq(rolePermissions.role, role),
+          eq(rolePermissions.permission, permission)
+        ));
+    }
   }
 
   async getUserSubscription(userId: number): Promise<Subscription | undefined> {

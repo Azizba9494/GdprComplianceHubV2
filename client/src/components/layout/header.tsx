@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, Play, User, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/": {
@@ -52,27 +51,8 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
 
 export default function Header() {
   const { user, logout } = useAuth();
-  const [location, setLocation] = useLocation();
-  const { toast } = useToast();
+  const [location] = useLocation();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
-
-  const handleProfileClick = () => {
-    setLocation("/user-back-office");
-  };
-
-  const handleSettingsClick = () => {
-    toast({
-      title: "Paramètres",
-      description: "Cette fonctionnalité sera bientôt disponible.",
-    });
-  };
-
-  const handleHelpClick = () => {
-    toast({
-      title: "Aide",
-      description: "Consultez notre documentation ou contactez le support.",
-    });
-  };
 
   return (
     <header className="bg-background border-b border-border px-6 py-4">
@@ -81,7 +61,7 @@ export default function Header() {
           <h1 className="text-2xl font-semibold text-foreground">{pageInfo.title}</h1>
           <p className="text-muted-foreground mt-1">{pageInfo.subtitle}</p>
         </div>
-
+        
         <div className="flex items-center space-x-4">
           {location === "/" && (
             <Button className="btn-primary">
@@ -89,7 +69,7 @@ export default function Header() {
               Nouveau diagnostic
             </Button>
           )}
-
+          
           <div className="relative">
             <Button variant="ghost" size="icon">
               <Bell className="w-5 h-5" />
@@ -114,16 +94,16 @@ export default function Header() {
               </div>
               <div className="px-2 py-1.5 text-xs text-gray-500">{user?.email}</div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setLocation("/user-back-office")}>
+              <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSettingsClick}>
+              <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Paramètres</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleHelpClick}>
+              <DropdownMenuItem>
                 <HelpCircle className="mr-2 h-4 w-4" />
                 <span>Aide</span>
               </DropdownMenuItem>
