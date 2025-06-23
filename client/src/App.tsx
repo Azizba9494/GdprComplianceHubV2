@@ -24,6 +24,7 @@ import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
 import UserBackOfficeEnhanced from "@/pages/UserBackOfficeEnhanced";
 import RoleTestPage from "@/pages/RoleTestPage";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
