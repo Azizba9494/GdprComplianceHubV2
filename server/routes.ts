@@ -129,8 +129,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { identifier, password } = req.body; // Allow login with username or email
       
-      console.log('Login attempt for:', identifier);
-      
       // Find user by username or email
       let user = await storage.getUserByUsername(identifier);
       if (!user) {
@@ -138,42 +136,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!user) {
-        console.log('User not found:', identifier);
         return res.status(401).json({ error: "Identifiants invalides" });
       }
-      
-      console.log('User found:', user.email, 'Password hash length:', user.password?.length);
       
       // Verify password with bcrypt
       const bcrypt = await import('bcryptjs');
-      
-      // Check if password hash exists
-      if (!user.password) {
-        console.error('No password hash for user:', user.email);
-        return res.status(401).json({ error: "Identifiants invalides" });
-      }
-      
-      // Validate bcrypt hash format (should start with $2a$, $2b$, or $2y$ and be around 60 chars)
-      const bcryptRegex = /^\$2[aby]\$\d{2}\$.{53}$/;
-      if (!bcryptRegex.test(user.password)) {
-        console.error('Invalid bcrypt hash format for user:', user.email, 'Hash:', user.password.substring(0, 20) + '...');
-        return res.status(401).json({ error: "Identifiants invalides" });
-      }
-      
       const passwordValid = await bcrypt.compare(password, user.password);
-      console.log('Password validation result:', passwordValid);
       
       if (!passwordValid) {
-        console.log('Invalid password for user:', user.email);
         return res.status(401).json({ error: "Identifiants invalides" });
       }
       
       // Update last login time
       await storage.updateUser(user.id, { lastLoginAt: new Date() });
       
-      // Store user session with proper typing
-      req.session.userId = user.id;
-      req.session.user = {
+      // Store user session
+      (req.session as any).userId = user.id;
+      (req.session as any).user = {
         id: user.id,
         username: user.username,
         email: user.email,
@@ -181,29 +160,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         lastName: user.lastName
       };
-
-      console.log('Session before save:', {
-        sessionId: req.sessionID,
-        userId: req.session.userId,
-        userExists: !!req.session.user
-      });
-
-      // Force session save and wait for completion
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((err: any) => {
-          if (err) {
-            console.error('Session save error:', err);
-            reject(err);
-          } else {
-            console.log('Session saved successfully:', {
-              sessionId: req.sessionID,
-              userId: req.session.userId,
-              userRole: req.session.user?.role
-            });
-            resolve();
-          }
-        });
-      });
       
       res.json({ 
         success: true, 
@@ -232,15 +188,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/api/auth/me", (req: any, res) => {
-    console.log('Auth/me - Session:', req.session);
-    console.log('Auth/me - UserId:', req.session?.userId);
-    console.log('Auth/me - User:', req.session?.user);
-    
-    if (req.session && req.session.userId) {
-      res.json({
-        authenticated: true,
-        user: req.session.user
+  app.get("/api/auth/me", (req, res) => {
+    if ((req.session as any)?.userId) {
+      res.json({ 
+        user: (req.session as any).user,
+        authenticated: true 
       });
     } else {
       res.json({ authenticated: false });
@@ -1501,45 +1453,10 @@ Répondez de manière complète et utile à cette question.`;
 
   // Authentication middleware for protected routes
   const requireAuth = (req: any, res: any, next: any) => {
-    console.log('RequireAuth middleware - Session:', req.session);
-    console.log('RequireAuth middleware - UserId:', req.session?.userId);
-    
     if (!req.session?.userId) {
-      console.log('RequireAuth middleware - No session userId found');
       return res.status(401).json({ error: "Authentication requise" });
     }
-    console.log('RequireAuth middleware - Authentication successful');
     next();
-  };
-
-  // Role-based access control middleware
-  const requireRole = (allowedRoles: string[]) => {
-    return async (req: any, res: any, next: any) => {
-      console.log('RequireRole middleware - Session:', req.session?.userId);
-      console.log('RequireRole middleware - Allowed roles:', allowedRoles);
-      
-      if (!req.session?.userId) {
-        console.log('RequireRole middleware - No session userId');
-        return res.status(401).json({ error: "Authentication requise" });
-      }
-      
-      try {
-        const user = await storage.getUser(req.session.userId);
-        console.log('RequireRole middleware - User found:', user?.email, 'Role:', user?.role);
-        
-        if (!user || !allowedRoles.includes(user.role)) {
-          console.log('RequireRole middleware - Access denied for role:', user?.role);
-          return res.status(403).json({ error: "Accès non autorisé pour votre rôle" });
-        }
-        
-        req.user = user;
-        console.log('RequireRole middleware - Access granted');
-        next();
-      } catch (error) {
-        console.error('Role check error:', error);
-        res.status(500).json({ error: "Erreur lors de la vérification des permissions" });
-      }
-    };
   };
 
   // Update user profile route
@@ -1589,83 +1506,11 @@ Répondez de manière complète et utile à cette question.`;
     '/api/breaches',
     '/api/requests',
     '/api/dpia',
+    '/api/admin',
     '/api/learning',
     '/api/gamification',
-    '/api/user',
-    '/api/admin'
+    '/api/user'
   ], requireAuth);
-
-  // Permission management routes (super admin only)
-  app.get('/api/admin/users-permissions', requireRole(['super_admin']), async (req, res) => {
-    try {
-      const usersWithPermissions = await storage.getAllUsersWithPermissions();
-      res.json(usersWithPermissions);
-    } catch (error: any) {
-      console.error('Get users permissions error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.get('/api/admin/role-permissions/:role', requireRole(['super_admin']), async (req, res) => {
-    try {
-      const { role } = req.params;
-      const permissions = await storage.getRolePermissions(role);
-      res.json(permissions);
-    } catch (error: any) {
-      console.error('Get role permissions error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.get('/api/admin/permission-categories', requireRole(['super_admin']), async (req, res) => {
-    try {
-      const categories = await storage.getPermissionCategories();
-      res.json(categories);
-    } catch (error: any) {
-      console.error('Get permission categories error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post('/api/admin/user-permissions', requireRole(['super_admin']), async (req, res) => {
-    try {
-      const { userId, permission, granted, reason } = req.body;
-      const grantedBy = (req.session as any).userId;
-
-      if (granted) {
-        await storage.grantUserPermission({
-          userId,
-          permission,
-          granted: true,
-          grantedBy,
-          reason
-        });
-      } else {
-        await storage.revokeUserPermission(userId, permission, grantedBy, reason);
-      }
-
-      res.json({ success: true });
-    } catch (error: any) {
-      console.error('Update user permission error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post('/api/admin/role-permissions', requireRole(['super_admin']), async (req, res) => {
-    try {
-      const { role, permission, granted } = req.body;
-      
-      await storage.updateRolePermission(role, permission, granted);
-      
-      res.json({ success: true });
-    } catch (error: any) {
-      console.error('Update role permission error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Apply role-based access control to general admin routes (after specific permission routes)
-  app.use('/api/admin', requireRole(['admin', 'super_admin']));
 
   // Compliance snapshots routes
   app.get("/api/compliance-snapshots/:companyId", async (req, res) => {

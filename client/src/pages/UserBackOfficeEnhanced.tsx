@@ -10,8 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { getRoleDisplayName, getRoleBadgeVariant } from "@/lib/permissions";
-import { RoleBadge } from "@/components/ui/role-badge";
 import { 
   User, 
   Building, 

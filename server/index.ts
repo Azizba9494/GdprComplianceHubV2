@@ -23,26 +23,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Always false in development to ensure cookies work
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  },
-  name: 'sessionId'
-}));
-
-// Add session debugging middleware
-app.use((req, res, next) => {
-  if (req.path.includes('/api/auth/')) {
-    console.log('Session debug:', {
-      path: req.path,
-      method: req.method,
-      sessionId: req.sessionID,
-      userId: req.session?.userId,
-      hasUser: !!req.session?.user
-    });
   }
-  next();
-});
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
