@@ -896,20 +896,21 @@ export class DatabaseStorage implements IStorage {
     return result.rows.map((row: any) => row.permission);
   }
 
-  async grantUserPermission(data: any) {
-    const result = await db.execute(sql`
-      INSERT INTO user_permissions (user_id, permission, granted, granted_by, granted_at, reason, expires_at)
-      VALUES (${data.userId}, ${data.permission}, ${data.granted}, ${data.grantedBy}, NOW(), ${data.reason}, ${data.expiresAt})
-      ON CONFLICT (user_id, permission) 
-      DO UPDATE SET 
-        granted = ${data.granted},
-        granted_by = ${data.grantedBy},
-        granted_at = NOW(),
-        reason = ${data.reason},
-        expires_at = ${data.expiresAt}
-      RETURNING *
-    `);
-    return result.rows[0];
+  async grantUserPermission(data: any): Promise<UserPermission> {
+    const [permission] = await db.insert(userPermissions)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: data.granted,
+          grantedBy: data.grantedBy,
+          grantedAt: new Date(),
+          reason: data.reason,
+          expiresAt: data.expiresAt,
+        }
+      })
+      .returning();
+    return permission;
   }
 
   async revokeUserPermission(userId: number, permission: string, revokedBy: number, reason?: string) {
@@ -933,34 +934,25 @@ export class DatabaseStorage implements IStorage {
     return result.rows;
   }
 
-  async getRolePermissions(role: string) {
-    const result = await db.execute(sql`
-      SELECT * FROM role_permissions 
-      WHERE role = ${role}
-    `);
-    return result.rows;
+  async getRolePermissions(role: string): Promise<RolePermission[]> {
+    return await db.select().from(rolePermissions).where(eq(rolePermissions.role, role));
   }
 
-  async getPermissionCategories() {
-    const result = await db.execute(sql`
-      SELECT * FROM permission_categories 
-      ORDER BY "order"
-    `);
-    return result.rows;
+  async getPermissionCategories(): Promise<PermissionCategory[]> {
+    return await db.select().from(permissionCategories).orderBy(permissionCategories.order);
   }
 
-  async updateRolePermission(role: string, permission: string, granted: boolean) {
+  async updateRolePermission(role: string, permission: string, granted: boolean): Promise<void> {
     if (granted) {
-      await db.execute(sql`
-        INSERT INTO role_permissions (role, permission, is_default, created_at)
-        VALUES (${role}, ${permission}, true, NOW())
-        ON CONFLICT (role, permission) DO NOTHING
-      `);
+      await db.insert(rolePermissions)
+        .values({ role, permission, isDefault: true })
+        .onConflictDoNothing();
     } else {
-      await db.execute(sql`
-        DELETE FROM role_permissions 
-        WHERE role = ${role} AND permission = ${permission}
-      `);
+      await db.delete(rolePermissions)
+        .where(and(
+          eq(rolePermissions.role, role),
+          eq(rolePermissions.permission, permission)
+        ));
     }
   }
 
