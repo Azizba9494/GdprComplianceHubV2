@@ -147,6 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Invalid password hash detected for user:', user.email, 'Length:', user.password?.length);
         return res.status(401).json({ error: "Identifiants invalides" });
       }
+      
       const passwordValid = await bcrypt.compare(password, user.password);
       
       if (!passwordValid) {
