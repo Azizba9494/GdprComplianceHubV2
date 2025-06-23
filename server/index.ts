@@ -1,19 +1,32 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { db } from "./db";
 
 const app = express();
 
 // Trust proxy for secure cookies in production
 app.set('trust proxy', 1);
 
-// Session configuration
-import session from "express-session";
-import { registerRoutes } from "./routes";
-import { db } from "./db";
-
-const app = express();
-app.use(helmet());
+// Security middleware with CSP configured for development
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://replit.dev", "blob:"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https:", "data:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https:"],
+      frameSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      workerSrc: ["'self'", "blob:"]
+    }
+  }
+}));
 
 // Enhanced session configuration
 app.use(session({
