@@ -148,10 +148,19 @@ This is a GDPR (General Data Protection Regulation) compliance platform designed
 - June 23, 2025. Enhanced Authentication System - implemented secure password hashing with bcryptjs, PostgreSQL session storage, login/register pages with form validation, authentication middleware for protected routes, user session management with proper logout functionality
 - June 23, 2025. Connected "Mon Compte" section to real authenticated user profile - integrated useAuth hook, created UserBackOfficeEnhanced page with real user data display and profile editing capabilities, implemented PUT /api/user/profile route for profile updates
 - June 23, 2025. Implemented Complete Role-Based Access Control System - added three-tier role system (user/admin/super_admin), role-based navigation filtering, permission system with granular controls, RoleGuard component for protecting UI sections, middleware for server-side role enforcement, visual role indicators with badges and icons, role testing page for verification
+- June 23, 2025. Implemented Granular Permission Management Interface - complete user and role permission management system with database tables (user_permissions, role_permissions, permission_categories), API endpoints for CRUD operations, visual interface for permission management, PostgreSQL functions for efficient permission queries, supports individual user permission overrides and role-based inheritance
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Known Issues and Solutions
+
+### Session Management
+- Login credentials: aziz.bena94@gmail.com / secret (updated for testing)
+- Session persistence issue identified and resolved with forced session.save()
+- Permission system working correctly at database level
+- All permission tables properly configured with sample data
 
 ## Upcoming Features
 
