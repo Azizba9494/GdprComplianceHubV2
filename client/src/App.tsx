@@ -24,6 +24,7 @@ import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
 import UserBackOfficeEnhanced from "@/pages/UserBackOfficeEnhanced";
 import RoleTestPage from "@/pages/RoleTestPage";
+import PermissionManagement from "@/pages/PermissionManagement";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -84,6 +85,11 @@ function AuthenticatedApp() {
             )} />
             <Route path="/user-back-office" component={UserBackOfficeEnhanced} />
             <Route path="/role-test" component={RoleTestPage} />
+            <Route path="/permissions" component={() => (
+              <RoleGuard requiredRole={['super_admin']}>
+                <PermissionManagement />
+              </RoleGuard>
+            )} />
             <Route component={NotFound} />
           </Switch>
         </div>

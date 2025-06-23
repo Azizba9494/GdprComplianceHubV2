@@ -72,11 +72,19 @@ export const ROLE_PERMISSIONS = {
   ]
 };
 
+// Note: This is the fallback permission check based on role
+// In production, use the effective permissions from the server
 export function hasPermission(userRole: UserRole | undefined, permission: string): boolean {
   if (!userRole) return false;
   
   const permissions = ROLE_PERMISSIONS[userRole];
   return permissions.includes(permission);
+}
+
+// Check effective permissions (should be used with server data)
+export function hasEffectivePermission(effectivePermissions: string[] | undefined, permission: string): boolean {
+  if (!effectivePermissions) return false;
+  return effectivePermissions.includes(permission);
 }
 
 export function canAccessRoute(userRole: UserRole | undefined, route: string): boolean {

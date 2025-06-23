@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   Shield, Home, ClipboardList, Book, FileText, 
-  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap, User, Crown 
+  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap, User, Crown, Key 
 } from "lucide-react";
 
 const getNavigation = (userRole: string) => {
@@ -19,6 +19,7 @@ const getNavigation = (userRole: string) => {
     { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap, roles: ["user", "admin", "super_admin"] },
     { name: "👤 Mon Compte", href: "/user-back-office", icon: User, roles: ["user", "admin", "super_admin"] },
     { name: "🧪 Test Rôles", href: "/role-test", icon: Shield, roles: ["user", "admin", "super_admin"] },
+    { name: "🔐 Permissions", href: "/permissions", icon: Key, roles: ["super_admin"] },
     { name: "⚙️ Administration", href: "/admin", icon: Settings, roles: ["admin", "super_admin"] },
   ];
 

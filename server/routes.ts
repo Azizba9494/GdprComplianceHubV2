@@ -1533,6 +1533,86 @@ Répondez de manière complète et utile à cette question.`;
     '/api/user'
   ], requireAuth);
 
+  // Permission management routes (super admin only)
+  app.get('/api/admin/users-permissions', requireRole(['super_admin']), async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const usersWithPermissions = await Promise.all(
+        users.map(async (user) => {
+          const userPermissions = await storage.getUserPermissions(user.id);
+          const effectivePermissions = await storage.getUserEffectivePermissions(user.id);
+          return {
+            ...user,
+            permissions: userPermissions.map(p => p.permission),
+            effectivePermissions
+          };
+        })
+      );
+      res.json(usersWithPermissions);
+    } catch (error: any) {
+      console.error('Get users permissions error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/admin/role-permissions/:role', requireRole(['super_admin']), async (req, res) => {
+    try {
+      const { role } = req.params;
+      const permissions = await storage.getRolePermissions(role);
+      res.json(permissions);
+    } catch (error: any) {
+      console.error('Get role permissions error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/admin/permission-categories', requireRole(['super_admin']), async (req, res) => {
+    try {
+      const categories = await storage.getPermissionCategories();
+      res.json(categories);
+    } catch (error: any) {
+      console.error('Get permission categories error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/admin/user-permissions', requireRole(['super_admin']), async (req, res) => {
+    try {
+      const { userId, permission, granted, reason } = req.body;
+      const grantedBy = (req.session as any).userId;
+
+      if (granted) {
+        await storage.grantUserPermission({
+          userId,
+          permission,
+          granted: true,
+          grantedBy,
+          reason
+        });
+      } else {
+        await storage.revokeUserPermission(userId, permission, grantedBy, reason);
+      }
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Update user permission error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/admin/role-permissions', requireRole(['super_admin']), async (req, res) => {
+    try {
+      const { role, permission, granted } = req.body;
+      
+      await storage.updateRolePermission(role, permission, granted);
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Update role permission error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Apply role-based access control to admin routes
   app.use('/api/admin', requireRole(['admin', 'super_admin']));
 

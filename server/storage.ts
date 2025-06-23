@@ -869,6 +869,111 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  // Permission Management
+  async getUserPermissions(userId: number): Promise<UserPermission[]> {
+    return await db.select().from(userPermissions).where(eq(userPermissions.userId, userId));
+  }
+
+  async getUserEffectivePermissions(userId: number): Promise<string[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    // Get role-based permissions
+    const rolePerms = await db.select()
+      .from(rolePermissions)
+      .where(eq(rolePermissions.role, user.role));
+
+    // Get user-specific permissions
+    const userPerms = await db.select()
+      .from(userPermissions)
+      .where(eq(userPermissions.userId, userId));
+
+    // Combine role permissions with user-specific overrides
+    const rolePermissions = rolePerms.map(p => p.permission);
+    const userOverrides = userPerms.reduce((acc, p) => {
+      acc[p.permission] = p.granted;
+      return acc;
+    }, {} as Record<string, boolean>);
+
+    // Apply user overrides to role permissions
+    const effectivePermissions = rolePermissions.filter(perm => {
+      return userOverrides[perm] !== false; // Only exclude if explicitly set to false
+    });
+
+    // Add user-specific granted permissions not in role
+    userPerms.forEach(p => {
+      if (p.granted && !rolePermissions.includes(p.permission)) {
+        effectivePermissions.push(p.permission);
+      }
+    });
+
+    return [...new Set(effectivePermissions)]; // Remove duplicates
+  }
+
+  async grantUserPermission(data: InsertUserPermission): Promise<UserPermission> {
+    const [permission] = await db.insert(userPermissions)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: data.granted,
+          grantedBy: data.grantedBy,
+          grantedAt: new Date(),
+          reason: data.reason,
+          expiresAt: data.expiresAt,
+        }
+      })
+      .returning();
+    return permission;
+  }
+
+  async revokeUserPermission(userId: number, permission: string, revokedBy: number, reason?: string): Promise<void> {
+    await db.insert(userPermissions)
+      .values({
+        userId,
+        permission,
+        granted: false,
+        grantedBy: revokedBy,
+        grantedAt: new Date(),
+        reason: reason || 'Permission revoked'
+      })
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: false,
+          grantedBy: revokedBy,
+          grantedAt: new Date(),
+          reason: reason || 'Permission revoked'
+        }
+      });
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.firstName, users.lastName);
+  }
+
+  async getRolePermissions(role: string): Promise<RolePermission[]> {
+    return await db.select().from(rolePermissions).where(eq(rolePermissions.role, role));
+  }
+
+  async getPermissionCategories(): Promise<PermissionCategory[]> {
+    return await db.select().from(permissionCategories).orderBy(permissionCategories.order);
+  }
+
+  async updateRolePermission(role: string, permission: string, granted: boolean): Promise<void> {
+    if (granted) {
+      await db.insert(rolePermissions)
+        .values({ role, permission, isDefault: true })
+        .onConflictDoNothing();
+    } else {
+      await db.delete(rolePermissions)
+        .where(and(
+          eq(rolePermissions.role, role),
+          eq(rolePermissions.permission, permission)
+        ));
+    }
+  }
+
   async getUserSubscription(userId: number): Promise<Subscription | undefined> {
     const [subscription] = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
     return subscription;
