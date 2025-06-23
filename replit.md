@@ -157,10 +157,11 @@ Preferred communication style: Simple, everyday language.
 ## Known Issues and Solutions
 
 ### Session Management
-- Login credentials: aziz.bena94@gmail.com / secret (updated for testing)
-- Session persistence issue identified and resolved with forced session.save()
-- Permission system working correctly at database level
+- Login credentials: aziz.bena94@gmail.com / secret (password hash corrected)
+- Session persistence working correctly with forced session.save()
+- Permission system fully functional at database and API level
 - All permission tables properly configured with sample data
+- CRUD operations tested and working for both user and role permissions
 
 ## Upcoming Features
 
