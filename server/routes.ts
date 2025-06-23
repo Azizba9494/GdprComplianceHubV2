@@ -129,6 +129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { identifier, password } = req.body; // Allow login with username or email
       
+      console.log('Login attempt for:', identifier);
+      
       // Find user by username or email
       let user = await storage.getUserByUsername(identifier);
       if (!user) {
@@ -136,21 +138,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!user) {
+        console.log('User not found:', identifier);
         return res.status(401).json({ error: "Identifiants invalides" });
       }
+      
+      console.log('User found:', user.email, 'Password hash length:', user.password?.length);
       
       // Verify password with bcrypt
       const bcrypt = await import('bcryptjs');
       
-      // Fix: Ensure password hash exists and is valid bcrypt format
-      if (!user.password || user.password.length !== 60) {
-        console.error('Invalid password hash detected for user:', user.email, 'Length:', user.password?.length);
+      // Check if password hash exists
+      if (!user.password) {
+        console.error('No password hash for user:', user.email);
+        return res.status(401).json({ error: "Identifiants invalides" });
+      }
+      
+      // Validate bcrypt hash format (should start with $2a$, $2b$, or $2y$ and be around 60 chars)
+      const bcryptRegex = /^\$2[aby]\$\d{2}\$.{53}$/;
+      if (!bcryptRegex.test(user.password)) {
+        console.error('Invalid bcrypt hash format for user:', user.email, 'Hash:', user.password.substring(0, 20) + '...');
         return res.status(401).json({ error: "Identifiants invalides" });
       }
       
       const passwordValid = await bcrypt.compare(password, user.password);
+      console.log('Password validation result:', passwordValid);
       
       if (!passwordValid) {
+        console.log('Invalid password for user:', user.email);
         return res.status(401).json({ error: "Identifiants invalides" });
       }
       
@@ -167,6 +181,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         lastName: user.lastName
       };
+
+      console.log('Session before save:', {
+        sessionId: req.sessionID,
+        userId: req.session.userId,
+        userExists: !!req.session.user
+      });
 
       // Force session save and wait for completion
       await new Promise<void>((resolve, reject) => {
