@@ -100,13 +100,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword
       });
 
+      // Create a default company for the new user
+      const defaultCompany = await storage.createCompany({
+        name: `Entreprise de ${user.firstName || user.username}`,
+        sector: null,
+        size: "small",
+        rcsNumber: null,
+        address: null,
+        userId: user.id
+      });
+
+      // Create owner access for the user
+      await storage.createUserCompanyAccess({
+        userId: user.id,
+        companyId: defaultCompany.id,
+        role: 'owner',
+        permissions: ['all'],
+        status: 'active'
+      });
+
       // Store user session
       (req.session as any).userId = user.id;
       (req.session as any).user = {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName
       };
 
       res.json({ 
@@ -235,10 +256,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Company routes
-  app.get("/api/companies/:userId", async (req, res) => {
+  app.get("/api/companies/:userId", requireAuth, async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-      const company = await storage.getCompanyByUserId(userId);
+      const requestedUserId = parseInt(req.params.userId);
+      const currentUserId = (req as any).userId;
+
+      // Users can only access their own company data
+      if (requestedUserId !== currentUserId) {
+        return res.status(403).json({ error: "Accès refusé" });
+      }
+
+      const company = await storage.getCompanyByUserId(currentUserId);
       res.json(company);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -256,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Diagnostic routes
-  app.get("/api/diagnostic/questions", async (req, res) => {
+  app.get("/api/diagnostic/questions", requireAuth, async (req, res) => {
     try {
       const questions = await storage.getDiagnosticQuestions();
       res.json(questions);
@@ -265,9 +293,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diagnostic/responses/:companyId", async (req, res) => {
+  app.get("/api/diagnostic/responses/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const responses = await storage.getDiagnosticResponses(companyId);
       res.json(responses);
     } catch (error: any) {
@@ -352,9 +388,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Compliance actions routes
-  app.get("/api/actions/:companyId", async (req, res) => {
+  app.get("/api/actions/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const actions = await storage.getComplianceActions(companyId);
       res.json(actions);
     } catch (error: any) {
@@ -380,9 +424,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Processing records routes
-  app.get("/api/records/:companyId", async (req, res) => {
+  app.get("/api/records/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const records = await storage.getProcessingRecords(companyId);
       res.json(records);
     } catch (error: any) {
@@ -482,9 +534,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Privacy policy routes
-  app.get("/api/privacy-policies/:companyId", async (req, res) => {
+  app.get("/api/privacy-policies/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const policies = await storage.getPrivacyPolicies(companyId);
       res.json(policies);
     } catch (error: any) {
@@ -528,9 +588,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data breach routes
-  app.get("/api/breaches/:companyId", async (req, res) => {
+  app.get("/api/breaches/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const breaches = await storage.getDataBreaches(companyId);
       res.json(breaches);
     } catch (error: any) {
@@ -572,9 +640,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data subject requests routes
-  app.get("/api/requests/:companyId", async (req, res) => {
+  app.get("/api/requests/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const requests = await storage.getDataSubjectRequests(companyId);
       res.json(requests);
     } catch (error: any) {
@@ -612,9 +688,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DPIA routes
-  app.get("/api/dpia/:companyId", async (req, res) => {
+  app.get("/api/dpia/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const assessments = await storage.getDpiaAssessments(companyId);
       res.json(assessments);
     } catch (error: any) {
@@ -1271,14 +1355,62 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
+  // Get current user's company
+  app.get("/api/user/company", requireAuth, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      let companyId = await getUserCompany(userId);
+      
+      // If user doesn't have a company, create one
+      if (!companyId) {
+        const user = await storage.getUser(userId);
+        if (user) {
+          const defaultCompany = await storage.createCompany({
+            name: `Entreprise de ${user.firstName || user.username}`,
+            sector: null,
+            size: "small",
+            rcsNumber: null,
+            address: null,
+            userId: user.id
+          });
+
+          // Create owner access for the user
+          await storage.createUserCompanyAccess({
+            userId: user.id,
+            companyId: defaultCompany.id,
+            role: 'owner',
+            permissions: ['all'],
+            status: 'active'
+          });
+
+          companyId = defaultCompany.id;
+        }
+      }
+
+      if (!companyId) {
+        return res.status(404).json({ error: "Impossible de créer une entreprise pour cet utilisateur" });
+      }
+
+      const company = await storage.getCompany(companyId);
+      res.json(company);
+    } catch (error: any) {
+      console.error('Error getting user company:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update company route
-  app.put("/api/companies/:id", async (req, res) => {
+  app.put("/api/companies/:id", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.id);
+      const userId = (req as any).userId;
       const updates = req.body;
 
-      // For demo purposes, we'll skip authentication check
-      // In production, verify user has permission to update this company
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
 
       const updatedCompany = await storage.updateCompany(companyId, updates);
       res.json(updatedCompany);
@@ -1289,9 +1421,16 @@ Répondez de manière complète et utile à cette question.`;
   });
 
   // Dashboard stats
-  app.get("/api/dashboard/:companyId", async (req, res) => {
+  app.get("/api/dashboard/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
 
       const actions = await storage.getComplianceActions(companyId);
       const requests = await storage.getDataSubjectRequests(companyId);
@@ -1475,14 +1614,37 @@ Répondez de manière complète et utile à cette question.`;
     if (!session?.userId) {
       return res.status(401).json({ error: "Authentification requise" });
     }
+    req.userId = session.userId;
     next();
+  };
+
+  // Utility function to get user's company
+  const getUserCompany = async (userId: number): Promise<number | null> => {
+    try {
+      // First check if user has a company as owner
+      let company = await storage.getCompanyByUserId(userId);
+      if (company) {
+        return company.id;
+      }
+
+      // If not, check user company access
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      if (userAccess.length > 0) {
+        return userAccess[0].companyId;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting user company:', error);
+      return null;
+    }
   };
 
   // Utility function to check if user has access to company
   const checkCompanyAccess = async (userId: number, companyId: number): Promise<boolean> => {
     try {
-      const userAccess = await storage.getUserCompanyAccess(userId);
-      return userAccess.some(access => access.companyId === companyId);
+      const userCompanyId = await getUserCompany(userId);
+      return userCompanyId === companyId;
     } catch (error) {
       console.error('Error checking company access:', error);
       return false;
@@ -1526,27 +1688,26 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  // Apply authentication middleware to protected routes
+  // Learning and gamification routes use user-specific data
   app.use([
-    '/api/companies',
-    '/api/diagnostic',
-    '/api/actions',
-    '/api/records',
-    '/api/privacy-policies',
-    '/api/breaches',
-    '/api/requests',
-    '/api/dpia',
     '/api/admin',
     '/api/learning',
-    '/api/gamification',
-    '/api/dashboard'
+    '/api/gamification'
   ], requireAuth);
 
   // Compliance snapshots routes
-  app.get("/api/compliance-snapshots/:companyId", async (req, res) => {
+  app.get("/api/compliance-snapshots/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = (req as any).userId;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
+
+      // Check if user has access to this company
+      const hasAccess = await checkCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+
       const snapshots = await storage.getComplianceSnapshots(companyId, limit);
       res.json(snapshots);
     } catch (error: any) {
