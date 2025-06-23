@@ -30,6 +30,7 @@ export interface AIContext {
   }>;
   existingDpiaData: any;
   field: string;
+  privacyPolicyContent?: string;
   companyContext: {
     hasDataBreaches: boolean;
     hasActiveActions: number;
@@ -74,6 +75,16 @@ export class ContextExtractor {
     // Get company compliance context
     const companyContext = await this.getCompanyContext(companyId);
 
+    // Get privacy policy for information measures
+    let privacyPolicyContent = undefined;
+    if (questionField === 'rightsInformation') {
+      const privacyPolicies = await storage.getPrivacyPolicies(companyId);
+      const activePolicy = privacyPolicies.find(p => p.isActive);
+      if (activePolicy) {
+        privacyPolicyContent = activePolicy.content;
+      }
+    }
+
     // Get related processing records based on similarity
     const relatedRecords = processingRecord 
       ? this.findRelatedProcessingRecords(processingRecord, allProcessingRecords)
@@ -109,7 +120,8 @@ export class ContextExtractor {
       existingDpiaData,
       field: questionField,
       companyContext,
-      industryContext
+      industryContext,
+      privacyPolicyContent
     };
   }
 
@@ -438,6 +450,17 @@ ${context.industryContext.recommendedMeasures.map(measure => `- ${measure}`).joi
 
 Exigences spécifiques:
 ${context.industryContext.specificRequirements.map(req => `- ${req}`).join('\n')}`);
+    }
+
+    // Privacy policy content for information measures
+    if (context.privacyPolicyContent) {
+      const cleanedContent = context.privacyPolicyContent
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+      
+      sections.push(`POLITIQUE DE CONFIDENTIALITÉ ACTIVE:
+${cleanedContent.substring(0, 2000)}${cleanedContent.length > 2000 ? '...' : ''}`);
     }
 
     // Existing DPIA data
