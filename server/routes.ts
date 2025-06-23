@@ -1453,9 +1453,14 @@ Répondez de manière complète et utile à cette question.`;
 
   // Authentication middleware for protected routes
   const requireAuth = (req: any, res: any, next: any) => {
+    console.log('RequireAuth middleware - Session:', req.session);
+    console.log('RequireAuth middleware - UserId:', req.session?.userId);
+    
     if (!req.session?.userId) {
+      console.log('RequireAuth middleware - No session userId found');
       return res.status(401).json({ error: "Authentication requise" });
     }
+    console.log('RequireAuth middleware - Authentication successful');
     next();
   };
 

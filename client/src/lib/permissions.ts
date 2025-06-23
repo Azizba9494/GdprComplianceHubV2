@@ -68,7 +68,8 @@ export const ROLE_PERMISSIONS = {
     'manage:roles',
     'view:logs',
     'manage:security',
-    'delete:any'
+    'delete:any',
+    'manage:permissions'
   ]
 };
 
