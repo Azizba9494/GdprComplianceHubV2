@@ -19,7 +19,7 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   lastName: text("last_name"), 
   phoneNumber: text("phone_number"),
-  role: text("role").notNull().default("user"), // user, admin, super_admin
+  role: text("role").notNull().default("user"), // user, admin
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -799,40 +799,6 @@ export const insertPromptDocumentSchema = createInsertSchema(promptDocuments).om
   id: true,
   createdAt: true,
 });
-
-// Permission system tables
-export const permissionCategories = pgTable("permission_categories", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  color: text("color"),
-  icon: text("icon"),
-  order: integer("order"),
-});
-
-export const rolePermissions = pgTable("role_permissions", {
-  id: serial("id").primaryKey(),
-  role: text("role").notNull(),
-  permission: text("permission").notNull(),
-  isDefault: boolean("is_default").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const userPermissions = pgTable("user_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  permission: text("permission").notNull(),
-  granted: boolean("granted").notNull(),
-  grantedBy: integer("granted_by"),
-  grantedAt: timestamp("granted_at").defaultNow(),
-  expiresAt: timestamp("expires_at"),
-  reason: text("reason"),
-});
-
-// Permission types
-export type PermissionCategory = typeof permissionCategories.$inferSelect;
-export type RolePermission = typeof rolePermissions.$inferSelect;
-export type UserPermission = typeof userPermissions.$inferSelect;
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   id: true,

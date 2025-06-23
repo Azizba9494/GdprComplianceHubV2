@@ -23,9 +23,6 @@ import DpiaProcessingSelection from "@/pages/DpiaProcessingSelection";
 import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
 import UserBackOfficeEnhanced from "@/pages/UserBackOfficeEnhanced";
-
-import PermissionManagement from "@/pages/PermissionManagement";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
@@ -78,18 +75,8 @@ function AuthenticatedApp() {
             <Route path="/dpia/:id" component={DpiaAssessmentEnhanced} />
             <Route path="/dpia-old" component={DPIA} />
             <Route path="/learning" component={Learning} />
-            <Route path="/admin" component={() => (
-              <RoleGuard requiredRole={['admin', 'super_admin']}>
-                <Admin />
-              </RoleGuard>
-            )} />
+            <Route path="/admin" component={Admin} />
             <Route path="/user-back-office" component={UserBackOfficeEnhanced} />
-
-            <Route path="/permissions" component={() => (
-              <RoleGuard requiredRole={['super_admin']}>
-                <PermissionManagement />
-              </RoleGuard>
-            )} />
             <Route component={NotFound} />
           </Switch>
         </div>
