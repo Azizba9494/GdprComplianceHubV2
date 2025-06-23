@@ -57,7 +57,7 @@ export default function Header() {
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
 
   const handleProfileClick = () => {
-    setLocation("/user-backoffice");
+    setLocation("/user-back-office");
   };
 
   const handleSettingsClick = () => {
@@ -81,7 +81,7 @@ export default function Header() {
           <h1 className="text-2xl font-semibold text-foreground">{pageInfo.title}</h1>
           <p className="text-muted-foreground mt-1">{pageInfo.subtitle}</p>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           {location === "/" && (
             <Button className="btn-primary">
@@ -89,7 +89,7 @@ export default function Header() {
               Nouveau diagnostic
             </Button>
           )}
-          
+
           <div className="relative">
             <Button variant="ghost" size="icon">
               <Bell className="w-5 h-5" />
@@ -114,7 +114,7 @@ export default function Header() {
               </div>
               <div className="px-2 py-1.5 text-xs text-gray-500">{user?.email}</div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleProfileClick}>
+              <DropdownMenuItem onClick={() => setLocation("/user-back-office")}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profil</span>
               </DropdownMenuItem>
