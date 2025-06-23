@@ -124,7 +124,7 @@ export default function PermissionManagement() {
 
   // Fetch role permissions
   const { data: rolePermissions } = useQuery({
-    queryKey: ['/api/admin/role-permissions', selectedRole],
+    queryKey: [`/api/admin/role-permissions/${selectedRole}`],
     staleTime: 2 * 60 * 1000,
   });
 

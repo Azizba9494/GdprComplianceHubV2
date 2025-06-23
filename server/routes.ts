@@ -1462,17 +1462,25 @@ Répondez de manière complète et utile à cette question.`;
   // Role-based access control middleware
   const requireRole = (allowedRoles: string[]) => {
     return async (req: any, res: any, next: any) => {
+      console.log('RequireRole middleware - Session:', req.session?.userId);
+      console.log('RequireRole middleware - Allowed roles:', allowedRoles);
+      
       if (!req.session?.userId) {
+        console.log('RequireRole middleware - No session userId');
         return res.status(401).json({ error: "Authentication requise" });
       }
       
       try {
         const user = await storage.getUser(req.session.userId);
+        console.log('RequireRole middleware - User found:', user?.email, 'Role:', user?.role);
+        
         if (!user || !allowedRoles.includes(user.role)) {
+          console.log('RequireRole middleware - Access denied for role:', user?.role);
           return res.status(403).json({ error: "Accès non autorisé pour votre rôle" });
         }
         
         req.user = user;
+        console.log('RequireRole middleware - Access granted');
         next();
       } catch (error) {
         console.error('Role check error:', error);
@@ -1530,7 +1538,8 @@ Répondez de manière complète et utile à cette question.`;
     '/api/dpia',
     '/api/learning',
     '/api/gamification',
-    '/api/user'
+    '/api/user',
+    '/api/admin'
   ], requireAuth);
 
   // Permission management routes (super admin only)
@@ -1613,7 +1622,7 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  // Apply role-based access control to admin routes
+  // Apply role-based access control to general admin routes (after specific permission routes)
   app.use('/api/admin', requireRole(['admin', 'super_admin']));
 
   // Compliance snapshots routes
