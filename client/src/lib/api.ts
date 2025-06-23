@@ -2,20 +2,30 @@ import { apiRequest } from "./queryClient";
 
 // Auth API
 export const authApi = {
-  register: (userData: { username: string; email: string; password: string; firstName?: string; lastName?: string }) =>
-    apiRequest("POST", "/api/auth/register", userData),
+  register: async (userData: { username: string; email: string; password: string; firstName?: string; lastName?: string }) => {
+    console.log('API: Making register request:', userData);
+    return await apiRequest("POST", "/api/auth/register", userData);
+  },
   
-  login: (credentials: { identifier: string; password: string }) => // Allow email or username
-    apiRequest("POST", "/api/auth/login", credentials),
+  login: async (credentials: { identifier: string; password: string }) => {
+    console.log('API: Making login request:', { identifier: credentials.identifier });
+    return await apiRequest("POST", "/api/auth/login", credentials);
+  },
     
-  logout: () =>
-    apiRequest("POST", "/api/auth/logout", {}),
+  logout: async () => {
+    console.log('API: Making logout request');
+    return await apiRequest("POST", "/api/auth/logout", {});
+  },
     
-  me: () =>
-    apiRequest("GET", "/api/auth/me"),
+  me: async () => {
+    console.log('API: Making me request');
+    return await apiRequest("GET", "/api/auth/me");
+  },
     
-  findUserByEmail: (email: string) =>
-    apiRequest("GET", `/api/auth/find-user?email=${encodeURIComponent(email)}`),
+  findUserByEmail: async (email: string) => {
+    console.log('API: Making findUserByEmail request:', email);
+    return await apiRequest("GET", `/api/auth/find-user?email=${encodeURIComponent(email)}`);
+  },
 };
 
 // Company API

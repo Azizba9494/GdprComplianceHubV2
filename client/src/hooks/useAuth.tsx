@@ -32,7 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check authentication status on app load
   const { data: authData, isLoading } = useQuery({
     queryKey: ['auth', 'me'],
-    queryFn: () => authApi.me().then(res => res.json()),
+    queryFn: async () => {
+      try {
+        const res = await authApi.me();
+        const data = await res.json();
+        return data;
+      } catch (error) {
+        console.error('Auth me query error:', error);
+        return { authenticated: false };
+      }
+    },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
