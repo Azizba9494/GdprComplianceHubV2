@@ -33,14 +33,8 @@ export const companyApi = {
   get: (userId: number) =>
     apiRequest("GET", `/api/companies/${userId}`),
   
-  getCurrentUserCompany: () =>
-    apiRequest("GET", "/api/user/company"),
-  
   create: (companyData: { name: string; sector?: string; size?: string; userId: number }) =>
     apiRequest("POST", "/api/companies", companyData),
-  
-  update: (id: number, updates: any) =>
-    apiRequest("PUT", `/api/companies/${id}`, updates),
 };
 
 // Diagnostic API
