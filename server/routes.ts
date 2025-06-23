@@ -188,11 +188,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/api/auth/me", (req, res) => {
-    if ((req.session as any)?.userId) {
-      res.json({ 
-        user: (req.session as any).user,
-        authenticated: true 
+  app.get("/api/auth/me", (req: any, res) => {
+    console.log('Auth/me - Session:', req.session);
+    console.log('Auth/me - UserId:', req.session?.userId);
+    console.log('Auth/me - User:', req.session?.user);
+    
+    if (req.session && req.session.userId) {
+      res.json({
+        authenticated: true,
+        user: req.session.user
       });
     } else {
       res.json({ authenticated: false });
@@ -1550,18 +1554,7 @@ Répondez de manière complète et utile à cette question.`;
   // Permission management routes (super admin only)
   app.get('/api/admin/users-permissions', requireRole(['super_admin']), async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const usersWithPermissions = await Promise.all(
-        users.map(async (user) => {
-          const userPermissions = await storage.getUserPermissions(user.id);
-          const effectivePermissions = await storage.getUserEffectivePermissions(user.id);
-          return {
-            ...user,
-            permissions: userPermissions.map(p => p.permission),
-            effectivePermissions
-          };
-        })
-      );
+      const usersWithPermissions = await storage.getAllUsersWithPermissions();
       res.json(usersWithPermissions);
     } catch (error: any) {
       console.error('Get users permissions error:', error);
