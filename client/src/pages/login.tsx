@@ -37,9 +37,14 @@ export default function Login() {
     try {
       setIsLoading(true);
       setError(null);
+      console.log('Attempting login with:', { identifier: data.identifier });
+      
       await login(data);
+      
+      console.log('Login successful, redirecting...');
       setLocation("/");
     } catch (err: any) {
+      console.error('Login form error:', err);
       setError(err.message || "Erreur de connexion");
     } finally {
       setIsLoading(false);

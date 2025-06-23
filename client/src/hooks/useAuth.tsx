@@ -46,9 +46,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [authData]);
 
   const loginMutation = useMutation({
-    mutationFn: authApi.login,
-    onSuccess: (response) => {
-      const data = response.json ? response.json() : response;
+    mutationFn: async (credentials: { identifier: string; password: string }) => {
+      try {
+        const response = await authApi.login(credentials);
+        const data = await response.json();
+        return data;
+      } catch (error: any) {
+        console.error('Login API error:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('Login success:', data);
       if (data.success && data.user) {
         setUser(data.user);
         queryClient.invalidateQueries({ queryKey: ['auth'] });
@@ -56,22 +65,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Connexion réussie",
           description: `Bienvenue ${data.user.firstName || data.user.username}`,
         });
+      } else {
+        throw new Error("Réponse inattendue du serveur");
       }
     },
     onError: (error: any) => {
+      console.error('Login error:', error);
       toast({
         title: "Erreur de connexion",
         description: error.message || "Identifiants invalides",
         variant: "destructive",
       });
-      throw error;
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: authApi.register,
-    onSuccess: (response) => {
-      const data = response.json ? response.json() : response;
+    mutationFn: async (userData: { username: string; email: string; password: string; firstName?: string; lastName?: string }) => {
+      try {
+        const response = await authApi.register(userData);
+        const data = await response.json();
+        return data;
+      } catch (error: any) {
+        console.error('Registration API error:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('Registration success:', data);
       if (data.success && data.user) {
         setUser(data.user);
         queryClient.invalidateQueries({ queryKey: ['auth'] });
@@ -79,20 +99,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title: "Inscription réussie",
           description: `Bienvenue ${data.user.firstName || data.user.username}`,
         });
+      } else {
+        throw new Error("Réponse inattendue du serveur");
       }
     },
     onError: (error: any) => {
+      console.error('Registration error:', error);
       toast({
         title: "Erreur d'inscription",
         description: error.message || "Erreur lors de la création du compte",
         variant: "destructive",
       });
-      throw error;
     },
   });
 
   const logoutMutation = useMutation({
-    mutationFn: authApi.logout,
+    mutationFn: async () => {
+      const response = await authApi.logout();
+      return response.json();
+    },
     onSuccess: () => {
       setUser(null);
       queryClient.clear();
@@ -110,20 +135,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const findUserByEmailMutation = useMutation({
-    mutationFn: authApi.findUserByEmail,
+    mutationFn: async (email: string) => {
+      const response = await authApi.findUserByEmail(email);
+      return response.json();
+    },
     onError: (error: any) => {
       console.error('Find user error:', error);
     },
   });
 
   const login = async (credentials: { identifier: string; password: string }) => {
-    const response = await loginMutation.mutateAsync(credentials);
-    return response;
+    try {
+      const result = await loginMutation.mutateAsync(credentials);
+      return result;
+    } catch (error) {
+      console.error('Login function error:', error);
+      throw error;
+    }
   };
 
   const register = async (userData: { username: string; email: string; password: string; firstName?: string; lastName?: string }) => {
-    const response = await registerMutation.mutateAsync(userData);
-    return response;
+    try {
+      const result = await registerMutation.mutateAsync(userData);
+      return result;
+    } catch (error) {
+      console.error('Register function error:', error);
+      throw error;
+    }
   };
 
   const logout = async () => {
@@ -131,9 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const findUserByEmail = async (email: string) => {
-    const response = await findUserByEmailMutation.mutateAsync(email);
-    const data = response.json ? await response.json() : response;
-    return data;
+    return await findUserByEmailMutation.mutateAsync(email);
   };
 
   return (

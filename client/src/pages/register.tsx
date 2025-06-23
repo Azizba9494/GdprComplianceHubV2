@@ -50,10 +50,20 @@ export default function Register() {
       setIsLoading(true);
       setError(null);
       
+      console.log('Attempting registration with:', { 
+        username: data.username, 
+        email: data.email, 
+        firstName: data.firstName,
+        lastName: data.lastName 
+      });
+      
       const { confirmPassword, ...registerData } = data;
       await registerUser(registerData);
+      
+      console.log('Registration successful, redirecting...');
       setLocation("/");
     } catch (err: any) {
+      console.error('Registration form error:', err);
       setError(err.message || "Erreur lors de la création du compte");
     } finally {
       setIsLoading(false);
