@@ -79,7 +79,8 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     sessionExists: !!session, 
     userId: session?.userId,
     userEmail: session?.user?.email,
-    authenticated: session?.user ? true : false
+    authenticated: session?.user ? true : false,
+    sessionId: req.sessionID
   });
   
   if (!session?.userId || !session?.user) {
@@ -255,11 +256,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName
       };
 
-      // Set session data directly
+      // Set session data and force save
       (req.session as any).userId = user.id;
       (req.session as any).user = sessionData;
 
-      console.log('[AUTH] Session data set for user:', user.email, 'User ID:', user.id);
+      // Save session explicitly
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('[AUTH] Session save error:', err);
+            reject(err);
+          } else {
+            console.log('[AUTH] Session saved successfully for user:', user.email);
+            resolve();
+          }
+        });
+      });
       
       res.json({ 
         success: true, 
@@ -276,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (err) {
         return res.status(500).json({ error: "Erreur lors de la déconnexion" });
       }
-      res.clearCookie('connect.sid');
+      res.clearCookie('gdpr.sid'); // Use the correct cookie name
       res.json({ success: true, message: "Déconnexion réussie" });
     });
   });

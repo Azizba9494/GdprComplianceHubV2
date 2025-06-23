@@ -10,20 +10,20 @@ const app = express();
 // Trust proxy for secure cookies in production
 app.set('trust proxy', 1);
 
-// Session configuration
-import session from "express-session";
-
+// Session configuration with better settings
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'gdpr-suite-secret-key-2024',
-  resave: false,
+  secret: process.env.SESSION_SECRET || 'gdpr-suite-secret-key-2024-dev',
+  resave: true,
   saveUninitialized: false,
-  name: 'connect.sid',
+  name: 'gdpr.sid',
   cookie: { 
     secure: false, // Set to false for development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax'
-  }
+  },
+  // Force session to be saved even if unmodified
+  rolling: true
 }));
 
 app.use(express.json());
