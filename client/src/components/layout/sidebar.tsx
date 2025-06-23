@@ -69,30 +69,32 @@ export default function Sidebar() {
       </nav>
       
       {/* User Profile */}
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-sidebar-accent rounded-full flex items-center justify-center">
-            <span className="text-sidebar-accent-foreground text-sm font-medium">
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
-            </span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-sidebar-foreground">
-              {user?.firstName} {user?.lastName}
-            </p>
-            <div className="flex items-center gap-1">
-              <p className="text-xs text-sidebar-foreground/60">
-                {user?.role === 'super_admin' ? 'Super Admin' : 
-                 user?.role === 'admin' ? 'Administrateur' : 
-                 'Utilisateur'}
+      {user && (
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-sidebar-accent rounded-full flex items-center justify-center">
+              <span className="text-sidebar-accent-foreground text-sm font-medium">
+                {user.firstName?.[0]}{user.lastName?.[0]}
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-sidebar-foreground">
+                {user.firstName} {user.lastName}
               </p>
-              {(user?.role === 'admin' || user?.role === 'super_admin') && (
-                <Crown className="w-3 h-3 text-yellow-500" />
-              )}
+              <div className="flex items-center gap-1">
+                <p className="text-xs text-sidebar-foreground/60">
+                  {user.role === 'super_admin' ? 'Super Admin' : 
+                   user.role === 'admin' ? 'Administrateur' : 
+                   'Utilisateur'}
+                </p>
+                {(user.role === 'admin' || user.role === 'super_admin') && (
+                  <Crown className="w-3 h-3 text-yellow-500" />
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 }
