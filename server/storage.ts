@@ -5,6 +5,7 @@ import {
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
   quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
   subscriptions, userCompanyAccess, invitations, invoices,
+  permissionCategories, rolePermissions, userPermissions,
   type User, type InsertUser, type Company, type InsertCompany,
   type Subscription, type InsertSubscription, type UserCompanyAccess, type InsertUserCompanyAccess,
   type Invitation, type InsertInvitation, type Invoice, type InsertInvoice,
@@ -29,7 +30,8 @@ import {
   type QuizAttempt, type InsertQuizAttempt,
   type DpiaEvaluation, type InsertDpiaEvaluation,
   type RagDocument, type InsertRagDocument,
-  type PromptDocument, type InsertPromptDocument
+  type PromptDocument, type InsertPromptDocument,
+  type PermissionCategory, type RolePermission, type UserPermission
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";

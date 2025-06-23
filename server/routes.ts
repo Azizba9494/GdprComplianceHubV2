@@ -142,8 +142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify password with bcrypt
       const bcrypt = await import('bcryptjs');
       
-      // Fix: Accept bcrypt hashes (should be 60 chars but allow slight variations)
-      if (!user.password || user.password.length < 59 || user.password.length > 60) {
+      // Fix: Ensure password hash is valid bcrypt format (60 chars)
+      if (!user.password || user.password.length !== 60) {
         console.error('Invalid password hash detected for user:', user.email, 'Length:', user.password?.length);
         return res.status(401).json({ error: "Identifiants invalides" });
       }
