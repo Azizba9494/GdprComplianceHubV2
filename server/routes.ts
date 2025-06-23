@@ -75,9 +75,17 @@ async function getRagDocuments(): Promise<string[]> {
 // Authentication middleware for protected routes
 const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   const session = req.session as any;
-  if (!session?.userId) {
+  console.log('[AUTH] Session check:', { 
+    sessionExists: !!session, 
+    userId: session?.userId,
+    authenticated: session?.user ? true : false
+  });
+  
+  if (!session?.userId || !session?.user) {
+    console.log('[AUTH] Authentication failed - no valid session');
     return res.status(401).json({ error: "Authentification requise" });
   }
+  
   (req as any).userId = session.userId;
   next();
 };
@@ -221,9 +229,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update last login time
       await storage.updateUser(user.id, { lastLoginAt: new Date() });
 
-      // Store user session
-      (req.session as any).userId = user.id;
-      (req.session as any).user = {
+      // Store user session with explicit save
+      const sessionData = {
         id: user.id,
         username: user.username,
         email: user.email,
@@ -232,16 +239,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName
       };
 
-      res.json({ 
-        success: true, 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email, 
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName
-        } 
+      (req.session as any).userId = user.id;
+      (req.session as any).user = sessionData;
+
+      // Explicitly save session
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ error: "Erreur de session" });
+        }
+
+        console.log('[AUTH] Session saved successfully for user:', user.email);
+        res.json({ 
+          success: true, 
+          user: sessionData
+        });
       });
     } catch (error: any) {
       console.error('Login error:', error);
@@ -260,9 +272,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/me", (req, res) => {
-    if ((req.session as any)?.userId) {
+    const session = req.session as any;
+    console.log('[AUTH] /me endpoint - session check:', {
+      sessionExists: !!session,
+      hasUserId: !!session?.userId,
+      hasUser: !!session?.user
+    });
+
+    if (session?.userId && session?.user) {
       res.json({ 
-        user: (req.session as any).user,
+        user: session.user,
         authenticated: true 
       });
     } else {

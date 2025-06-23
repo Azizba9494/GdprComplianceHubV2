@@ -8,24 +8,24 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Session configuration
-import session from 'express-session';
-import connectPgSimple from 'connect-pg-simple';
+import session from "express-session";
+import { registerRoutes } from "./routes";
+import { db } from "./db";
 
-const PgSession = connectPgSimple(session);
+const app = express();
+app.use(helmet());
 
+// Enhanced session configuration
 app.use(session({
-  store: new PgSession({
-    conString: process.env.DATABASE_URL,
-    tableName: 'sessions',
-    createTableIfMissing: false
-  }),
-  secret: process.env.SESSION_SECRET || 'gdpr-compliance-platform-secret-key',
+  secret: process.env.SESSION_SECRET || 'gdpr-suite-secret-key-2024',
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
+  name: 'gdpr.session.id',
+  cookie: { 
+    secure: false, // Set to false for development, true for production
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax'
   }
 }));
 
@@ -69,7 +69,7 @@ app.use((req, res, next) => {
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-      
+
       console.error('Error:', err);
       res.status(status).json({ message });
     });
