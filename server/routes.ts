@@ -150,9 +150,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update last login time
       await storage.updateUser(user.id, { lastLoginAt: new Date() });
       
-      // Store user session
-      (req.session as any).userId = user.id;
-      (req.session as any).user = {
+      // Store user session with proper typing
+      req.session.userId = user.id;
+      req.session.user = {
         id: user.id,
         username: user.username,
         email: user.email,
@@ -160,6 +160,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         lastName: user.lastName
       };
+
+      // Force session save and wait for completion
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) {
+            console.error('Session save error:', err);
+            reject(err);
+          } else {
+            console.log('Session saved successfully:', {
+              sessionId: req.sessionID,
+              userId: req.session.userId,
+              userRole: req.session.user?.role
+            });
+            resolve();
+          }
+        });
+      });
       
       res.json({ 
         success: true, 
