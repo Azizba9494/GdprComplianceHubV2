@@ -78,6 +78,7 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   console.log('[AUTH] Session check:', { 
     sessionExists: !!session, 
     userId: session?.userId,
+    userEmail: session?.user?.email,
     authenticated: session?.user ? true : false
   });
   
@@ -87,6 +88,7 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   }
   
   (req as any).userId = session.userId;
+  (req as any).user = session.user;
   next();
 };
 
@@ -113,10 +115,24 @@ const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
   const session = req.session as any;
   const user = session?.user;
 
-  if (!user || user.email !== 'aziz.bena94@gmail.com') {
+  console.log('[ADMIN] Admin check:', {
+    hasSession: !!session,
+    hasUser: !!user,
+    userEmail: user?.email,
+    isAdmin: user?.email === 'aziz.bena94@gmail.com'
+  });
+
+  if (!session?.userId || !user) {
+    console.log('[ADMIN] No valid session for admin access');
+    return res.status(401).json({ error: "Authentification requise" });
+  }
+
+  if (user.email !== 'aziz.bena94@gmail.com') {
+    console.log('[ADMIN] User', user.email, 'denied admin access');
     return res.status(403).json({ error: "Accès administrateur requis" });
   }
 
+  console.log('[ADMIN] Admin access granted to:', user.email);
   next();
 };
 
@@ -229,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update last login time
       await storage.updateUser(user.id, { lastLoginAt: new Date() });
 
-      // Store user session with explicit save
+      // Store user session with proper data
       const sessionData = {
         id: user.id,
         username: user.username,
@@ -239,21 +255,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName
       };
 
+      // Set session data directly
       (req.session as any).userId = user.id;
       (req.session as any).user = sessionData;
 
-      // Explicitly save session
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err);
-          return res.status(500).json({ error: "Erreur de session" });
-        }
-
-        console.log('[AUTH] Session saved successfully for user:', user.email);
-        res.json({ 
-          success: true, 
-          user: sessionData
-        });
+      console.log('[AUTH] Session data set for user:', user.email, 'User ID:', user.id);
+      
+      res.json({ 
+        success: true, 
+        user: sessionData
       });
     } catch (error: any) {
       console.error('Login error:', error);
@@ -276,15 +286,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[AUTH] /me endpoint - session check:', {
       sessionExists: !!session,
       hasUserId: !!session?.userId,
-      hasUser: !!session?.user
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email
     });
 
     if (session?.userId && session?.user) {
+      console.log('[AUTH] /me endpoint - returning user data for:', session.user.email);
       res.json({ 
         user: session.user,
         authenticated: true 
       });
     } else {
+      console.log('[AUTH] /me endpoint - no valid session found');
       res.json({ authenticated: false });
     }
   });

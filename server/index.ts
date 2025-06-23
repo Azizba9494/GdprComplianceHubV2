@@ -10,32 +10,16 @@ const app = express();
 // Trust proxy for secure cookies in production
 app.set('trust proxy', 1);
 
-// Security middleware with CSP configured for development
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://replit.dev", "blob:"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      fontSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'", "ws:", "wss:", "https:"],
-      frameSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      workerSrc: ["'self'", "blob:"]
-    }
-  }
-}));
+// Session configuration
+import session from "express-session";
 
-// Enhanced session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'gdpr-suite-secret-key-2024',
   resave: false,
   saveUninitialized: false,
-  name: 'gdpr.session.id',
+  name: 'connect.sid',
   cookie: { 
-    secure: false, // Set to false for development, true for production
+    secure: false, // Set to false for development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax'
