@@ -18,6 +18,7 @@ const getNavigation = (userRole: string) => {
     { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3, roles: ["user", "admin", "super_admin"] },
     { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap, roles: ["user", "admin", "super_admin"] },
     { name: "👤 Mon Compte", href: "/user-back-office", icon: User, roles: ["user", "admin", "super_admin"] },
+    { name: "🧪 Test Rôles", href: "/role-test", icon: Shield, roles: ["user", "admin", "super_admin"] },
     { name: "⚙️ Administration", href: "/admin", icon: Settings, roles: ["admin", "super_admin"] },
   ];
 
