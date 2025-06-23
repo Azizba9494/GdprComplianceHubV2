@@ -1459,6 +1459,28 @@ Répondez de manière complète et utile à cette question.`;
     next();
   };
 
+  // Role-based access control middleware
+  const requireRole = (allowedRoles: string[]) => {
+    return async (req: any, res: any, next: any) => {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Authentication requise" });
+      }
+      
+      try {
+        const user = await storage.getUser(req.session.userId);
+        if (!user || !allowedRoles.includes(user.role)) {
+          return res.status(403).json({ error: "Accès non autorisé pour votre rôle" });
+        }
+        
+        req.user = user;
+        next();
+      } catch (error) {
+        console.error('Role check error:', error);
+        res.status(500).json({ error: "Erreur lors de la vérification des permissions" });
+      }
+    };
+  };
+
   // Update user profile route
   app.put("/api/user/profile", requireAuth, async (req, res) => {
     try {
@@ -1506,11 +1528,13 @@ Répondez de manière complète et utile à cette question.`;
     '/api/breaches',
     '/api/requests',
     '/api/dpia',
-    '/api/admin',
     '/api/learning',
     '/api/gamification',
     '/api/user'
   ], requireAuth);
+
+  // Apply role-based access control to admin routes
+  app.use('/api/admin', requireRole(['admin', 'super_admin']));
 
   // Compliance snapshots routes
   app.get("/api/compliance-snapshots/:companyId", async (req, res) => {
