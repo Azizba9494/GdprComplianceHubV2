@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { learningApi, gamificationApi } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -108,14 +107,14 @@ export default function Learning() {
       setIsModuleDialogOpen(false);
       setSelectedModule(null);
       setCurrentProgress(0);
-
+      
       if (data.newAchievements && data.newAchievements.length > 0) {
         toast({
           title: "Nouveau badge débloqué !",
           description: `Félicitations ! Vous avez gagné ${data.newAchievements.length} nouveau(x) badge(s).`,
         });
       }
-
+      
       toast({
         title: "Module complété !",
         description: `Vous avez gagné ${selectedModule?.xpReward || 0} XP !`,
@@ -154,7 +153,7 @@ export default function Learning() {
   const openModule = (module: LearningModule) => {
     setSelectedModule(module);
     setIsModuleDialogOpen(true);
-
+    
     // Find existing progress
     const existingProgress = userProgressData?.moduleProgress?.find(
       (mp: ModuleProgress) => mp.moduleId === module.id
@@ -246,7 +245,7 @@ export default function Learning() {
             </p>
           </div>
         </div>
-
+        
         {/* User stats */}
         {userProgress && (
           <div className="flex space-x-4">
@@ -300,7 +299,7 @@ export default function Learning() {
                     <CardTitle className="text-lg leading-6">{module.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">{module.description}</p>
                   </CardHeader>
-
+                  
                   <CardContent>
                     <div className="space-y-4">
                       {/* Progress bar */}
@@ -313,7 +312,7 @@ export default function Learning() {
                           <Progress value={progress.progress} className="h-2" />
                         </div>
                       )}
-
+                      
                       {/* Module info */}
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center space-x-2">
@@ -452,7 +451,7 @@ export default function Learning() {
               <span>{selectedModule?.title}</span>
             </DialogTitle>
           </DialogHeader>
-
+          
           {selectedModule && (
             <div className="space-y-6">
               {/* Progress */}
@@ -478,7 +477,7 @@ export default function Learning() {
                   <span>🏆 +{selectedModule.xpReward} XP</span>
                   <span>⏰ {timeSpent} min passées</span>
                 </div>
-
+                
                 <div className="flex space-x-2">
                   {currentProgress < 100 && (
                     <>
@@ -495,7 +494,7 @@ export default function Learning() {
                       </Button>
                     </>
                   )}
-
+                  
                   {currentProgress >= 100 && (
                     <Button 
                       onClick={completeModule}
