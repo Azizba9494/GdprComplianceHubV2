@@ -73,28 +73,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('Database connection failed, some routes may not work properly');
   }
   
-  // Authentication routes
+  // Enhanced Authentication routes with security
   app.post("/api/auth/register", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
-      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email } });
+      
+      // Check if user already exists by email or username
+      const existingUserByEmail = await storage.getUserByEmail(userData.email);
+      const existingUserByUsername = await storage.getUserByUsername(userData.username);
+      
+      if (existingUserByEmail) {
+        return res.status(400).json({ error: "Un compte avec cet email existe déjà" });
+      }
+      
+      if (existingUserByUsername) {
+        return res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris" });
+      }
+      
+      // Hash password before storing
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash(userData.password, 12);
+      
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword
+      });
+      
+      // Store user session
+      (req.session as any).userId = user.id;
+      (req.session as any).user = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      };
+      
+      res.json({ 
+        success: true, 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName
+        } 
+      });
     } catch (error: any) {
+      console.error('Registration error:', error);
       res.status(400).json({ error: error.message });
     }
   });
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username, password } = req.body;
-      const user = await storage.getUserByUsername(username);
+      const { identifier, password } = req.body; // Allow login with username or email
       
-      if (!user || user.password !== password) {
+      // Find user by username or email
+      let user = await storage.getUserByUsername(identifier);
+      if (!user) {
+        user = await storage.getUserByEmail(identifier);
+      }
+      
+      if (!user) {
         return res.status(401).json({ error: "Identifiants invalides" });
       }
       
-      res.json({ success: true, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
+      // Verify password with bcrypt
+      const bcrypt = await import('bcryptjs');
+      const passwordValid = await bcrypt.compare(password, user.password);
+      
+      if (!passwordValid) {
+        return res.status(401).json({ error: "Identifiants invalides" });
+      }
+      
+      // Store user session
+      (req.session as any).userId = user.id;
+      (req.session as any).user = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      };
+      
+      res.json({ 
+        success: true, 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email, 
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName
+        } 
+      });
     } catch (error: any) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Erreur lors de la déconnexion" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ success: true, message: "Déconnexion réussie" });
+    });
+  });
+
+  app.get("/api/auth/me", (req, res) => {
+    if ((req.session as any)?.userId) {
+      res.json({ 
+        user: (req.session as any).user,
+        authenticated: true 
+      });
+    } else {
+      res.json({ authenticated: false });
+    }
+  });
+
+  // Find user by email - useful for password reset and user lookup
+  app.get("/api/auth/find-user", async (req, res) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ error: "Email requis" });
+      }
+      
+      const user = await storage.getUserByEmail(email);
+      
+      if (user) {
+        // Return limited user info for security
+        res.json({
+          found: true,
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName
+          }
+        });
+      } else {
+        res.json({ found: false });
+      }
+    } catch (error: any) {
+      console.error('Find user error:', error);
       res.status(500).json({ error: error.message });
     }
   });

@@ -2,11 +2,20 @@ import { apiRequest } from "./queryClient";
 
 // Auth API
 export const authApi = {
-  register: (userData: { username: string; email: string; password: string }) =>
+  register: (userData: { username: string; email: string; password: string; firstName?: string; lastName?: string }) =>
     apiRequest("POST", "/api/auth/register", userData),
   
-  login: (credentials: { username: string; password: string }) =>
+  login: (credentials: { identifier: string; password: string }) => // Allow email or username
     apiRequest("POST", "/api/auth/login", credentials),
+    
+  logout: () =>
+    apiRequest("POST", "/api/auth/logout", {}),
+    
+  me: () =>
+    apiRequest("GET", "/api/auth/me"),
+    
+  findUserByEmail: (email: string) =>
+    apiRequest("GET", `/api/auth/find-user?email=${encodeURIComponent(email)}`),
 };
 
 // Company API

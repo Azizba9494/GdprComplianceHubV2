@@ -3,6 +3,32 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Trust proxy for secure cookies in production
+app.set('trust proxy', 1);
+
+// Session configuration
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+
+const PgSession = connectPgSimple(session);
+
+app.use(session({
+  store: new PgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'sessions',
+    createTableIfMissing: false
+  }),
+  secret: process.env.SESSION_SECRET || 'gdpr-compliance-platform-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
