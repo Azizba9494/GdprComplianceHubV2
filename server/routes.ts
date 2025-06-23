@@ -15,6 +15,7 @@ import {
 } from "@shared/schema";
 import multer from "multer";
 // import pdfParse from "pdf-parse";
+import { Request, Response, NextFunction } from 'express';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -1469,11 +1470,23 @@ Répondez de manière complète et utile à cette question.`;
   });
 
   // Authentication middleware for protected routes
-  const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.session?.userId) {
-      return res.status(401).json({ error: "Authentication requise" });
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    const session = req.session as any;
+    if (!session?.userId) {
+      return res.status(401).json({ error: "Authentification requise" });
     }
     next();
+  };
+
+  // Utility function to check if user has access to company
+  const checkCompanyAccess = async (userId: number, companyId: number): Promise<boolean> => {
+    try {
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      return userAccess.some(access => access.companyId === companyId);
+    } catch (error) {
+      console.error('Error checking company access:', error);
+      return false;
+    }
   };
 
   // Update user profile route
@@ -1526,7 +1539,7 @@ Répondez de manière complète et utile à cette question.`;
     '/api/admin',
     '/api/learning',
     '/api/gamification',
-    '/api/user'
+    '/api/dashboard'
   ], requireAuth);
 
   // Compliance snapshots routes
