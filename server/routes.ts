@@ -33,11 +33,11 @@ const upload = multer({
 async function getRagDocuments(): Promise<string[]> {
   try {
     const ragDocuments: string[] = [];
-    
+
     // Get all active prompts
     const allPrompts = await storage.getAiPrompts();
     const activePrompts = allPrompts.filter(p => p.isActive);
-    
+
     // For each active prompt, get associated documents
     for (const prompt of activePrompts) {
       const promptDocuments = await storage.getPromptDocuments(prompt.id);
@@ -45,7 +45,7 @@ async function getRagDocuments(): Promise<string[]> {
         const documentIds = promptDocuments
           .sort((a, b) => a.priority - b.priority)
           .map(pd => pd.documentId);
-        
+
         for (const docId of documentIds) {
           const document = await storage.getRagDocument(docId);
           if (document && document.isActive && !ragDocuments.includes(document.content)) {
@@ -54,7 +54,7 @@ async function getRagDocuments(): Promise<string[]> {
         }
       }
     }
-    
+
     return ragDocuments;
   } catch (error) {
     console.error('Error getting RAG documents:', error);
@@ -72,33 +72,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (!dbConnected) {
     console.warn('Database connection failed, some routes may not work properly');
   }
-  
+
   // Enhanced Authentication routes with security
   app.post("/api/auth/register", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      
+
       // Check if user already exists by email or username
       const existingUserByEmail = await storage.getUserByEmail(userData.email);
       const existingUserByUsername = await storage.getUserByUsername(userData.username);
-      
+
       if (existingUserByEmail) {
         return res.status(400).json({ error: "Un compte avec cet email existe déjà" });
       }
-      
+
       if (existingUserByUsername) {
         return res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris" });
       }
-      
+
       // Hash password before storing
       const bcrypt = await import('bcryptjs');
       const hashedPassword = await bcrypt.hash(userData.password, 12);
-      
+
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword
       });
-      
+
       // Store user session
       (req.session as any).userId = user.id;
       (req.session as any).user = {
@@ -107,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email,
         role: user.role
       };
-      
+
       res.json({ 
         success: true, 
         user: { 
@@ -128,28 +128,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { identifier, password } = req.body; // Allow login with username or email
-      
+
       // Find user by username or email
       let user = await storage.getUserByUsername(identifier);
       if (!user) {
         user = await storage.getUserByEmail(identifier);
       }
-      
+
       if (!user) {
         return res.status(401).json({ error: "Identifiants invalides" });
       }
-      
+
       // Verify password with bcrypt
       const bcrypt = await import('bcryptjs');
       const passwordValid = await bcrypt.compare(password, user.password);
-      
+
       if (!passwordValid) {
         return res.status(401).json({ error: "Identifiants invalides" });
       }
-      
+
       // Update last login time
       await storage.updateUser(user.id, { lastLoginAt: new Date() });
-      
+
       // Store user session
       (req.session as any).userId = user.id;
       (req.session as any).user = {
@@ -160,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         lastName: user.lastName
       };
-      
+
       res.json({ 
         success: true, 
         user: { 
@@ -203,13 +203,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/find-user", async (req, res) => {
     try {
       const { email } = req.query;
-      
+
       if (!email || typeof email !== 'string') {
         return res.status(400).json({ error: "Email requis" });
       }
-      
+
       const user = await storage.getUserByEmail(email);
-      
+
       if (user) {
         // Return limited user info for security
         res.json({
@@ -287,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/diagnostic/analyze", async (req, res) => {
     try {
       const { companyId } = req.body;
-      
+
       const company = await storage.getCompany(companyId);
       if (!company) {
         return res.status(404).json({ error: "Entreprise non trouvée" });
@@ -295,25 +295,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const responses = await storage.getDiagnosticResponses(companyId);
       const questions = await storage.getDiagnosticQuestions();
-      
+
       // Generate action plans based on manual configuration
       const actions = [];
       let overallRiskScore = 0;
       let riskCount = { faible: 0, moyen: 0, elevé: 0, critique: 0 };
-      
+
       for (const response of responses) {
         const question = questions.find(q => q.id === response.questionId);
         if (!question) continue;
-        
+
         const isYes = response.response.toLowerCase() === 'oui';
         const actionPlan = isYes ? question.actionPlanYes : question.actionPlanNo;
         const riskLevel = isYes ? question.riskLevelYes : question.riskLevelNo;
-        
+
         if (actionPlan && actionPlan.trim()) {
           const riskScore = riskLevel === 'critique' ? 25 : riskLevel === 'elevé' ? 15 : riskLevel === 'moyen' ? 10 : 5;
           overallRiskScore += riskScore;
           riskCount[riskLevel as keyof typeof riskCount]++;
-          
+
           actions.push({
             title: `Action pour: ${question.question}`,
             description: actionPlan,
@@ -323,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       // Create compliance actions from manual configuration
       for (const action of actions) {
         await storage.createComplianceAction({
@@ -365,12 +365,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
-      
+
       // Convert date strings to Date objects if present
       if (updates.dueDate && typeof updates.dueDate === 'string') {
         updates.dueDate = new Date(updates.dueDate);
       }
-      
+
       const action = await storage.updateComplianceAction(id, updates);
       res.json(action);
     } catch (error: any) {
@@ -392,14 +392,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/records/generate", async (req, res) => {
     try {
       const { companyId, processingType, description } = req.body;
-      
+
       const company = await storage.getCompany(companyId);
       if (!company) {
         return res.status(404).json({ error: "Entreprise non trouvée" });
       }
 
       const recordTemplate = await geminiService.generateProcessingRecord(company, processingType, description);
-      
+
       const record = await storage.createProcessingRecord({
         companyId,
         ...recordTemplate,
@@ -425,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/records", async (req, res) => {
     try {
       const recordData = insertProcessingRecordSchema.parse(req.body);
-      
+
       // Auto-fill data controller information from company data if not provided
       if (!recordData.dataControllerName || !recordData.dataControllerAddress) {
         const company = await storage.getCompany(recordData.companyId);
@@ -436,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           recordData.dataControllerEmail = recordData.dataControllerEmail || company.email;
         }
       }
-      
+
       const record = await storage.createProcessingRecord(recordData);
       res.json(record);
     } catch (error: any) {
@@ -469,7 +469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const record = req.body;
       const analysis = await geminiService.assessDPIA(record.name, record.purpose, { companyId: record.companyId });
-      
+
       res.json({
         dpiaRequired: analysis.dpiaRequired,
         justification: analysis.conclusion,
@@ -504,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/privacy-policies/generate", async (req, res) => {
     try {
       const { companyId } = req.body;
-      
+
       const company = await storage.getCompany(companyId);
       if (!company) {
         return res.status(404).json({ error: "Entreprise non trouvée" });
@@ -512,7 +512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const records = await storage.getProcessingRecords(companyId);
       const policyData = await geminiService.generatePrivacyPolicy(company, records);
-      
+
       const policy = await storage.createPrivacyPolicy({
         companyId,
         content: policyData.content,
@@ -550,13 +550,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/breaches/analyze", async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
-      
+
       // Get RAG documents for enhanced analysis
       const ragDocuments = await getRagDocuments();
       console.log(`[RAG] Found ${ragDocuments.length} documents for breach analysis`);
-      
+
       const analysis = await geminiService.analyzeDataBreach(breachData, ragDocuments);
-      
+
       const breach = await storage.createDataBreach({
         ...breachData,
         notificationRequired: analysis.notificationRequired,
@@ -587,12 +587,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Auto-calculate due date (1 month from now)
       const dueDate = new Date();
       dueDate.setMonth(dueDate.getMonth() + 1);
-      
+
       const request = await storage.createDataSubjectRequest({
         ...requestData,
         dueDate,
       });
-      
+
       res.json(request);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -681,7 +681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/dpia/ai-risk-analysis", async (req, res) => {
     try {
       const { companyId, dpiaId, riskCategory, section, promptKey, processingRecord } = req.body;
-      
+
       // Get the specific prompt for this risk analysis
       const prompt = await storage.getActivePromptByCategory(promptKey);
       if (!prompt) {
@@ -694,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const ragDocuments = await getRagDocuments();
-      
+
       const analysisResult = await geminiService.generateRiskAnalysis(
         riskCategory,
         section,
@@ -714,9 +714,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/dpia/ai-assist", async (req, res) => {
     try {
       const { questionField, companyId, existingDpiaData } = req.body;
-      
+
       console.log("[DPIA AI-ASSIST] Request:", { questionField, companyId });
-      
+
       // Map questionField to prompt category (more reliable than name)
       const fieldToCategoryMap: Record<string, string> = {
         'generalDescription': 'generalDescription',
@@ -752,22 +752,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'dataDisappearanceSources': 'dataDisappearanceSources',
         'dataDisappearanceMeasures': 'dataDisappearanceMeasures'
       };
-      
+
       const promptCategory = fieldToCategoryMap[questionField];
       if (!promptCategory) {
         console.log("[DPIA AI-ASSIST] No prompt mapping found for field:", questionField);
         return res.status(400).json({ error: "Champ non supporté pour la génération IA" });
       }
-      
+
       // Get the specific prompt from database using category
       const aiPrompt = await storage.getAiPromptByCategory(promptCategory);
       if (!aiPrompt) {
         console.log("[DPIA AI-ASSIST] No prompt found in database for category:", promptCategory);
         return res.status(404).json({ error: "Prompt IA non trouvé pour ce champ" });
       }
-      
+
       console.log("[DPIA AI-ASSIST] Using prompt:", aiPrompt.name, "- Length:", aiPrompt.prompt.length);
-      
+
       // Extract comprehensive context using the new context extractor
       const context = await contextExtractor.extractContext(
         companyId, 
@@ -778,17 +778,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get RAG documents for enhanced context
       const ragDocuments = await getRagDocuments();
-      
+
       // Use the custom prompt with Gemini
       const response = await geminiService.generateDpiaResponse(
         aiPrompt.prompt,
         context,
         ragDocuments
       );
-      
+
       console.log("[DPIA AI-ASSIST] Response generated successfully");
       res.json(response);
-      
+
     } catch (error: any) {
       console.error("[DPIA AI-ASSIST] Error:", error);
       res.status(500).json({ error: error.message });
@@ -799,14 +799,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/dpia/ai-risk-assessment", async (req, res) => {
     try {
       const { processingDescription, dataCategories, companyId } = req.body;
-      
+
       const company = await storage.getCompany(companyId);
       if (!company) {
         return res.status(404).json({ error: "Entreprise non trouvée" });
       }
 
       const ragDocuments = await getRagDocuments();
-      
+
       const riskAssessment = await geminiService.generateRiskAssessment(
         processingDescription,
         dataCategories,
@@ -907,14 +907,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.userId);
       let progress = await storage.getUserProgress(userId);
-      
+
       if (!progress) {
         progress = await storage.createUserProgress({ userId, totalXp: 0, level: 1 });
       }
-      
+
       const achievements = await storage.getUserAchievements(userId);
       const moduleProgress = await storage.getUserModuleProgress(userId);
-      
+
       res.json({
         progress,
         achievements,
@@ -950,20 +950,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/learning/complete-module", async (req, res) => {
     try {
       const { userId, moduleId } = req.body;
-      
+
       // Complete the module
       const moduleProgress = await storage.completeModule(userId, moduleId);
-      
+
       // Get module to award XP
       const module = await storage.getLearningModule(moduleId);
       if (module) {
         await storage.addExperience(userId, module.xpReward || 0);
         await storage.updateStreak(userId);
       }
-      
+
       // Check for new achievements
       const newAchievements = await storage.checkAndUnlockAchievements(userId);
-      
+
       res.json({
         moduleProgress,
         newAchievements
@@ -977,9 +977,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/learning/update-progress", async (req, res) => {
     try {
       const { userId, moduleId, progress, timeSpent } = req.body;
-      
+
       let moduleProgress = await storage.getModuleProgress(userId, moduleId);
-      
+
       if (moduleProgress) {
         moduleProgress = await storage.updateModuleProgress(moduleProgress.id, {
           progress,
@@ -995,10 +995,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: progress >= 100 ? 'completed' : 'in_progress'
         });
       }
-      
+
       // Update daily streak
       await storage.updateStreak(userId);
-      
+
       res.json(moduleProgress);
     } catch (error) {
       console.error("Error updating module progress:", error);
@@ -1150,7 +1150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/prompt-documents", async (req, res) => {
     try {
       const { promptId, documentId, priority } = req.body;
-      
+
       if (!promptId || !documentId) {
         return res.status(400).json({ error: "promptId et documentId sont requis" });
       }
@@ -1209,7 +1209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chatbot", async (req, res) => {
     try {
       const { message, companyId } = req.body;
-      
+
       let context = null;
       if (companyId) {
         const company = await storage.getCompany(companyId);
@@ -1221,7 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get documents using helper function
       const ragDocuments = await getRagDocuments();
       console.log(`[RAG] Found ${ragDocuments.length} documents for chatbot context`);
-      
+
       const response = await geminiService.getChatbotResponse(message, context, ragDocuments);
       res.json(response);
     } catch (error: any) {
@@ -1235,7 +1235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get current chatbot prompt
       const chatbotPrompt = await storage.getActivePromptByCategory('chatbot');
-      
+
       if (chatbotPrompt) {
         // Update with a working prompt
         const workingPrompt = `Vous êtes un assistant expert en conformité RGPD spécialisé pour les entreprises françaises VSE/PME.
@@ -1254,7 +1254,7 @@ Répondez de manière complète et utile à cette question.`;
           prompt: workingPrompt,
           description: "Prompt corrigé pour le chatbot RGPD"
         });
-        
+
         res.json({
           success: true,
           message: "Prompt chatbot corrigé",
@@ -1263,9 +1263,26 @@ Répondez de manière complète et utile à cette question.`;
       } else {
         res.status(404).json({ error: "Prompt chatbot non trouvé" });
       }
-      
+
     } catch (error: any) {
       console.error('Fix chatbot error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update company route
+  app.put("/api/companies/:id", async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      const updates = req.body;
+
+      // For demo purposes, we'll skip authentication check
+      // In production, verify user has permission to update this company
+
+      const updatedCompany = await storage.updateCompany(companyId, updates);
+      res.json(updatedCompany);
+    } catch (error: any) {
+      console.error('Error updating company:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -1274,22 +1291,22 @@ Répondez de manière complète et utile à cette question.`;
   app.get("/api/dashboard/:companyId", async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
-      
+
       const actions = await storage.getComplianceActions(companyId);
       const requests = await storage.getDataSubjectRequests(companyId);
       const diagnosticResponses = await storage.getDiagnosticResponses(companyId);
       const questions = await storage.getDiagnosticQuestions();
-      
+
       // Calculate category-based compliance scores
       const categoryScores: Record<string, { score: number; total: number; answered: number }> = {};
       const categories = Array.from(new Set(questions.map(q => q.category)));
-      
+
       categories.forEach(category => {
         const categoryQuestions = questions.filter(q => q.category === category);
         const categoryResponses = diagnosticResponses.filter(r => 
           categoryQuestions.some(q => q.id === r.questionId)
         );
-        
+
         const yesResponses = categoryResponses.filter(r => r.response.toLowerCase() === 'oui').length;
         categoryScores[category] = {
           score: categoryResponses.length > 0 ? Math.round((yesResponses / categoryResponses.length) * 100) : 0,
@@ -1297,33 +1314,33 @@ Répondez de manière complète et utile à cette question.`;
           answered: categoryResponses.length
         };
       });
-      
+
       // Calculate overall compliance score based on diagnostic responses
       const totalResponses = diagnosticResponses.length;
       const yesResponses = diagnosticResponses.filter(r => r.response.toLowerCase() === 'oui').length;
       const diagnosticScore = totalResponses > 0 ? Math.round((yesResponses / totalResponses) * 100) : 0;
-      
+
       // Calculate real risk levels based on diagnostic question responses
       const riskAreas: Array<{ category: string; score: number; severity: string; specificRisks: Array<{ questionId: number; question: string; response: string; riskLevel: string }> }> = [];
-      
+
       categories.forEach(category => {
         const categoryQuestions = questions.filter(q => q.category === category);
         const categoryResponses = diagnosticResponses.filter(r => 
           categoryQuestions.some(q => q.id === r.questionId)
         );
-        
+
         if (categoryResponses.length > 0) {
           const specificRisks: Array<{ questionId: number; question: string; response: string; riskLevel: string }> = [];
           let totalRiskScore = 0;
           let riskCount = 0;
-          
+
           categoryResponses.forEach(response => {
             const question = questions.find(q => q.id === response.questionId);
             if (question) {
               const riskLevel = response.response.toLowerCase() === 'oui' 
                 ? question.riskLevelYes 
                 : question.riskLevelNo;
-              
+
               if (riskLevel) {
                 specificRisks.push({
                   questionId: question.id,
@@ -1331,7 +1348,7 @@ Répondez de manière complète et utile à cette question.`;
                   response: response.response,
                   riskLevel
                 });
-                
+
                 // Convert risk level to numeric score for category calculation
                 const riskScore = riskLevel === 'critique' ? 4 : riskLevel === 'elevé' ? 3 : riskLevel === 'moyen' ? 2 : 1;
                 totalRiskScore += riskScore;
@@ -1339,7 +1356,7 @@ Répondez de manière complète et utile à cette question.`;
               }
             }
           });
-          
+
           if (riskCount > 0) {
             // Use the highest risk level found in the category instead of average
             const maxRiskScore = Math.max(...specificRisks.map(r => 
@@ -1347,7 +1364,7 @@ Répondez de manière complète et utile à cette question.`;
             ));
             const categoryScore = categoryScores[category].score;
             const severity = maxRiskScore >= 4 ? 'critique' : maxRiskScore >= 3 ? 'elevé' : maxRiskScore >= 2 ? 'moyen' : 'faible';
-            
+
             riskAreas.push({
               category,
               score: categoryScore,
@@ -1357,7 +1374,7 @@ Répondez de manière complète et utile à cette question.`;
           }
         }
       });
-      
+
       // Save compliance snapshot if there are diagnostic responses
       if (totalResponses > 0) {
         try {
@@ -1403,7 +1420,7 @@ Répondez de manière complète et utile à cette question.`;
           })
           .slice(0, 5),
       };
-      
+
       res.json(stats);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -1464,20 +1481,20 @@ Répondez de manière complète et utile à cette question.`;
     try {
       const userId = (req.session as any).userId;
       const { firstName, lastName, phoneNumber } = req.body;
-      
+
       const updatedUser = await storage.updateUser(userId, {
         firstName,
         lastName,
         phoneNumber
       });
-      
+
       // Update session user data
       (req.session as any).user = {
         ...(req.session as any).user,
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName
       };
-      
+
       res.json({
         success: true,
         user: {
@@ -1528,16 +1545,16 @@ Répondez de manière complète et utile à cette question.`;
   app.post('/api/ai/generate-risk-content', async (req, res) => {
     try {
       const { field, companyId, processingRecordId, riskType } = req.body;
-      
+
       console.log('[RISK AI] Request:', { field, companyId, processingRecordId, riskType });
-      
+
       // Get processing record and company data for context
       const processingRecord = processingRecordId ? await storage.getProcessingRecord(processingRecordId) : null;
       const company = await storage.getCompany(companyId);
-      
+
       // Build context-specific prompt for risk assessment
       let basePrompt = '';
-      
+
       // Handle different risk sections
       if (field === 'potentialImpacts') {
         basePrompt = `Analysez les impacts potentiels sur les personnes concernées pour le traitement "${processingRecord?.name || 'Non spécifié'}" dans le contexte du risque "${riskType}".
@@ -1588,12 +1605,12 @@ Traitement: ${processingRecord?.name || 'Non spécifié'}
 Secteur: ${company?.sector || 'Non spécifié'}
 Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spécifiées'}`;
       }
-      
+
       // Generate content with AI
       const aiResponse = await generateAIContent(basePrompt);
-      
+
       console.log('[RISK AI] Response generated successfully');
-      
+
       res.json({ 
         content: aiResponse,
         field: field
