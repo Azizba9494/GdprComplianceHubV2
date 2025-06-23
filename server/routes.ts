@@ -100,6 +100,18 @@ const checkCompanyAccess = async (userId: number, companyId: number): Promise<bo
   }
 };
 
+// Admin authentication middleware
+const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const session = req.session as any;
+  const user = session?.user;
+
+  if (!user || user.email !== 'aziz.bena94@gmail.com') {
+    return res.status(403).json({ error: "Accès administrateur requis" });
+  }
+
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register user management routes first
   app.use("/api/user", userRoutes);
@@ -1129,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Prompts management (Admin only)
-  app.get("/api/admin/prompts", async (req, res) => {
+  app.get("/api/admin/prompts", requireAdmin, async (req, res) => {
     try {
       const prompts = await storage.getAiPrompts();
       res.json(prompts);
@@ -1138,7 +1150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/prompts", async (req, res) => {
+  app.post("/api/admin/prompts", requireAdmin, async (req, res) => {
     try {
       const promptData = insertAiPromptSchema.parse(req.body);
       const prompt = await storage.createAiPrompt(promptData);
@@ -1148,7 +1160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/prompts/:id", async (req, res) => {
+  app.put("/api/admin/prompts/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1160,7 +1172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Diagnostic Questions management (Admin only)
-  app.post("/api/admin/questions", async (req, res) => {
+  app.post("/api/admin/questions", requireAdmin, async (req, res) => {
     try {
       const questionData = insertDiagnosticQuestionSchema.parse(req.body);
       const question = await storage.createDiagnosticQuestion(questionData);
@@ -1170,7 +1182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/questions/:id", async (req, res) => {
+  app.put("/api/admin/questions/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1181,7 +1193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/questions/:id", async (req, res) => {
+  app.delete("/api/admin/questions/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteDiagnosticQuestion(id);
@@ -1192,7 +1204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // RAG Documents management (Admin only)
-  app.get("/api/admin/documents", async (req, res) => {
+  app.get("/api/admin/documents", requireAdmin, async (req, res) => {
     try {
       const documents = await storage.getRagDocuments();
       res.json(documents);
@@ -1201,7 +1213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/documents", upload.single('file'), async (req, res) => {
+  app.post("/api/admin/documents", upload.single('file'), requireAdmin, async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -1226,7 +1238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/documents/:id", async (req, res) => {
+  app.delete("/api/admin/documents/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteRagDocument(id);
@@ -1237,7 +1249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Prompt-Document associations
-  app.get("/api/admin/prompt-documents/:promptId", async (req, res) => {
+  app.get("/api/admin/prompt-documents/:promptId", requireAdmin, async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const associations = await storage.getPromptDocuments(promptId);
@@ -1247,7 +1259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/prompt-documents", async (req, res) => {
+  app.post("/api/admin/prompt-documents", requireAdmin, async (req, res) => {
     try {
       const associationData = insertPromptDocumentSchema.parse(req.body);
       const association = await storage.createPromptDocument(associationData);
@@ -1257,7 +1269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/prompt-documents/:promptId/:documentId", async (req, res) => {
+  app.delete("/api/admin/prompt-documents/:promptId/:documentId", requireAdmin, async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const documentId = parseInt(req.params.documentId);
@@ -1269,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Associate prompt with document
-  app.post("/api/admin/prompt-documents", async (req, res) => {
+  app.post("/api/admin/prompt-documents", requireAdmin, async (req, res) => {
     try {
       const { promptId, documentId, priority } = req.body;
 
@@ -1291,7 +1303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all prompt-document associations
-  app.get("/api/admin/prompt-documents", async (req, res) => {
+  app.get("/api/admin/prompt-documents", requireAdmin, async (req, res) => {
     try {
       // Récupérer toutes les associations via une requête SQL directe
       const allAssociations = await storage.getAllPromptDocuments();
@@ -1303,7 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get prompt-document associations for specific prompt
-  app.get("/api/admin/prompt-documents/:promptId", async (req, res) => {
+  app.get("/api/admin/prompt-documents/:promptId", requireAdmin, async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const associations = await storage.getPromptDocuments(promptId);
@@ -1315,7 +1327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete prompt-document association
-  app.delete("/api/admin/prompt-documents/:promptId/:documentId", async (req, res) => {
+  app.delete("/api/admin/prompt-documents/:promptId/:documentId", requireAdmin, async (req, res) => {
     try {
       const promptId = parseInt(req.params.promptId);
       const documentId = parseInt(req.params.documentId);
@@ -1397,7 +1409,7 @@ Répondez de manière complète et utile à cette question.`;
     try {
       const userId = (req as any).userId;
       let companyId = await getUserCompany(userId);
-      
+
       // If user doesn't have a company, create one
       if (!companyId) {
         const user = await storage.getUser(userId);
@@ -1605,7 +1617,7 @@ Répondez de manière complète et utile à cette question.`;
   });
 
   // LLM Configuration routes
-  app.get("/api/admin/llm-configs", async (req, res) => {
+  app.get("/api/admin/llm-configs", requireAdmin, async (req, res) => {
     try {
       const configs = await storage.getLlmConfigurations();
       res.json(configs);
@@ -1614,7 +1626,7 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  app.post("/api/admin/llm-configs", async (req, res) => {
+  app.post("/api/admin/llm-configs", requireAdmin, async (req, res) => {
     try {
       const configData = insertLlmConfigurationSchema.parse(req.body);
       const config = await storage.createLlmConfiguration(configData);
@@ -1624,7 +1636,7 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  app.put("/api/admin/llm-configs/:id", async (req, res) => {
+  app.put("/api/admin/llm-configs/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = insertLlmConfigurationSchema.partial().parse(req.body);
@@ -1635,7 +1647,7 @@ Répondez de manière complète et utile à cette question.`;
     }
   });
 
-  app.delete("/api/admin/llm-configs/:id", async (req, res) => {
+  app.delete("/api/admin/llm-configs/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteLlmConfiguration(id);
@@ -1745,7 +1757,9 @@ Répondez de manière complète et utile à cette question.`;
       // Build context-specific prompt for risk assessment
       let basePrompt = '';
 
-      // Handle different risk sections
+      // Handle different riskThis commit applies the `requireAdmin` middleware to secure the prompt-document association routes, restricting access to administrators only.
+```typescript
+ sections
       if (field === 'potentialImpacts') {
         basePrompt = `Analysez les impacts potentiels sur les personnes concernées pour le traitement "${processingRecord?.name || 'Non spécifié'}" dans le contexte du risque "${riskType}".
 
@@ -1813,4 +1827,9 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+async function generateAIContent(prompt: string): Promise<string> {
+  // Placeholder implementation: replace with actual AI content generation logic
+  return `Generated content for: ${prompt}`;
 }
