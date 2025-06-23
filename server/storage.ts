@@ -34,6 +34,35 @@ import {
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 
+// Import permission tables and types
+const userPermissions = {
+  id: 'id',
+  userId: 'user_id',
+  permission: 'permission',
+  granted: 'granted',
+  grantedBy: 'granted_by',
+  grantedAt: 'granted_at',
+  expiresAt: 'expires_at',
+  reason: 'reason'
+};
+
+const rolePermissions = {
+  id: 'id',
+  role: 'role',
+  permission: 'permission',
+  isDefault: 'is_default',
+  createdAt: 'created_at'
+};
+
+const permissionCategories = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  color: 'color',
+  icon: 'icon',
+  order: 'order'
+};
+
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
@@ -867,6 +896,111 @@ export class DatabaseStorage implements IStorage {
       updatedAt: new Date()
     }).where(eq(users.id, id)).returning();
     return updated;
+  }
+
+  // Permission Management
+  async getUserPermissions(userId: number) {
+    return await db.select().from(userPermissions).where(eq(userPermissions.userId, userId));
+  }
+
+  async getUserEffectivePermissions(userId: number): Promise<string[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    // Get role-based permissions
+    const rolePerms = await db.select()
+      .from(rolePermissions)
+      .where(eq(rolePermissions.role, user.role));
+
+    // Get user-specific permissions
+    const userPerms = await db.select()
+      .from(userPermissions)
+      .where(eq(userPermissions.userId, userId));
+
+    // Combine role permissions with user-specific overrides
+    const rolePermissionsList = rolePerms.map(p => p.permission);
+    const userOverrides = userPerms.reduce((acc, p) => {
+      acc[p.permission] = p.granted;
+      return acc;
+    }, {} as Record<string, boolean>);
+
+    // Apply user overrides to role permissions
+    const effectivePermissions = rolePermissionsList.filter(perm => {
+      return userOverrides[perm] !== false; // Only exclude if explicitly set to false
+    });
+
+    // Add user-specific granted permissions not in role
+    userPerms.forEach(p => {
+      if (p.granted && !rolePermissionsList.includes(p.permission)) {
+        effectivePermissions.push(p.permission);
+      }
+    });
+
+    return [...new Set(effectivePermissions)]; // Remove duplicates
+  }
+
+  async grantUserPermission(data: any) {
+    const [permission] = await db.insert(userPermissions)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: data.granted,
+          grantedBy: data.grantedBy,
+          grantedAt: new Date(),
+          reason: data.reason,
+          expiresAt: data.expiresAt,
+        }
+      })
+      .returning();
+    return permission;
+  }
+
+  async revokeUserPermission(userId: number, permission: string, revokedBy: number, reason?: string): Promise<void> {
+    await db.insert(userPermissions)
+      .values({
+        userId,
+        permission,
+        granted: false,
+        grantedBy: revokedBy,
+        grantedAt: new Date(),
+        reason: reason || 'Permission revoked'
+      })
+      .onConflictDoUpdate({
+        target: [userPermissions.userId, userPermissions.permission],
+        set: {
+          granted: false,
+          grantedBy: revokedBy,
+          grantedAt: new Date(),
+          reason: reason || 'Permission revoked'
+        }
+      });
+  }
+
+  async getAllUsers() {
+    return await db.select().from(users).orderBy(users.firstName, users.lastName);
+  }
+
+  async getRolePermissions(role: string) {
+    return await db.select().from(rolePermissions).where(eq(rolePermissions.role, role));
+  }
+
+  async getPermissionCategories() {
+    return await db.select().from(permissionCategories).orderBy(permissionCategories.order);
+  }
+
+  async updateRolePermission(role: string, permission: string, granted: boolean): Promise<void> {
+    if (granted) {
+      await db.insert(rolePermissions)
+        .values({ role, permission, isDefault: true })
+        .onConflictDoNothing();
+    } else {
+      await db.delete(rolePermissions)
+        .where(and(
+          eq(rolePermissions.role, role),
+          eq(rolePermissions.permission, permission)
+        ));
+    }
   }
 
   // Permission Management
