@@ -816,7 +816,19 @@ Développez chaque section en détail avec des informations pratiques et juridiq
       };
     } catch (error: any) {
       console.error('Gemini API error:', error);
-      throw new Error(`Erreur Gemini API: ${error.message}`);
+      
+      // Gérer les erreurs de surcharge avec un message plus informatif
+      if (error.status === 503 || error.message.includes('overloaded')) {
+        throw new Error('Le service de génération est temporairement surchargé. Veuillez réessayer dans quelques minutes.');
+      }
+      
+      // Gérer les erreurs de quota
+      if (error.status === 429 || error.message.includes('quota')) {
+        throw new Error('Limite de quota atteinte. Veuillez réessayer plus tard.');
+      }
+      
+      // Autres erreurs API
+      throw new Error(`Service de génération indisponible: ${error.message}`);
     }
   }
 

@@ -524,18 +524,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const records = await storage.getProcessingRecords(companyId);
-      const policyData = await geminiService.generatePrivacyPolicy(company, records);
+      
+      try {
+        const policyData = await geminiService.generatePrivacyPolicy(company, records);
+        
+        const policy = await storage.createPrivacyPolicy({
+          companyId,
+          content: policyData.content,
+          version: 1,
+          isActive: true,
+        });
 
-      const policy = await storage.createPrivacyPolicy({
-        companyId,
-        content: policyData.content,
-        version: 1,
-        isActive: true,
-      });
-
-      res.json(policy);
+        res.json(policy);
+      } catch (aiError: any) {
+        console.error('AI generation failed:', aiError.message);
+        
+        // Retourner une erreur spécifique avec suggestions
+        if (aiError.message.includes('surchargé') || aiError.message.includes('overloaded')) {
+          return res.status(503).json({ 
+            error: "Service temporairement indisponible",
+            message: "Le service de génération IA est actuellement surchargé. Veuillez réessayer dans quelques minutes.",
+            retry: true,
+            suggestions: [
+              "Réessayez dans 2-3 minutes",
+              "Vérifiez votre connexion internet", 
+              "Contactez le support si le problème persiste"
+            ]
+          });
+        }
+        
+        return res.status(500).json({ 
+          error: "Erreur de génération",
+          message: aiError.message,
+          retry: true
+        });
+      }
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      console.error('Privacy policy generation error:', error);
+      res.status(500).json({ 
+        error: "Erreur système",
+        message: "Une erreur interne s'est produite. Veuillez réessayer."
+      });
     }
   });
 

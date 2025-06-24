@@ -40,10 +40,29 @@ export default function PrivacyPolicy() {
       });
     },
     onError: (error: any) => {
+      console.error('Privacy policy generation error:', error);
+      
+      // Analyser la réponse d'erreur pour afficher un message approprié
+      let errorMessage = "Impossible de générer la politique de confidentialité";
+      let errorTitle = "Erreur";
+      
+      if (error?.response?.status === 503) {
+        errorTitle = "Service temporairement indisponible";
+        errorMessage = "Le service de génération IA est surchargé. Veuillez réessayer dans quelques minutes.";
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+        if (error.response.data.error) {
+          errorTitle = error.response.data.error;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Erreur",
-        description: error.message || "Impossible de générer la politique de confidentialité",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
+        duration: 6000, // Afficher plus longtemps pour les erreurs temporaires
       });
     },
   });
@@ -183,7 +202,7 @@ export default function PrivacyPolicy() {
                 {generateMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Génération...
+                    Génération en cours...
                   </>
                 ) : (
                   <>
@@ -192,6 +211,31 @@ export default function PrivacyPolicy() {
                   </>
                 )}
               </Button>
+              {generateMutation.isError && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm text-red-700 mb-2">
+                        Si le problème persiste, vous pouvez :
+                      </p>
+                      <ul className="text-sm text-red-600 list-disc list-inside space-y-1">
+                        <li>Attendre quelques minutes et réessayer</li>
+                        <li>Vérifier votre connexion internet</li>
+                        <li>Contacter le support technique</li>
+                      </ul>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => generateMutation.mutate()}
+                      disabled={generateMutation.isPending}
+                      className="ml-4"
+                    >
+                      Réessayer
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
