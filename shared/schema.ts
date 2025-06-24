@@ -468,6 +468,9 @@ export const insertPrivacyPolicySchema = createInsertSchema(privacyPolicies).omi
 export const insertDataBreachSchema = createInsertSchema(dataBreaches).omit({
   id: true,
   createdAt: true,
+}).extend({
+  incidentDate: z.union([z.date(), z.string().transform((str) => new Date(str))]),
+  discoveryDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.undefined()]).optional(),
 });
 
 export const insertDpiaAssessmentSchema = createInsertSchema(dpiaAssessments).omit({
