@@ -815,27 +815,73 @@ La politique doit être:
       // Simplified approach: use direct API call instead of structured response
       const client = await this.getClient();
       const model = client.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 2048
+          maxOutputTokens: 4096
         }
       });
 
-      const prompt = `Analysez cette violation RGPD et répondez uniquement avec un JSON valide:
+      // Parse comprehensive data if available
+      let comprehensiveInfo = {};
+      try {
+        if (breachData.comprehensiveData) {
+          comprehensiveInfo = JSON.parse(breachData.comprehensiveData);
+        }
+      } catch (e) {
+        console.log('Could not parse comprehensive data');
+      }
 
-Violation: ${breachData.description}
-Date incident: ${breachData.incidentDate}
-Date découverte: ${breachData.discoveryDate}
-Données concernées: ${breachData.comprehensiveData || 'Non précisé'}
+      const prompt = `Analysez cette violation de données personnelles selon le RGPD et les directives EDPB Guidelines 9/2022.
 
-Répondez UNIQUEMENT avec ce JSON (pas d'autre texte):
+DÉTAILS DE LA VIOLATION:
+Description: ${breachData.description}
+Date de l'incident: ${breachData.incidentDate}
+Date de découverte: ${breachData.discoveryDate}
+
+INFORMATIONS DÉTAILLÉES:
+${Object.keys(comprehensiveInfo).length > 0 ? `
+Statut de la violation: ${comprehensiveInfo.violationStatus || 'Non précisé'}
+Circonstances de découverte: ${comprehensiveInfo.discoveryCircumstances || 'Non précisé'}
+Origines: ${comprehensiveInfo.origins?.join(', ') || 'Non précisé'}
+Circonstances: ${comprehensiveInfo.circumstances?.join(', ') || 'Non précisé'}
+Causes: ${comprehensiveInfo.causes?.join(', ') || 'Non précisé'}
+Catégories de personnes: ${comprehensiveInfo.personCategories?.join(', ') || 'Non précisé'}
+Nombre de personnes affectées: ${comprehensiveInfo.affectedPersonsCount || 'Non précisé'}
+Catégories de données: ${comprehensiveInfo.dataCategories?.join(', ') || 'Non précisé'}
+Volume de données: ${comprehensiveInfo.dataVolume || 'Non précisé'}
+Support de données: ${comprehensiveInfo.dataSupport?.join(', ') || 'Non précisé'}
+Conséquences: ${comprehensiveInfo.consequences?.join(', ') || 'Non précisé'}
+Préjudices potentiels: ${comprehensiveInfo.potentialHarms?.join(', ') || 'Non précisé'}
+Mesures immédiates: ${comprehensiveInfo.immediateMeasures || 'Non précisé'}
+` : 'Informations détaillées non disponibles'}
+
+${ragDocuments && ragDocuments.length > 0 ? `
+DOCUMENTS DE RÉFÉRENCE RGPD:
+${ragDocuments.slice(0, 2).join('\n\n')}
+` : ''}
+
+ANALYSE REQUISE:
+Basez votre évaluation sur:
+- Article 33 du RGPD (notification autorité dans 72h)
+- Article 34 du RGPD (communication aux personnes concernées)
+- Guidelines EDPB 01/2021 sur les violations de données
+- Considérant 85 du RGPD sur l'évaluation des risques
+
+Critères d'évaluation:
+1. Nature et volume des données concernées
+2. Nombre de personnes affectées
+3. Probabilité et gravité des préjudices
+4. Mesures de protection existantes
+5. Circonstances spécifiques de la violation
+
+Répondez UNIQUEMENT avec ce JSON (sans markdown, sans autre texte):
 {
   "notificationRequired": true/false,
   "dataSubjectNotificationRequired": true/false,
-  "justification": "Explication détaillée de l'analyse selon RGPD art.33 et 34",
+  "justification": "Explication détaillée de l'analyse selon RGPD articles 33 et 34, en référence aux circonstances spécifiques",
   "riskLevel": "faible/moyen/élevé",
-  "recommendations": ["Action 1", "Action 2"]
+  "recommendations": ["Action recommandée 1", "Action recommandée 2", "Action recommandée 3"]
 }`;
 
       console.log('Sending request to Gemini...');
