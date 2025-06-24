@@ -1,0 +1,27 @@
+Section 2 : Critères de risque (Répondre par Oui ou Non)
+1. Évaluation ou Notation Le traitement implique-t-il une évaluation ou une notation de personnes sur la base de leurs données, y compris le profilage ? (Exemples : score de crédit, évaluation de la performance d'un employé, profilage marketing pour prédire les préférences, diagnostic médical automatisé) 🔘 Oui 🔘 Non
+2. Décision Automatisée Le traitement conduit-il à une prise de décision entièrement automatisée (sans intervention humaine) ayant un effet juridique ou vous affectant de manière significative ? (Exemples : refus automatisé d'un crédit en ligne, décision d'éligibilité à une prestation sociale, tri automatique de CV menant à un rejet sans examen humain)🔘 Oui 🔘 Non
+3. Surveillance Systématique Le traitement implique-t-il une surveillance systématique et continue de personnes ?(Exemples : vidéosurveillance d'un lieu public ou d'employés, surveillance de l'activité réseau, géolocalisation continue de véhicules) 🔘 Oui 🔘 Non
+4. Données Sensibles ou Hautement Personnelles Le traitement porte-t-il sur des données dites "sensibles" (santé, opinions politiques/religieuses, orientation sexuelle) ou d'autres données à caractère hautement personnel ? (Exemples : dossiers médicaux, données biométriques, données de localisation précises, données financières détaillées) 🔘 Oui 🔘 Non
+5. Traitement à Grande Échelle Les données sont-elles traitées à "grande échelle" ? (Pensez en volume de données, nombre de personnes, zone géographique, durée) (Exemples : données des utilisateurs d'un réseau social national, données des patients d'une chaîne d'hôpitaux, données de géolocalisation collectées par une application populaire)(Champ optionnel pour aider le client : "Estimez le nombre de personnes concernées : ______") 🔘 Oui 🔘 Non
+6. Croisement de Données Le traitement consiste-t-il à croiser ou combiner des ensembles de données provenant de différentes sources ou collectées pour différents objectifs ? (Exemples : croiser les données de navigation d'un site web avec des informations d'achat en magasin ; enrichir une base de données clients avec des données achetées à des courtiers en données) 🔘 Oui 🔘 Non
+7. Personnes Vulnérables Le traitement concerne-t-il des personnes considérées comme "vulnérables", qui ont des difficultés à consentir ou à s'opposer au traitement ? (Exemples : enfants, patients, personnes âgées, employés (en raison du lien de subordination), demandeurs d'asile) 🔘 Oui 🔘 Non
+8. Technologie Innovante Le traitement fait-il appel à une technologie innovante ou à un usage nouveau d'une technologie existante, pouvant créer de nouveaux types de risques ? (Exemples : utilisation de l'Intelligence Artificielle pour l'analyse de personnalité, objets connectés (IoT), reconnaissance faciale, neuro-technologies) 🔘 Oui 🔘 Non
+9. Obstacle à un Droit ou un Service Le traitement peut-il avoir pour conséquence d'empêcher une personne d'exercer un droit ou de bénéficier d'un service ou d'un contrat ? (Exemples : utiliser un score de crédit pour refuser un prêt ou un logement, utiliser un profil de risque pour refuser une assurance) 🔘 Oui 🔘 Non
+
+Partie 2 : Logique de l'IA pour l'analyse et la recommandation
+Une fois que le client a soumis le questionnaire, votre système (l'IA) peut appliquer la logique suivante pour générer une recommandation et une justification claires.
+Étape 1 : Le Scoring
+Le mécanisme est simple :
+Chaque réponse "Oui" à une question de la Section 2 vaut 1 point.
+Le score total est la somme des points (de 0 à 9).
+Étape 2 : Le Moteur de Règles et la Recommandation
+Le système applique une règle de décision basée sur le score total, conformément aux recommandations de la CNIL/CEPD.
+Si Score >= 2 :
+Recommandation : Réalisation d'une AIPD fortement recommandée / obligatoire.
+Si Score = 1 :
+Recommandation : Vigilance requise. Une AIPD n'est pas strictement obligatoire sur la seule base de ces critères, mais la présence d'un facteur de risque justifie une analyse plus approfondie pour confirmer l'absence de risque élevé.
+Si Score = 0 :
+Recommandation : Réalisation d'une AIPD non requise à première vue. Il est tout de même nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement.
+Étape 3 : La Génération de la Justification Dynamique
+C'est ici que l'IA apporte le plus de valeur. La justification ne doit pas être générique. Elle doit lister les raisons spécifiques.

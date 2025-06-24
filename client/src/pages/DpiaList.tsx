@@ -12,11 +12,70 @@ import { Plus, FileText, Clock, CheckCircle, AlertCircle, Eye, Edit, BookOpen, U
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Risk criteria for DPIA evaluation
+const riskCriteria = [
+  {
+    id: "evaluation_notation",
+    title: "Évaluation ou Notation",
+    description: "Le traitement implique-t-il une évaluation ou une notation de personnes sur la base de leurs données, y compris le profilage ?",
+    examples: "Exemples : score de crédit, évaluation de la performance d'un employé, profilage marketing pour prédire les préférences, diagnostic médical automatisé"
+  },
+  {
+    id: "decision_automatisee",
+    title: "Décision Automatisée",
+    description: "Le traitement conduit-il à une prise de décision entièrement automatisée (sans intervention humaine) ayant un effet juridique ou vous affectant de manière significative ?",
+    examples: "Exemples : refus automatisé d'un crédit en ligne, décision d'éligibilité à une prestation sociale, tri automatique de CV menant à un rejet sans examen humain"
+  },
+  {
+    id: "surveillance_systematique",
+    title: "Surveillance Systématique",
+    description: "Le traitement implique-t-il une surveillance systématique et continue de personnes ?",
+    examples: "Exemples : vidéosurveillance d'un lieu public ou d'employés, surveillance de l'activité réseau, géolocalisation continue de véhicules"
+  },
+  {
+    id: "donnees_sensibles",
+    title: "Données Sensibles ou Hautement Personnelles",
+    description: "Le traitement porte-t-il sur des données dites \"sensibles\" (santé, opinions politiques/religieuses, orientation sexuelle) ou d'autres données à caractère hautement personnel ?",
+    examples: "Exemples : dossiers médicaux, données biométriques, données de localisation précises, données financières détaillées"
+  },
+  {
+    id: "grande_echelle",
+    title: "Traitement à Grande Échelle",
+    description: "Les données sont-elles traitées à \"grande échelle\" ? (Pensez en volume de données, nombre de personnes, zone géographique, durée)",
+    examples: "Exemples : données des utilisateurs d'un réseau social national, données des patients d'une chaîne d'hôpitaux, données de géolocalisation collectées par une application populaire"
+  },
+  {
+    id: "croisement_donnees",
+    title: "Croisement de Données",
+    description: "Le traitement consiste-t-il à croiser ou combiner des ensembles de données provenant de différentes sources ou collectées pour différents objectifs ?",
+    examples: "Exemples : croiser les données de navigation d'un site web avec des informations d'achat en magasin ; enrichir une base de données clients avec des données achetées à des courtiers en données"
+  },
+  {
+    id: "personnes_vulnerables",
+    title: "Personnes Vulnérables",
+    description: "Le traitement concerne-t-il des personnes considérées comme \"vulnérables\", qui ont des difficultés à consentir ou à s'opposer au traitement ?",
+    examples: "Exemples : enfants, patients, personnes âgées, employés (en raison du lien de subordination), demandeurs d'asile"
+  },
+  {
+    id: "technologie_innovante",
+    title: "Technologie Innovante",
+    description: "Le traitement fait-il appel à une technologie innovante ou à un usage nouveau d'une technologie existante, pouvant créer de nouveaux types de risques ?",
+    examples: "Exemples : utilisation de l'Intelligence Artificielle pour l'analyse de personnalité, objets connectés (IoT), reconnaissance faciale, neuro-technologies"
+  },
+  {
+    id: "obstacle_droit",
+    title: "Obstacle à un Droit ou un Service",
+    description: "Le traitement peut-il avoir pour conséquence d'empêcher une personne d'exercer un droit ou de bénéficier d'un service ou d'un contrat ?",
+    examples: "Exemples : utiliser un score de crédit pour refuser un prêt ou un logement, utiliser un profil de risque pour refuser une assurance"
+  }
+];
+
 // Component for processing selection and evaluation
 function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId }: any) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [evaluationCriteria, setEvaluationCriteria] = useState<Record<string, boolean>>({});
+  const [riskAnswers, setRiskAnswers] = useState<Record<string, boolean>>({});
+  const [estimatedPersons, setEstimatedPersons] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -72,7 +131,8 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
       });
       queryClient.invalidateQueries({ queryKey: [`/api/dpia-evaluations/${companyId}`] });
       setSelectedRecord(null);
-      setEvaluationCriteria({});
+      setRiskAnswers({});
+      setEstimatedPersons("");
     },
     onError: (error: any) => {
       toast({
@@ -88,70 +148,71 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
            record.purpose?.toLowerCase().includes(searchTerm.toLowerCase());
   }) || [];
 
-  const handleCriteriaChange = (criteriaId: string, checked: boolean) => {
-    setEvaluationCriteria(prev => ({
+  const handleRiskAnswerChange = (criteriaId: string, value: boolean) => {
+    setRiskAnswers(prev => ({
       ...prev,
-      [criteriaId]: checked
+      [criteriaId]: value
     }));
   };
 
-  const calculateScore = () => {
-    const mandatoryCriteria = ['profiling', 'automated-decision', 'systematic-monitoring', 'sensitive-data', 'public-area', 'vulnerable-persons', 'innovative-use', 'data-blocking'];
-    const additionalCriteria = ['cross-border', 'multiple-sources', 'biometric-data', 'genetic-data', 'large-scale'];
-    
-    let mandatoryScore = 0;
-    let additionalScore = 0;
-    
-    mandatoryCriteria.forEach(criteria => {
-      if (evaluationCriteria[criteria]) mandatoryScore++;
-    });
-    
-    additionalCriteria.forEach(criteria => {
-      if (evaluationCriteria[criteria]) additionalScore++;
-    });
-    
-    return { mandatoryScore, additionalScore, total: mandatoryScore + additionalScore };
+  const calculateRiskScore = () => {
+    const yesAnswers = Object.values(riskAnswers).filter(answer => answer === true).length;
+    return yesAnswers;
   };
 
-  const getRecommendation = () => {
-    const scores = calculateScore();
+  const getAipdRecommendation = () => {
+    const score = calculateRiskScore();
+    const positiveAnswers = Object.entries(riskAnswers)
+      .filter(([_, value]) => value === true)
+      .map(([key, _]) => riskCriteria.find(c => c.id === key)?.title)
+      .filter(Boolean);
     
-    if (scores.mandatoryScore > 0) {
+    if (score >= 2) {
       return {
         type: "obligatoire",
-        message: "Une AIPD est obligatoire car au moins un critère obligatoire CNIL est rempli.",
-        color: "destructive"
+        title: "Réalisation d'une AIPD fortement recommandée / obligatoire",
+        message: `Score de ${score}/9 - La présence de ${score} facteur(s) de risque justifie la réalisation d'une AIPD.`,
+        color: "destructive",
+        details: `Critères identifiés : ${positiveAnswers.join(', ')}`,
+        justification: `Selon les critères CNIL/CEPD, votre traitement présente ${score} facteur(s) de risque élevé. Une AIPD est donc ${score >= 3 ? 'fortement' : ''} recommandée pour évaluer et mitiger ces risques.`
       };
     }
     
-    if (scores.additionalScore >= 2) {
+    if (score === 1) {
       return {
-        type: "recommandée",
-        message: "Une AIPD est fortement recommandée en raison du nombre de critères de risque identifiés.",
-        color: "warning"
+        type: "vigilance",
+        title: "Vigilance requise",
+        message: `Score de ${score}/9 - Une AIPD n'est pas strictement obligatoire mais vigilance requise.`,
+        color: "warning",
+        details: `Critère identifié : ${positiveAnswers.join(', ')}`,
+        justification: `La présence d'un facteur de risque justifie une analyse plus approfondie pour confirmer l'absence de risque élevé. Nous recommandons de documenter cette analyse et de rester vigilant à toute évolution du traitement.`
       };
     }
     
     return {
       type: "non-requise",
-      message: "Une AIPD n'est pas requise pour ce traitement selon les critères analysés.",
-      color: "secondary"
+      title: "Réalisation d'une AIPD non requise",
+      message: `Score de ${score}/9 - Une AIPD n'est pas requise à première vue.`,
+      color: "default",
+      details: "Aucun critère de risque élevé identifié",
+      justification: "Selon l'analyse des critères CNIL/CEPD, votre traitement ne présente pas de facteur de risque élevé nécessitant une AIPD. Il est toutefois nécessaire de documenter cette analyse et de rester vigilant à toute évolution du traitement."
     };
   };
 
   const saveEvaluation = () => {
     if (!selectedRecord) return;
     
-    const scores = calculateScore();
-    const recommendation = getRecommendation();
+    const score = calculateRiskScore();
+    const recommendation = getAipdRecommendation();
     
     createEvaluationMutation.mutate({
       companyId,
       recordId: selectedRecord.id,
-      score: scores.total,
-      recommendation: recommendation.message,
-      justification: `Critères obligatoires: ${scores.mandatoryScore}/8, Critères additionnels: ${scores.additionalScore}/5`,
-      criteria: evaluationCriteria
+      score: score,
+      recommendation: recommendation.title,
+      justification: recommendation.justification,
+      criteria: riskAnswers,
+      estimatedPersons: estimatedPersons || null
     });
   };
 
@@ -179,84 +240,71 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
           </AlertDescription>
         </Alert>
 
-        <div className="grid gap-6">
-          {/* Critères obligatoires */}
-          <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Critères obligatoires selon la CNIL
-              </CardTitle>
-              <CardDescription>
-                Si votre traitement correspond à l'un de ces critères, une AIPD est obligatoire.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { id: 'profiling', label: 'Évaluation/scoring (y compris le profilage)', desc: 'Traitement automatisé pour évaluer des aspects personnels ou prédire des comportements' },
-                  { id: 'automated-decision', label: 'Prise de décision automatisée avec effet légal ou similaire', desc: 'Décisions automatisées produisant des effets juridiques ou affectant significativement les personnes' },
-                  { id: 'systematic-monitoring', label: 'Surveillance systématique', desc: 'Observation, surveillance ou contrôle systématique y compris données collectées dans des réseaux' },
-                  { id: 'sensitive-data', label: 'Données sensibles à grande échelle', desc: 'Traitement à grande échelle de données sensibles ou de données relatives à des condamnations' },
-                  { id: 'public-area', label: 'Données collectées dans un espace public à grande échelle', desc: 'Collecte systématique de données dans des lieux accessibles au public (vidéosurveillance, etc.)' },
-                  { id: 'vulnerable-persons', label: 'Données de personnes vulnérables', desc: 'Traitement à grande échelle de données concernant des enfants, employés, personnes vulnérables' },
-                  { id: 'innovative-use', label: 'Usage innovant ou application de nouvelles solutions technologiques', desc: 'Utilisation d\'une technologie nouvelle ou application d\'une technologie de manière nouvelle' },
-                  { id: 'data-blocking', label: 'Exclusion du bénéfice d\'un droit, service ou contrat', desc: 'Traitement visant à empêcher les personnes d\'exercer un droit, de bénéficier d\'un service ou d\'un contrat' }
-                ].map((criteria) => (
-                  <div key={criteria.id} className="flex items-start space-x-3">
-                    <Checkbox 
-                      id={criteria.id}
-                      checked={evaluationCriteria[criteria.id] || false}
-                      onCheckedChange={(checked) => handleCriteriaChange(criteria.id, !!checked)}
-                    />
-                    <div className="space-y-1">
-                      <label htmlFor={criteria.id} className="text-sm font-medium leading-none cursor-pointer">
-                        {criteria.label}
-                      </label>
-                      <p className="text-sm text-muted-foreground">
-                        {criteria.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Critères additionnels */}
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Critères de risque supplémentaires
+                <Shield className="h-5 w-5" />
+                Section 2 : Critères de risque
               </CardTitle>
               <CardDescription>
-                Ces critères, bien que non obligatoires, peuvent indiquer la nécessité d'une AIPD selon le contexte.
+                Répondez par Oui ou Non à chacune des questions suivantes pour évaluer si une AIPD est nécessaire.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[
-                  { id: 'cross-border', label: 'Transferts transfrontaliers', desc: 'Transfert de données vers des pays tiers ou organisations internationales' },
-                  { id: 'multiple-sources', label: 'Croisement de données de sources multiples', desc: 'Combinaison de données provenant de différentes sources ou traitements' },
-                  { id: 'biometric-data', label: 'Données biométriques', desc: 'Traitement de données biométriques aux fins d\'identifier une personne de manière unique' },
-                  { id: 'genetic-data', label: 'Données génétiques', desc: 'Traitement de données génétiques à des fins autres que médicales' },
-                  { id: 'large-scale', label: 'Traitement à grande échelle', desc: 'Volume important de données ou nombre élevé de personnes concernées' }
-                ].map((criteria) => (
-                  <div key={criteria.id} className="flex items-start space-x-3">
-                    <Checkbox 
-                      id={criteria.id}
-                      checked={evaluationCriteria[criteria.id] || false}
-                      onCheckedChange={(checked) => handleCriteriaChange(criteria.id, !!checked)}
-                    />
-                    <div className="space-y-1">
-                      <label htmlFor={criteria.id} className="text-sm font-medium leading-none cursor-pointer">
-                        {criteria.label}
-                      </label>
-                      <p className="text-sm text-muted-foreground">
-                        {criteria.desc}
-                      </p>
+              <div className="space-y-6">
+                {riskCriteria.map((criteria, index) => (
+                  <div key={criteria.id} className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 space-y-2">
+                        <h4 className="font-medium text-sm">
+                          {index + 1}. {criteria.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {criteria.description}
+                        </p>
+                        <p className="text-xs text-blue-600 italic">
+                          {criteria.examples}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4 ml-4">
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={criteria.id}
+                            value="true"
+                            checked={riskAnswers[criteria.id] === true}
+                            onChange={() => handleRiskAnswerChange(criteria.id, true)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm">Oui</span>
+                        </label>
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={criteria.id}
+                            value="false"
+                            checked={riskAnswers[criteria.id] === false}
+                            onChange={() => handleRiskAnswerChange(criteria.id, false)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm">Non</span>
+                        </label>
+                      </div>
                     </div>
+                    {criteria.id === "grande_echelle" && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded">
+                        <label className="text-sm font-medium">
+                          Champ optionnel pour aider l'évaluation :
+                        </label>
+                        <Input
+                          placeholder="Estimez le nombre de personnes concernées"
+                          value={estimatedPersons}
+                          onChange={(e) => setEstimatedPersons(e.target.value)}
+                          className="mt-2"
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
