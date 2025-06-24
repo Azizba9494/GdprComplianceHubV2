@@ -477,11 +477,13 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
     const client = await this.getClient();
     
     try {
+      const activeLlmConfig = await storage.getActiveLlmConfiguration();
       const model = client.getGenerativeModel({ 
-        model: 'gemini-2.5-flash',
+        model: activeLlmConfig?.modelName || 'gemini-1.5-flash',
         generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 3000,
+          temperature: activeLlmConfig?.temperature || 0.3,
+          maxOutputTokens: activeLlmConfig?.maxTokens || 3000,
+          responseMimeType: "application/json",
         }
       });
 
@@ -503,22 +505,68 @@ Contexte: ${JSON.stringify(context || {})}
 
 Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
 
+      console.log(`[LLM] Using model: ${activeLlmConfig?.modelName || 'gemini-1.5-flash'}`);
+      console.log('[LLM] Sending prompt for breach analysis...');
+
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
       const text = response.text();
 
+      console.log('[LLM] Raw response received:', text.substring(0, 200) + '...');
+
       try {
         return JSON.parse(text);
       } catch (parseError) {
+        console.error('[LLM] JSON parse error:', parseError);
+        console.error('[LLM] Raw response:', text);
+        
         // Attempt to extract JSON from the response
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
+          try {
+            return JSON.parse(jsonMatch[0]);
+          } catch (secondParseError) {
+            console.error('[LLM] Second parse attempt failed:', secondParseError);
+          }
         }
+        
+        // Return fallback response for breach analysis
+        if (prompt.includes('violation') || prompt.includes('breach')) {
+          console.log('[LLM] Returning fallback response for breach analysis');
+          return {
+            notificationRequired: false,
+            dataSubjectNotificationRequired: false,
+            justification: "Erreur lors de l'analyse automatique. Une évaluation manuelle est recommandée selon les critères CNIL.",
+            riskLevel: "moyen",
+            recommendations: [
+              "Effectuer une analyse manuelle complète",
+              "Consulter un expert RGPD ou DPO",
+              "Vérifier les critères de notification selon l'article 33 du RGPD"
+            ]
+          };
+        }
+        
         throw new Error('Impossible de parser la réponse JSON');
       }
     } catch (error: any) {
-      console.error('Gemini API error:', error);
+      console.error('[LLM] Gemini API error:', error);
+      
+      // For breach analysis, provide a meaningful fallback
+      if (prompt.includes('violation') || prompt.includes('breach')) {
+        console.log('[LLM] API error - returning fallback response for breach analysis');
+        return {
+          notificationRequired: false,
+          dataSubjectNotificationRequired: false,
+          justification: `Erreur technique lors de l'analyse: ${error.message}. Une évaluation manuelle est requise.`,
+          riskLevel: "moyen",
+          recommendations: [
+            "Effectuer une analyse manuelle selon les lignes directrices CNIL",
+            "Vérifier si les critères de l'article 33 RGPD sont remplis",
+            "Consulter un expert en protection des données"
+          ]
+        };
+      }
+      
       throw new Error(`Erreur Gemini API: ${error.message}`);
     }
   }
