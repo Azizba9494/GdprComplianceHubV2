@@ -577,6 +577,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/breaches/ai-analysis", async (req, res) => {
+    try {
+      // Check authentication
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Authentication requise" });
+      }
+
+      console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
+      
+      const breachData = req.body;
+
+      // Get RAG documents for enhanced analysis
+      const ragDocuments = await getRagDocuments();
+      console.log(`[RAG] Found ${ragDocuments.length} documents for breach analysis`);
+
+      const analysis = await geminiService.analyzeDataBreach(breachData, ragDocuments);
+
+      // Update the existing breach with AI analysis results
+      const updatedBreach = await storage.updateDataBreach(breachData.id, {
+        aiRecommendationAuthority: analysis.notificationRequired ? 'required' : 'not_required',
+        aiRecommendationDataSubject: analysis.dataSubjectNotificationRequired ? 'required' : 'not_required',
+        aiJustification: analysis.justification,
+        riskAnalysisResult: analysis.riskLevel,
+        status: "analyzed",
+      });
+
+      res.json({ breach: updatedBreach, analysis });
+    } catch (error: any) {
+      console.error('AI Analysis error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Data subject requests routes
   app.get("/api/requests/:companyId", async (req, res) => {
     try {
