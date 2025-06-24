@@ -710,13 +710,26 @@ ${processingRecords.map((record: any) => `
       let prompt;
       
       if (activePrompt?.prompt && activePrompt.prompt.trim().length > 10) {
-        // Utiliser le prompt configuré et remplacer les variables
+        // Utiliser le prompt configuré et remplacer les variables (syntaxes {{}} et ${})
         prompt = activePrompt.prompt
+          // Variables avec syntaxe {{}}
           .replace(/\{\{company\}\}/g, companyInfo)
           .replace(/\{\{processingRecords\}\}/g, JSON.stringify(processingRecords))
-          .replace(/\{\{ragContext\}\}/g, ragContext);
+          .replace(/\{\{ragContext\}\}/g, ragContext)
+          // Variables avec syntaxe ${} - remplacer par les données réelles
+          .replace(/\$\{company\.name\}/g, company.name || 'Entreprise')
+          .replace(/\$\{company\.sector\}/g, company.sector || 'Non spécifié')
+          .replace(/\$\{company\.size\}/g, company.size || 'Non spécifiée')
+          .replace(/\$\{company\.address\}/g, company.address || 'Non spécifiée')
+          .replace(/\$\{company\.email\}/g, company.email || 'contact@entreprise.fr')
+          .replace(/\$\{company\.phone\}/g, company.phone || 'Non spécifié')
+          .replace(/\$\{company\.website\}/g, company.website || 'Non spécifié')
+          // Variables pour les traitements
+          .replace(/\$\{processingRecords\}/g, JSON.stringify(processingRecords))
+          .replace(/\$\{ragContext\}/g, ragContext);
         
         console.log(`[PRIVACY POLICY] Using configured prompt: ${activePrompt.name}`);
+        console.log(`[PRIVACY POLICY] Company data: ${company.name}, ${company.sector}`);
       } else {
         // Utiliser le prompt par défaut
         prompt = `Vous êtes un expert juridique en protection des données. Générez une politique de confidentialité COMPLÈTE et DÉTAILLÉE conforme au RGPD pour l'entreprise suivante.
