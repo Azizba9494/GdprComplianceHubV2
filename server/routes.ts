@@ -539,17 +539,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/breaches", async (req, res) => {
     try {
-      console.log('Raw breach data received:', JSON.stringify(req.body, null, 2));
-      
-      // Validate with the schema that handles string-to-date transformation
       const breachData = insertDataBreachSchema.parse(req.body);
-      
-      console.log('Validated breach data:', JSON.stringify(breachData, null, 2));
-      
       const breach = await storage.createDataBreach(breachData);
       res.json(breach);
     } catch (error: any) {
-      console.error('Breach creation error:', error);
       res.status(400).json({ error: error.message });
     }
   });

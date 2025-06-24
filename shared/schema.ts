@@ -156,28 +156,19 @@ export const privacyPolicies = pgTable("privacy_policies", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Data breach incidents - complete schema with all fields
+// Data breach incidents
 export const dataBreaches = pgTable("data_breaches", {
   id: serial("id").primaryKey(),
   companyId: integer("company_id").notNull().references(() => companies.id),
   description: text("description").notNull(),
   incidentDate: timestamp("incident_date").notNull(),
-  discoveryDate: timestamp("discovery_date"),
   dataCategories: text("data_categories").array(),
   affectedPersons: integer("affected_persons"),
   circumstances: text("circumstances"),
   consequences: text("consequences"),
   measures: text("measures"),
-  comprehensiveData: text("comprehensive_data"),
   notificationRequired: boolean("notification_required"),
   notificationJustification: text("notification_justification"),
-  aiRecommendationAuthority: text("ai_recommendation_authority"),
-  aiRecommendationDataSubject: text("ai_recommendation_data_subject"),
-  aiJustification: text("ai_justification"),
-  riskAnalysisResult: text("risk_analysis_result"),
-  dataSubjectNotificationRequired: boolean("data_subject_notification_required"),
-  notificationDate: timestamp("notification_date"),
-  dataSubjectNotificationDate: timestamp("data_subject_notification_date"),
   status: text("status").notNull().default("draft"), // draft, analyzed, reported
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -477,9 +468,6 @@ export const insertPrivacyPolicySchema = createInsertSchema(privacyPolicies).omi
 export const insertDataBreachSchema = createInsertSchema(dataBreaches).omit({
   id: true,
   createdAt: true,
-}).extend({
-  incidentDate: z.string().transform((str) => new Date(str)),
-  discoveryDate: z.string().optional().transform((str) => str ? new Date(str) : undefined),
 });
 
 export const insertDpiaAssessmentSchema = createInsertSchema(dpiaAssessments).omit({
