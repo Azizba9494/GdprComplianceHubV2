@@ -876,20 +876,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBreach(breachData: any) {
-    const [breach] = await db.insert(dataBreaches).values({
-      companyId: breachData.companyId,
-      description: breachData.description,
-      incidentDate: new Date(breachData.incidentDate),
-      discoveryDate: breachData.discoveryDate ? new Date(breachData.discoveryDate) : null,
-      affectedPersons: breachData.affectedPersons || 0,
-      dataCategories: Array.isArray(breachData.dataCategories) ? breachData.dataCategories : [],
-      circumstances: breachData.circumstances || '',
-      consequences: breachData.consequences || '',
-      measures: breachData.measures || '',
-      comprehensiveData: breachData.comprehensiveData || null,
-      status: breachData.status || 'draft'
-    }).returning();
-    return breach;
+    console.log('Creating breach with data:', JSON.stringify(breachData, null, 2));
+    
+    try {
+      const [breach] = await db.insert(dataBreaches).values({
+        companyId: breachData.companyId,
+        description: breachData.description,
+        incidentDate: breachData.incidentDate,
+        dataCategories: breachData.dataCategories,
+        affectedPersons: breachData.affectedPersons,
+        circumstances: breachData.circumstances,
+        consequences: breachData.consequences,
+        measures: breachData.measures,
+        status: breachData.status
+      }).returning();
+      
+      console.log('Breach created successfully:', breach);
+      return breach;
+    } catch (error) {
+      console.error('Database insertion error:', error);
+      throw error;
+    }
   }
 
   async updateBreach(id: number, updates: any) {
