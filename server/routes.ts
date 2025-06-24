@@ -163,31 +163,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Force session save and regenerate
       await new Promise((resolve, reject) => {
-        req.session.regenerate((err) => {
-          if (err) {
-            console.error('Session regenerate error:', err);
-            reject(err);
+        // Set user data in session
+        (req.session as any).userId = user.id;
+        (req.session as any).user = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName
+        };
+        
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error:', saveErr);
+            reject(saveErr);
           } else {
-            // Set user data again after regeneration
-            (req.session as any).userId = user.id;
-            (req.session as any).user = {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              role: user.role,
-              firstName: user.firstName,
-              lastName: user.lastName
-            };
-            
-            req.session.save((saveErr) => {
-              if (saveErr) {
-                console.error('Session save error:', saveErr);
-                reject(saveErr);
-              } else {
-                console.log('Session saved successfully with userId:', user.id);
-                resolve(true);
-              }
-            });
+            console.log('Session saved successfully with userId:', user.id);
+            resolve(true);
           }
         });
       });
@@ -620,15 +613,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionCookie: req.headers.cookie?.includes('connect.sid')
       });
 
-      // Temporary workaround: bypass authentication for breach analysis during development
-      // TODO: Fix session persistence issue
-      console.log('Bypassing authentication for breach analysis (development mode)');
-      
-      // Skip authentication check for now
-      // if (!req.session?.userId) {
-      //   console.log('Authentication failed - no userId in session');
-      //   return res.status(401).json({ error: "Authentication requise" });
-      // }
+      // Check authentication
+      if (!req.session?.userId) {
+        console.log('Authentication failed - no userId in session');
+        return res.status(401).json({ error: "Authentication requise" });
+      }
 
       console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
       
@@ -638,14 +627,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ragDocuments = await getRagDocuments();
       console.log(`[RAG] Found ${ragDocuments.length} documents for breach analysis`);
 
+      console.log('Starting Gemini analysis...');
       const analysis = await geminiService.analyzeDataBreach(breachData, ragDocuments);
+      console.log('Analysis completed:', analysis);
 
       // Update the existing breach with AI analysis results
       const updatedBreach = await storage.updateDataBreach(breachData.id, {
         aiRecommendationAuthority: analysis.notificationRequired ? 'required' : 'not_required',
         aiRecommendationDataSubject: analysis.dataSubjectNotificationRequired ? 'required' : 'not_required',
-        aiJustification: analysis.justification,
-        riskAnalysisResult: analysis.riskLevel,
+        aiJustification: analysis.justification || 'Analyse IA générée automatiquement',
+        riskAnalysisResult: analysis.riskLevel || 'moyen',
         status: "analyzed",
       });
 

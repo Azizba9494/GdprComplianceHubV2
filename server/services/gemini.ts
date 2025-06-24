@@ -854,12 +854,23 @@ Répondez UNIQUEMENT avec ce JSON (pas d'autre texte):
         console.log('Direct parse failed, trying extraction...');
         
         // Try to extract JSON from potential markdown or other formatting
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        let jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
           try {
-            parsedResponse = JSON.parse(jsonMatch[0]);
+            parsedResponse = JSON.parse(jsonMatch[1]);
           } catch (e2) {
-            console.log('JSON extraction failed, using fallback...');
+            console.log('JSON extraction from markdown failed, trying simple match...');
+          }
+        }
+        
+        if (!parsedResponse) {
+          jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              parsedResponse = JSON.parse(jsonMatch[0]);
+            } catch (e2) {
+              console.log('JSON extraction failed, using fallback...');
+            }
           }
         }
         
