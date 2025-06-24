@@ -602,15 +602,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionCookie: req.headers.cookie?.includes('connect.sid')
       });
 
-      // Temporary workaround: bypass authentication for breach analysis during development
-      // TODO: Fix session persistence issue
-      console.log('Bypassing authentication for breach analysis (development mode)');
-      
-      // Skip authentication check for now
-      // if (!req.session?.userId) {
-      //   console.log('Authentication failed - no userId in session');
-      //   return res.status(401).json({ error: "Authentication requise" });
-      // }
+      // Check authentication - sessions should now persist correctly
+      if (!req.session?.userId) {
+        console.log('Authentication failed - no userId in session');
+        console.log('Session details:', {
+          sessionId: req.sessionID,
+          hasSession: !!req.session,
+          sessionKeys: req.session ? Object.keys(req.session) : 'no session',
+          cookies: req.headers.cookie
+        });
+        return res.status(401).json({ error: "Authentication requise" });
+      }
 
       console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
       
