@@ -377,8 +377,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDataBreach(breach: InsertDataBreach): Promise<DataBreach> {
-    const [created] = await db.insert(dataBreaches).values(breach).returning();
-    return created;
+    console.log('Creating data breach with validated data:', JSON.stringify(breach, null, 2));
+    
+    try {
+      const [created] = await db.insert(dataBreaches).values(breach).returning();
+      console.log('Breach created successfully:', created);
+      return created;
+    } catch (error) {
+      console.error('Database insertion error:', error);
+      throw error;
+    }
   }
 
   async updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach> {

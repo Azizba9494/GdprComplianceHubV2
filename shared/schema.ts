@@ -156,7 +156,7 @@ export const privacyPolicies = pgTable("privacy_policies", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Data breach incidents
+// Data breach incidents - complete schema with all fields
 export const dataBreaches = pgTable("data_breaches", {
   id: serial("id").primaryKey(),
   companyId: integer("company_id").notNull().references(() => companies.id),
