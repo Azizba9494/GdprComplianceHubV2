@@ -886,6 +886,7 @@ export default function Admin() {
               );
             })}
           </div>
+          </div>
         </TabsContent>
 
         {/* DPIA Prompts Management */}
