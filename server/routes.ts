@@ -1367,6 +1367,101 @@ Répondez de manière complète et utile à cette question en respectant tous le
     }
   });
 
+  // Create or update breach analysis prompt
+  app.post("/api/admin/setup-breach-prompt", async (req, res) => {
+    try {
+      // Check if breach analysis prompt already exists
+      const existingPrompt = await storage.getActivePromptByCategory('breach');
+
+      const defaultBreachPrompt = `Vous êtes un expert en conformité RGPD spécialisé dans l'analyse des violations de données personnelles. Analysez cette violation selon le RGPD et les directives EDPB Guidelines 9/2022.
+
+**VOTRE MISSION :**
+- Évaluer la nécessité de notification à l'autorité de contrôle (Article 33 RGPD)
+- Déterminer si une communication aux personnes concernées est requise (Article 34 RGPD)
+- Analyser le niveau de risque selon la méthodologie CNIL
+- Proposer des recommandations concrètes et adaptées
+
+**CRITÈRES D'ÉVALUATION OBLIGATOIRES :**
+
+1. **Nature et volume des données concernées**
+   - Type de données (identifiants, données sensibles, etc.)
+   - Volume et nombre de personnes affectées
+   - Contexte de traitement
+
+2. **Probabilité et gravité des préjudices**
+   - Risques financiers, réputationnels, discriminatoires
+   - Vulnérabilité des personnes concernées
+   - Facilité d'identification des personnes
+
+3. **Mesures de protection existantes**
+   - Chiffrement des données
+   - Contrôles d'accès
+   - Mesures de confinement prises
+
+4. **Circonstances spécifiques**
+   - Origine de la violation (interne/externe)
+   - Durée de l'exposition
+   - Étendue géographique
+
+**BASES LÉGALES DE RÉFÉRENCE :**
+- Article 33 RGPD : Notification autorité (72h si risque probable)
+- Article 34 RGPD : Communication aux personnes (risque élevé)
+- Considérant 85 RGPD : Évaluation des risques
+- Guidelines EDPB 01/2021 sur les violations de données
+
+**FORMAT DE RÉPONSE ATTENDU :**
+Répondez UNIQUEMENT avec un JSON valide selon ce format :
+{
+  "notificationRequired": true/false,
+  "dataSubjectNotificationRequired": true/false,
+  "justification": "Analyse détaillée avec références légales précises",
+  "riskLevel": "faible/moyen/élevé",
+  "recommendations": ["Action 1", "Action 2", "Action 3"]
+}
+
+**DONNÉES DE LA VIOLATION À ANALYSER :**
+{{breachData}}
+
+**DOCUMENTS RAG DISPONIBLES :**
+{{ragDocuments}}
+
+Analysez rigoureusement cette violation et fournissez une évaluation conforme aux exigences RGPD.`;
+
+      if (existingPrompt) {
+        // Update existing prompt
+        await storage.updateAiPrompt(existingPrompt.id, {
+          prompt: defaultBreachPrompt,
+          description: "Prompt configurable pour l'analyse des violations de données RGPD"
+        });
+
+        res.json({
+          success: true,
+          message: "Prompt d'analyse des violations mis à jour",
+          promptId: existingPrompt.id
+        });
+      } else {
+        // Create new prompt
+        const newPrompt = await storage.createAiPrompt({
+          name: "Analyse violation données",
+          description: "Prompt configurable pour l'analyse des violations de données RGPD",
+          category: "breach",
+          prompt: defaultBreachPrompt,
+          isActive: true
+        });
+
+        res.json({
+          success: true,
+          message: "Prompt d'analyse des violations créé",
+          promptId: newPrompt.id
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Setup breach prompt error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Update company route
   app.put("/api/companies/:id", async (req, res) => {
     try {

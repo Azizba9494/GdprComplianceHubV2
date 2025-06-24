@@ -671,13 +671,45 @@ export default function Admin() {
         <TabsContent value="prompts" className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Gestion des prompts IA</h3>
-            <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => openPromptDialog()}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nouveau prompt
-                </Button>
-              </DialogTrigger>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/admin/setup-breach-prompt', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                      toast({
+                        title: "Prompt d'analyse des violations",
+                        description: result.message,
+                      });
+                      queryClient.invalidateQueries({ queryKey: ['/api/admin/prompts'] });
+                    } else {
+                      throw new Error(result.error);
+                    }
+                  } catch (error: any) {
+                    toast({
+                      title: "Erreur",
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Initialiser prompt violations
+              </Button>
+              <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => openPromptDialog()}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nouveau prompt
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>

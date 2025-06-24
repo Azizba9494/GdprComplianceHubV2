@@ -812,7 +812,33 @@ La politique doit être:
     try {
       console.log('Starting data breach analysis...');
       
-      // Simplified approach: use direct API call instead of structured response
+      // Get the active breach analysis prompt from database
+      const breachPrompt = await storage.getActivePromptByCategory('breach');
+      
+      let promptTemplate;
+      if (breachPrompt?.prompt && breachPrompt.prompt.trim().length > 10) {
+        promptTemplate = breachPrompt.prompt;
+        console.log(`[BREACH] Using configurable prompt: ${breachPrompt.name}`);
+      } else {
+        // Fallback to default prompt if none configured
+        promptTemplate = `Analysez cette violation de données personnelles selon le RGPD et les directives EDPB Guidelines 9/2022.
+
+DÉTAILS DE LA VIOLATION:
+{{breachData}}
+
+{{ragDocuments}}
+
+Répondez UNIQUEMENT avec ce JSON (sans markdown, sans autre texte):
+{
+  "notificationRequired": true/false,
+  "dataSubjectNotificationRequired": true/false,
+  "justification": "Explication détaillée selon RGPD articles 33 et 34",
+  "riskLevel": "faible/moyen/élevé",
+  "recommendations": ["Action 1", "Action 2", "Action 3"]
+}`;
+        console.log('[BREACH] Using fallback default prompt');
+      }
+
       const client = await this.getClient();
       const model = client.getGenerativeModel({ 
         model: "gemini-2.5-flash",
@@ -832,10 +858,8 @@ La politique doit être:
         console.log('Could not parse comprehensive data');
       }
 
-      const prompt = `Analysez cette violation de données personnelles selon le RGPD et les directives EDPB Guidelines 9/2022.
-
-DÉTAILS DE LA VIOLATION:
-Description: ${breachData.description}
+      // Build breach data context
+      const breachDataContext = `Description: ${breachData.description}
 Date de l'incident: ${breachData.incidentDate}
 Date de découverte: ${breachData.discoveryDate}
 
@@ -854,38 +878,20 @@ Support de données: ${comprehensiveInfo.dataSupport?.join(', ') || 'Non précis
 Conséquences: ${comprehensiveInfo.consequences?.join(', ') || 'Non précisé'}
 Préjudices potentiels: ${comprehensiveInfo.potentialHarms?.join(', ') || 'Non précisé'}
 Mesures immédiates: ${comprehensiveInfo.immediateMeasures || 'Non précisé'}
-` : 'Informations détaillées non disponibles'}
+` : 'Informations détaillées non disponibles'}`;
 
-${ragDocuments && ragDocuments.length > 0 ? `
-DOCUMENTS DE RÉFÉRENCE RGPD:
-${ragDocuments.slice(0, 2).join('\n\n')}
-` : ''}
+      // Build RAG context
+      const ragContext = ragDocuments && ragDocuments.length > 0 ? 
+        `DOCUMENTS DE RÉFÉRENCE RGPD:\n${ragDocuments.slice(0, 2).join('\n\n')}` : 
+        'Aucun document de référence disponible';
 
-ANALYSE REQUISE:
-Basez votre évaluation sur:
-- Article 33 du RGPD (notification autorité dans 72h)
-- Article 34 du RGPD (communication aux personnes concernées)
-- Guidelines EDPB 01/2021 sur les violations de données
-- Considérant 85 du RGPD sur l'évaluation des risques
-
-Critères d'évaluation:
-1. Nature et volume des données concernées
-2. Nombre de personnes affectées
-3. Probabilité et gravité des préjudices
-4. Mesures de protection existantes
-5. Circonstances spécifiques de la violation
-
-Répondez UNIQUEMENT avec ce JSON (sans markdown, sans autre texte):
-{
-  "notificationRequired": true/false,
-  "dataSubjectNotificationRequired": true/false,
-  "justification": "Explication détaillée de l'analyse selon RGPD articles 33 et 34, en référence aux circonstances spécifiques",
-  "riskLevel": "faible/moyen/élevé",
-  "recommendations": ["Action recommandée 1", "Action recommandée 2", "Action recommandée 3"]
-}`;
+      // Replace placeholders in the prompt template
+      const finalPrompt = promptTemplate
+        .replace(/\{\{breachData\}\}/g, breachDataContext)
+        .replace(/\{\{ragDocuments\}\}/g, ragContext);
 
       console.log('Sending request to Gemini...');
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent(finalPrompt);
       const response = await result.response;
       const text = response.text().trim();
       
