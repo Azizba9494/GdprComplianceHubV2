@@ -74,6 +74,7 @@ export default function BreachAnalysisEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedBreach, setSelectedBreach] = useState<Breach | null>(null);
+  const [previewBreach, setPreviewBreach] = useState<Breach | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState("list");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -479,9 +480,10 @@ Généré le: ${new Date().toLocaleString()}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="list">Liste des Violations</TabsTrigger>
           <TabsTrigger value="form">Formulaire</TabsTrigger>
+          <TabsTrigger value="preview">Aperçu Analyse</TabsTrigger>
           <TabsTrigger value="summary">Tableau de Synthèse</TabsTrigger>
         </TabsList>
 
@@ -536,15 +538,29 @@ Généré le: ${new Date().toLocaleString()}
                             {breach.aiRecommendationAuthority === 'required' ? 'REQUISE' : 'NON REQUISE'}
                           </Badge>
                           {breach.aiJustification && (
-                            <Button
-                              variant="link"
-                              size="sm"
-                              onClick={() => downloadJustification(breach)}
-                              className="ml-2 p-0 h-auto"
-                            >
-                              <Download className="w-3 h-3 mr-1" />
-                              Télécharger la justification
-                            </Button>
+                            <>
+                              <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() => downloadJustification(breach)}
+                                className="ml-2 p-0 h-auto"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Télécharger la justification
+                              </Button>
+                              <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() => {
+                                  setPreviewBreach(breach);
+                                  setActiveTab('preview');
+                                }}
+                                className="ml-2 p-0 h-auto"
+                              >
+                                <Eye className="w-3 h-3 mr-1" />
+                                Aperçu
+                              </Button>
+                            </>
                           )}
                         </AlertDescription>
                       </Alert>
@@ -556,6 +572,19 @@ Généré le: ${new Date().toLocaleString()}
                           <Edit className="w-4 h-4 mr-2" />
                           Modifier
                         </Button>
+                        {breach.aiJustification && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setPreviewBreach(breach);
+                              setActiveTab('preview');
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Aperçu Analyse
+                          </Button>
+                        )}
                         {!breach.aiRecommendationAuthority && (
                           <Button 
                             variant="outline" 
@@ -1478,6 +1507,141 @@ Généré le: ${new Date().toLocaleString()}
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="preview" className="space-y-4">
+          {previewBreach && previewBreach.aiJustification ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  Aperçu de l'Analyse IA - Violation #{previewBreach.id}
+                </CardTitle>
+                <CardDescription>
+                  Analyse générée selon les directives EDPB Guidelines 9/2022
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label className="font-semibold">Date de l'incident</Label>
+                    <p className="text-sm">{new Date(previewBreach.incidentDate).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Date de découverte</Label>
+                    <p className="text-sm">{new Date(previewBreach.discoveryDate).toLocaleDateString()}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="font-semibold">Description</Label>
+                    <p className="text-sm">{previewBreach.description}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        Notification Autorité
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge 
+                        variant={previewBreach.aiRecommendationAuthority === 'required' ? 'destructive' : 'secondary'}
+                        className="mb-2"
+                      >
+                        {previewBreach.aiRecommendationAuthority === 'required' ? 'REQUISE' : 'NON REQUISE'}
+                      </Badge>
+                      {previewBreach.aiRecommendationAuthority === 'required' && (
+                        <Alert className="mt-2">
+                          <AlertCircle className="w-4 h-4" />
+                          <AlertDescription>
+                            Notification à la CNIL requise dans les 72 heures
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Notification Personnes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge 
+                        variant={previewBreach.aiRecommendationDataSubject === 'required' ? 'destructive' : 'secondary'}
+                        className="mb-2"
+                      >
+                        {previewBreach.aiRecommendationDataSubject === 'required' ? 'REQUISE' : 'NON REQUISE'}
+                      </Badge>
+                      {previewBreach.aiRecommendationDataSubject === 'required' && (
+                        <Alert className="mt-2">
+                          <AlertCircle className="w-4 h-4" />
+                          <AlertDescription>
+                            Notification aux personnes concernées recommandée
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Justification Détaillée
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose max-w-none">
+                      <div className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg border">
+                        {previewBreach.aiJustification}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="text-sm text-gray-500">
+                    <strong>Avertissement:</strong> Cette évaluation est basée sur les directives EDPB Guidelines 9/2022. 
+                    Il est recommandé de consulter des professionnels juridiques qualifiés pour les décisions finales.
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => downloadJustification(previewBreach)}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Télécharger
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveTab('list')}
+                    >
+                      Retour à la liste
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune analyse sélectionnée</h3>
+                <p className="text-gray-500 mb-4">
+                  Sélectionnez une violation avec une analyse IA pour voir l'aperçu.
+                </p>
+                <Button onClick={() => setActiveTab('list')}>
+                  Retour à la liste
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
