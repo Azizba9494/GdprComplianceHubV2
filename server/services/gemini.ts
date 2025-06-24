@@ -770,22 +770,24 @@ La politique doit être:
 
   async analyzeDataBreach(breachData: any, ragDocuments?: string[]): Promise<{
     notificationRequired: boolean;
+    dataSubjectNotificationRequired: boolean;
     justification: string;
     riskLevel: string;
     recommendations: string[];
   }> {
-    const prompt = `Analysez cette violation de données personnelles selon le RGPD et la réglementation française.
+    // Get the configurable prompt from the database
+    const breachAnalysisPrompt = await storage.getAiPromptByName('Analyse Violation Données');
+    
+    if (!breachAnalysisPrompt || !breachAnalysisPrompt.isActive) {
+      throw new Error('Prompt d\'analyse des violations non trouvé ou inactif');
+    }
 
-Données de la violation: ${JSON.stringify(breachData)}
-
-Déterminez:
-1. Si une notification à la CNIL est obligatoire (72h)
-2. Si une information aux personnes concernées est nécessaire
-3. Le niveau de risque
-4. Les actions recommandées`;
+    // Replace placeholder with actual breach data
+    const prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', JSON.stringify(breachData, null, 2));
 
     const schema = {
       notificationRequired: "boolean",
+      dataSubjectNotificationRequired: "boolean", 
       justification: "string",
       riskLevel: "string (faible|moyen|élevé|critique)",
       recommendations: ["string"]
