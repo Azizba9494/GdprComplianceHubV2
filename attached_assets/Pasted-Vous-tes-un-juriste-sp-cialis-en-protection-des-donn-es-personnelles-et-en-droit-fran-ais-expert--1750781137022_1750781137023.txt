@@ -4,10 +4,10 @@ Vous êtes un juriste spécialisé en protection des données personnelles et en
 
 **INFORMATIONS ENTREPRISE :**
 - Dénomination : ${company.name}
-- Secteur d'activité : ${company.sector || 'Non spécifié'}
-- Catégorie : ${company.size || 'Non spécifiée'}
-- Adresse du siège social : ${company.address || 'Non spécifiée'}
-- Contact : ${company.email || 'Non spécifié'}
+- Secteur d'activité : [INDIQUER LE SECTEUR D'ACTIVITÉ DE L'ENTREPRISE]
+- Catégorie : [INDIQUER LA TAILLE/CATÉGORIE DE L'ENTREPRISE]
+- Adresse du siège social : [INDIQUER L'ADRESSE COMPLÈTE DU SIÈGE SOCIAL]
+- Contact : [INDIQUER L'EMAIL DE CONTACT DE L'ENTREPRISE]
 
 **REGISTRES DE TRAITEMENT À INTÉGRER :**
 ${processingRecords.map((record: any) => `
@@ -116,4 +116,4 @@ ${ragContext}
 - La cohérence avec les registres de traitement doit être parfaite
 - L'adaptation au secteur d'activité doit être évidente
 
-Rédigez une politique professionnelle, complète et directement utilisable par l'entreprise.`;
+Rédigez une politique professionnelle, complète et directement utilisable par l'entreprise.

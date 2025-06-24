@@ -710,8 +710,23 @@ ${processingRecords.map((record: any) => `
       let prompt;
       
       if (activePrompt?.prompt && activePrompt.prompt.trim().length > 10) {
-        // Utiliser le prompt configuré et remplacer les variables (syntaxes {{}} et ${})
-        prompt = activePrompt.prompt
+        // Utiliser le prompt configuré et remplacer les variables et placeholders
+        // Ajouter des instructions spécifiques à l'IA avant le prompt principal
+        const aiInstructions = `INSTRUCTIONS IMPORTANTES POUR LA GÉNÉRATION:
+- Utilisez EXCLUSIVEMENT les informations réelles de l'entreprise fournies ci-dessous
+- Remplacez TOUS les placeholders [INDIQUER...] par les vraies données de l'entreprise
+- Ne laissez aucun placeholder non rempli dans la politique finale
+- Adaptez le contenu au secteur d'activité spécifique de l'entreprise
+- Utilisez les vrais traitements de données listés ci-dessous
+
+DONNÉES DE L'ENTREPRISE:
+${companyInfo}
+
+MAINTENANT, générez la politique de confidentialité en suivant le template ci-dessous:
+
+`;
+
+        prompt = aiInstructions + activePrompt.prompt
           // Variables avec syntaxe {{}}
           .replace(/\{\{company\}\}/g, companyInfo)
           .replace(/\{\{processingRecords\}\}/g, JSON.stringify(processingRecords))
@@ -726,7 +741,13 @@ ${processingRecords.map((record: any) => `
           .replace(/\$\{company\.website\}/g, company.website || 'Non spécifié')
           // Variables pour les traitements
           .replace(/\$\{processingRecords\}/g, JSON.stringify(processingRecords))
-          .replace(/\$\{ragContext\}/g, ragContext);
+          .replace(/\$\{ragContext\}/g, ragContext)
+          // Remplacer les placeholders textuels par les vraies données
+          .replace(/\[INDIQUER LE SECTEUR D'ACTIVITÉ DE L'ENTREPRISE\]/g, company.sector || 'Non spécifié')
+          .replace(/\[INDIQUER LA TAILLE\/CATÉGORIE DE L'ENTREPRISE\]/g, company.size || 'Non spécifiée')
+          .replace(/\[INDIQUER L'ADRESSE COMPLÈTE DU SIÈGE SOCIAL\]/g, company.address || 'Non spécifiée')
+          .replace(/\[INDIQUER L'EMAIL DE CONTACT DE L'ENTREPRISE\]/g, company.email || 'contact@entreprise.fr')
+          .replace(/\[INDIQUER LE NOM DE L'ENTREPRISE\]/g, company.name || 'Entreprise');
         
         console.log(`[PRIVACY POLICY] Using configured prompt: ${activePrompt.name}`);
         console.log(`[PRIVACY POLICY] Company data: ${company.name}, ${company.sector}`);
