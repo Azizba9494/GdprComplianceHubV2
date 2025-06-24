@@ -669,48 +669,49 @@ export default function Admin() {
 
         {/* AI Prompts Management */}
         <TabsContent value="prompts" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Gestion des prompts IA</h3>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/admin/setup-breach-prompt', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' }
-                    });
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                      toast({
-                        title: "Prompt d'analyse des violations",
-                        description: result.message,
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Gestion des prompts IA</h3>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/admin/setup-breach-prompt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
                       });
-                      queryClient.invalidateQueries({ queryKey: ['/api/admin/prompts'] });
-                    } else {
-                      throw new Error(result.error);
+                      const result = await response.json();
+                      
+                      if (result.success) {
+                        toast({
+                          title: "Prompt d'analyse des violations",
+                          description: result.message,
+                        });
+                        queryClient.invalidateQueries({ queryKey: ['/api/admin/prompts'] });
+                      } else {
+                        throw new Error(result.error);
+                      }
+                    } catch (error: any) {
+                      toast({
+                        title: "Erreur",
+                        description: error.message,
+                        variant: "destructive",
+                      });
                     }
-                  } catch (error: any) {
-                    toast({
-                      title: "Erreur",
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-              >
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Initialiser prompt violations
-              </Button>
-              <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => openPromptDialog()}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nouveau prompt
-                  </Button>
-                </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+                  }}
+                >
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Initialiser prompt violations
+                </Button>
+                <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => openPromptDialog()}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nouveau prompt
+                    </Button>
+                  </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingPrompt ? "Modifier le prompt" : "Créer un nouveau prompt"}
@@ -814,75 +815,77 @@ export default function Admin() {
           </div>
 
           {/* Prompts by Category */}
-          {Object.entries(promptCategories).map(([categoryKey, categoryLabel]) => {
-            const categoryPrompts = prompts?.filter((p: AiPrompt) => p.category === categoryKey) || [];
-            const Icon = categoryIcons[categoryKey as keyof typeof categoryIcons];
-            
-            if (categoryPrompts.length === 0) return null;
+          <div>
+            {Object.entries(promptCategories).map(([categoryKey, categoryLabel]) => {
+              const categoryPrompts = prompts?.filter((p: AiPrompt) => p.category === categoryKey) || [];
+              const Icon = categoryIcons[categoryKey as keyof typeof categoryIcons];
+              
+              if (categoryPrompts.length === 0) return null;
 
-            return (
-              <Card key={categoryKey}>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Icon className="w-5 h-5" />
-                    <span>{categoryLabel}</span>
-                    <Badge variant="outline">{categoryPrompts.length}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {categoryPrompts.map((prompt: AiPrompt) => (
-                      <div
-                        key={prompt.id}
-                        className="flex items-start justify-between p-4 border rounded-lg"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h4 className="font-medium">{prompt.name}</h4>
-                            <Badge variant={prompt.isActive ? "default" : "secondary"}>
-                              {prompt.isActive ? (
-                                <>
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Actif
-                                </>
-                              ) : (
-                                <>
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  Inactif
-                                </>
-                              )}
-                            </Badge>
-                            <Badge variant="outline">v{prompt.version}</Badge>
+              return (
+                <Card key={categoryKey}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Icon className="w-5 h-5" />
+                      <span>{categoryLabel}</span>
+                      <Badge variant="outline">{categoryPrompts.length}</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {categoryPrompts.map((prompt: AiPrompt) => (
+                        <div
+                          key={prompt.id}
+                          className="flex items-start justify-between p-4 border rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h4 className="font-medium">{prompt.name}</h4>
+                              <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                                {prompt.isActive ? (
+                                  <>
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Actif
+                                  </>
+                                ) : (
+                                  <>
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    Inactif
+                                  </>
+                                )}
+                              </Badge>
+                              <Badge variant="outline">v{prompt.version}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {prompt.description}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Créé le {new Date(prompt.createdAt).toLocaleDateString('fr-FR')}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {prompt.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Créé le {new Date(prompt.createdAt).toLocaleDateString('fr-FR')}
-                          </p>
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={prompt.isActive}
+                              onCheckedChange={() => togglePromptStatus(prompt)}
+                              disabled={updatePromptMutation.isPending}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPromptDialog(prompt)}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Modifier
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={prompt.isActive}
-                            onCheckedChange={() => togglePromptStatus(prompt)}
-                            disabled={updatePromptMutation.isPending}
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openPromptDialog(prompt)}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Modifier
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </TabsContent>
 
         {/* DPIA Prompts Management */}
