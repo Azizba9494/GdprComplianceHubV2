@@ -12,7 +12,7 @@ import Diagnostic from "@/pages/diagnostic";
 import ActionPlan from "@/pages/action-plan";
 import Records from "@/pages/records";
 import PrivacyPolicy from "@/pages/privacy-policy";
-import BreachAnalysis from "@/pages/breach-analysis";
+import BreachAnalysisEnhanced from "@/pages/BreachAnalysisEnhanced";
 import RightsManagement from "@/pages/rights-management";
 import DPIA from "@/pages/dpia";
 import DpiaList from "@/pages/DpiaList";
@@ -67,7 +67,7 @@ function AuthenticatedApp() {
             <Route path="/actions" component={ActionPlan} />
             <Route path="/records" component={Records} />
             <Route path="/privacy-policy" component={PrivacyPolicy} />
-            <Route path="/breach-analysis" component={BreachAnalysis} />
+            <Route path="/breach-analysis" component={BreachAnalysisEnhanced} />
             <Route path="/rights" component={RightsManagement} />
             <Route path="/dpia" component={DpiaList} />
             <Route path="/dpia/evaluation" component={DpiaEvaluationOriginal} />
