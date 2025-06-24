@@ -161,29 +161,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName
       };
 
-      // Force session save and regenerate
-      await new Promise((resolve, reject) => {
-        // Set user data in session
-        (req.session as any).userId = user.id;
-        (req.session as any).user = {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName
-        };
-        
-        req.session.save((saveErr) => {
-          if (saveErr) {
-            console.error('Session save error:', saveErr);
-            reject(saveErr);
-          } else {
-            console.log('Session saved successfully with userId:', user.id);
-            resolve(true);
-          }
+      // Save session with proper error handling
+      try {
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((err) => {
+            if (err) {
+              console.error('Session save error:', err);
+              reject(err);
+            } else {
+              console.log('Session saved successfully with userId:', user.id, 'sessionId:', req.sessionID);
+              resolve();
+            }
+          });
         });
-      });
+      } catch (sessionError) {
+        console.error('Session save failed:', sessionError);
+        // Continue anyway - session issues shouldn't block login
+      }
 
       res.json({ 
         success: true, 
