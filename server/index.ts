@@ -17,13 +17,12 @@ app.use(session({
   store: new PgSession({
     conString: process.env.DATABASE_URL,
     tableName: 'sessions',
-    createTableIfMissing: true  // Allow table creation
+    createTableIfMissing: false
   }),
   secret: process.env.SESSION_SECRET || 'gdpr-compliance-platform-secret-key',
   resave: false,
   saveUninitialized: false,
   rolling: true,
-  name: 'connect.sid', // Standard session name
   cookie: {
     secure: false, // Force non-secure for development
     httpOnly: true,
