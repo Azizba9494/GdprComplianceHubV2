@@ -501,54 +501,20 @@ Schéma de réponse attendu: ${JSON.stringify(schema)}
 
 Contexte: ${JSON.stringify(context || {})}
 
-Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire, sans markdown, sans explication.
-IMPORTANT: La réponse doit commencer par { et finir par } uniquement.`;
+Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
 
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
       const text = response.text();
 
-      console.log('Raw Gemini response:', text);
-      
       try {
         return JSON.parse(text);
       } catch (parseError) {
-        console.log('Direct JSON parse failed, attempting extraction...');
-        
-        // Try to extract JSON from the response with multiple patterns
-        let jsonMatch = text.match(/\{[\s\S]*\}/);
-        
-        if (!jsonMatch) {
-          // Try looking for JSON between code blocks
-          jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
-          if (jsonMatch) {
-            try {
-              return JSON.parse(jsonMatch[1]);
-            } catch (e) {
-              console.log('Failed to parse extracted JSON from code blocks');
-            }
-          }
-        }
-        
+        // Attempt to extract JSON from the response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          try {
-            return JSON.parse(jsonMatch[0]);
-          } catch (e) {
-            console.log('Failed to parse extracted JSON:', e);
-          }
+          return JSON.parse(jsonMatch[0]);
         }
-        
-        // Last resort: try to clean up the text and extract JSON
-        const cleanedText = text.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
-        if (cleanedText.startsWith('{') && cleanedText.endsWith('}')) {
-          try {
-            return JSON.parse(cleanedText);
-          } catch (e) {
-            console.log('Failed to parse cleaned text:', e);
-          }
-        }
-        
-        console.error('Complete response that failed to parse:', text);
         throw new Error('Impossible de parser la réponse JSON');
       }
     } catch (error: any) {
@@ -803,159 +769,6 @@ La politique doit être:
   }
 
   async analyzeDataBreach(breachData: any, ragDocuments?: string[]): Promise<{
-    notificationRequired: boolean;
-    dataSubjectNotificationRequired: boolean;
-    justification: string;
-    riskLevel: string;
-    recommendations: string[];
-  }> {
-    try {
-      console.log('Starting data breach analysis...');
-      
-      // Get the active breach analysis prompt from database
-      const breachPrompt = await storage.getActivePromptByCategory('breach');
-      
-      let promptTemplate;
-      if (breachPrompt?.prompt && breachPrompt.prompt.trim().length > 10) {
-        promptTemplate = breachPrompt.prompt;
-        console.log(`[BREACH] Using configurable prompt: ${breachPrompt.name}`);
-      } else {
-        // Fallback to default prompt if none configured
-        promptTemplate = `Analysez cette violation de données personnelles selon le RGPD et les directives EDPB Guidelines 9/2022.
-
-DÉTAILS DE LA VIOLATION:
-{{breachData}}
-
-{{ragDocuments}}
-
-Répondez UNIQUEMENT avec ce JSON (sans markdown, sans autre texte):
-{
-  "notificationRequired": true/false,
-  "dataSubjectNotificationRequired": true/false,
-  "justification": "Explication détaillée selon RGPD articles 33 et 34",
-  "riskLevel": "faible/moyen/élevé",
-  "recommendations": ["Action 1", "Action 2", "Action 3"]
-}`;
-        console.log('[BREACH] Using fallback default prompt');
-      }
-
-      const client = await this.getClient();
-      const model = client.getGenerativeModel({ 
-        model: "gemini-2.5-flash",
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 4096
-        }
-      });
-
-      // Parse comprehensive data if available
-      let comprehensiveInfo = {};
-      try {
-        if (breachData.comprehensiveData) {
-          comprehensiveInfo = JSON.parse(breachData.comprehensiveData);
-        }
-      } catch (e) {
-        console.log('Could not parse comprehensive data');
-      }
-
-      // Build breach data context
-      const breachDataContext = `Description: ${breachData.description}
-Date de l'incident: ${breachData.incidentDate}
-Date de découverte: ${breachData.discoveryDate}
-
-INFORMATIONS DÉTAILLÉES:
-${Object.keys(comprehensiveInfo).length > 0 ? `
-Statut de la violation: ${comprehensiveInfo.violationStatus || 'Non précisé'}
-Circonstances de découverte: ${comprehensiveInfo.discoveryCircumstances || 'Non précisé'}
-Origines: ${comprehensiveInfo.origins?.join(', ') || 'Non précisé'}
-Circonstances: ${comprehensiveInfo.circumstances?.join(', ') || 'Non précisé'}
-Causes: ${comprehensiveInfo.causes?.join(', ') || 'Non précisé'}
-Catégories de personnes: ${comprehensiveInfo.personCategories?.join(', ') || 'Non précisé'}
-Nombre de personnes affectées: ${comprehensiveInfo.affectedPersonsCount || 'Non précisé'}
-Catégories de données: ${comprehensiveInfo.dataCategories?.join(', ') || 'Non précisé'}
-Volume de données: ${comprehensiveInfo.dataVolume || 'Non précisé'}
-Support de données: ${comprehensiveInfo.dataSupport?.join(', ') || 'Non précisé'}
-Conséquences: ${comprehensiveInfo.consequences?.join(', ') || 'Non précisé'}
-Préjudices potentiels: ${comprehensiveInfo.potentialHarms?.join(', ') || 'Non précisé'}
-Mesures immédiates: ${comprehensiveInfo.immediateMeasures || 'Non précisé'}
-` : 'Informations détaillées non disponibles'}`;
-
-      // Build RAG context
-      const ragContext = ragDocuments && ragDocuments.length > 0 ? 
-        `DOCUMENTS DE RÉFÉRENCE RGPD:\n${ragDocuments.slice(0, 2).join('\n\n')}` : 
-        'Aucun document de référence disponible';
-
-      // Replace placeholders in the prompt template
-      const finalPrompt = promptTemplate
-        .replace(/\{\{breachData\}\}/g, breachDataContext)
-        .replace(/\{\{ragDocuments\}\}/g, ragContext);
-
-      console.log('Sending request to Gemini...');
-      const result = await model.generateContent(finalPrompt);
-      const response = await result.response;
-      const text = response.text().trim();
-      
-      console.log('Raw Gemini response:', text);
-      
-      // Parse response with multiple fallback strategies
-      let parsedResponse;
-      
-      try {
-        parsedResponse = JSON.parse(text);
-      } catch (e) {
-        console.log('Direct parse failed, trying extraction...');
-        
-        // Try to extract JSON from potential markdown or other formatting
-        let jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-          try {
-            parsedResponse = JSON.parse(jsonMatch[1]);
-          } catch (e2) {
-            console.log('JSON extraction from markdown failed, trying simple match...');
-          }
-        }
-        
-        if (!parsedResponse) {
-          jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            try {
-              parsedResponse = JSON.parse(jsonMatch[0]);
-            } catch (e2) {
-              console.log('JSON extraction failed, using fallback...');
-            }
-          }
-        }
-        
-        if (!parsedResponse) {
-          // Create fallback response
-          parsedResponse = {
-            notificationRequired: true,
-            dataSubjectNotificationRequired: false,
-            justification: `Analyse automatique de la violation: ${breachData.description}. Notification à la CNIL recommandée dans les 72h selon l'article 33 du RGPD.`,
-            riskLevel: "moyen",
-            recommendations: ["Notifier la CNIL dans les 72h", "Documenter l'incident", "Renforcer les mesures de sécurité"]
-          };
-        }
-      }
-      
-      console.log('Parsed analysis result:', parsedResponse);
-      return parsedResponse;
-      
-    } catch (error: any) {
-      console.error('Breach analysis error:', error);
-      
-      // Return default safe analysis
-      return {
-        notificationRequired: true,
-        dataSubjectNotificationRequired: false,
-        justification: `Analyse de la violation: ${breachData.description}. Par précaution, notification à la CNIL recommandée selon l'article 33 du RGPD.`,
-        riskLevel: "moyen",
-        recommendations: ["Notifier la CNIL dans les 72h", "Évaluer l'impact sur les personnes concernées", "Renforcer les mesures de sécurité"]
-      };
-    }
-  }
-
-  async analyzeDataBreachOriginal(breachData: any, ragDocuments?: string[]): Promise<{
     notificationRequired: boolean;
     justification: string;
     riskLevel: string;

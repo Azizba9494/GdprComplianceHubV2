@@ -161,23 +161,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName
       };
 
-      // Save session with proper error handling
-      try {
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) {
-              console.error('Session save error:', err);
-              reject(err);
-            } else {
-              console.log('Session saved successfully with userId:', user.id, 'sessionId:', req.sessionID);
-              resolve();
-            }
-          });
+      // Force session save
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            reject(err);
+          } else {
+            console.log('Session saved successfully with userId:', user.id);
+            resolve(true);
+          }
         });
-      } catch (sessionError) {
-        console.error('Session save failed:', sessionError);
-        // Continue anyway - session issues shouldn't block login
-      }
+      });
 
       res.json({ 
         success: true, 
@@ -607,9 +602,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionCookie: req.headers.cookie?.includes('connect.sid')
       });
 
-      // Bypass authentication for breach analysis - development mode
-      console.log('Session ID:', req.sessionID, 'User ID in session:', req.session?.userId);
-      console.log('Bypassing authentication for breach analysis development');
+      // Temporary workaround: bypass authentication for breach analysis during development
+      // TODO: Fix session persistence issue
+      console.log('Bypassing authentication for breach analysis (development mode)');
+      
+      // Skip authentication check for now
+      // if (!req.session?.userId) {
+      //   console.log('Authentication failed - no userId in session');
+      //   return res.status(401).json({ error: "Authentication requise" });
+      // }
 
       console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
       
@@ -619,16 +620,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ragDocuments = await getRagDocuments();
       console.log(`[RAG] Found ${ragDocuments.length} documents for breach analysis`);
 
-      console.log('Starting Gemini analysis...');
       const analysis = await geminiService.analyzeDataBreach(breachData, ragDocuments);
-      console.log('Analysis completed:', analysis);
 
       // Update the existing breach with AI analysis results
       const updatedBreach = await storage.updateDataBreach(breachData.id, {
         aiRecommendationAuthority: analysis.notificationRequired ? 'required' : 'not_required',
         aiRecommendationDataSubject: analysis.dataSubjectNotificationRequired ? 'required' : 'not_required',
-        aiJustification: analysis.justification || 'Analyse IA générée automatiquement',
-        riskAnalysisResult: analysis.riskLevel || 'moyen',
+        aiJustification: analysis.justification,
+        riskAnalysisResult: analysis.riskLevel,
         status: "analyzed",
       });
 
@@ -1363,101 +1362,6 @@ Répondez de manière complète et utile à cette question en respectant tous le
 
     } catch (error: any) {
       console.error('Fix chatbot error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Create or update breach analysis prompt
-  app.post("/api/admin/setup-breach-prompt", async (req, res) => {
-    try {
-      // Check if breach analysis prompt already exists
-      const existingPrompt = await storage.getActivePromptByCategory('breach');
-
-      const defaultBreachPrompt = `Vous êtes un expert en conformité RGPD spécialisé dans l'analyse des violations de données personnelles. Analysez cette violation selon le RGPD et les directives EDPB Guidelines 9/2022.
-
-**VOTRE MISSION :**
-- Évaluer la nécessité de notification à l'autorité de contrôle (Article 33 RGPD)
-- Déterminer si une communication aux personnes concernées est requise (Article 34 RGPD)
-- Analyser le niveau de risque selon la méthodologie CNIL
-- Proposer des recommandations concrètes et adaptées
-
-**CRITÈRES D'ÉVALUATION OBLIGATOIRES :**
-
-1. **Nature et volume des données concernées**
-   - Type de données (identifiants, données sensibles, etc.)
-   - Volume et nombre de personnes affectées
-   - Contexte de traitement
-
-2. **Probabilité et gravité des préjudices**
-   - Risques financiers, réputationnels, discriminatoires
-   - Vulnérabilité des personnes concernées
-   - Facilité d'identification des personnes
-
-3. **Mesures de protection existantes**
-   - Chiffrement des données
-   - Contrôles d'accès
-   - Mesures de confinement prises
-
-4. **Circonstances spécifiques**
-   - Origine de la violation (interne/externe)
-   - Durée de l'exposition
-   - Étendue géographique
-
-**BASES LÉGALES DE RÉFÉRENCE :**
-- Article 33 RGPD : Notification autorité (72h si risque probable)
-- Article 34 RGPD : Communication aux personnes (risque élevé)
-- Considérant 85 RGPD : Évaluation des risques
-- Guidelines EDPB 01/2021 sur les violations de données
-
-**FORMAT DE RÉPONSE ATTENDU :**
-Répondez UNIQUEMENT avec un JSON valide selon ce format :
-{
-  "notificationRequired": true/false,
-  "dataSubjectNotificationRequired": true/false,
-  "justification": "Analyse détaillée avec références légales précises",
-  "riskLevel": "faible/moyen/élevé",
-  "recommendations": ["Action 1", "Action 2", "Action 3"]
-}
-
-**DONNÉES DE LA VIOLATION À ANALYSER :**
-{{breachData}}
-
-**DOCUMENTS RAG DISPONIBLES :**
-{{ragDocuments}}
-
-Analysez rigoureusement cette violation et fournissez une évaluation conforme aux exigences RGPD.`;
-
-      if (existingPrompt) {
-        // Update existing prompt
-        await storage.updateAiPrompt(existingPrompt.id, {
-          prompt: defaultBreachPrompt,
-          description: "Prompt configurable pour l'analyse des violations de données RGPD"
-        });
-
-        res.json({
-          success: true,
-          message: "Prompt d'analyse des violations mis à jour",
-          promptId: existingPrompt.id
-        });
-      } else {
-        // Create new prompt
-        const newPrompt = await storage.createAiPrompt({
-          name: "Analyse violation données",
-          description: "Prompt configurable pour l'analyse des violations de données RGPD",
-          category: "breach",
-          prompt: defaultBreachPrompt,
-          isActive: true
-        });
-
-        res.json({
-          success: true,
-          message: "Prompt d'analyse des violations créé",
-          promptId: newPrompt.id
-        });
-      }
-
-    } catch (error: any) {
-      console.error('Setup breach prompt error:', error);
       res.status(500).json({ error: error.message });
     }
   });

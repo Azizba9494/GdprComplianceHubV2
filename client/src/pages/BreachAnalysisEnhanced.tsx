@@ -600,15 +600,6 @@ Généré le: ${new Date().toLocaleString()}
                             Analyse IA
                           </Button>
                         )}
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => window.open('/admin?tab=prompts', '_blank')}
-                          title="Modifier le prompt d'analyse IA"
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Modifier prompt IA
-                        </Button>
                       </div>
                       {breach.notificationRequired && (
                         <Button
