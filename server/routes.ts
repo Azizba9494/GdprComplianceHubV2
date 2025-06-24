@@ -161,15 +161,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName
       };
 
-      // Force session save
+      // Force session save and regenerate
       await new Promise((resolve, reject) => {
-        req.session.save((err) => {
+        req.session.regenerate((err) => {
           if (err) {
-            console.error('Session save error:', err);
+            console.error('Session regenerate error:', err);
             reject(err);
           } else {
-            console.log('Session saved successfully with userId:', user.id);
-            resolve(true);
+            // Set user data again after regeneration
+            (req.session as any).userId = user.id;
+            (req.session as any).user = {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              role: user.role,
+              firstName: user.firstName,
+              lastName: user.lastName
+            };
+            
+            req.session.save((saveErr) => {
+              if (saveErr) {
+                console.error('Session save error:', saveErr);
+                reject(saveErr);
+              } else {
+                console.log('Session saved successfully with userId:', user.id);
+                resolve(true);
+              }
+            });
           }
         });
       });
