@@ -523,10 +523,7 @@ Généré le: ${new Date().toLocaleString()}
                         <Calendar className="w-4 h-4 text-gray-500" />
                         <span className="text-sm">Découvert: {new Date(breach.discoveryDate).toLocaleDateString()}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm">Personnes affectées: {breach.estimatedAffectedPersons || 'Non précisé'}</span>
-                      </div>
+                      
                     </div>
 
                     {breach.aiRecommendationAuthority && (
@@ -707,14 +704,7 @@ Généré le: ${new Date().toLocaleString()}
                               disabled={formData.discoveryUnknown}
                             />
                           </div>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Checkbox
-                              id="discoveryUnknown"
-                              checked={formData.discoveryUnknown}
-                              onCheckedChange={(checked) => setFormData({ ...formData, discoveryUnknown: checked as boolean })}
-                            />
-                            <Label htmlFor="discoveryUnknown" className="text-sm">Date/heure inconnue</Label>
-                          </div>
+                          
                         </div>
                       </div>
 

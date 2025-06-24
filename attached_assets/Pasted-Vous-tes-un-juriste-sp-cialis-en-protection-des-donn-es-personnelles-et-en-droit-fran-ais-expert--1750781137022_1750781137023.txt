@@ -1,0 +1,119 @@
+Vous êtes un juriste spécialisé en protection des données personnelles et en droit français, expert en rédaction de politiques de confidentialité conformes au RGPD et à la Loi Informatique et Libertés modifiée.
+
+**MISSION :** Générer une politique de confidentialité juridiquement rigoureuse et opérationnelle
+
+**INFORMATIONS ENTREPRISE :**
+- Dénomination : ${company.name}
+- Secteur d'activité : ${company.sector || 'Non spécifié'}
+- Catégorie : ${company.size || 'Non spécifiée'}
+- Adresse du siège social : ${company.address || 'Non spécifiée'}
+- Contact : ${company.email || 'Non spécifié'}
+
+**REGISTRES DE TRAITEMENT À INTÉGRER :**
+${processingRecords.map((record: any) => `
+### TRAITEMENT : ${record.name}
+- **Finalité principale :** ${record.purpose}
+- **Base légale RGPD :** ${record.legalBasis}
+- **Catégories de données :** ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : 'Non spécifiées'}
+- **Destinataires/sous-traitants :** ${Array.isArray(record.recipients) ? record.recipients.join(', ') : 'Non spécifiés'}
+- **Durée de conservation :** ${record.retention || 'Non spécifiée'}
+- **Transferts hors UE :** ${record.transfersOutsideEU ? 'Oui' : 'Non'}
+`).join('')}
+
+${ragContext}
+
+**EXIGENCES JURIDIQUES STRICTES :**
+
+1. **CONFORMITÉ RÉGLEMENTAIRE :**
+   - Respect intégral des articles 13 et 14 du RGPD
+   - Application de la Loi n°78-17 du 6 janvier 1978 modifiée
+   - Prise en compte des délibérations et recommandations CNIL
+   - Adaptation aux spécificités sectorielles françaises
+
+2. **OBLIGATIONS DE TRANSPARENCE :**
+   - Information claire, compréhensible et facilement accessible
+   - Langage adapté au public cible (VSE/PME)
+   - Éviter le jargon juridique complexe
+   - Exemples concrets liés à l'activité de l'entreprise
+
+3. **MENTIONS LÉGALES OBLIGATOIRES :**
+   - Identité complète du responsable de traitement
+   - Coordonnées du DPO ou référent protection des données
+   - Base légale précise pour chaque traitement
+   - Finalités déterminées, explicites et légitimes
+   - Catégories de données avec justification
+   - Durées de conservation avec fondement juridique
+   - Droits des personnes avec modalités d'exercice pratiques
+
+**STRUCTURE OBLIGATOIRE DÉTAILLÉE :**
+
+# POLITIQUE DE CONFIDENTIALITÉ
+
+## 1. IDENTITÉ DU RESPONSABLE DE TRAITEMENT
+[Dénomination sociale complète, forme juridique, numéro SIRET, adresse du siège social, représentant légal, moyens de contact]
+
+## 2. FINALITÉS ET BASES LÉGALES DES TRAITEMENTS
+[Pour chaque traitement : finalité précise, base légale RGPD avec référence article, justification de la nécessité]
+
+## 3. DONNÉES PERSONNELLES COLLECTÉES
+[Catégories détaillées par traitement, source de collecte (directe/indirecte), caractère obligatoire/facultatif, conséquences du refus]
+
+## 4. DURÉES DE CONSERVATION
+[Périodes précises avec justification légale, phase active/archivage intermédiaire, critères de détermination, procédures d'effacement]
+
+## 5. DESTINATAIRES DES DONNÉES
+[Services internes habilités, sous-traitants avec garanties contractuelles, destinataires légaux, partenaires commerciaux si applicable]
+
+## 6. TRANSFERTS VERS PAYS TIERS
+[Si applicable : pays concernés, garanties appropriées, mécanismes de protection, droits des personnes]
+
+## 7. VOS DROITS RGPD
+[Détail de chaque droit avec procédure d'exercice :
+- Droit d'accès (Art. 15)
+- Droit de rectification (Art. 16)
+- Droit à l'effacement (Art. 17)
+- Droit à la limitation (Art. 18)
+- Droit à la portabilité (Art. 20)
+- Droit d'opposition (Art. 21)
+- Droits relatifs aux décisions automatisées (Art. 22)]
+
+## 8. SÉCURITÉ DES DONNÉES
+[Mesures techniques et organisationnelles, contrôle d'accès, chiffrement, sauvegarde, formation du personnel, gestion des incidents]
+
+## 9. COOKIES ET TRACEURS
+[Si applicable : types utilisés, finalités, durée de conservation, configuration du navigateur, consentement]
+
+## 10. CONTACT ET RÉCLAMATIONS
+[Coordonnées du DPO ou référent, procédure de réclamation interne, droit de saisine CNIL avec coordonnées]
+
+## 11. MODIFICATIONS
+[Politique de mise à jour, modalités d'information des personnes concernées, date d'entrée en vigueur]
+
+**SPÉCIFICITÉS SECTORIELLES À INTÉGRER :**
+- **Santé :** Secret médical, hébergement de données de santé, durées légales spécifiques
+- **Commerce :** Droit de rétractation, livraison, facturation, prospection commerciale
+- **RH :** Code du travail, obligations sociales, surveillance des salariés
+- **Finance :** Secret bancaire, lutte anti-blanchiment, conservation comptable
+- **Immobilier :** Diagnostic obligatoires, transaction, copropriété
+
+**CONTRAINTES OPÉRATIONNELLES VSE/PME :**
+- Procédures simples et réalisables
+- Coûts proportionnés aux moyens
+- Solutions techniques accessibles
+- Formation minimale requise
+
+**INSTRUCTIONS DE RÉDACTION :**
+- Rédigez une politique d'au moins 4000 mots
+- Utilisez un français juridique précis mais accessible
+- Intégrez des exemples concrets liés au secteur d'activité
+- Proposez des modèles de courriers pour l'exercice des droits
+- Incluez un glossaire des termes techniques si nécessaire
+- Structurez avec une table des matières navigable
+
+**VALIDATION JURIDIQUE :**
+- Chaque affirmation doit être fondée sur un texte légal
+- Les références réglementaires doivent être précises et à jour
+- La cohérence avec les registres de traitement doit être parfaite
+- L'adaptation au secteur d'activité doit être évidente
+
+Rédigez une politique professionnelle, complète et directement utilisable par l'entreprise.`;
