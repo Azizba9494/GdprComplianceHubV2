@@ -202,15 +202,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/me", (req, res) => {
-    console.log('Auth check - Session details:', {
-      sessionId: req.sessionID,
-      userId: (req.session as any)?.userId,
-      hasSession: !!req.session,
-      sessionKeys: req.session ? Object.keys(req.session) : 'no session',
-      cookies: req.headers.cookie,
-      connectSid: req.headers.cookie?.includes('connect.sid')
-    });
-    
     if ((req.session as any)?.userId) {
       res.json({ 
         user: (req.session as any).user,
@@ -611,9 +602,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionCookie: req.headers.cookie?.includes('connect.sid')
       });
 
-      // Check authentication
+      // Check authentication - sessions should now persist correctly
       if (!req.session?.userId) {
         console.log('Authentication failed - no userId in session');
+        console.log('Session details:', {
+          sessionId: req.sessionID,
+          hasSession: !!req.session,
+          sessionKeys: req.session ? Object.keys(req.session) : 'no session',
+          cookies: req.headers.cookie
+        });
         return res.status(401).json({ error: "Authentication requise" });
       }
 

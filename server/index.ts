@@ -17,19 +17,18 @@ app.use(session({
   store: new PgSession({
     conString: process.env.DATABASE_URL,
     tableName: 'sessions',
-    createTableIfMissing: true
+    createTableIfMissing: true  // Allow table creation
   }),
   secret: process.env.SESSION_SECRET || 'gdpr-compliance-platform-secret-key',
   resave: false,
   saveUninitialized: false,
   rolling: true,
-  name: 'connect.sid',
+  name: 'connect.sid', // Standard session name
   cookie: {
-    secure: false,
+    secure: false, // Force non-secure for development
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'lax',
-    path: '/'
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax'
   }
 }));
 
