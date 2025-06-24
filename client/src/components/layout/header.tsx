@@ -84,7 +84,10 @@ export default function Header() {
 
         <div className="flex items-center space-x-4">
           {location === "/" && (
-            <Button className="btn-primary">
+            <Button 
+              className="btn-primary"
+              onClick={() => window.open(window.location.href, '_blank')}
+            >
               <Play className="w-4 h-4 mr-2" />
               Nouveau diagnostic
             </Button>
