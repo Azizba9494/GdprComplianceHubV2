@@ -40,10 +40,16 @@ interface Breach {
   incidentDate: string;
   discoveryDate: string;
   description: string;
-  affectedDataTypes: string[];
-  estimatedAffectedPersons: number;
-  breachType: string;
-  severity: string;
+  affectedDataTypes?: string[];
+  estimatedAffectedPersons?: number;
+  dataCategories?: string[];
+  affectedPersons?: number;
+  circumstances?: string;
+  consequences?: string;
+  measures?: string;
+  comprehensiveData?: string;
+  breachType?: string;
+  severity?: string;
   technicalMeasures?: string;
   organizationalMeasures?: string;
   potentialImpact?: string;
@@ -60,8 +66,8 @@ interface Breach {
   dataSubjectNotificationDate?: string;
   dataSubjectNotificationMessage?: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function BreachAnalysisEnhanced() {
@@ -256,16 +262,72 @@ export default function BreachAnalysisEnhanced() {
 
   const handleEdit = (breach: Breach) => {
     setSelectedBreach(breach);
-    // For existing breaches, populate basic fields for backward compatibility
-    setFormData({
-      ...formData,
-      startDate: breach.incidentDate.split('T')[0],
-      discoveryDate: breach.discoveryDate ? breach.discoveryDate.split('T')[0] : "",
-      discoveryCircumstances: breach.description,
-      estimatedPersonCount: breach.estimatedAffectedPersons?.toString() || "",
-      measures: breach.technicalMeasures ? [breach.technicalMeasures] : [],
-      additionalInfo: breach.organizationalMeasures || "",
-    });
+    
+    // Try to load comprehensive data if available
+    let loadedFormData = { ...formData };
+    
+    try {
+      if (breach.comprehensiveData) {
+        const comprehensiveData = JSON.parse(breach.comprehensiveData);
+        loadedFormData = { ...formData, ...comprehensiveData };
+      } else {
+        // Fallback: populate basic fields from breach data
+        loadedFormData = {
+          ...formData,
+          startDate: breach.incidentDate.split('T')[0],
+          startTime: breach.incidentDate.includes('T') ? breach.incidentDate.split('T')[1].substring(0, 5) : "",
+          discoveryDate: breach.discoveryDate ? breach.discoveryDate.split('T')[0] : "",
+          discoveryTime: breach.discoveryDate && breach.discoveryDate.includes('T') ? breach.discoveryDate.split('T')[1].substring(0, 5) : "",
+          discoveryCircumstances: breach.description,
+          affectedPersonsCount: breach.estimatedAffectedPersons?.toString() || "",
+          dataCategories: breach.affectedDataTypes || [],
+        };
+        
+        // Try to parse structured JSON fields
+        if (breach.circumstances) {
+          try {
+            const circumstances = JSON.parse(breach.circumstances);
+            loadedFormData = { ...loadedFormData, ...circumstances };
+          } catch (e) {
+            // If not JSON, treat as simple string
+            loadedFormData.circumstances = [breach.circumstances];
+          }
+        }
+        
+        if (breach.consequences) {
+          try {
+            const consequences = JSON.parse(breach.consequences);
+            loadedFormData = { ...loadedFormData, ...consequences };
+          } catch (e) {
+            loadedFormData.consequences = [breach.consequences];
+          }
+        }
+        
+        if (breach.measures) {
+          try {
+            const measures = JSON.parse(breach.measures);
+            loadedFormData.immediateMeasures = measures.immediate || "";
+            loadedFormData.mediumTermMeasures = measures.mediumTerm || "";
+            loadedFormData.longTermMeasures = measures.longTerm || "";
+            loadedFormData.otherMeasures = measures.other || "";
+          } catch (e) {
+            loadedFormData.immediateMeasures = breach.measures;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading form data:", error);
+      // Use basic fallback data
+      loadedFormData = {
+        ...formData,
+        startDate: breach.incidentDate.split('T')[0],
+        discoveryDate: breach.discoveryDate ? breach.discoveryDate.split('T')[0] : "",
+        discoveryCircumstances: breach.description,
+        affectedPersonsCount: breach.estimatedAffectedPersons?.toString() || "",
+      };
+    }
+    
+    setFormData(loadedFormData);
     setShowForm(true);
     setActiveTab("form");
   };
@@ -280,22 +342,63 @@ export default function BreachAnalysisEnhanced() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.discoveryCircumstances.trim()) {
+      toast({
+        title: "Champ requis",
+        description: "Veuillez décrire les circonstances de découverte.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Transform comprehensive form data for storage
     const breachData = {
       companyId: 1,
-      description: formData.discoveryCircumstances || "Violation de données personnelles",
-      incidentDate: formData.startDate || new Date().toISOString().split('T')[0],
-      discoveryDate: formData.discoveryDate || new Date().toISOString().split('T')[0],
+      description: formData.discoveryCircumstances,
+      incidentDate: formData.startDate ? formData.startDate + (formData.startTime ? `T${formData.startTime}:00` : 'T12:00:00') : new Date().toISOString(),
+      discoveryDate: formData.discoveryDate ? formData.discoveryDate + (formData.discoveryTime ? `T${formData.discoveryTime}:00` : 'T12:00:00') : new Date().toISOString(),
       affectedPersons: parseInt(formData.affectedPersonsCount) || 0,
-      dataCategories: formData.dataCategories,
-      circumstances: formData.circumstances.join(', '),
-      consequences: formData.consequences.join(', '),
-      measures: [formData.immediateMeasures, formData.mediumTermMeasures, formData.longTermMeasures].filter(Boolean).join(', '),
+      dataCategories: formData.dataCategories.length > 0 ? formData.dataCategories : null,
       
-      // Store comprehensive data as string for AI analysis
+      // Comprehensive structured data for analysis
+      circumstances: JSON.stringify({
+        violationStatus: formData.violationStatus,
+        origins: formData.origins,
+        otherOrigin: formData.otherOrigin,
+        circumstances: formData.circumstances,
+        otherCircumstance: formData.otherCircumstance,
+        causes: formData.causes,
+        otherCause: formData.otherCause,
+        hasSubcontractors: formData.hasSubcontractors,
+        subcontractorDetails: formData.subcontractorDetails,
+        ongoingViolation: formData.ongoingViolation,
+        extendedPeriod: formData.extendedPeriod
+      }),
+      
+      consequences: JSON.stringify({
+        consequences: formData.consequences,
+        otherConsequence: formData.otherConsequence,
+        potentialHarms: formData.potentialHarms,
+        otherPotentialHarm: formData.otherPotentialHarm,
+        personCategories: formData.personCategories,
+        otherPersonCategory: formData.otherPersonCategory,
+        directlyIdentifiable: formData.directlyIdentifiable,
+        dataVolume: formData.dataVolume,
+        dataSupport: formData.dataSupport,
+        otherDataSupport: formData.otherDataSupport
+      }),
+      
+      measures: JSON.stringify({
+        immediate: formData.immediateMeasures,
+        mediumTerm: formData.mediumTermMeasures,
+        longTerm: formData.longTermMeasures,
+        other: formData.otherMeasures
+      }),
+      
+      // Store complete form data for future editing and AI analysis
       comprehensiveData: JSON.stringify(formData),
       
-      // Additional required fields
       status: 'draft'
     };
     
@@ -1277,16 +1380,50 @@ Généré le: ${new Date().toLocaleString()}
                             </div>
                           </td>
                           <td className="border border-gray-300 p-2 text-sm max-w-xs">
-                            <div className="truncate" title={breach.technicalMeasures || ''}>
-                              {(breach.technicalMeasures || '').substring(0, 50)}
-                              {(breach.technicalMeasures || '').length > 50 ? '...' : ''}
-                            </div>
+                            {(() => {
+                              try {
+                                const measures = breach.measures ? JSON.parse(breach.measures) : {};
+                                const allMeasures = [measures.immediate, measures.mediumTerm, measures.longTerm, measures.other]
+                                  .filter(Boolean).join(', ');
+                                return (
+                                  <div className="truncate" title={allMeasures || breach.technicalMeasures || 'Aucune mesure renseignée'}>
+                                    {(allMeasures || breach.technicalMeasures || 'Aucune mesure').substring(0, 50)}
+                                    {(allMeasures || breach.technicalMeasures || '').length > 50 ? '...' : ''}
+                                  </div>
+                                );
+                              } catch {
+                                return (
+                                  <div className="truncate" title={breach.measures || breach.technicalMeasures || 'Aucune mesure renseignée'}>
+                                    {(breach.measures || breach.technicalMeasures || 'Aucune mesure').substring(0, 50)}
+                                    {(breach.measures || breach.technicalMeasures || '').length > 50 ? '...' : ''}
+                                  </div>
+                                );
+                              }
+                            })()}
                           </td>
                           <td className="border border-gray-300 p-2 text-sm max-w-xs">
-                            <div className="truncate" title={breach.potentialImpact || ''}>
-                              {(breach.potentialImpact || '').substring(0, 50)}
-                              {(breach.potentialImpact || '').length > 50 ? '...' : ''}
-                            </div>
+                            {(() => {
+                              try {
+                                const consequences = breach.consequences ? JSON.parse(breach.consequences) : {};
+                                const allConsequences = [
+                                  ...(consequences.consequences || []),
+                                  ...(consequences.potentialHarms || [])
+                                ].join(', ');
+                                return (
+                                  <div className="truncate" title={allConsequences || breach.potentialImpact || 'Aucune répercussion renseignée'}>
+                                    {(allConsequences || breach.potentialImpact || 'Aucune répercussion').substring(0, 50)}
+                                    {(allConsequences || breach.potentialImpact || '').length > 50 ? '...' : ''}
+                                  </div>
+                                );
+                              } catch {
+                                return (
+                                  <div className="truncate" title={breach.consequences || breach.potentialImpact || 'Aucune répercussion renseignée'}>
+                                    {(breach.consequences || breach.potentialImpact || 'Aucune répercussion').substring(0, 50)}
+                                    {(breach.consequences || breach.potentialImpact || '').length > 50 ? '...' : ''}
+                                  </div>
+                                );
+                              }
+                            })()}
                           </td>
                           <td className="border border-gray-300 p-2 text-sm">
                             {breach.aiRecommendationAuthority ? (
