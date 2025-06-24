@@ -579,8 +579,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/breaches/ai-analysis", async (req, res) => {
     try {
+      // Debug session information
+      console.log('Session debug:', {
+        sessionId: req.sessionID,
+        userId: req.session?.userId,
+        hasSession: !!req.session,
+        sessionKeys: req.session ? Object.keys(req.session) : 'no session'
+      });
+
       // Check authentication
       if (!req.session?.userId) {
+        console.log('Authentication failed - no userId in session');
         return res.status(401).json({ error: "Authentication requise" });
       }
 
