@@ -90,57 +90,56 @@ export default function BreachAnalysisEnhanced() {
     ongoingViolation: false,
     discoveryCircumstances: "",
     
-    // Origines
+    // Origines de l'incident
     origins: [] as string[],
     otherOrigin: "",
     originUnknown: false,
     
-    // Circonstances
+    // Circonstances de la violation
     circumstances: [] as string[],
     otherCircumstance: "",
     circumstanceUnknown: false,
     
-    // Causes
+    // Causes de la violation
     causes: [] as string[],
     otherCause: "",
     causeUnknown: false,
     
-    // Types de violation
-    violationTypes: [] as string[],
-    otherViolationType: "",
+    // Sous-traitants
+    hasSubcontractors: false,
+    subcontractorDetails: "",
     
-    // Données concernées
+    // Catégories de personnes concernées
+    personCategories: [] as string[],
+    otherPersonCategory: "",
+    personCategoryUnknown: false,
+    affectedPersonsCount: "",
+    directlyIdentifiable: false,
+    
+    // Catégories de données personnelles
     dataCategories: [] as string[],
     otherDataCategory: "",
     dataCategoryUnknown: false,
+    dataVolume: "",
+    dataSupport: [] as string[],
+    otherDataSupport: "",
+    dataSupportUnknown: false,
     
-    // Nombre de personnes
-    exactPersonCount: "",
-    estimatedPersonCount: "",
-    personCountUnknown: false,
-    
-    // Conséquences
+    // Conséquences probables
     consequences: [] as string[],
     otherConsequence: "",
     consequenceUnknown: false,
     
+    // Préjudices potentiels
+    potentialHarms: [] as string[],
+    otherPotentialHarm: "",
+    potentialHarmUnknown: false,
+    
     // Mesures prises
-    measures: [] as string[],
-    otherMeasure: "",
-    measureUnknown: false,
-    
-    // Mesures de sécurité préexistantes
-    preexistingMeasures: [] as string[],
-    otherPreexistingMeasure: "",
-    
-    // Informations complémentaires
-    additionalInfo: "",
-    
-    // Évaluation interne
-    internalAssessment: "",
-    riskLevel: "",
-    notificationDecision: "",
-    notificationJustification: "",
+    immediateMeasures: "",
+    mediumTermMeasures: "",
+    longTermMeasures: "",
+    otherMeasures: "",
   });
 
   // Fetch breaches
@@ -228,27 +227,30 @@ export default function BreachAnalysisEnhanced() {
       causes: [],
       otherCause: "",
       causeUnknown: false,
-      violationTypes: [],
-      otherViolationType: "",
+      hasSubcontractors: false,
+      subcontractorDetails: "",
+      personCategories: [],
+      otherPersonCategory: "",
+      personCategoryUnknown: false,
+      affectedPersonsCount: "",
+      directlyIdentifiable: false,
       dataCategories: [],
       otherDataCategory: "",
       dataCategoryUnknown: false,
-      exactPersonCount: "",
-      estimatedPersonCount: "",
-      personCountUnknown: false,
+      dataVolume: "",
+      dataSupport: [],
+      otherDataSupport: "",
+      dataSupportUnknown: false,
       consequences: [],
       otherConsequence: "",
       consequenceUnknown: false,
-      measures: [],
-      otherMeasure: "",
-      measureUnknown: false,
-      preexistingMeasures: [],
-      otherPreexistingMeasure: "",
-      additionalInfo: "",
-      internalAssessment: "",
-      riskLevel: "",
-      notificationDecision: "",
-      notificationJustification: "",
+      potentialHarms: [],
+      otherPotentialHarm: "",
+      potentialHarmUnknown: false,
+      immediateMeasures: "",
+      mediumTermMeasures: "",
+      longTermMeasures: "",
+      otherMeasures: "",
     });
   };
 
@@ -281,26 +283,20 @@ export default function BreachAnalysisEnhanced() {
     // Transform comprehensive form data for storage
     const breachData = {
       companyId: 1,
-      description: formData.discoveryCircumstances,
-      incidentDate: formData.startDate,
-      discoveryDate: formData.discoveryDate,
-      affectedPersons: parseInt(formData.exactPersonCount || formData.estimatedPersonCount) || 0,
+      description: formData.discoveryCircumstances || "Violation de données personnelles",
+      incidentDate: formData.startDate || new Date().toISOString().split('T')[0],
+      discoveryDate: formData.discoveryDate || new Date().toISOString().split('T')[0],
+      affectedPersons: parseInt(formData.affectedPersonsCount) || 0,
       dataCategories: formData.dataCategories,
       circumstances: formData.circumstances.join(', '),
       consequences: formData.consequences.join(', '),
-      measures: formData.measures.join(', '),
+      measures: [formData.immediateMeasures, formData.mediumTermMeasures, formData.longTermMeasures].filter(Boolean).join(', '),
       
       // Store comprehensive data in JSON for AI analysis
       comprehensiveData: JSON.stringify(formData),
       
-      // Legacy fields for compatibility
-      estimatedAffectedPersons: parseInt(formData.exactPersonCount || formData.estimatedPersonCount) || 0,
-      technicalMeasures: formData.measures.join(', '),
-      organizationalMeasures: formData.preexistingMeasures.join(', '),
-      potentialImpact: formData.consequences.join(', '),
-      actualImpact: formData.otherConsequence,
-      breachType: formData.violationTypes.length > 0 ? formData.violationTypes[0] : 'confidentiality',
-      severity: formData.riskLevel || 'medium'
+      // Additional required fields
+      status: 'draft'
     };
     
     breachMutation.mutate(breachData);
@@ -639,22 +635,26 @@ Généré le: ${new Date().toLocaleString()}
                     </CardContent>
                   </Card>
 
-                  {/* Section 2: Origines */}
+                  {/* Section 2: Origines de l'incident */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">2. Origines de la violation</CardTitle>
+                      <CardTitle className="text-lg">2. Origines de l'incident</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
                         <Label>Sélectionnez les origines applicables</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="grid grid-cols-1 gap-2 mt-2">
                           {[
-                            'Action malveillante externe',
-                            'Action malveillante interne',
-                            'Erreur humaine',
-                            'Défaillance technique',
-                            'Catastrophe naturelle',
-                            'Force majeure'
+                            'Equipement perdu ou volé',
+                            'Papier perdu, volé ou laissé accessible dans un endroit non sécurisé',
+                            'Courrier perdu ou ouvert avant d\'être retourné à l\'envoyeur',
+                            'Piratage, logiciel malveillant (par exemple rançongiciel) et/ou hameçonnage',
+                            'Mise au rebut de documents papier contenant des données personnelles sans destruction physique',
+                            'Mise au rebut d\'appareils numériques contenant des données personnelles sans effacement sécurisé',
+                            'Publication non volontaire d\'informations',
+                            'Données de la mauvaise personne affichées sur le portail du client',
+                            'Données personnelles envoyées à un mauvais destinataire',
+                            'Informations personnelles divulguées de façon verbale'
                           ].map((origin) => (
                             <div key={origin} className="flex items-center space-x-2">
                               <Checkbox
@@ -675,7 +675,7 @@ Généré le: ${new Date().toLocaleString()}
                       </div>
                       
                       <div>
-                        <Label>Autre origine</Label>
+                        <Label>Autre origine (à préciser)</Label>
                         <Input
                           placeholder="Précisez une autre origine..."
                           value={formData.otherOrigin}
@@ -689,63 +689,250 @@ Généré le: ${new Date().toLocaleString()}
                           checked={formData.originUnknown}
                           onCheckedChange={(checked) => setFormData({ ...formData, originUnknown: checked as boolean })}
                         />
-                        <Label htmlFor="originUnknown" className="text-sm">Origine inconnue</Label>
+                        <Label htmlFor="originUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Section 3: Types de violation */}
+                  {/* Section 3: Circonstances de la violation */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">3. Types de violation</CardTitle>
+                      <CardTitle className="text-lg">3. Circonstances de la violation</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label>Sélectionnez les types applicables</Label>
+                        <Label>Sélectionnez les circonstances applicables</Label>
                         <div className="grid grid-cols-1 gap-2 mt-2">
                           {[
-                            'Violation de confidentialité',
-                            'Violation d\'intégrité',
-                            'Violation de disponibilité'
-                          ].map((type) => (
-                            <div key={type} className="flex items-center space-x-2">
+                            'Perte de confidentialité (divulgation ou accès non autorisé(e) ou accidentel(le) à des données à caractère personnel)',
+                            'Perte d\'intégrité (altération non autorisée ou accidentelle de données à caractère personnel)',
+                            'Perte de disponibilité (destruction ou perte accidentelle ou non autorisée de données à caractère personnel)'
+                          ].map((circumstance) => (
+                            <div key={circumstance} className="flex items-center space-x-2">
                               <Checkbox
-                                id={`type-${type}`}
-                                checked={formData.violationTypes.includes(type)}
+                                id={`circumstance-${circumstance}`}
+                                checked={formData.circumstances.includes(circumstance)}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
-                                    setFormData({ ...formData, violationTypes: [...formData.violationTypes, type] });
+                                    setFormData({ ...formData, circumstances: [...formData.circumstances, circumstance] });
                                   } else {
-                                    setFormData({ ...formData, violationTypes: formData.violationTypes.filter(t => t !== type) });
+                                    setFormData({ ...formData, circumstances: formData.circumstances.filter(c => c !== circumstance) });
                                   }
                                 }}
                               />
-                              <Label htmlFor={`type-${type}`} className="text-sm">{type}</Label>
+                              <Label htmlFor={`circumstance-${circumstance}`} className="text-sm">{circumstance}</Label>
                             </div>
                           ))}
                         </div>
                       </div>
+
+                      <div>
+                        <Label>Autre circonstance (à préciser)</Label>
+                        <Input
+                          placeholder="Précisez une autre circonstance..."
+                          value={formData.otherCircumstance}
+                          onChange={(e) => setFormData({ ...formData, otherCircumstance: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="circumstanceUnknown"
+                          checked={formData.circumstanceUnknown}
+                          onCheckedChange={(checked) => setFormData({ ...formData, circumstanceUnknown: checked as boolean })}
+                        />
+                        <Label htmlFor="circumstanceUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
+                      </div>
                     </CardContent>
                   </Card>
 
-                  {/* Section 4: Données concernées */}
+                  {/* Section 4: Causes de la violation */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">4. Données à caractère personnel concernées</CardTitle>
+                      <CardTitle className="text-lg">4. Cause(s) de la violation</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label>Catégories de données</Label>
+                        <Label>Sélectionnez les causes applicables</Label>
+                        <div className="grid grid-cols-1 gap-2 mt-2">
+                          {[
+                            'Acte interne malveillant',
+                            'Acte interne accidentel',
+                            'Acte externe malveillant',
+                            'Acte externe accidentel'
+                          ].map((cause) => (
+                            <div key={cause} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`cause-${cause}`}
+                                checked={formData.causes.includes(cause)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setFormData({ ...formData, causes: [...formData.causes, cause] });
+                                  } else {
+                                    setFormData({ ...formData, causes: formData.causes.filter(c => c !== cause) });
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`cause-${cause}`} className="text-sm">{cause}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Autre cause (à préciser)</Label>
+                        <Input
+                          placeholder="Précisez une autre cause..."
+                          value={formData.otherCause}
+                          onChange={(e) => setFormData({ ...formData, otherCause: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="causeUnknown"
+                          checked={formData.causeUnknown}
+                          onCheckedChange={(checked) => setFormData({ ...formData, causeUnknown: checked as boolean })}
+                        />
+                        <Label htmlFor="causeUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Section 5: Sous-traitants */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">5. Existence d'un ou de plusieurs sous-traitant(s)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="hasSubcontractors"
+                          checked={formData.hasSubcontractors}
+                          onCheckedChange={(checked) => setFormData({ ...formData, hasSubcontractors: checked as boolean })}
+                        />
+                        <Label htmlFor="hasSubcontractors">Oui, il y a des sous-traitants impliqués</Label>
+                      </div>
+
+                      {formData.hasSubcontractors && (
+                        <div>
+                          <Label>Nom(s) et coordonnées des sous-traitants</Label>
+                          <Textarea
+                            placeholder="Précisez les noms et coordonnées des sous-traitants impliqués..."
+                            value={formData.subcontractorDetails}
+                            onChange={(e) => setFormData({ ...formData, subcontractorDetails: e.target.value })}
+                            rows={3}
+                          />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Section 6: Catégories de personnes concernées */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">6. Catégories de personnes concernées</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Catégorie(s) de personnes</Label>
                         <div className="grid grid-cols-2 gap-2 mt-2">
                           {[
-                            'Données d\'identification',
-                            'Données de contact',
-                            'Données financières',
-                            'Données de santé',
-                            'Données sensibles',
-                            'Données de géolocalisation',
-                            'Données techniques',
-                            'Autres données personnelles'
+                            'Clients',
+                            'Prospects',
+                            'Salariés',
+                            'Mandataires sociaux',
+                            'Prestataires',
+                            'Fournisseurs',
+                            'Personnes vulnérables'
+                          ].map((category) => (
+                            <div key={category} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`person-${category}`}
+                                checked={formData.personCategories.includes(category)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setFormData({ ...formData, personCategories: [...formData.personCategories, category] });
+                                  } else {
+                                    setFormData({ ...formData, personCategories: formData.personCategories.filter(p => p !== category) });
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`person-${category}`} className="text-sm">{category}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Autres catégories (à préciser)</Label>
+                        <Input
+                          placeholder="Précisez d'autres catégories de personnes..."
+                          value={formData.otherPersonCategory}
+                          onChange={(e) => setFormData({ ...formData, otherPersonCategory: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="personCategoryUnknown"
+                          checked={formData.personCategoryUnknown}
+                          onCheckedChange={(checked) => setFormData({ ...formData, personCategoryUnknown: checked as boolean })}
+                        />
+                        <Label htmlFor="personCategoryUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
+                      </div>
+
+                      <div>
+                        <Label>Nombre (éventuellement approximatif) de personnes concernées</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Nombre de personnes concernées"
+                          value={formData.affectedPersonsCount}
+                          onChange={(e) => setFormData({ ...formData, affectedPersonsCount: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="directlyIdentifiable"
+                          checked={formData.directlyIdentifiable}
+                          onCheckedChange={(checked) => setFormData({ ...formData, directlyIdentifiable: checked as boolean })}
+                        />
+                        <Label htmlFor="directlyIdentifiable" className="text-sm">
+                          Ces personnes sont-elles identifiables directement ?
+                        </Label>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Section 7: Catégories de données personnelles */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">7. Catégories de données personnelles</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Nature des données personnelles touchées par la violation</Label>
+                        <div className="grid grid-cols-1 gap-2 mt-2">
+                          {[
+                            'Nom',
+                            'Prénom',
+                            'Date de naissance',
+                            'Etat civil (marié, divorcé, pacsé etc.)',
+                            'Filiation (parents, enfants etc.)',
+                            'Genre',
+                            'Numéro de sécurité sociale',
+                            'Coordonnées (adresse postale ou électronique, numéros de téléphone)',
+                            'Adresse IP',
+                            'Données transactionnelles (produits achetés, date heure et lieu d\'achat etc.)',
+                            'Données de connexion',
+                            'Données de localisation',
+                            'Documents officiels (Passeport, pièce d\'identité, etc.)',
+                            'Données relatives à des infractions, condamnations, mesures de sûreté',
+                            'Informations d\'ordre économique et financier (revenus, situation bancaire, etc.)',
+                            'Données comportementales (habitudes de vie, marques préférées etc.)',
+                            'Données sensibles (origine raciale, opinions politiques, santé, biométriques, etc.)'
                           ].map((category) => (
                             <div key={category} className="flex items-center space-x-2">
                               <Checkbox
@@ -765,58 +952,98 @@ Généré le: ${new Date().toLocaleString()}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Nombre exact de personnes concernées</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={formData.exactPersonCount}
-                            onChange={(e) => setFormData({ ...formData, exactPersonCount: e.target.value })}
-                            disabled={formData.personCountUnknown}
-                          />
-                        </div>
-                        <div>
-                          <Label>Nombre estimé (si exact inconnu)</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={formData.estimatedPersonCount}
-                            onChange={(e) => setFormData({ ...formData, estimatedPersonCount: e.target.value })}
-                            disabled={formData.personCountUnknown}
-                          />
-                        </div>
+                      <div>
+                        <Label>Autres données (à préciser)</Label>
+                        <Input
+                          placeholder="Précisez d'autres types de données..."
+                          value={formData.otherDataCategory}
+                          onChange={(e) => setFormData({ ...formData, otherDataCategory: e.target.value })}
+                        />
                       </div>
 
                       <div className="flex items-center space-x-2">
                         <Checkbox
-                          id="personCountUnknown"
-                          checked={formData.personCountUnknown}
-                          onCheckedChange={(checked) => setFormData({ ...formData, personCountUnknown: checked as boolean })}
+                          id="dataCategoryUnknown"
+                          checked={formData.dataCategoryUnknown}
+                          onCheckedChange={(checked) => setFormData({ ...formData, dataCategoryUnknown: checked as boolean })}
                         />
-                        <Label htmlFor="personCountUnknown" className="text-sm">Nombre de personnes inconnu</Label>
+                        <Label htmlFor="dataCategoryUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
+                      </div>
+
+                      <div>
+                        <Label>Volume de données concernées par la violation</Label>
+                        <Textarea
+                          placeholder="Décrivez le volume de données concernées..."
+                          value={formData.dataVolume}
+                          onChange={(e) => setFormData({ ...formData, dataVolume: e.target.value })}
+                          rows={2}
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Support des données concernées</Label>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          {[
+                            'Serveur',
+                            'Poste fixe',
+                            'Ordinateur portable',
+                            'Disque de sauvegarde',
+                            'Clé USB',
+                            'Téléphone portable',
+                            'Document papier'
+                          ].map((support) => (
+                            <div key={support} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`support-${support}`}
+                                checked={formData.dataSupport.includes(support)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setFormData({ ...formData, dataSupport: [...formData.dataSupport, support] });
+                                  } else {
+                                    setFormData({ ...formData, dataSupport: formData.dataSupport.filter(s => s !== support) });
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`support-${support}`} className="text-sm">{support}</Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Autres supports (à préciser)</Label>
+                        <Input
+                          placeholder="Précisez d'autres supports..."
+                          value={formData.otherDataSupport}
+                          onChange={(e) => setFormData({ ...formData, otherDataSupport: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="dataSupportUnknown"
+                          checked={formData.dataSupportUnknown}
+                          onCheckedChange={(checked) => setFormData({ ...formData, dataSupportUnknown: checked as boolean })}
+                        />
+                        <Label htmlFor="dataSupportUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Section 5: Conséquences */}
+                  {/* Section 8: Conséquences probables */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">5. Conséquences potentielles ou effectives</CardTitle>
+                      <CardTitle className="text-lg">8. Conséquences probables de la violation</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
                         <Label>Sélectionnez les conséquences applicables</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="grid grid-cols-1 gap-2 mt-2">
                           {[
-                            'Préjudices matériels',
-                            'Préjudices moraux',
-                            'Usurpation d\'identité',
-                            'Atteinte à la réputation',
-                            'Discrimination',
-                            'Chantage/extorsion',
-                            'Perte de confiance',
-                            'Aucune conséquence identifiée'
+                            'Les données ont été diffusées plus que nécessaire et ont échappé à la maîtrise des personnes concernées',
+                            'Les données peuvent être croisées ou rapprochées avec d\'autres informations relatives aux personnes concernées',
+                            'Les données peuvent être détournées par un tiers à d\'autres fins que celles prévues initialement et/ou de manière non loyale ou malveillante',
+                            'Les données peuvent être falsifiées'
                           ].map((consequence) => (
                             <div key={consequence} className="flex items-center space-x-2">
                               <Checkbox
@@ -835,75 +1062,129 @@ Généré le: ${new Date().toLocaleString()}
                           ))}
                         </div>
                       </div>
+
+                      <div>
+                        <Label>Autres conséquences (à préciser)</Label>
+                        <Input
+                          placeholder="Précisez d'autres conséquences..."
+                          value={formData.otherConsequence}
+                          onChange={(e) => setFormData({ ...formData, otherConsequence: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="consequenceUnknown"
+                          checked={formData.consequenceUnknown}
+                          onCheckedChange={(checked) => setFormData({ ...formData, consequenceUnknown: checked as boolean })}
+                        />
+                        <Label htmlFor="consequenceUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
+                      </div>
                     </CardContent>
                   </Card>
 
-                  {/* Section 6: Mesures prises */}
+                  {/* Section 9: Préjudices potentiels */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">6. Mesures prises pour remédier à la violation</CardTitle>
+                      <CardTitle className="text-lg">9. Préjudices potentiels</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label>Mesures techniques et organisationnelles</Label>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
+                        <Label>Nature des préjudices potentiels pour les personnes concernées</Label>
+                        <div className="grid grid-cols-1 gap-2 mt-2">
                           {[
-                            'Isolation du système compromis',
-                            'Changement des mots de passe',
-                            'Mise à jour de sécurité',
-                            'Suppression des données compromises',
-                            'Notification aux personnes concernées',
-                            'Formation du personnel',
-                            'Révision des procédures',
-                            'Audit de sécurité'
-                          ].map((measure) => (
-                            <div key={measure} className="flex items-center space-x-2">
+                            'Perte de contrôle sur les données à caractère personnel',
+                            'Limitation des droits des personnes concernées',
+                            'Discrimination',
+                            'Vol d\'identité',
+                            'Fraude',
+                            'Levée non autorisée de la pseudonymisation',
+                            'Pertes financières',
+                            'Atteinte à la réputation',
+                            'Atteinte à la vie privée',
+                            'Perte de la confidentialité de données protégées par un secret professionnel'
+                          ].map((harm) => (
+                            <div key={harm} className="flex items-center space-x-2">
                               <Checkbox
-                                id={`measure-${measure}`}
-                                checked={formData.measures.includes(measure)}
+                                id={`harm-${harm}`}
+                                checked={formData.potentialHarms.includes(harm)}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
-                                    setFormData({ ...formData, measures: [...formData.measures, measure] });
+                                    setFormData({ ...formData, potentialHarms: [...formData.potentialHarms, harm] });
                                   } else {
-                                    setFormData({ ...formData, measures: formData.measures.filter(m => m !== measure) });
+                                    setFormData({ ...formData, potentialHarms: formData.potentialHarms.filter(h => h !== harm) });
                                   }
                                 }}
                               />
-                              <Label htmlFor={`measure-${measure}`} className="text-sm">{measure}</Label>
+                              <Label htmlFor={`harm-${harm}`} className="text-sm">{harm}</Label>
                             </div>
                           ))}
                         </div>
                       </div>
+
+                      <div>
+                        <Label>Autres préjudices (à préciser)</Label>
+                        <Input
+                          placeholder="Précisez d'autres préjudices potentiels..."
+                          value={formData.otherPotentialHarm}
+                          onChange={(e) => setFormData({ ...formData, otherPotentialHarm: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="potentialHarmUnknown"
+                          checked={formData.potentialHarmUnknown}
+                          onCheckedChange={(checked) => setFormData({ ...formData, potentialHarmUnknown: checked as boolean })}
+                        />
+                        <Label htmlFor="potentialHarmUnknown" className="text-sm">Ne sait pas pour l'instant</Label>
+                      </div>
                     </CardContent>
                   </Card>
 
-                  {/* Section 7: Évaluation du risque */}
+                  {/* Section 10: Mesures prises */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">7. Évaluation interne du risque</CardTitle>
+                      <CardTitle className="text-lg">10. Mesures prises pour remédier à la violation</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <Label>Niveau de risque évalué</Label>
-                        <Select value={formData.riskLevel} onValueChange={(value) => setFormData({ ...formData, riskLevel: value })}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez le niveau de risque" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="low">Risque faible</SelectItem>
-                            <SelectItem value="medium">Risque modéré</SelectItem>
-                            <SelectItem value="high">Risque élevé</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Label>Mesures prises en réaction immédiate à la violation</Label>
+                        <Textarea
+                          placeholder="Décrivez les mesures prises immédiatement après la découverte de la violation..."
+                          value={formData.immediateMeasures}
+                          onChange={(e) => setFormData({ ...formData, immediateMeasures: e.target.value })}
+                          rows={3}
+                        />
                       </div>
 
                       <div>
-                        <Label>Justification de l'évaluation</Label>
+                        <Label>Mesures de moyen terme prises ou prévues pour revenir à une situation normale</Label>
                         <Textarea
-                          placeholder="Justifiez votre évaluation du niveau de risque..."
-                          value={formData.internalAssessment}
-                          onChange={(e) => setFormData({ ...formData, internalAssessment: e.target.value })}
+                          placeholder="Décrivez les mesures à moyen terme pour rétablir la situation..."
+                          value={formData.mediumTermMeasures}
+                          onChange={(e) => setFormData({ ...formData, mediumTermMeasures: e.target.value })}
                           rows={3}
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Mesures de moyen et long termes prises ou prévues pour éviter que la violation ne se reproduise</Label>
+                        <Textarea
+                          placeholder="Décrivez les mesures préventives pour éviter la répétition de l'incident..."
+                          value={formData.longTermMeasures}
+                          onChange={(e) => setFormData({ ...formData, longTermMeasures: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Autre - Préciser</Label>
+                        <Textarea
+                          placeholder="Autres mesures ou informations complémentaires..."
+                          value={formData.otherMeasures}
+                          onChange={(e) => setFormData({ ...formData, otherMeasures: e.target.value })}
+                          rows={2}
                         />
                       </div>
                     </CardContent>

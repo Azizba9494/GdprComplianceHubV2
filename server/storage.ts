@@ -881,20 +881,13 @@ export class DatabaseStorage implements IStorage {
       description: breachData.description,
       incidentDate: new Date(breachData.incidentDate),
       discoveryDate: breachData.discoveryDate ? new Date(breachData.discoveryDate) : null,
-      affectedPersons: breachData.affectedPersons || breachData.estimatedAffectedPersons,
+      affectedPersons: breachData.affectedPersons || 0,
       dataCategories: Array.isArray(breachData.dataCategories) ? breachData.dataCategories : [],
       circumstances: breachData.circumstances || '',
       consequences: breachData.consequences || '',
       measures: breachData.measures || '',
       comprehensiveData: breachData.comprehensiveData || null,
-      // Legacy fields for backward compatibility
-      technicalMeasures: breachData.technicalMeasures,
-      organizationalMeasures: breachData.organizationalMeasures,
-      potentialImpact: breachData.potentialImpact,
-      actualImpact: breachData.actualImpact,
-      breachType: breachData.breachType,
-      severity: breachData.severity,
-      estimatedAffectedPersons: breachData.estimatedAffectedPersons
+      status: breachData.status || 'draft'
     }).returning();
     return breach;
   }
