@@ -377,8 +377,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDataBreach(breach: InsertDataBreach): Promise<DataBreach> {
-    const [created] = await db.insert(dataBreaches).values(breach).returning();
-    return created;
+    console.log('Creating data breach with validated data:', JSON.stringify(breach, null, 2));
+    
+    try {
+      const [created] = await db.insert(dataBreaches).values(breach).returning();
+      console.log('Breach created successfully:', created);
+      return created;
+    } catch (error) {
+      console.error('Database insertion error:', error);
+      throw error;
+    }
   }
 
   async updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach> {
@@ -876,22 +884,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBreach(breachData: any) {
-    const [breach] = await db.insert(dataBreaches).values({
-      companyId: breachData.companyId,
-      description: breachData.description,
-      incidentDate: new Date(breachData.incidentDate),
-      discoveryDate: new Date(breachData.discoveryDate),
-      affectedPersons: breachData.estimatedAffectedPersons,
-      dataCategories: breachData.affectedDataTypes,
-      technicalMeasures: breachData.technicalMeasures,
-      organizationalMeasures: breachData.organizationalMeasures,
-      potentialImpact: breachData.potentialImpact,
-      actualImpact: breachData.actualImpact,
-      breachType: breachData.breachType,
-      severity: breachData.severity,
-      estimatedAffectedPersons: breachData.estimatedAffectedPersons
-    }).returning();
-    return breach;
+    console.log('Creating breach with data:', JSON.stringify(breachData, null, 2));
+    
+    try {
+      const [breach] = await db.insert(dataBreaches).values({
+        companyId: breachData.companyId,
+        description: breachData.description,
+        incidentDate: breachData.incidentDate,
+        dataCategories: breachData.dataCategories,
+        affectedPersons: breachData.affectedPersons,
+        circumstances: breachData.circumstances,
+        consequences: breachData.consequences,
+        measures: breachData.measures,
+        status: breachData.status
+      }).returning();
+      
+      console.log('Breach created successfully:', breach);
+      return breach;
+    } catch (error) {
+      console.error('Database insertion error:', error);
+      throw error;
+    }
   }
 
   async updateBreach(id: number, updates: any) {
