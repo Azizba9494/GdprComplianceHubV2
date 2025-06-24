@@ -672,10 +672,14 @@ Répondez de manière complète et utile à cette question en respectant tous le
     const client = await this.getClient();
     
     try {
+      // Récupérer le prompt actif pour la génération de politique de confidentialité
+      const prompts = await storage.getAiPrompts();
+      const activePrompt = prompts.find(p => p.name === 'Génération Politique Confidentialité' && p.isActive);
+      
       const model = client.getGenerativeModel({ 
         model: 'gemini-2.5-flash',
         generationConfig: {
-          maxOutputTokens: 16384, // Augmenté pour éviter la troncature
+          maxOutputTokens: 16384,
           temperature: 0.3,
         }
       });
@@ -685,8 +689,8 @@ Répondez de manière complète et utile à cette question en respectant tous le
         ? `\n\nDocuments de référence CNIL:\n${ragDocuments.join('\n\n---\n\n')}` 
         : '';
 
-      const prompt = `Vous êtes un expert juridique en protection des données. Générez une politique de confidentialité COMPLÈTE et DÉTAILLÉE conforme au RGPD pour l'entreprise suivante.
-
+      // Construire les informations de contexte
+      const companyInfo = `
 ENTREPRISE:
 - Nom: ${company.name}
 - Secteur: ${company.sector || 'Non spécifié'}
@@ -701,9 +705,23 @@ ${processingRecords.map((record: any) => `
   Données: ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : 'Non spécifiées'}
   Destinataires: ${Array.isArray(record.recipients) ? record.recipients.join(', ') : 'Non spécifiés'}
   Conservation: ${record.retention || 'Non spécifiée'}
-`).join('')}
+`).join('')}`;
 
-${ragContext}
+      let prompt;
+      
+      if (activePrompt?.prompt && activePrompt.prompt.trim().length > 10) {
+        // Utiliser le prompt configuré et remplacer les variables
+        prompt = activePrompt.prompt
+          .replace(/\{\{company\}\}/g, companyInfo)
+          .replace(/\{\{processingRecords\}\}/g, JSON.stringify(processingRecords))
+          .replace(/\{\{ragContext\}\}/g, ragContext);
+        
+        console.log(`[PRIVACY POLICY] Using configured prompt: ${activePrompt.name}`);
+      } else {
+        // Utiliser le prompt par défaut
+        prompt = `Vous êtes un expert juridique en protection des données. Générez une politique de confidentialité COMPLÈTE et DÉTAILLÉE conforme au RGPD pour l'entreprise suivante.
+
+${companyInfo}${ragContext}
 
 INSTRUCTIONS IMPORTANTES:
 - Générez une politique d'au moins 3000 mots
@@ -747,6 +765,9 @@ STRUCTURE OBLIGATOIRE:
 [DPO ou référent protection des données]
 
 Développez chaque section en détail avec des informations pratiques et juridiquement exactes.`;
+        
+        console.log(`[PRIVACY POLICY] Using default prompt (no configured prompt found)`);
+      }
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
