@@ -292,7 +292,7 @@ export default function BreachAnalysisEnhanced() {
       consequences: formData.consequences.join(', '),
       measures: [formData.immediateMeasures, formData.mediumTermMeasures, formData.longTermMeasures].filter(Boolean).join(', '),
       
-      // Store comprehensive data in JSON for AI analysis
+      // Store comprehensive data as string for AI analysis
       comprehensiveData: JSON.stringify(formData),
       
       // Additional required fields
