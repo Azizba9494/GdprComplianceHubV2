@@ -311,50 +311,72 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
             </CardContent>
           </Card>
 
-          {/* Résultat */}
-          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                Résultat de l'évaluation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
-                  <div className="mb-2">
-                    <Badge variant={getRecommendation().color as any}>
-                      {getRecommendation().type.toUpperCase()}
-                    </Badge>
+          {/* Résultat et Recommandation IA */}
+          {Object.keys(riskAnswers).length > 0 && (
+            <Card className={`border-2 ${getAipdRecommendation().type === 'obligatoire' ? 'border-red-200 bg-red-50 dark:bg-red-950/20' : 
+                                          getAipdRecommendation().type === 'vigilance' ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20' : 
+                                          'border-green-200 bg-green-50 dark:bg-green-950/20'}`}>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Analyse et Recommandation IA
+                </CardTitle>
+                <CardDescription>
+                  Analyse automatique basée sur les critères CNIL/CEPD
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 rounded-lg border">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-medium text-lg">{getAipdRecommendation().title}</span>
+                      <Badge variant={getAipdRecommendation().type === 'obligatoire' ? 'destructive' : 
+                                     getAipdRecommendation().type === 'vigilance' ? 'secondary' : 'default'}>
+                        Score: {calculateRiskScore()}/9
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {getAipdRecommendation().message}
+                      </p>
+                      
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Détails :</strong> {getAipdRecommendation().details}
+                      </p>
+                      
+                      <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded border-l-4 border-blue-500">
+                        <p className="text-sm"><strong>Justification :</strong></p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                          {getAipdRecommendation().justification}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm">{getRecommendation().message}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Score: {calculateScore().total}/13 critères ({calculateScore().mandatoryScore} obligatoires, {calculateScore().additionalScore} additionnels)
-                  </p>
-                </div>
 
-                <div className="flex gap-4">
-                  <Button 
-                    onClick={saveEvaluation}
-                    disabled={createEvaluationMutation.isPending}
-                    className="flex-1"
-                  >
-                    {createEvaluationMutation.isPending ? "Sauvegarde..." : "Sauvegarder l'évaluation"}
-                  </Button>
-                  {getRecommendation().type !== "non-requise" && (
+                  <div className="flex gap-4">
                     <Button 
-                      variant="outline"
-                      onClick={() => setLocation('/dpia/processing-selection')}
+                      onClick={saveEvaluation}
+                      disabled={createEvaluationMutation.isPending}
                       className="flex-1"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Créer l'AIPD
+                      {createEvaluationMutation.isPending ? "Sauvegarde..." : "Sauvegarder l'évaluation"}
                     </Button>
-                  )}
+                    {getAipdRecommendation().type === "obligatoire" && (
+                      <Button 
+                        variant="outline"
+                        onClick={() => setLocation('/dpia/processing-selection')}
+                        className="flex-1"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Créer l'AIPD
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     );
@@ -620,7 +642,7 @@ export default function DpiaList() {
                 Évaluation préliminaire AIPD
               </CardTitle>
               <CardDescription>
-                Sélectionnez un traitement pour déterminer s'il nécessite une analyse d'impact relative à la protection des données (AIPD).
+                Sélectionnez un traitement pour évaluer s'il nécessite une analyse d'impact relative à la protection des données (AIPD) selon les nouveaux critères CNIL/CEPD.
               </CardDescription>
             </CardHeader>
             <CardContent>
