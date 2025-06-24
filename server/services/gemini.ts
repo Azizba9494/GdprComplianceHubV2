@@ -479,7 +479,7 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
     try {
       const activeLlmConfig = await storage.getActiveLlmConfiguration();
       const model = client.getGenerativeModel({ 
-        model: activeLlmConfig?.modelName || 'gemini-1.5-flash',
+        model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
         generationConfig: {
           temperature: activeLlmConfig?.temperature || 0.3,
           maxOutputTokens: activeLlmConfig?.maxTokens || 3000,
@@ -505,7 +505,7 @@ Contexte: ${JSON.stringify(context || {})}
 
 Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
 
-      console.log(`[LLM] Using model: ${activeLlmConfig?.modelName || 'gemini-1.5-flash'}`);
+      console.log(`[LLM] Using model: ${activeLlmConfig?.modelName || 'gemini-2.5-flash'}`);
       console.log('[LLM] Sending prompt for breach analysis...');
 
       const result = await model.generateContent(fullPrompt);
