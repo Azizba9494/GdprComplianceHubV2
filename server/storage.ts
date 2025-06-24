@@ -869,6 +869,36 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  // Enhanced Breach management
+  async getBreachesByCompany(companyId: number) {
+    const breaches = await db.select().from(dataBreaches).where(eq(dataBreaches.companyId, companyId));
+    return breaches;
+  }
+
+  async createBreach(breachData: any) {
+    const [breach] = await db.insert(dataBreaches).values({
+      companyId: breachData.companyId,
+      description: breachData.description,
+      incidentDate: new Date(breachData.incidentDate),
+      discoveryDate: new Date(breachData.discoveryDate),
+      affectedPersons: breachData.estimatedAffectedPersons,
+      dataCategories: breachData.affectedDataTypes,
+      technicalMeasures: breachData.technicalMeasures,
+      organizationalMeasures: breachData.organizationalMeasures,
+      potentialImpact: breachData.potentialImpact,
+      actualImpact: breachData.actualImpact,
+      breachType: breachData.breachType,
+      severity: breachData.severity,
+      estimatedAffectedPersons: breachData.estimatedAffectedPersons
+    }).returning();
+    return breach;
+  }
+
+  async updateBreach(id: number, updates: any) {
+    const [breach] = await db.update(dataBreaches).set(updates).where(eq(dataBreaches.id, id)).returning();
+    return breach;
+  }
+
   async getUserSubscription(userId: number): Promise<Subscription | undefined> {
     const [subscription] = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
     return subscription;
