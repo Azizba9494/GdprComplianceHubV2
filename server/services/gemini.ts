@@ -501,20 +501,54 @@ Schéma de réponse attendu: ${JSON.stringify(schema)}
 
 Contexte: ${JSON.stringify(context || {})}
 
-Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
+Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire, sans markdown, sans explication.
+IMPORTANT: La réponse doit commencer par { et finir par } uniquement.`;
 
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
       const text = response.text();
 
+      console.log('Raw Gemini response:', text);
+      
       try {
         return JSON.parse(text);
       } catch (parseError) {
-        // Attempt to extract JSON from the response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
+        console.log('Direct JSON parse failed, attempting extraction...');
+        
+        // Try to extract JSON from the response with multiple patterns
+        let jsonMatch = text.match(/\{[\s\S]*\}/);
+        
+        if (!jsonMatch) {
+          // Try looking for JSON between code blocks
+          jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            try {
+              return JSON.parse(jsonMatch[1]);
+            } catch (e) {
+              console.log('Failed to parse extracted JSON from code blocks');
+            }
+          }
         }
+        
+        if (jsonMatch) {
+          try {
+            return JSON.parse(jsonMatch[0]);
+          } catch (e) {
+            console.log('Failed to parse extracted JSON:', e);
+          }
+        }
+        
+        // Last resort: try to clean up the text and extract JSON
+        const cleanedText = text.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+        if (cleanedText.startsWith('{') && cleanedText.endsWith('}')) {
+          try {
+            return JSON.parse(cleanedText);
+          } catch (e) {
+            console.log('Failed to parse cleaned text:', e);
+          }
+        }
+        
+        console.error('Complete response that failed to parse:', text);
         throw new Error('Impossible de parser la réponse JSON');
       }
     } catch (error: any) {
