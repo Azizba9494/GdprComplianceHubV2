@@ -669,7 +669,6 @@ export default function Admin() {
 
         {/* AI Prompts Management */}
         <TabsContent value="prompts" className="space-y-6">
-          <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Gestion des prompts IA</h3>
               <div className="flex space-x-2">
