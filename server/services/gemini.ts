@@ -690,6 +690,11 @@ Priorisez les actions selon leur urgence légale et leur impact sur la conformit
     // Récupérer le prompt actif pour le chatbot
     const activePrompt = await storage.getActivePromptByCategory('chatbot');
     
+    // Charger les documents spécifiquement associés au chatbot
+    if (!ragDocuments) {
+      ragDocuments = await this.loadRagDocuments('chatbot');
+    }
+    
     let basePrompt;
     if (activePrompt?.prompt && activePrompt.prompt.trim().length > 10) {
       basePrompt = activePrompt.prompt;
@@ -763,7 +768,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
         }
       });
 
-      const ragDocuments = await this.loadRagDocuments();
+      const ragDocuments = await this.loadRagDocuments('Génération Politique Confidentialité');
       const ragContext = ragDocuments && ragDocuments.length > 0 
         ? `\n\nDocuments de référence CNIL:\n${ragDocuments.join('\n\n---\n\n')}` 
         : '';
