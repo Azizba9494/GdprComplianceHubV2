@@ -361,7 +361,7 @@ export class DatabaseStorage implements IStorage {
   async createPrivacyPolicy(policy: InsertPrivacyPolicy): Promise<PrivacyPolicy> {
     const [created] = await db.insert(privacyPolicies).values(policy).returning();
     return created;
-  }
+  },
 
   async updatePrivacyPolicy(id: number, updates: Partial<InsertPrivacyPolicy>): Promise<PrivacyPolicy> {
     const [updated] = await db.update(privacyPolicies).set(updates).where(eq(privacyPolicies.id, id)).returning();
