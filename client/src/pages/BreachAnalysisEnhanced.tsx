@@ -1503,17 +1503,6 @@ Généré le: ${new Date().toLocaleString()}
                               >
                                 {expandedRows.has(breach.id) ? '−' : '+'}
                               </Button>
-                              {breach.aiJustification && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setShowAnalysisModal(breach)}
-                                  title="Voir l'analyse IA"
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Brain className="w-3 h-3" />
-                                </Button>
-                              )}
                             </div>
                           </td>
                           
