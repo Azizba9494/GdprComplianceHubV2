@@ -42,6 +42,8 @@ export interface AIContext {
     recommendedMeasures: string[];
     specificRequirements: string[];
   };
+  technicalMeasures: string[];
+  organizationalMeasures: string[];
 }
 
 export class ContextExtractor {
@@ -98,6 +100,9 @@ export class ContextExtractor {
 
     // Extract security measures from DPIA data instead of processing record
     const dpiaSecurityMeasures = this.extractDpiaSecurityMeasures(existingDpiaData);
+    
+    // Extract technical and organizational measures separately
+    const { technical, organizational } = this.extractTechnicalAndOrganizationalMeasures(existingDpiaData);
 
     return {
       company: {
@@ -124,7 +129,9 @@ export class ContextExtractor {
       field: questionField,
       companyContext,
       industryContext,
-      privacyPolicyContent
+      privacyPolicyContent,
+      technicalMeasures: technical,
+      organizationalMeasures: organizational
     };
   }
 
@@ -412,6 +419,58 @@ export class ContextExtractor {
   }
 
   /**
+   * Extract technical and organizational measures separately
+   */
+  extractTechnicalAndOrganizationalMeasures(dpiaData: any): { technical: string[], organizational: string[] } {
+    const technical: string[] = [];
+    const organizational: string[] = [];
+
+    // Extract from securityMeasures (predefined CNIL measures)
+    if (Array.isArray(dpiaData?.securityMeasures)) {
+      dpiaData.securityMeasures.forEach((measure: any) => {
+        if (measure.name) {
+          const status = measure.implemented ? 'mise en œuvre' : 'prévue';
+          const measureText = `${measure.name}: ${measure.description || `Mesure ${status}`} (${status})`;
+          
+          // Categorize based on measure category
+          if (measure.category && 
+              (measure.category.toLowerCase().includes('technique') || 
+               measure.category.toLowerCase().includes('chiffrement') ||
+               measure.category.toLowerCase().includes('authentification') ||
+               measure.category.toLowerCase().includes('accès'))) {
+            technical.push(measureText);
+          } else {
+            organizational.push(measureText);
+          }
+        }
+      });
+    }
+
+    // Extract from customSecurityMeasures (user-defined measures)
+    if (Array.isArray(dpiaData?.customSecurityMeasures)) {
+      dpiaData.customSecurityMeasures.forEach((measure: any) => {
+        if (measure.name) {
+          const status = measure.implemented ? 'mise en œuvre' : 'prévue';
+          const measureText = `${measure.name}: ${measure.description || `Mesure personnalisée ${status}`} (${status})`;
+          
+          // Categorize based on measure category
+          if (measure.category && 
+              (measure.category.toLowerCase().includes('technique') || 
+               measure.category.toLowerCase().includes('chiffrement') ||
+               measure.category.toLowerCase().includes('authentification') ||
+               measure.category.toLowerCase().includes('accès'))) {
+            technical.push(measureText);
+          } else {
+            organizational.push(measureText);
+          }
+        }
+      });
+    }
+
+    return { technical, organizational };
+  }
+
+  /**
    * Format context for AI prompt
    */
   formatContextForAI(context: AIContext): string {
@@ -498,6 +557,18 @@ ${context.industryContext.specificRequirements.map(req => `- ${req}`).join('\n')
       
       sections.push(`POLITIQUE DE CONFIDENTIALITÉ ACTIVE:
 ${cleanedContent.substring(0, 2000)}${cleanedContent.length > 2000 ? '...' : ''}`);
+    }
+
+    // Extract technical and organizational measures separately
+    const { technical, organizational } = this.extractTechnicalAndOrganizationalMeasures(context.existingDpiaData);
+    
+    if (technical.length > 0 || organizational.length > 0) {
+      sections.push(`MESURES DE SÉCURITÉ DÉTAILLÉES:
+Mesures techniques:
+${technical.length > 0 ? technical.map(m => `- ${m}`).join('\n') : '- Aucune mesure technique spécifiée'}
+
+Mesures organisationnelles:
+${organizational.length > 0 ? organizational.map(m => `- ${m}`).join('\n') : '- Aucune mesure organisationnelle spécifiée'}`);
     }
 
     // Existing DPIA data
