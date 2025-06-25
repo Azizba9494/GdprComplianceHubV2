@@ -8,7 +8,7 @@ export class GeminiService {
   private async loadRagDocuments(promptName?: string): Promise<string[]> {
     try {
       const ragDocuments: string[] = [];
-
+      
       if (promptName) {
         // Load documents only for the specific prompt
         const specificPrompt = await storage.getAiPromptByName(promptName);
@@ -19,7 +19,7 @@ export class GeminiService {
             const documentIds = promptDocuments
               .sort((a, b) => a.priority - b.priority)
               .map(pd => pd.documentId);
-
+            
             for (const docId of documentIds) {
               const document = await storage.getRagDocument(docId);
               if (document && document.isActive) {
@@ -32,7 +32,7 @@ export class GeminiService {
         // Original behavior: Get all active prompts
         const allPrompts = await storage.getAiPrompts();
         const activePrompts = allPrompts.filter(p => p.isActive);
-
+        
         // For each active prompt, get associated documents
         for (const prompt of activePrompts) {
           try {
@@ -41,7 +41,7 @@ export class GeminiService {
               const documentIds = promptDocuments
                 .sort((a, b) => a.priority - b.priority)
                 .map(pd => pd.documentId);
-
+              
               for (const docId of documentIds) {
                 const document = await storage.getRagDocument(docId);
                 if (document && document.isActive && !ragDocuments.includes(document.content)) {
@@ -54,7 +54,7 @@ export class GeminiService {
           }
         }
       }
-
+      
       console.log(`[RAG] Found ${ragDocuments.length} documents${promptName ? ` for prompt ${promptName}` : ' total'}`);
       return ragDocuments;
     } catch (error) {
@@ -67,7 +67,7 @@ export class GeminiService {
     // Try to get active LLM configuration
     try {
       const activeLlmConfig = await storage.getActiveLlmConfiguration();
-
+      
       if (activeLlmConfig && activeLlmConfig.provider === 'google') {
         const apiKey = process.env[activeLlmConfig.apiKeyName];
         if (apiKey) {
@@ -78,18 +78,190 @@ export class GeminiService {
     } catch (error) {
       console.log('[LLM] Error getting active config, using fallback');
     }
-
+    
     // Fallback to environment variable
     const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       throw new Error('Google API key not configured');
     }
-
+    
     console.log('[LLM] Using fallback environment API key');
     return new GoogleGenerativeAI(apiKey);
   }
 
-  // AI-assisted DPIA questionnaire responses (legacy method)
+  // AI-assisted DPIA questionnaire responses
+  async generateDpiaResponse(
+    questionField: string, 
+    companyInfo: any, 
+    existingDpiaData: any, 
+    processingRecords: any[], 
+    ragDocuments?: string[]
+  ): Promise<{ response: string }> {
+    // Find the specific processing record for this DPIA
+    const specificProcessingRecord = processingRecords.find(r => r.id === existingDpiaData?.processingRecordId);
+    
+    // Context analysis focused on the specific treatment
+    const companyContext = `
+Profil de l'entreprise:
+- Nom: ${companyInfo.name}
+- Secteur: ${companyInfo.sector || 'Non spécifié'}  
+- Taille: ${companyInfo.size || 'Non spécifiée'}
+
+TRAITEMENT ANALYSÉ DANS CETTE AIPD:
+${specificProcessingRecord ? `
+- Nom: ${specificProcessingRecord.name}
+- Finalité: ${specificProcessingRecord.purpose}
+- Base légale: ${specificProcessingRecord.legalBasis || 'Non spécifiée'}
+- Catégories de données: ${specificProcessingRecord.dataCategories || 'Non spécifiées'}
+- Personnes concernées: ${specificProcessingRecord.dataSubjects || 'Non spécifiées'}
+- Durée de conservation: ${specificProcessingRecord.retentionPeriod || 'Non spécifiée'}
+` : 'Aucun traitement spécifique identifié'}
+
+IMPORTANT: Cette AIPD concerne UNIQUEMENT le traitement "${specificProcessingRecord?.name || 'en cours d\'analyse'}", pas l'ensemble des activités de l'entreprise.
+`;
+
+    // Knowledge base from RAG documents
+    const knowledgeBase = ragDocuments && ragDocuments.length > 0 ? 
+      `\n\nDocuments de référence CNIL à prioriser:\n${ragDocuments.join('\n\n---\n\n')}` : '';
+
+    let specificPrompt = '';
+    
+    switch (questionField) {
+      case 'generalDescription':
+        specificPrompt = `En tant qu'expert DPIA, rédigez une description générale UNIQUEMENT pour le traitement "${specificProcessingRecord?.name}" en cours d'analyse.
+
+ATTENTION: Ne mentionnez pas l'ensemble des traitements de l'entreprise. Concentrez-vous exclusivement sur ce traitement spécifique.
+
+Incluez pour ce traitement uniquement:
+- Nature précise du traitement analysé
+- Portée spécifique (qui est concerné par ce traitement particulier)
+- Contexte et objectifs de ce traitement
+
+Commencez par: "Le traitement '${specificProcessingRecord?.name}' consiste en..."`;
+        break;
+
+      case 'processingPurposes':
+        specificPrompt = `Définissez les finalités précises de ce traitement AIPD selon les exigences RGPD.
+        
+Les finalités doivent être déterminées, explicites et légitimes. Distinguez:
+- Finalité principale (objectif principal du traitement)
+- Finalités secondaires éventuelles (statistiques, amélioration du service)
+
+Basez-vous sur le secteur d'activité "${companyInfo.sector}" pour proposer des finalités cohérentes.`;
+        break;
+
+      case 'dataProcessors':
+        specificPrompt = `Identifiez les sous-traitants potentiels pour ce type de traitement.
+        
+D'après vos informations, votre entreprise utilise déjà plusieurs prestataires. Analysez lesquels pourraient être impliqués dans ce nouveau traitement et rappellez les obligations contractuelles RGPD.
+
+Structure attendue: Pour chaque sous-traitant, précisez son rôle et rappelez la nécessité d'un contrat de sous-traitance conforme à l'article 28 du RGPD.`;
+        break;
+
+      case 'dataMinimization':
+        specificPrompt = `Analysez la minimisation des données pour ce traitement selon l'article 5.1.c du RGPD.
+        
+Pour chaque catégorie de données collectées, justifiez en quoi elle est "adéquate, pertinente et limitée à ce qui est nécessaire".
+Proposez des alternatives si certaines données semblent excessives.
+
+Exemple: "Pour la finalité de livraison, l'adresse complète est nécessaire, mais le numéro de téléphone fixe pourrait être optionnel si le mobile est fourni."`;
+        break;
+
+      case 'retentionJustification':
+        specificPrompt = `Justifiez les durées de conservation selon les obligations légales du secteur "${companyInfo.sector}".
+        
+Référez-vous aux délais légaux applicables et proposez des durées différenciées selon:
+- La phase active du traitement
+- L'archivage intermédiaire (si applicable)
+- Les obligations légales de conservation
+
+Mentionnez les processus de suppression/archivage à mettre en place.`;
+        break;
+
+      case 'rightsInformation':
+        specificPrompt = `Décrivez les modalités d'information des personnes concernées selon les articles 13-14 du RGPD.
+        
+Précisez:
+- Les supports d'information (formulaires, site web, affichage)
+- Le moment de l'information (collecte directe/indirecte)
+- Le contenu obligatoire (responsable, finalités, droits, etc.)
+- L'adaptation au public cible`;
+        break;
+
+      case 'securityMeasures':
+        specificPrompt = `Listez les mesures de sécurité techniques et organisationnelles selon l'article 32 du RGPD.
+        
+Structurez par catégories:
+- Contrôle d'accès (authentification, habilitations)
+- Chiffrement (stockage, transit)  
+- Traçabilité et logging
+- Sauvegardes et continuité
+- Sécurité physique
+- Formation du personnel
+- Gestion des incidents
+
+Adaptez au niveau de risque et aux moyens d'une ${companyInfo.size || 'PME'}.`;
+        break;
+
+      case 'dpoAdvice':
+        specificPrompt = `Rédigez l'avis du Délégué à la Protection des Données sur cette AIPD.
+        
+L'avis doit porter sur:
+- La méthodologie utilisée
+- La complétude de l'analyse
+- La pertinence des mesures proposées
+- Les points d'attention particuliers
+- Les recommandations d'amélioration
+
+Adoptez un ton professionnel de DPO expérimenté.`;
+        break;
+
+      case 'riskScenarios':
+        specificPrompt = `Analysez les risques pour les droits et libertés des personnes selon la méthodologie CNIL pour le traitement "${specificProcessingRecord?.name}".
+
+Évaluez les 3 scénarios de risque fondamentaux:
+
+1. ACCÈS ILLÉGITIME AUX DONNÉES
+- Impacts potentiels sur les personnes concernées
+- Menaces identifiées (piratage, vol, indiscrétion, etc.)
+- Sources de risque (humaines, techniques, organisationnelles)
+- Mesures existantes ou prévues
+
+2. MODIFICATION NON DÉSIRÉE DES DONNÉES
+- Impacts sur les personnes (erreurs, décisions erronées, etc.)
+- Menaces (erreurs humaines, bugs, malveillance, etc.)
+- Sources de risque spécifiques à l'intégrité
+- Mesures de protection
+
+3. DISPARITION DES DONNÉES
+- Conséquences pour les personnes concernées
+- Menaces (pannes, suppressions, catastrophes, etc.)
+- Sources de risque pour la disponibilité
+- Mesures de sauvegarde et continuité
+
+Pour chaque scénario, proposez une évaluation sur l'échelle CNIL: négligeable, limitée, importante, maximale.
+
+Répondez en format structuré avec des sections claires pour chaque scénario.`;
+        break;
+
+      default:
+        specificPrompt = `Analysez le champ "${questionField}" UNIQUEMENT pour le traitement "${specificProcessingRecord?.name}" en cours d'analyse.
+
+IMPORTANT: Cette analyse concerne exclusivement ce traitement spécifique, pas l'ensemble des activités de l'entreprise.
+
+Fournissez une réponse adaptée dans le contexte d'une AIPD RGPD pour ce traitement particulier.`;
+    }
+
+    const fullPrompt = `${companyContext}${specificPrompt}${knowledgeBase}
+
+Répondez de manière professionnelle, précise et directement applicable. Citez les articles RGPD pertinents quand approprié.`;
+
+    const client = await this.getClient();
+    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    
+    const response = await model.generateContent(fullPrompt);
+    return { response: response.response.text() || "" };
+  }
 
   // Generate risk assessment suggestions
   async generateRiskAssessment(
@@ -150,9 +322,9 @@ Répondez en JSON structuré:
 
     const client = await this.getClient();
     const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+    
     const response = await model.generateContent(prompt);
-
+    
     try {
       const jsonMatch = response.response.text().match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -161,21 +333,21 @@ Répondez en JSON structuré:
     } catch (error) {
       console.error('Error parsing risk assessment JSON:', error);
     }
-
+    
     return { risks: [] };
   }
 
   async generateResponse(prompt: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
     const client = await this.getClient();
-
+    
     try {
       const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+      
       let contextSection = '';
       if (ragDocuments && ragDocuments.length > 0) {
         contextSection = `\n\nDocuments de référence à prioriser dans votre réponse:\n${ragDocuments.join('\n\n---\n\n')}`;
       }
-
+      
       const fullPrompt = `Vous êtes un expert en conformité RGPD qui aide les entreprises françaises VSE/PME. Répondez en français de manière claire et professionnelle.
 
 ${contextSection ? 'IMPORTANT: Utilisez en priorité les informations des documents de référence fournis ci-dessous pour répondre à la question.' : ''}
@@ -248,15 +420,15 @@ Rédigez une réponse précise, personnalisée et professionnelle qui:
 2. S'adapte au contexte sectoriel et aux risques identifiés
 3. Propose des éléments concrets et actionnables
 4. Respecte la méthodologie CNIL pour les AIPD`;
-
+      
       console.log("[DPIA AI] Using automated context extraction for field:", context.field);
       console.log("[DPIA AI] Custom prompt length:", customPrompt.length, "chars");
       console.log("[DPIA AI] Processing:", context.currentProcessing?.name || 'None');
       console.log("[DPIA AI] Industry context:", context.industryContext ? 'Available' : 'Generic');
       console.log("[DPIA AI] Related records:", context.relatedProcessingRecords.length);
-
+      
       const response = await model.generateContent(finalPrompt);
-
+      
       return {
         response: response.response.text() || "Impossible de générer une réponse pour ce champ."
       };
@@ -275,7 +447,7 @@ Rédigez une réponse précise, personnalisée et professionnelle qui:
     ragDocuments?: string[]
   ): Promise<{ analysis: string }> {
     const client = await this.getClient();
-
+    
     try {
       const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
@@ -324,19 +496,19 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
 
   async generateStructuredResponse(prompt: string, schema: any, context?: any, ragDocuments?: string[]): Promise<any> {
     const client = await this.getClient();
-
+    
     try {
       const activeLlmConfig = await storage.getActiveLlmConfiguration();
-
+      
       // For breach analysis, use higher token limit to handle comprehensive data
       const isBreachAnalysis = prompt.includes('violation') || prompt.includes('breach') || 
                               (context && (context.description || context.comprehensiveData));
       const maxTokens = isBreachAnalysis ? 8192 : (activeLlmConfig?.maxTokens || 3000);
-
+      
       const model = client.getGenerativeModel({ 
         model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
         generationConfig: {
-          temperature: typeof activeLlmConfig?.temperature === 'string' ? parseFloat(activeLlmConfig.temperature) : activeLlmConfig?.temperature || 0.3,
+          temperature: activeLlmConfig?.temperature || 0.3,
           maxOutputTokens: maxTokens,
           responseMimeType: "application/json",
         }
@@ -372,7 +544,7 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
 
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
-
+      
       // Check if the response object exists
       if (!response) {
         console.error('[LLM] No response object received from Gemini');
@@ -419,14 +591,14 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
       } catch (parseError) {
         console.error('[LLM] JSON parse error:', parseError);
         console.error('[LLM] Raw response:', text);
-
+        
         // Attempt to extract JSON from markdown code blocks
         let jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
         if (!jsonMatch) {
           // Try to find any JSON-like structure
           jsonMatch = text.match(/\{[\s\S]*\}/);
         }
-
+        
         if (jsonMatch) {
           try {
             const extractedJson = jsonMatch[1] || jsonMatch[0];
@@ -436,7 +608,7 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
             console.error('[LLM] Second parse attempt failed:', secondParseError);
           }
         }
-
+        
         // Return fallback response for breach analysis
         if (prompt.includes('violation') || prompt.includes('breach')) {
           console.log('[LLM] Returning fallback response for breach analysis');
@@ -452,12 +624,12 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
             ]
           };
         }
-
+        
         throw new Error('Impossible de parser la réponse JSON');
       }
     } catch (error: any) {
       console.error('[LLM] Gemini API error:', error);
-
+      
       // For breach analysis, provide a meaningful fallback
       if (prompt.includes('violation') || prompt.includes('breach')) {
         console.log('[LLM] API error - returning fallback response for breach analysis');
@@ -473,7 +645,7 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
           ]
         };
       }
-
+      
       throw new Error(`Erreur Gemini API: ${error.message}`);
     }
   }
@@ -507,7 +679,7 @@ Priorisez les actions selon leur urgence légale et leur impact sur la conformit
           dueDate: "string (optional, ISO date)"
         }
       ],
-      overallRiskScore: 0,
+      overallRiskScore: "number (0-100)",
       summary: "string"
     };
 
@@ -517,12 +689,12 @@ Priorisez les actions selon leur urgence légale et leur impact sur la conformit
   async getChatbotResponse(message: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
     // Récupérer le prompt actif pour le chatbot
     const activePrompt = await storage.getActivePromptByCategory('chatbot');
-
+    
     // Charger les documents spécifiquement associés au chatbot
     if (!ragDocuments) {
       ragDocuments = await this.loadRagDocuments('chatbot');
     }
-
+    
     let basePrompt;
     if (activePrompt?.prompt && activePrompt.prompt.trim().length > 10) {
       basePrompt = activePrompt.prompt;
@@ -576,18 +748,18 @@ Répondez de manière complète et utile à cette question en respectant tous le
       : `${basePrompt}\n\nQuestion de l'utilisateur: ${message}`;
 
     console.log(`[CHATBOT] Final prompt length: ${finalPrompt.length} chars`);
-
+    
     return await this.generateResponse(finalPrompt, context, ragDocuments);
   }
 
   async generatePrivacyPolicy(company: any, processingRecords: any[]): Promise<{ content: string }> {
     const client = await this.getClient();
-
+    
     try {
       // Récupérer le prompt actif pour la génération de politique de confidentialité
       const prompts = await storage.getAiPrompts();
       const activePrompt = prompts.find(p => p.name === 'Génération Politique Confidentialité' && p.isActive);
-
+      
       const model = client.getGenerativeModel({ 
         model: 'gemini-2.5-flash',
         generationConfig: {
@@ -616,31 +788,111 @@ ${processingRecords.map((record: any) => `
   Base légale: ${record.legalBasis}
   Données: ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : 'Non spécifiées'}
   Destinataires: ${Array.isArray(record.recipients) ? record.recipients.join(', ') : 'Non spécifiés'}
-`).join('')}
+  Conservation: ${record.retention || 'Non spécifiée'}
+`).join('')}`;
+
+      let prompt;
+      
+      if (activePrompt?.prompt && activePrompt.prompt.trim().length > 10) {
+        // Utiliser le prompt configuré et remplacer les variables et placeholders
+        // Ajouter des instructions spécifiques à l'IA avant le prompt principal
+        const aiInstructions = `INSTRUCTIONS IMPORTANTES POUR LA GÉNÉRATION:
+- Utilisez EXCLUSIVEMENT les informations réelles de l'entreprise fournies ci-dessous
+- Remplacez TOUS les placeholders [INDIQUER...] par les vraies données de l'entreprise
+- Ne laissez aucun placeholder non rempli dans la politique finale
+- Adaptez le contenu au secteur d'activité spécifique de l'entreprise
+- Utilisez les vrais traitements de données listés ci-dessous
+
+DONNÉES DE L'ENTREPRISE:
+${companyInfo}
+
+MAINTENANT, générez la politique de confidentialité en suivant le template ci-dessous:
+
 `;
 
-      // Utiliser le prompt configuré ou un prompt par défaut
-      const prompt = activePrompt?.prompt || `
-Générez une politique de confidentialité complète et conforme au RGPD pour l'entreprise {{company}}.
+        prompt = aiInstructions + activePrompt.prompt
+          // Variables avec syntaxe {{}}
+          .replace(/\{\{company\}\}/g, companyInfo)
+          .replace(/\{\{processingRecords\}\}/g, JSON.stringify(processingRecords))
+          .replace(/\{\{ragContext\}\}/g, ragContext)
+          // Variables avec syntaxe ${} - remplacer par les données réelles
+          .replace(/\$\{company\.name\}/g, company.name || 'Entreprise')
+          .replace(/\$\{company\.sector\}/g, company.sector || 'Non spécifié')
+          .replace(/\$\{company\.size\}/g, company.size || 'Non spécifiée')
+          .replace(/\$\{company\.address\}/g, company.address || 'Non spécifiée')
+          .replace(/\$\{company\.email\}/g, company.email || 'contact@entreprise.fr')
+          .replace(/\$\{company\.phone\}/g, company.phone || 'Non spécifié')
+          .replace(/\$\{company\.website\}/g, company.website || 'Non spécifié')
+          // Variables pour les traitements
+          .replace(/\$\{processingRecords\}/g, JSON.stringify(processingRecords))
+          .replace(/\$\{ragContext\}/g, ragContext)
+          // Remplacer les placeholders textuels par les vraies données
+          .replace(/\[INDIQUER LE SECTEUR D'ACTIVITÉ DE L'ENTREPRISE\]/g, company.sector || 'Non spécifié')
+          .replace(/\[INDIQUER LA TAILLE\/CATÉGORIE DE L'ENTREPRISE\]/g, company.size || 'Non spécifiée')
+          .replace(/\[INDIQUER L'ADRESSE COMPLÈTE DU SIÈGE SOCIAL\]/g, company.address || 'Non spécifiée')
+          .replace(/\[INDIQUER L'EMAIL DE CONTACT DE L'ENTREPRISE\]/g, company.email || 'contact@entreprise.fr')
+          .replace(/\[INDIQUER LE NOM DE L'ENTREPRISE\]/g, company.name || 'Entreprise');
+        
+        console.log(`[PRIVACY POLICY] Using configured prompt: ${activePrompt.name}`);
+        console.log(`[PRIVACY POLICY] Company data: ${company.name}, ${company.sector}`);
+      } else {
+        // Utiliser le prompt par défaut
+        prompt = `Vous êtes un expert juridique en protection des données. Générez une politique de confidentialité COMPLÈTE et DÉTAILLÉE conforme au RGPD pour l'entreprise suivante.
 
-{{processingRecords}}
+${companyInfo}${ragContext}
 
-{{ragContext}}
+INSTRUCTIONS IMPORTANTES:
+- Générez une politique d'au moins 3000 mots
+- Incluez TOUTES les sections obligatoires du RGPD
+- Adaptez le contenu aux traitements réels de l'entreprise
+- Utilisez un langage clair et accessible
+- Donnez des exemples concrets
 
-La politique doit inclure toutes les sections obligatoires selon la CNIL et être rédigée en français.
-`;
+STRUCTURE OBLIGATOIRE:
 
-      // Construire le prompt final avec les variables de template
-      const finalPrompt = prompt
-        .replace(/{{company}}/g, company.name)
-        .replace(/{{processingRecords}}/g, companyInfo)
-        .replace(/{{ragContext}}/g, ragContext);
+# POLITIQUE DE CONFIDENTIALITÉ
 
-      console.log('Génération de la politique de confidentialité avec Gemini...');
+## 1. IDENTITÉ DU RESPONSABLE DE TRAITEMENT
+[Détails complets avec coordonnées, représentant légal, etc.]
 
-      const result = await model.generateContent(finalPrompt);
+## 2. DONNÉES PERSONNELLES COLLECTÉES
+[Liste détaillée par traitement avec exemples]
+
+## 3. FINALITÉS ET BASES LÉGALES
+[Pour chaque traitement, expliquer la finalité et la base légale RGPD]
+
+## 4. DESTINATAIRES ET TRANSFERTS
+[Qui peut accéder aux données, dans quelles conditions]
+
+## 5. DURÉES DE CONSERVATION
+[Périodes précises par type de données]
+
+## 6. VOS DROITS RGPD
+[Explication détaillée de chaque droit avec modalités d'exercice]
+
+## 7. SÉCURITÉ DES DONNÉES
+[Mesures techniques et organisationnelles]
+
+## 8. COOKIES ET TRACEURS
+[Si applicable selon l'activité]
+
+## 9. MODIFICATIONS
+[Comment les changements sont communiqués]
+
+## 10. CONTACT
+[DPO ou référent protection des données]
+
+Développez chaque section en détail avec des informations pratiques et juridiquement exactes.`;
+        
+        console.log(`[PRIVACY POLICY] Using default prompt (no configured prompt found)`);
+      }
+
+      const result = await model.generateContent(prompt);
       const response = await result.response;
-      let cleanResponse = response.text()
+      let text = response.text();
+
+      // Améliorer le nettoyage du texte sans supprimer les titres de sections
+      let cleanResponse = text
         .replace(/```json/g, '')
         .replace(/```/g, '')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -655,13 +907,13 @@ La politique doit inclure toutes les sections obligatoires selon la CNIL et êtr
       // Vérifier la longueur et regénérer si nécessaire
       if (cleanResponse.length < 2000) {
         console.log('Politique trop courte, régénération...');
-
+        
         const detailedPrompt = `${prompt}\n\nIMPORTANT: La politique précédente était trop courte. Générez une version COMPLÈTE et DÉTAILLÉE d'au moins 3000 mots avec tous les détails juridiques et pratiques nécessaires.`;
-
+        
         const retryResult = await model.generateContent(detailedPrompt);
         const retryResponse = await retryResult.response;
         const retryText = retryResponse.text();
-
+        
         if (retryText && retryText.length > cleanResponse.length) {
           cleanResponse = retryText
             .replace(/```json/g, '')
@@ -677,11 +929,259 @@ La politique doit inclure toutes les sections obligatoires selon la CNIL et êtr
         }
       }
 
-      return { content: cleanResponse };
-    } catch (error) {
-      console.error('Error generating privacy policy:', error);
-      throw new Error('Erreur lors de la génération de la politique de confidentialité');
+      return {
+        content: cleanResponse || 'Erreur lors de la génération de la politique de confidentialité.'
+      };
+    } catch (error: any) {
+      console.error('Gemini API error:', error);
+      
+      // Gérer les erreurs de surcharge avec un message plus informatif
+      if (error.status === 503 || error.message.includes('overloaded')) {
+        throw new Error('Le service de génération est temporairement surchargé. Veuillez réessayer dans quelques minutes.');
+      }
+      
+      // Gérer les erreurs de quota
+      if (error.status === 429 || error.message.includes('quota')) {
+        throw new Error('Limite de quota atteinte. Veuillez réessayer plus tard.');
+      }
+      
+      // Autres erreurs API
+      throw new Error(`Service de génération indisponible: ${error.message}`);
     }
+  }
+
+  // Version originale conservée pour compatibilité
+  async generatePrivacyPolicyOriginal(company: any, processingRecords: any[]): Promise<{ content: string }> {
+    const prompt = `Générez une politique de confidentialité conforme au RGPD pour cette entreprise française.
+
+Informations de l'entreprise: ${JSON.stringify(company)}
+Registres de traitement: ${JSON.stringify(processingRecords)}
+
+La politique doit être:
+- Conforme au RGPD et à la loi française
+- Adaptée à une VSE/PME
+- Claire et compréhensible pour les utilisateurs
+- Complète mais pas excessive`;
+
+    const result = await this.generateResponse(prompt, { company, processingRecords });
+    return { content: result.response };
+  }
+
+  async analyzeDataBreach(breachData: any, ragDocuments: string[] = []): Promise<{
+    notificationRequired: boolean;
+    dataSubjectNotificationRequired: boolean;
+    justification: string;
+    riskLevel: string;
+    recommendations: string[];
+  }> {
+    try {
+      // Get the configured prompt for breach analysis
+      const breachAnalysisPrompt = await storage.getAiPromptByName('Analyse Violation Données');
+      
+      if (!breachAnalysisPrompt || !breachAnalysisPrompt.prompt || !breachAnalysisPrompt.isActive) {
+        console.error('[BREACH] Prompt "Analyse Violation Données" not found or inactive in database');
+        return this.getDefaultBreachAnalysis(breachData);
+      }
+
+      console.log('[BREACH] Using configured prompt:', breachAnalysisPrompt.name);
+      
+      // Load documents specifically associated with this prompt
+      const specificRagDocuments = await this.loadRagDocuments('Analyse Violation Données');
+      console.log(`[BREACH] Found ${specificRagDocuments.length} documents specifically for breach analysis prompt`);
+
+      // Prepare breach data for the prompt
+      const breachDataString = JSON.stringify(breachData, null, 2);
+      console.log('[BREACH] Breach data length:', breachDataString.length, 'characters');
+
+      // Replace placeholder with actual breach data
+      let prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', breachDataString);
+      
+      // Fallback if no placeholder found - append data to prompt
+      if (!breachAnalysisPrompt.prompt.includes('{breach_data}')) {
+        prompt = `${breachAnalysisPrompt.prompt}\n\nDonnées de la violation à analyser:\n${breachDataString}`;
+      }
+
+      console.log('[BREACH] Final prompt length:', prompt.length, 'characters');
+
+      const schema = {
+        notificationRequired: "boolean",
+        dataSubjectNotificationRequired: "boolean", 
+        justification: "string",
+        riskLevel: "string (faible|moyen|élevé|critique)",
+        recommendations: ["string"]
+      };
+
+      console.log('[BREACH] Starting AI analysis with specific prompt documents...');
+      return await this.generateStructuredResponse(prompt, schema, breachData, specificRagDocuments);
+      
+    } catch (error: any) {
+      console.error('[BREACH] AI analysis failed:', error.message);
+      console.log('[BREACH] Returning default analysis due to error');
+      return this.getDefaultBreachAnalysis(breachData);
+    }
+  }
+
+  private getDefaultBreachAnalysis(breachData: any): {
+    notificationRequired: boolean;
+    dataSubjectNotificationRequired: boolean;
+    justification: string;
+    riskLevel: string;
+    recommendations: string[];
+  } {
+    console.log('[BREACH] Using fallback analysis for breach data:', breachData.description);
+    
+    // Analyze comprehensive data if available
+    let comprehensiveData: any = {};
+    try {
+      if (breachData.comprehensiveData) {
+        comprehensiveData = JSON.parse(breachData.comprehensiveData);
+      }
+    } catch (error) {
+      console.log('[BREACH] Could not parse comprehensive data');
+    }
+
+    const hasDataCategories = (breachData.dataCategories && breachData.dataCategories.length > 0) || 
+                             (comprehensiveData.dataCategories && comprehensiveData.dataCategories.length > 0);
+    const hasAffectedPersons = (breachData.affectedPersons && breachData.affectedPersons > 0) ||
+                              (comprehensiveData.affectedPersonsCount && parseInt(comprehensiveData.affectedPersonsCount) > 0);
+    const hasSensitiveData = comprehensiveData.dataCategories?.some((cat: string) => 
+      cat.includes('sensible') || cat.includes('santé') || cat.includes('judiciaire'));
+    
+    // Enhanced risk assessment based on EDPB guidelines
+    let riskLevel = "faible";
+    let notificationRequired = false;
+    let dataSubjectNotificationRequired = false;
+    
+    // Risk factors analysis
+    if (hasSensitiveData) {
+      riskLevel = "élevé";
+      notificationRequired = true;
+      dataSubjectNotificationRequired = true;
+    } else if (hasAffectedPersons && parseInt(comprehensiveData.affectedPersonsCount || breachData.affectedPersons) > 100) {
+      riskLevel = "élevé";
+      notificationRequired = true;
+      dataSubjectNotificationRequired = true;
+    } else if (hasDataCategories || hasAffectedPersons) {
+      riskLevel = "moyen";
+      notificationRequired = true;
+    }
+    
+    return {
+      notificationRequired,
+      dataSubjectNotificationRequired,
+      justification: `Analyse de fallback basée sur les critères RGPD disponibles : ${breachData.description || 'Violation de données personnelles'}. ${hasSensitiveData ? 'Données sensibles détectées. ' : ''}${hasDataCategories ? 'Catégories de données identifiées. ' : ''}${hasAffectedPersons ? `${comprehensiveData.affectedPersonsCount || breachData.affectedPersons} personnes potentiellement affectées. ` : ''}Niveau de risque évalué à ${riskLevel}. Une analyse détaillée par un expert est recommandée.`,
+      riskLevel,
+      recommendations: [
+        "Effectuer une analyse manuelle détaillée selon les lignes directrices EDPB",
+        "Documenter précisément la nature et l'étendue de la violation", 
+        "Évaluer les risques pour les droits et libertés des personnes concernées",
+        "Mettre en place des mesures correctives immédiates",
+        notificationRequired ? "Préparer la notification à la CNIL dans les 72h" : "Surveiller les conséquences potentielles",
+        dataSubjectNotificationRequired ? "Informer les personnes concernées sans délai" : "Évaluer la nécessité d'informer les personnes concernées",
+        "Consulter un expert DPO ou juridique pour validation"
+      ]
+    };
+  }
+
+  async generateProcessingRecord(company: any, processingType: string, description: string): Promise<any> {
+    const prompt = `Générez un registre de traitement RGPD pour cette entreprise française.
+
+Entreprise: ${JSON.stringify(company)}
+Type de traitement: ${processingType}
+Description: ${description}
+
+Le registre doit inclure tous les éléments obligatoires selon l'article 30 du RGPD.`;
+
+    const schema = {
+      name: "string",
+      purpose: "string",
+      legalBasis: "string",
+      dataCategories: ["string"],
+      recipients: ["string"],
+      retention: "string",
+      securityMeasures: ["string"],
+      transfersOutsideEU: "boolean"
+    };
+
+    return await this.generateStructuredResponse(prompt, schema, { company, processingType, description });
+  }
+
+  async assessDPIA(processingName: string, processingDescription: string, company: any): Promise<any> {
+    const prompt = `Réalisez une analyse d'impact relative à la protection des données (AIPD/DPIA) pour ce traitement.
+
+Nom du traitement: ${processingName}
+Description: ${processingDescription}
+Entreprise: ${JSON.stringify(company)}
+
+Analysez les risques et proposez des mesures de protection adaptées à une VSE/PME.`;
+
+    const schema = {
+      riskAssessment: {
+        likelihood: "string (faible|moyen|élevé)",
+        severity: "string (faible|moyen|élevé)",
+        overallRisk: "string (faible|moyen|élevé|critique)"
+      },
+      measures: {
+        technical: ["string"],
+        organizational: ["string"],
+        legal: ["string"]
+      },
+      conclusion: "string",
+      dpiaRequired: "boolean"
+    };
+
+    return await this.generateStructuredResponse(prompt, schema, { processingName, processingDescription, company });
+  }
+
+  async generateDPIA(processingName: string, processingDescription: string, company: any, customPrompt: string): Promise<any> {
+    const prompt = `${customPrompt}
+
+Traitement à analyser:
+Nom: ${processingName}
+Description: ${processingDescription}
+Entreprise: ${JSON.stringify(company)}
+
+Générez une DPIA complète selon la structure demandée.`;
+
+    const schema = {
+      description: {
+        finalites: "string",
+        categoriesDonnees: ["string"],
+        categoriesPersonnes: ["string"],
+        destinataires: ["string"],
+        dureeConservation: "string",
+        transfertsHorsUE: "boolean"
+      },
+      necessite: {
+        justificationNecessite: "string",
+        adequationMoyens: "string",
+        proportionnalite: "string"
+      },
+      risques: {
+        risquesViePrivee: ["string"],
+        risquesSecurite: ["string"],
+        risquesDiscrimination: ["string"],
+        autresRisques: ["string"]
+      },
+      evaluation: {
+        probabilite: "string (faible|moyen|élevé)",
+        gravite: "string (faible|moyen|élevé)",
+        niveauRisque: "string (faible|moyen|élevé|critique)"
+      },
+      mesures: {
+        techniqueExistantes: ["string"],
+        organisationnellesExistantes: ["string"],
+        complementaires: ["string"],
+        transferts: ["string"]
+      },
+      conclusion: {
+        acceptabilite: "string",
+        actionsCorrectices: ["string"],
+        suivi: "string"
+      }
+    };
+
+    return await this.generateStructuredResponse(prompt, schema, { processingName, processingDescription, company });
   }
 }
 
