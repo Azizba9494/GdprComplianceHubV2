@@ -1,7 +1,5 @@
-
-import * as React from "react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "./button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 

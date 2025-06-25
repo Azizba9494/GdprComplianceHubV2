@@ -245,7 +245,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Section 2 : Critères de risque
+                Critères de risque
               </CardTitle>
               <CardDescription>
                 Répondez par Oui ou Non à chacune des questions suivantes pour évaluer si une AIPD est nécessaire.
