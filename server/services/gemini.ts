@@ -1011,6 +1011,10 @@ Cette évaluation suit le principe de précaution conformément au RGPD.`,
     const breach = context || {};
     const parsedData = breach.parsedFormData || {};
     
+    // Log the context to debug
+    console.log('[LLM] Extracting breach context from:', JSON.stringify(context, null, 2));
+    console.log('[LLM] Parsed form data:', JSON.stringify(parsedData, null, 2));
+    
     return {
       description: breach.description || 'Violation de données non spécifiée',
       incidentType: this.determineIncidentType(parsedData),

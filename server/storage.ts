@@ -393,7 +393,11 @@ export class DatabaseStorage implements IStorage {
   async updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach> {
     const [updated] = await db.update(dataBreaches).set(updates).where(eq(dataBreaches.id, id)).returning();
     return updated;
-  }
+  },
+
+  async deleteDataBreach(id: number): Promise<void> {
+    await db.delete(dataBreaches).where(eq(dataBreaches.id, id));
+  },
 
   // DPIA Assessments
   async getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]> {
