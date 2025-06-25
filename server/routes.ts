@@ -30,26 +30,46 @@ const upload = multer({
 });
 
 // Helper function to get RAG documents for AI prompts
-async function getRagDocuments(): Promise<string[]> {
+async function getRagDocuments(promptName?: string): Promise<string[]> {
   try {
     const ragDocuments: string[] = [];
 
-    // Get all active prompts
-    const allPrompts = await storage.getAiPrompts();
-    const activePrompts = allPrompts.filter(p => p.isActive);
+    // If a promptName is provided, load only documents associated with that prompt
+    if (promptName) {
+      const prompt = await storage.getAiPromptByName(promptName); // Assuming you have a method to get a prompt by name
+      if (prompt) {
+        const promptDocuments = await storage.getPromptDocuments(prompt.id);
+        if (promptDocuments.length > 0) {
+          const documentIds = promptDocuments
+            .sort((a, b) => a.priority - b.priority)
+            .map(pd => pd.documentId);
 
-    // For each active prompt, get associated documents
-    for (const prompt of activePrompts) {
-      const promptDocuments = await storage.getPromptDocuments(prompt.id);
-      if (promptDocuments.length > 0) {
-        const documentIds = promptDocuments
-          .sort((a, b) => a.priority - b.priority)
-          .map(pd => pd.documentId);
+          for (const docId of documentIds) {
+            const document = await storage.getRagDocument(docId);
+            if (document && document.isActive && !ragDocuments.includes(document.content)) {
+              ragDocuments.push(document.content);
+            }
+          }
+        }
+      }
+    } else {
+      // Get all active prompts and their documents (default behavior)
+      const allPrompts = await storage.getAiPrompts();
+      const activePrompts = allPrompts.filter(p => p.isActive);
 
-        for (const docId of documentIds) {
-          const document = await storage.getRagDocument(docId);
-          if (document && document.isActive && !ragDocuments.includes(document.content)) {
-            ragDocuments.push(document.content);
+      // For each active prompt, get associated documents
+      for (const prompt of activePrompts) {
+        const promptDocuments = await storage.getPromptDocuments(prompt.id);
+        if (promptDocuments.length > 0) {
+          const documentIds = promptDocuments
+            .sort((a, b) => a.priority - b.priority)
+            .map(pd => pd.documentId);
+
+          for (const docId of documentIds) {
+            const document = await storage.getRagDocument(docId);
+            if (document && document.isActive && !ragDocuments.includes(document.content)) {
+              ragDocuments.push(document.content);
+            }
           }
         }
       }
@@ -524,10 +544,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const records = await storage.getProcessingRecords(companyId);
-      
+
       try {
         const policyData = await geminiService.generatePrivacyPolicy(company, records);
-        
+
         const policy = await storage.createPrivacyPolicy({
           companyId,
           content: policyData.content,
@@ -538,7 +558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(policy);
       } catch (aiError: any) {
         console.error('AI generation failed:', aiError.message);
-        
+
         // Retourner une erreur spécifique avec suggestions
         if (aiError.message.includes('surchargé') || aiError.message.includes('overloaded')) {
           return res.status(503).json({ 
@@ -552,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ]
           });
         }
-        
+
         return res.status(500).json({ 
           error: "Erreur de génération",
           message: aiError.message,
@@ -582,12 +602,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/breaches", async (req, res) => {
     try {
       console.log('Raw breach data received:', JSON.stringify(req.body, null, 2));
-      
+
       // Validate with the schema that handles string-to-date transformation
       const breachData = insertDataBreachSchema.parse(req.body);
-      
+
       console.log('Validated breach data:', JSON.stringify(breachData, null, 2));
-      
+
       const breach = await storage.createDataBreach(breachData);
       res.json(breach);
     } catch (error: any) {
@@ -601,7 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const breachData = insertDataBreachSchema.parse(req.body);
 
       // Get RAG documents for enhanced analysis
-      const ragDocuments = await getRagDocuments();
+      const ragDocuments = await getRagDocuments('Analyse Violation Données');
       console.log(`[RAG] Found ${ragDocuments.length} documents for breach analysis`);
 
       const analysis = await geminiService.analyzeDataBreach(breachData, ragDocuments);
@@ -634,7 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Temporary workaround: bypass authentication for breach analysis during development
       // TODO: Fix session persistence issue
       console.log('Bypassing authentication for breach analysis (development mode)');
-      
+
       // Skip authentication check for now
       // if (!req.session?.userId) {
       //   console.log('Authentication failed - no userId in session');
@@ -642,11 +662,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // }
 
       console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
-      
+
       const breachData = req.body;
 
       // Get RAG documents for enhanced analysis
-      const ragDocuments = await getRagDocuments();
+      const ragDocuments = await getRagDocuments('Analyse Violation Données');
       console.log(`[RAG] Found ${ragDocuments.length} documents for breach analysis`);
 
       const analysis = await geminiService.analyzeDataBreach(breachData, ragDocuments);
@@ -1748,4 +1768,15 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+async function generateAIContent(prompt: string): Promise<string> {
+  try {
+    // Use your AI service to generate content based on the prompt
+    const aiResponse = await geminiService.getGeminiResponse(prompt);
+    return aiResponse.content;
+  } catch (error) {
+    console.error('AI content generation failed:', error);
+    throw new Error('AI content generation failed');
+  }
 }
