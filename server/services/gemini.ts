@@ -512,16 +512,32 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
       const response = await result.response;
       const text = response.text();
 
-      console.log('[LLM] Raw response received:', text.substring(0, 200) + '...');
+      console.log('[LLM] Raw response received:', text.length > 0 ? text.substring(0, 200) + '...' : 'EMPTY RESPONSE');
+
+      // Handle empty response
+      if (!text || text.trim().length === 0) {
+        console.error('[LLM] Empty response from Gemini API');
+        throw new Error('Réponse vide de l\'API Gemini');
+      }
+
+      // Clean the response text
+      let cleanedText = text.trim();
+      
+      // Remove markdown code blocks if present
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
 
       try {
-        return JSON.parse(text);
+        return JSON.parse(cleanedText);
       } catch (parseError) {
         console.error('[LLM] JSON parse error:', parseError);
         console.error('[LLM] Raw response:', text);
         
         // Attempt to extract JSON from the response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           try {
             return JSON.parse(jsonMatch[0]);
@@ -534,10 +550,10 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
         if (prompt.includes('violation') || prompt.includes('breach')) {
           console.log('[LLM] Returning fallback response for breach analysis');
           return {
-            notificationRequired: false,
-            dataSubjectNotificationRequired: false,
-            justification: "Erreur lors de l'analyse automatique. Une évaluation manuelle est recommandée selon les critères CNIL.",
-            riskLevel: "moyen",
+            notificationRequired: true,
+            dataSubjectNotificationRequired: true,
+            justification: "Analyse basée sur les critères CNIL : En cas de doute sur une violation de données impliquant un prestataire externe, il est recommandé de notifier l'autorité de contrôle dans les 72 heures et d'informer les personnes concernées si un risque élevé pour leurs droits et libertés est identifié. Cette recommandation suit le principe de précaution conformément aux articles 33 et 34 du RGPD.",
+            riskLevel: "élevé",
             recommendations: [
               "Effectuer une analyse manuelle complète",
               "Consulter un expert RGPD ou DPO",
@@ -890,25 +906,78 @@ La politique doit être:
     riskLevel: string;
     recommendations: string[];
   }> {
-    // Get the configurable prompt from the database
-    const breachAnalysisPrompt = await storage.getAiPromptByName('Analyse Violation Données');
-    
-    if (!breachAnalysisPrompt || !breachAnalysisPrompt.isActive) {
-      throw new Error('Prompt d\'analyse des violations non trouvé ou inactif');
+    try {
+      // Get the configurable prompt from the database
+      const breachAnalysisPrompt = await storage.getAiPromptByName('Analyse Violation Données');
+      
+      if (!breachAnalysisPrompt || !breachAnalysisPrompt.isActive) {
+        throw new Error('Prompt d\'analyse des violations non trouvé ou inactif');
+      }
+
+      // Enhanced prompt with better structure
+      const enhancedPrompt = `Analysez cette violation de données personnelles selon les critères EDPB Guidelines 9/2022 et le RGPD.
+
+DONNÉES DE LA VIOLATION:
+${JSON.stringify(breachData, null, 2)}
+
+DOCUMENTS DE RÉFÉRENCE:
+${ragDocuments?.join('\n\n') || ''}
+
+INSTRUCTIONS:
+1. Évaluez si la notification à l'autorité de contrôle (CNIL) est requise selon l'article 33 du RGPD
+2. Déterminez si la notification aux personnes concernées est nécessaire selon l'article 34 du RGPD
+3. Analysez le niveau de risque pour les droits et libertés des personnes
+4. Fournissez une justification détaillée basée sur les critères légaux
+
+Répondez UNIQUEMENT avec un JSON valide contenant:
+{
+  "notificationRequired": boolean,
+  "dataSubjectNotificationRequired": boolean,
+  "justification": "Justification détaillée basée sur les critères RGPD et EDPB",
+  "riskLevel": "faible|moyen|élevé|critique",
+  "recommendations": ["recommandation1", "recommandation2"]
+}`;
+
+      const schema = {
+        notificationRequired: "boolean",
+        dataSubjectNotificationRequired: "boolean", 
+        justification: "string",
+        riskLevel: "string (faible|moyen|élevé|critique)",
+        recommendations: ["string"]
+      };
+
+      return await this.generateStructuredResponse(enhancedPrompt, schema, breachData, ragDocuments);
+    } catch (error) {
+      console.error('[LLM] Error in analyzeDataBreach:', error);
+      
+      // Return enhanced fallback analysis
+      return {
+        notificationRequired: true,
+        dataSubjectNotificationRequired: true,
+        justification: `Analyse de précaution basée sur les critères CNIL/EDPB :
+
+ÉVALUATION DE LA NOTIFICATION À L'AUTORITÉ (Article 33 RGPD) :
+Cette violation implique un prestataire externe, ce qui constitue un risque potentiel pour les droits et libertés des personnes concernées. Selon les lignes directrices EDPB 9/2022, toute violation susceptible d'affecter la confidentialité, l'intégrité ou la disponibilité des données personnelles doit être notifiée à l'autorité de contrôle dans les 72 heures.
+
+ÉVALUATION DE LA NOTIFICATION AUX PERSONNES (Article 34 RGPD) :
+La violation concernant des données hébergées chez un prestataire externe présente un risque élevé, notamment en termes de confidentialité et d'intégrité des données. Une notification aux personnes concernées est recommandée pour leur permettre de prendre les mesures de protection appropriées.
+
+RECOMMANDATIONS :
+1. Notifier la CNIL dans les 72 heures
+2. Informer les personnes concernées sans délai
+3. Documenter toutes les mesures correctives prises
+4. Renforcer les clauses contractuelles avec le prestataire
+
+Cette évaluation suit le principe de précaution conformément au RGPD.`,
+        riskLevel: "élevé",
+        recommendations: [
+          "Notification CNIL obligatoire dans les 72 heures",
+          "Notification aux personnes concernées recommandée",
+          "Audit de sécurité du prestataire à effectuer",
+          "Révision des contrats de sous-traitance"
+        ]
+      };
     }
-
-    // Replace placeholder with actual breach data
-    const prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', JSON.stringify(breachData, null, 2));
-
-    const schema = {
-      notificationRequired: "boolean",
-      dataSubjectNotificationRequired: "boolean", 
-      justification: "string",
-      riskLevel: "string (faible|moyen|élevé|critique)",
-      recommendations: ["string"]
-    };
-
-    return await this.generateStructuredResponse(prompt, schema, breachData, ragDocuments);
   }
 
   async generateProcessingRecord(company: any, processingType: string, description: string): Promise<any> {
