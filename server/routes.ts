@@ -596,6 +596,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update breach
+  app.put('/api/breaches/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const breachData = req.body;
+      
+      const updatedBreach = await storage.updateDataBreach(parseInt(id), breachData);
+      res.json(updatedBreach);
+    } catch (error: any) {
+      console.error('Error updating breach:', error);
+      res.status(500).json({ error: 'Erreur lors de la mise à jour' });
+    }
+  });
+
+  // Delete a breach
+  app.delete('/api/breaches/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteDataBreach(parseInt(id));
+      
+      if (!deleted) {
+        return res.status(404).json({ error: 'Violation non trouvée' });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting breach:', error);
+      res.status(500).json({ error: 'Erreur lors de la suppression' });
+    }
+  });
+
+  // Patch/update specific fields of a breach
+  app.patch('/api/breaches/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Get existing breach
+      const existingBreach = await storage.getDataBreaches(1); // Get all first
+      const breach = existingBreach.find((b: any) => b.id === parseInt(id));
+      
+      if (!breach) {
+        return res.status(404).json({ error: 'Violation non trouvée' });
+      }
+      
+      // Apply updates
+      const updatedData = { ...breach, ...updates, updatedAt: new Date().toISOString() };
+      
+      // Save updated breach
+      const result = await storage.updateDataBreach(parseInt(id), updatedData);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error updating breach:', error);
+      res.status(500).json({ error: 'Erreur lors de la mise à jour' });
+    }
+  });
+
   app.post("/api/breaches/analyze", async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);

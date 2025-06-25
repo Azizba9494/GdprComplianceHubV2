@@ -721,64 +721,62 @@ Généré le: ${new Date().toLocaleString()}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge className={getSeverityColor(breach.severity)}>
-                          {breach.severity}
-                        </Badge>
-                        <Badge className={getStatusColor(breach.status)}>
-                          {breach.status}
-                        </Badge>
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm">Découvert: {new Date(breach.discoveryDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Users className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm">{breach.affectedPersons || 0} personnes</span>
+                        </div>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm">Découvert: {new Date(breach.discoveryDate).toLocaleDateString()}</span>
-                      </div>
-                      
-                    </div>
-
+                    
                     {breach.aiRecommendationAuthority && (
-                      <Alert className="mb-4">
-                        <Brain className="w-4 h-4" />
-                        <AlertDescription>
-                          <strong>Analyse IA:</strong> Notification autorité: 
-                          <Badge variant={breach.aiRecommendationAuthority === 'required' ? 'destructive' : 'secondary'} className="ml-2">
-                            {breach.aiRecommendationAuthority === 'required' ? 'REQUISE' : 'NON REQUISE'}
-                          </Badge>
-                          {breach.aiJustification && (
-                            <>
-                              <Button
-                                variant="link"
-                                size="sm"
-                                onClick={() => downloadJustification(breach)}
-                                className="ml-2 p-0 h-auto"
-                              >
-                                <Download className="w-3 h-3 mr-1" />
-                                Télécharger la justification
-                              </Button>
-                              <Button
-                                variant="link"
-                                size="sm"
-                                onClick={() => {
-                                  setPreviewBreach(breach);
-                                  setActiveTab('preview');
-                                }}
-                                className="ml-2 p-0 h-auto"
-                              >
-                                <Eye className="w-3 h-3 mr-1" />
-                                Aperçu
-                              </Button>
-                            </>
-                          )}
-                        </AlertDescription>
-                      </Alert>
+                      <div className="mt-4">
+                        <Alert>
+                          <Brain className="w-4 h-4" />
+                          <AlertDescription>
+                            <strong>Analyse IA:</strong> Notification autorité: 
+                            <Badge variant={breach.aiRecommendationAuthority === 'required' ? 'destructive' : 'secondary'} className="ml-2">
+                              {breach.aiRecommendationAuthority === 'required' ? 'REQUISE' : 'NON REQUISE'}
+                            </Badge>
+                            {breach.aiJustification && (
+                              <>
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => downloadJustification(breach)}
+                                  className="ml-2 p-0 h-auto"
+                                >
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Télécharger la justification
+                                </Button>
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => {
+                                    setPreviewBreach(breach);
+                                    setActiveTab('preview');
+                                  }}
+                                  className="ml-2 p-0 h-auto"
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  Aperçu
+                                </Button>
+                              </>
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      </div>
                     )}
 
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mt-4">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(breach)}>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          setSelectedBreach(breach);
+                          setActiveTab("form");
+                        }}>
                           <Edit className="w-4 h-4 mr-2" />
                           Modifier
                         </Button>
