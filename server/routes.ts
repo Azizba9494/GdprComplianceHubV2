@@ -614,16 +614,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/breaches/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const breachId = parseInt(id);
+      const deleted = await storage.deleteDataBreach(parseInt(id));
       
-      if (isNaN(breachId)) {
-        return res.status(400).json({ error: 'ID de violation invalide' });
+      if (!deleted) {
+        return res.status(404).json({ error: 'Violation non trouvée' });
       }
       
-      // Directly attempt deletion since storage handles existence validation
-      console.log(`Attempting to delete breach with ID: ${breachId}`);
-      
-      await storage.deleteDataBreach(breachId);
       res.json({ success: true });
     } catch (error: any) {
       console.error('Error deleting breach:', error);

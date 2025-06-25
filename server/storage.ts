@@ -395,10 +395,6 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteDataBreach(id: number): Promise<void> {
-    await db.delete(dataBreaches).where(eq(dataBreaches.id, id));
-  }
-
   // DPIA Assessments
   async getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]> {
     return await db.select().from(dpiaAssessments).where(eq(dpiaAssessments.companyId, companyId)).orderBy(desc(dpiaAssessments.createdAt));
