@@ -507,16 +507,53 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
 
       console.log(`[LLM] Using model: ${activeLlmConfig?.modelName || 'gemini-2.5-flash'}`);
       console.log('[LLM] Sending prompt for breach analysis...');
+      console.log('[LLM] Prompt length:', fullPrompt.length, 'characters');
+      console.log('[LLM] Model configuration:', {
+        model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
+        temperature: activeLlmConfig?.temperature || 0.3,
+        maxTokens: activeLlmConfig?.maxTokens || 3000
+      });
 
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
-      const text = response.text();
+      
+      // Check if the response object exists
+      if (!response) {
+        console.error('[LLM] No response object received from Gemini');
+        throw new Error('Aucune réponse reçue du service IA');
+      }
 
+      // Check for blocked content or safety issues
+      if (response.promptFeedback?.blockReason) {
+        console.error('[LLM] Content blocked by Gemini:', response.promptFeedback.blockReason);
+        throw new Error('Contenu bloqué par le service IA pour des raisons de sécurité');
+      }
+
+      // Check if candidates exist
+      if (!response.candidates || response.candidates.length === 0) {
+        console.error('[LLM] No candidates in response:', response);
+        throw new Error('Aucune réponse générée par le service IA');
+      }
+
+      // Check candidate finish reason
+      const candidate = response.candidates[0];
+      if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+        console.error('[LLM] Generation stopped unexpectedly:', candidate.finishReason);
+        if (candidate.finishReason === 'SAFETY') {
+          throw new Error('Génération arrêtée pour des raisons de sécurité');
+        } else if (candidate.finishReason === 'MAX_TOKENS') {
+          throw new Error('Réponse tronquée - limite de tokens atteinte');
+        }
+      }
+
+      const text = response.text();
       console.log('[LLM] Raw response received:', text ? text.substring(0, 200) + '...' : 'EMPTY RESPONSE');
+      console.log('[LLM] Response length:', text ? text.length : 0, 'characters');
 
       // Check if response is empty or too short
       if (!text || text.trim().length < 10) {
         console.error('[LLM] Empty or too short response:', text);
+        console.error('[LLM] Full response object:', JSON.stringify(response, null, 2));
         throw new Error('Réponse IA vide ou trop courte');
       }
 
@@ -916,9 +953,21 @@ La politique doit être:
       }
 
       console.log('[BREACH] Using configured prompt:', breachAnalysisPrompt.name);
+      console.log('[BREACH] Prompt length:', breachAnalysisPrompt.prompt.length, 'characters');
+
+      // Prepare breach data for the prompt
+      const breachDataString = JSON.stringify(breachData, null, 2);
+      console.log('[BREACH] Breach data length:', breachDataString.length, 'characters');
 
       // Replace placeholder with actual breach data
-      const prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', JSON.stringify(breachData, null, 2));
+      let prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', breachDataString);
+      
+      // Fallback if no placeholder found - append data to prompt
+      if (!breachAnalysisPrompt.prompt.includes('{breach_data}')) {
+        prompt = `${breachAnalysisPrompt.prompt}\n\nDonnées de la violation à analyser:\n${breachDataString}`;
+      }
+
+      console.log('[BREACH] Final prompt length:', prompt.length, 'characters');
 
       const schema = {
         notificationRequired: "boolean",
@@ -945,30 +994,57 @@ La politique doit être:
     riskLevel: string;
     recommendations: string[];
   } {
-    const hasDataCategories = breachData.dataCategories && breachData.dataCategories.length > 0;
-    const hasAffectedPersons = breachData.affectedPersons && breachData.affectedPersons > 0;
+    console.log('[BREACH] Using fallback analysis for breach data:', breachData.description);
     
-    // Basic risk assessment based on available data
-    let riskLevel = "moyen";
-    let notificationRequired = true;
+    // Analyze comprehensive data if available
+    let comprehensiveData: any = {};
+    try {
+      if (breachData.comprehensiveData) {
+        comprehensiveData = JSON.parse(breachData.comprehensiveData);
+      }
+    } catch (error) {
+      console.log('[BREACH] Could not parse comprehensive data');
+    }
+
+    const hasDataCategories = (breachData.dataCategories && breachData.dataCategories.length > 0) || 
+                             (comprehensiveData.dataCategories && comprehensiveData.dataCategories.length > 0);
+    const hasAffectedPersons = (breachData.affectedPersons && breachData.affectedPersons > 0) ||
+                              (comprehensiveData.affectedPersonsCount && parseInt(comprehensiveData.affectedPersonsCount) > 0);
+    const hasSensitiveData = comprehensiveData.dataCategories?.some((cat: string) => 
+      cat.includes('sensible') || cat.includes('santé') || cat.includes('judiciaire'));
+    
+    // Enhanced risk assessment based on EDPB guidelines
+    let riskLevel = "faible";
+    let notificationRequired = false;
     let dataSubjectNotificationRequired = false;
     
-    if (hasDataCategories || hasAffectedPersons) {
+    // Risk factors analysis
+    if (hasSensitiveData) {
       riskLevel = "élevé";
+      notificationRequired = true;
       dataSubjectNotificationRequired = true;
+    } else if (hasAffectedPersons && parseInt(comprehensiveData.affectedPersonsCount || breachData.affectedPersons) > 100) {
+      riskLevel = "élevé";
+      notificationRequired = true;
+      dataSubjectNotificationRequired = true;
+    } else if (hasDataCategories || hasAffectedPersons) {
+      riskLevel = "moyen";
+      notificationRequired = true;
     }
     
     return {
       notificationRequired,
       dataSubjectNotificationRequired,
-      justification: `Analyse basée sur les données disponibles : ${breachData.description || 'Violation de données personnelles'}. ${hasDataCategories ? 'Catégories de données identifiées.' : ''} ${hasAffectedPersons ? `${breachData.affectedPersons} personnes potentiellement affectées.` : ''}`,
+      justification: `Analyse de fallback basée sur les critères RGPD disponibles : ${breachData.description || 'Violation de données personnelles'}. ${hasSensitiveData ? 'Données sensibles détectées. ' : ''}${hasDataCategories ? 'Catégories de données identifiées. ' : ''}${hasAffectedPersons ? `${comprehensiveData.affectedPersonsCount || breachData.affectedPersons} personnes potentiellement affectées. ` : ''}Niveau de risque évalué à ${riskLevel}. Une analyse détaillée par un expert est recommandée.`,
       riskLevel,
       recommendations: [
-        "Documenter précisément la nature et l'étendue de la violation",
-        "Évaluer les risques pour les droits et libertés des personnes",
+        "Effectuer une analyse manuelle détaillée selon les lignes directrices EDPB",
+        "Documenter précisément la nature et l'étendue de la violation", 
+        "Évaluer les risques pour les droits et libertés des personnes concernées",
         "Mettre en place des mesures correctives immédiates",
-        "Considérer la notification à la CNIL sous 72h si applicable",
-        "Préparer la communication aux personnes concernées si nécessaire"
+        notificationRequired ? "Préparer la notification à la CNIL dans les 72h" : "Surveiller les conséquences potentielles",
+        dataSubjectNotificationRequired ? "Informer les personnes concernées sans délai" : "Évaluer la nécessité d'informer les personnes concernées",
+        "Consulter un expert DPO ou juridique pour validation"
       ]
     };
   }
