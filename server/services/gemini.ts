@@ -897,32 +897,79 @@ La politique doit être:
     return { content: result.response };
   }
 
-  async analyzeDataBreach(breachData: any, ragDocuments?: string[]): Promise<{
+  async analyzeDataBreach(breachData: any, ragDocuments: string[] = []): Promise<{
     notificationRequired: boolean;
     dataSubjectNotificationRequired: boolean;
     justification: string;
     riskLevel: string;
     recommendations: string[];
   }> {
-    // Get the configurable prompt from the database
-    const breachAnalysisPrompt = await storage.getAiPromptByName('Analyse Violation Données');
+    console.log('[RAG] Found', ragDocuments.length, 'documents for breach analysis');
     
-    if (!breachAnalysisPrompt || !breachAnalysisPrompt.isActive) {
-      throw new Error('Prompt d\'analyse des violations non trouvé ou inactif');
+    try {
+      // Get the configured prompt for breach analysis
+      const allPrompts = await storage.getAiPrompts();
+      const breachAnalysisPrompt = allPrompts.find(p => p.name.includes('Analyse') && p.name.includes('violation'));
+      
+      if (!breachAnalysisPrompt || !breachAnalysisPrompt.prompt) {
+        console.error('[BREACH] No breach analysis prompt found, using default');
+        return this.getDefaultBreachAnalysis(breachData);
+      }
+
+      // Replace placeholder with actual breach data
+      const prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', JSON.stringify(breachData, null, 2));
+
+      const schema = {
+        notificationRequired: "boolean",
+        dataSubjectNotificationRequired: "boolean", 
+        justification: "string",
+        riskLevel: "string (faible|moyen|élevé|critique)",
+        recommendations: ["string"]
+      };
+
+      console.log('[BREACH] Starting AI analysis with structured response...');
+      return await this.generateStructuredResponse(prompt, schema, breachData, ragDocuments);
+      
+    } catch (error: any) {
+      console.error('[BREACH] AI analysis failed:', error.message);
+      console.log('[BREACH] Returning default analysis due to error');
+      return this.getDefaultBreachAnalysis(breachData);
     }
+  }
 
-    // Replace placeholder with actual breach data
-    const prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', JSON.stringify(breachData, null, 2));
-
-    const schema = {
-      notificationRequired: "boolean",
-      dataSubjectNotificationRequired: "boolean", 
-      justification: "string",
-      riskLevel: "string (faible|moyen|élevé|critique)",
-      recommendations: ["string"]
+  private getDefaultBreachAnalysis(breachData: any): {
+    notificationRequired: boolean;
+    dataSubjectNotificationRequired: boolean;
+    justification: string;
+    riskLevel: string;
+    recommendations: string[];
+  } {
+    const hasDataCategories = breachData.dataCategories && breachData.dataCategories.length > 0;
+    const hasAffectedPersons = breachData.affectedPersons && breachData.affectedPersons > 0;
+    
+    // Basic risk assessment based on available data
+    let riskLevel = "moyen";
+    let notificationRequired = true;
+    let dataSubjectNotificationRequired = false;
+    
+    if (hasDataCategories || hasAffectedPersons) {
+      riskLevel = "élevé";
+      dataSubjectNotificationRequired = true;
+    }
+    
+    return {
+      notificationRequired,
+      dataSubjectNotificationRequired,
+      justification: `Analyse basée sur les données disponibles : ${breachData.description || 'Violation de données personnelles'}. ${hasDataCategories ? 'Catégories de données identifiées.' : ''} ${hasAffectedPersons ? `${breachData.affectedPersons} personnes potentiellement affectées.` : ''}`,
+      riskLevel,
+      recommendations: [
+        "Documenter précisément la nature et l'étendue de la violation",
+        "Évaluer les risques pour les droits et libertés des personnes",
+        "Mettre en place des mesures correctives immédiates",
+        "Considérer la notification à la CNIL sous 72h si applicable",
+        "Préparer la communication aux personnes concernées si nécessaire"
+      ]
     };
-
-    return await this.generateStructuredResponse(prompt, schema, breachData, ragDocuments);
   }
 
   async generateProcessingRecord(company: any, processingType: string, description: string): Promise<any> {
