@@ -1009,14 +1009,27 @@ Cette évaluation suit le principe de précaution conformément au RGPD.`,
 
   private extractBreachContext(context: any): any {
     const breach = context || {};
-    const parsedData = breach.parsedFormData || {};
+    let parsedData = breach.parsedFormData || {};
+    
+    // Try to parse comprehensiveData if parsedFormData is empty
+    if (Object.keys(parsedData).length === 0 && breach.comprehensiveData) {
+      try {
+        if (typeof breach.comprehensiveData === 'string') {
+          parsedData = JSON.parse(breach.comprehensiveData);
+        } else {
+          parsedData = breach.comprehensiveData;
+        }
+      } catch (e) {
+        console.warn('[LLM] Could not parse comprehensiveData:', e);
+      }
+    }
     
     // Log the context to debug
     console.log('[LLM] Extracting breach context from:', JSON.stringify(context, null, 2));
-    console.log('[LLM] Parsed form data:', JSON.stringify(parsedData, null, 2));
+    console.log('[LLM] Final parsed form data:', JSON.stringify(parsedData, null, 2));
     
     return {
-      description: breach.description || 'Violation de données non spécifiée',
+      description: breach.description || parsedData.discoveryCircumstances || 'Violation de données non spécifiée',
       incidentType: this.determineIncidentType(parsedData),
       dataTypes: this.formatDataTypes(parsedData.dataCategories),
       affectedCount: parsedData.affectedPersonsCount || breach.affectedPersons || 'Non spécifié',

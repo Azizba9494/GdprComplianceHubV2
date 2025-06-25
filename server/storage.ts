@@ -375,7 +375,7 @@ export class DatabaseStorage implements IStorage {
   // Data Breaches
   async getDataBreaches(companyId: number): Promise<DataBreach[]> {
     return await db.select().from(dataBreaches).where(eq(dataBreaches.companyId, companyId)).orderBy(desc(dataBreaches.createdAt));
-  }
+  },
 
   async createDataBreach(breach: InsertDataBreach): Promise<DataBreach> {
     console.log('Creating data breach with validated data:', JSON.stringify(breach, null, 2));
@@ -388,7 +388,7 @@ export class DatabaseStorage implements IStorage {
       console.error('Database insertion error:', error);
       throw error;
     }
-  }
+  },
 
   async updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach> {
     const [updated] = await db.update(dataBreaches).set(updates).where(eq(dataBreaches.id, id)).returning();
