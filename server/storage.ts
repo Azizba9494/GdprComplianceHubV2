@@ -366,11 +366,11 @@ export class DatabaseStorage implements IStorage {
   async updatePrivacyPolicy(id: number, updates: Partial<InsertPrivacyPolicy>): Promise<PrivacyPolicy> {
     const [updated] = await db.update(privacyPolicies).set(updates).where(eq(privacyPolicies.id, id)).returning();
     return updated;
-  }
+  },
 
   async deletePrivacyPolicy(id: number): Promise<void> {
     await db.delete(privacyPolicies).where(eq(privacyPolicies.id, id));
-  }
+  },
 
   // Data Breaches
   async getDataBreaches(companyId: number): Promise<DataBreach[]> {
