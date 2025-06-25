@@ -28,10 +28,10 @@ import {
   Download,
   ExternalLink,
   Brain,
+  AlertCircle,
   Table,
-  Save,
   Loader2,
-  AlertCircle
+  Save
 } from "lucide-react";
 
 interface Breach {
@@ -1776,91 +1776,142 @@ Généré le: ${new Date().toLocaleString()}
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
 
-      {/* Modale d'analyse IA */}
-      {showAnalysisModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <Brain className="w-5 h-5 mr-2" />
-                  Analyse IA - Violation #{showAnalysisModal.id}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAnalysisModal(null)}
-                >
-                  <XCircle className="w-4 h-4" />
+        <TabsContent value="preview" className="space-y-4">
+          {previewBreach && previewBreach.aiJustification ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="w-5 h-5" />
+                  Aperçu de l'Analyse IA - Violation #{previewBreach.id}
+                </CardTitle>
+                <CardDescription>
+                  Analyse générée selon les directives EDPB Guidelines 9/2022
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <div>
+                    <Label className="font-semibold">Date de l'incident</Label>
+                    <p className="text-sm">{new Date(previewBreach.incidentDate).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Date de découverte</Label>
+                    <p className="text-sm">{new Date(previewBreach.discoveryDate).toLocaleDateString()}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="font-semibold">Description</Label>
+                    <p className="text-sm">{previewBreach.description}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        Notification Autorité
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge 
+                        variant={previewBreach.aiRecommendationAuthority === 'required' ? 'destructive' : 'secondary'}
+                        className="mb-2"
+                      >
+                        {previewBreach.aiRecommendationAuthority === 'required' ? 'REQUISE' : 'NON REQUISE'}
+                      </Badge>
+                      {previewBreach.aiRecommendationAuthority === 'required' && (
+                        <Alert className="mt-2">
+                          <AlertCircle className="w-4 h-4" />
+                          <AlertDescription>
+                            Notification à la CNIL requise dans les 72 heures
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Notification Personnes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Badge 
+                        variant={previewBreach.aiRecommendationDataSubject === 'required' ? 'destructive' : 'secondary'}
+                        className="mb-2"
+                      >
+                        {previewBreach.aiRecommendationDataSubject === 'required' ? 'REQUISE' : 'NON REQUISE'}
+                      </Badge>
+                      {previewBreach.aiRecommendationDataSubject === 'required' && (
+                        <Alert className="mt-2">
+                          <AlertCircle className="w-4 h-4" />
+                          <AlertDescription>
+                            Notification aux personnes concernées recommandée
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Justification Détaillée
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose max-w-none">
+                      <div className="whitespace-pre-wrap text-sm bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border">
+                        {previewBreach.aiJustification}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="text-sm text-gray-500">
+                    <strong>Avertissement:</strong> Cette évaluation est basée sur les directives EDPB Guidelines 9/2022. 
+                    Il est recommandé de consulter des professionnels juridiques qualifiés pour les décisions finales.
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => downloadJustification(previewBreach)}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Télécharger
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveTab('list')}
+                    >
+                      Retour à la liste
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Aucune analyse sélectionnée</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  Sélectionnez une violation avec une analyse IA pour voir l'aperçu.
+                </p>
+                <Button onClick={() => setActiveTab('list')}>
+                  Retour à la liste
                 </Button>
-              </div>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-2">Description de la violation</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-3 rounded">
-                    {showAnalysisModal.description}
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-medium mb-2">Recommandations de notification</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">CNIL:</span>
-                        <Badge variant={showAnalysisModal.aiRecommendationAuthority === 'required' ? 'destructive' : 'secondary'}>
-                          {showAnalysisModal.aiRecommendationAuthority === 'required' ? 'Requise' : 'Non requise'}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">Personnes concernées:</span>
-                        <Badge variant={showAnalysisModal.aiRecommendationDataSubject === 'required' ? 'destructive' : 'secondary'}>
-                          {showAnalysisModal.aiRecommendationDataSubject === 'required' ? 'Requise' : 'Non requise'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium mb-2">Niveau de risque</h3>
-                    <Badge variant={showAnalysisModal.riskAnalysisResult === 'élevé' ? 'destructive' : 
-                                   showAnalysisModal.riskAnalysisResult === 'moyen' ? 'secondary' : 'default'}>
-                      {showAnalysisModal.riskAnalysisResult || 'Non analysé'}
-                    </Badge>
-                  </div>
-                </div>
-                
-                {showAnalysisModal.aiJustification && (
-                  <div>
-                    <h3 className="font-medium mb-2">Justification détaillée</h3>
-                    <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded whitespace-pre-wrap">
-                      {showAnalysisModal.aiJustification}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-xs text-gray-500">
-                    Analyse basée sur les directives EDPB Guidelines 9/2022
-                  </span>
-                  <Button
-                    onClick={() => downloadJustification(showAnalysisModal)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Télécharger l'analyse
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Modale d'analyse IA */}
       {showAnalysisModal && (
