@@ -155,6 +155,7 @@ This is a GDPR (General Data Protection Regulation) compliance platform designed
 - June 25, 2025. Enhanced Breach Analysis Module - added delete functionality for violations in the list view, implemented expandable "en savoir plus" buttons for violation descriptions, updated form wording for "Les personnes concernées sont directement identifiables", created comprehensive synthesis table with editable cells and expandable content, added risk analysis preview buttons, integrated date fields for CNIL and data subject notifications, implemented CSV download functionality for synthesis table with full data export
 - June 25, 2025. Fixed AI Analysis System - resolved Gemini API JSON parsing errors in breach analysis by improving response handling, added enhanced fallback responses with detailed GDPR-compliant justifications, strengthened prompt structure for better AI analysis quality, ensured analysis preview functionality works correctly with comprehensive legal reasoning
 - June 25, 2025. Enhanced AI Analysis Contextual Responses - implemented contextual fallback system that generates unique justifications based on actual violation data instead of generic responses, added extraction of form data for personalized analysis, improved risk assessment based on data categories and affected persons count
+- June 25, 2025. Fixed Breach Deletion Functionality - corrected deleteDataBreach storage method and route handling, violations can now be properly deleted from the interface without errors
 
 ## User Preferences
 
