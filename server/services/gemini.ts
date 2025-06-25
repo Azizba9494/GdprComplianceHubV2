@@ -512,19 +512,33 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
       const response = await result.response;
       const text = response.text();
 
-      console.log('[LLM] Raw response received:', text.substring(0, 200) + '...');
+      console.log('[LLM] Raw response received:', text ? text.substring(0, 200) + '...' : 'EMPTY RESPONSE');
+
+      // Check if response is empty or too short
+      if (!text || text.trim().length < 10) {
+        console.error('[LLM] Empty or too short response:', text);
+        throw new Error('Réponse IA vide ou trop courte');
+      }
 
       try {
-        return JSON.parse(text);
+        const cleanText = text.trim();
+        return JSON.parse(cleanText);
       } catch (parseError) {
         console.error('[LLM] JSON parse error:', parseError);
         console.error('[LLM] Raw response:', text);
         
-        // Attempt to extract JSON from the response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        // Attempt to extract JSON from markdown code blocks
+        let jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+        if (!jsonMatch) {
+          // Try to find any JSON-like structure
+          jsonMatch = text.match(/\{[\s\S]*\}/);
+        }
+        
         if (jsonMatch) {
           try {
-            return JSON.parse(jsonMatch[0]);
+            const extractedJson = jsonMatch[1] || jsonMatch[0];
+            console.log('[LLM] Attempting to parse extracted JSON:', extractedJson.substring(0, 200));
+            return JSON.parse(extractedJson.trim());
           } catch (secondParseError) {
             console.error('[LLM] Second parse attempt failed:', secondParseError);
           }
