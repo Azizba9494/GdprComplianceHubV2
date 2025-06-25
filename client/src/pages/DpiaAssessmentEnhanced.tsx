@@ -1938,7 +1938,7 @@ export default function DpiaAssessmentEnhanced() {
                           <h4 className="font-medium text-sm mb-3 text-gray-900 dark:text-gray-100">
                             {category}
                           </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                             {CNIL_SECURITY_MEASURES
                               .filter(measure => measure.category === category)
                               .map(measure => (
@@ -1948,12 +1948,12 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => addSecurityMeasure(measure)}
-                                  className="justify-start h-auto p-3 text-left"
+                                  className="justify-start h-auto p-4 text-left min-h-[100px] whitespace-normal"
                                   disabled={form.watch("securityMeasures")?.some((m: any) => m.id === measure.id)}
                                 >
-                                  <div>
-                                    <div className="font-medium text-sm">{measure.name}</div>
-                                    <div className="text-xs text-gray-500 mt-1">
+                                  <div className="w-full">
+                                    <div className="font-medium text-sm mb-2 leading-tight">{measure.name}</div>
+                                    <div className="text-xs text-gray-500 leading-relaxed break-words">
                                       {measure.description}
                                     </div>
                                   </div>
