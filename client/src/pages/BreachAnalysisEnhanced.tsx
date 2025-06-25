@@ -1411,18 +1411,22 @@ Généré le: ${new Date().toLocaleString()}
                                 const measures = breach.measures ? JSON.parse(breach.measures) : {};
                                 const allMeasures = [measures.immediate, measures.mediumTerm, measures.longTerm, measures.other]
                                   .filter(Boolean).join(', ');
+                                const displayText = allMeasures || breach.technicalMeasures || 'Aucune mesure renseignée';
                                 return (
-                                  <div className="truncate" title={allMeasures || breach.technicalMeasures || 'Aucune mesure renseignée'}>
-                                    {(allMeasures || breach.technicalMeasures || 'Aucune mesure').substring(0, 50)}
-                                    {(allMeasures || breach.technicalMeasures || '').length > 50 ? '...' : ''}
-                                  </div>
+                                  <ExpandableText 
+                                    text={displayText}
+                                    maxLength={50}
+                                    className="text-sm"
+                                  />
                                 );
                               } catch {
+                                const displayText = breach.measures || breach.technicalMeasures || 'Aucune mesure renseignée';
                                 return (
-                                  <div className="truncate" title={breach.measures || breach.technicalMeasures || 'Aucune mesure renseignée'}>
-                                    {(breach.measures || breach.technicalMeasures || 'Aucune mesure').substring(0, 50)}
-                                    {(breach.measures || breach.technicalMeasures || '').length > 50 ? '...' : ''}
-                                  </div>
+                                  <ExpandableText 
+                                    text={displayText}
+                                    maxLength={50}
+                                    className="text-sm"
+                                  />
                                 );
                               }
                             })()}
@@ -1435,18 +1439,22 @@ Généré le: ${new Date().toLocaleString()}
                                   ...(consequences.consequences || []),
                                   ...(consequences.potentialHarms || [])
                                 ].join(', ');
+                                const displayText = allConsequences || breach.potentialImpact || 'Aucune répercussion renseignée';
                                 return (
-                                  <div className="truncate" title={allConsequences || breach.potentialImpact || 'Aucune répercussion renseignée'}>
-                                    {(allConsequences || breach.potentialImpact || 'Aucune répercussion').substring(0, 50)}
-                                    {(allConsequences || breach.potentialImpact || '').length > 50 ? '...' : ''}
-                                  </div>
+                                  <ExpandableText 
+                                    text={displayText}
+                                    maxLength={50}
+                                    className="text-sm"
+                                  />
                                 );
                               } catch {
+                                const displayText = breach.consequences || breach.potentialImpact || 'Aucune répercussion renseignée';
                                 return (
-                                  <div className="truncate" title={breach.consequences || breach.potentialImpact || 'Aucune répercussion renseignée'}>
-                                    {(breach.consequences || breach.potentialImpact || 'Aucune répercussion').substring(0, 50)}
-                                    {(breach.consequences || breach.potentialImpact || '').length > 50 ? '...' : ''}
-                                  </div>
+                                  <ExpandableText 
+                                    text={displayText}
+                                    maxLength={50}
+                                    className="text-sm"
+                                  />
                                 );
                               }
                             })()}
