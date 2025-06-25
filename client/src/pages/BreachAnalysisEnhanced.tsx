@@ -33,6 +33,7 @@ import {
   Loader2,
   AlertCircle
 } from "lucide-react";
+import { ExpandableText } from "@/components/ui/expandable-text";
 
 interface Breach {
   id: number;
@@ -504,7 +505,11 @@ Généré le: ${new Date().toLocaleString()}
                           Violation #{breach.id}
                         </CardTitle>
                         <CardDescription>
-                          {new Date(breach.incidentDate).toLocaleDateString()} - {breach.description.substring(0, 100)}...
+                          <ExpandableText 
+                            text={`${new Date(breach.incidentDate).toLocaleDateString()} - ${breach.description}`}
+                            maxLength={100}
+                            className="text-muted-foreground"
+                          />
                         </CardDescription>
                       </div>
                       <div className="flex items-center space-x-2">
