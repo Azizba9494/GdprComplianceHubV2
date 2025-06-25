@@ -474,30 +474,31 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
   }
 
   async generateStructuredResponse(prompt: string, schema: any, context?: any, ragDocuments?: string[]): Promise<any> {
-    const client = await this.getClient();
-    
     try {
-      const activeLlmConfig = await storage.getActiveLlmConfiguration();
-      const model = client.getGenerativeModel({ 
-        model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
+      const apiKey = process.env.GOOGLE_API_KEY;
+      if (!apiKey) {
+        throw new Error('Clé API Google non configurée');
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
         generationConfig: {
-          temperature: activeLlmConfig?.temperature || 0.3,
-          maxOutputTokens: activeLlmConfig?.maxTokens || 3000,
-          responseMimeType: "application/json",
+          temperature: 0.1,
+          topK: 1,
+          topP: 0.8,
+          maxOutputTokens: 4096,
         }
       });
 
       let contextSection = '';
       if (ragDocuments && ragDocuments.length > 0) {
-        contextSection = `\n\nDocuments de référence à prioriser:\n${ragDocuments.join('\n\n---\n\n')}`;
+        contextSection = `\n\nDocuments de référence:\n${ragDocuments.join('\n\n---\n\n')}`;
       }
 
-      const fullPrompt = `Vous êtes un expert en conformité RGPD. Répondez uniquement avec un JSON valide selon le schéma demandé.
+      const fullPrompt = `${prompt}
 
-${contextSection ? 'IMPORTANT: Utilisez en priorité les informations des documents de référence fournis.' : ''}
 ${contextSection}
-
-${prompt}
 
 Schéma de réponse attendu: ${JSON.stringify(schema)}
 
@@ -505,11 +506,27 @@ Contexte: ${JSON.stringify(context || {})}
 
 Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
 
-      console.log(`[LLM] Using model: ${activeLlmConfig?.modelName || 'gemini-2.5-flash'}`);
+      console.log('[LLM] Using model: gemini-2.5-flash');
       console.log('[LLM] Sending prompt for breach analysis...');
+      console.log(`[LLM] Prompt length: ${fullPrompt.length} characters`);
 
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
+      
+      // Check for safety or other blocking reasons
+      const candidates = response.candidates;
+      if (candidates && candidates.length > 0) {
+        const candidate = candidates[0];
+        if (candidate.finishReason === 'SAFETY') {
+          console.error('[LLM] Response blocked by safety filters:', candidate.safetyRatings);
+          throw new Error('Réponse bloquée par les filtres de sécurité');
+        }
+        if (candidate.finishReason === 'RECITATION') {
+          console.error('[LLM] Response blocked for recitation');
+          throw new Error('Réponse bloquée pour récitation');
+        }
+      }
+      
       const text = response.text();
 
       console.log('[LLM] Raw response received:', text.length > 0 ? text.substring(0, 200) + '...' : 'EMPTY RESPONSE');
@@ -548,7 +565,7 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
         
         // Return specific fallback response for breach analysis based on context
         if (prompt.includes('violation') || prompt.includes('breach')) {
-          console.log('[LLM] Returning contextual fallback response for breach analysis');
+          console.log('[LLM] API parsing failed - returning contextual fallback response for breach analysis');
           
           // Extract key information from breach data for contextual fallback
           const contextualInfo = this.extractBreachContext(context);
