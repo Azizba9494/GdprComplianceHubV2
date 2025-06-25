@@ -91,7 +91,6 @@ export interface IStorage {
   getDataBreaches(companyId: number): Promise<DataBreach[]>;
   createDataBreach(breach: InsertDataBreach): Promise<DataBreach>;
   updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach>;
-  deleteDataBreach(id: number): Promise<void>;
 
   // DPIA Assessments
   getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]>;
@@ -361,21 +360,21 @@ export class DatabaseStorage implements IStorage {
   async createPrivacyPolicy(policy: InsertPrivacyPolicy): Promise<PrivacyPolicy> {
     const [created] = await db.insert(privacyPolicies).values(policy).returning();
     return created;
-  },
+  }
 
   async updatePrivacyPolicy(id: number, updates: Partial<InsertPrivacyPolicy>): Promise<PrivacyPolicy> {
     const [updated] = await db.update(privacyPolicies).set(updates).where(eq(privacyPolicies.id, id)).returning();
     return updated;
-  },
+  }
 
   async deletePrivacyPolicy(id: number): Promise<void> {
     await db.delete(privacyPolicies).where(eq(privacyPolicies.id, id));
-  },
+  }
 
   // Data Breaches
   async getDataBreaches(companyId: number): Promise<DataBreach[]> {
     return await db.select().from(dataBreaches).where(eq(dataBreaches.companyId, companyId)).orderBy(desc(dataBreaches.createdAt));
-  },
+  }
 
   async createDataBreach(breach: InsertDataBreach): Promise<DataBreach> {
     console.log('Creating data breach with validated data:', JSON.stringify(breach, null, 2));
@@ -388,16 +387,12 @@ export class DatabaseStorage implements IStorage {
       console.error('Database insertion error:', error);
       throw error;
     }
-  },
+  }
 
   async updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach> {
     const [updated] = await db.update(dataBreaches).set(updates).where(eq(dataBreaches.id, id)).returning();
     return updated;
-  },
-
-  async deleteDataBreach(id: number): Promise<void> {
-    await db.delete(dataBreaches).where(eq(dataBreaches.id, id));
-  },
+  }
 
   // DPIA Assessments
   async getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]> {
