@@ -469,11 +469,8 @@ Généré le: ${new Date().toLocaleString()}
     if (!editingCell) return;
     
     try {
-      await apiRequest(`/api/breaches/${editingCell.breachId}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          [editingCell.field]: editValue
-        })
+      await apiRequest('PUT', `/api/breaches/${editingCell.breachId}`, {
+        [editingCell.field]: editValue
       });
       
       queryClient.invalidateQueries({ queryKey: ['/api/breaches/1'] });
@@ -485,6 +482,7 @@ Généré le: ${new Date().toLocaleString()}
       setEditingCell(null);
       setEditValue("");
     } catch (error) {
+      console.error('Save edit error:', error);
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder la modification.",
