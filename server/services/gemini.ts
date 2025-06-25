@@ -5,19 +5,16 @@ import { contextExtractor, type AIContext } from './contextExtractor';
 export class GeminiService {
   constructor() {}
 
-  private async loadRagDocuments(): Promise<string[]> {
+  private async loadRagDocuments(promptName?: string): Promise<string[]> {
     try {
-      // Cette méthode charge les documents RAG depuis la base de données
       const ragDocuments: string[] = [];
       
-      // Get all active prompts
-      const allPrompts = await storage.getAiPrompts();
-      const activePrompts = allPrompts.filter(p => p.isActive);
-      
-      // For each active prompt, get associated documents
-      for (const prompt of activePrompts) {
-        try {
-          const promptDocuments = await storage.getPromptDocuments(prompt.id);
+      if (promptName) {
+        // Load documents only for the specific prompt
+        const specificPrompt = await storage.getAiPromptByName(promptName);
+        if (specificPrompt && specificPrompt.isActive) {
+          console.log(`[RAG] Loading documents specifically for prompt: ${promptName}`);
+          const promptDocuments = await storage.getPromptDocuments(specificPrompt.id);
           if (promptDocuments.length > 0) {
             const documentIds = promptDocuments
               .sort((a, b) => a.priority - b.priority)
@@ -25,16 +22,40 @@ export class GeminiService {
             
             for (const docId of documentIds) {
               const document = await storage.getRagDocument(docId);
-              if (document && document.isActive && !ragDocuments.includes(document.content)) {
+              if (document && document.isActive) {
                 ragDocuments.push(document.content);
               }
             }
           }
-        } catch (error) {
-          console.error(`Error loading documents for prompt ${prompt.id}:`, error);
+        }
+      } else {
+        // Original behavior: Get all active prompts
+        const allPrompts = await storage.getAiPrompts();
+        const activePrompts = allPrompts.filter(p => p.isActive);
+        
+        // For each active prompt, get associated documents
+        for (const prompt of activePrompts) {
+          try {
+            const promptDocuments = await storage.getPromptDocuments(prompt.id);
+            if (promptDocuments.length > 0) {
+              const documentIds = promptDocuments
+                .sort((a, b) => a.priority - b.priority)
+                .map(pd => pd.documentId);
+              
+              for (const docId of documentIds) {
+                const document = await storage.getRagDocument(docId);
+                if (document && document.isActive && !ragDocuments.includes(document.content)) {
+                  ragDocuments.push(document.content);
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error loading documents for prompt ${prompt.id}:`, error);
+          }
         }
       }
       
+      console.log(`[RAG] Found ${ragDocuments.length} documents${promptName ? ` for prompt ${promptName}` : ' total'}`);
       return ragDocuments;
     } catch (error) {
       console.error('Error loading RAG documents:', error);
@@ -948,8 +969,6 @@ La politique doit être:
     riskLevel: string;
     recommendations: string[];
   }> {
-    console.log('[RAG] Found', ragDocuments.length, 'documents for breach analysis');
-    
     try {
       // Get the configured prompt for breach analysis
       const breachAnalysisPrompt = await storage.getAiPromptByName('Analyse Violation Données');
@@ -960,7 +979,10 @@ La politique doit être:
       }
 
       console.log('[BREACH] Using configured prompt:', breachAnalysisPrompt.name);
-      console.log('[BREACH] Prompt length:', breachAnalysisPrompt.prompt.length, 'characters');
+      
+      // Load documents specifically associated with this prompt
+      const specificRagDocuments = await this.loadRagDocuments('Analyse Violation Données');
+      console.log(`[BREACH] Found ${specificRagDocuments.length} documents specifically for breach analysis prompt`);
 
       // Prepare breach data for the prompt
       const breachDataString = JSON.stringify(breachData, null, 2);
@@ -984,8 +1006,8 @@ La politique doit être:
         recommendations: ["string"]
       };
 
-      console.log('[BREACH] Starting AI analysis with structured response...');
-      return await this.generateStructuredResponse(prompt, schema, breachData, ragDocuments);
+      console.log('[BREACH] Starting AI analysis with specific prompt documents...');
+      return await this.generateStructuredResponse(prompt, schema, breachData, specificRagDocuments);
       
     } catch (error: any) {
       console.error('[BREACH] AI analysis failed:', error.message);
