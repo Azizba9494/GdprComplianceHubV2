@@ -78,6 +78,10 @@ export default function BreachAnalysisEnhanced() {
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState("list");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [editingCell, setEditingCell] = useState<{breachId: number, field: string} | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [showAnalysisModal, setShowAnalysisModal] = useState<Breach | null>(null);
 
   const [formData, setFormData] = useState({
     // Nature de la violation
@@ -444,6 +448,97 @@ Généré le: ${new Date().toLocaleString()}
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const toggleRowExpansion = (breachId: number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(breachId)) {
+      newExpanded.delete(breachId);
+    } else {
+      newExpanded.add(breachId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const startEditing = (breachId: number, field: string, currentValue: string) => {
+    setEditingCell({ breachId, field });
+    setEditValue(currentValue || "");
+  };
+
+  const saveEdit = async () => {
+    if (!editingCell) return;
+    
+    try {
+      await apiRequest(`/api/breaches/${editingCell.breachId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          [editingCell.field]: editValue
+        })
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/breaches/1'] });
+      toast({
+        title: "Modification sauvegardée",
+        description: "La violation a été mise à jour avec succès."
+      });
+      
+      setEditingCell(null);
+      setEditValue("");
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la modification.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const downloadSummaryTable = () => {
+    if (!breaches || breaches.length === 0) return;
+    
+    const headers = [
+      'Date de début',
+      'Date de découverte', 
+      'Description',
+      'Mesures prises',
+      'Répercussions',
+      'Analyse du risque',
+      'Notification CNIL',
+      'Date notification CNIL',
+      'Notification personnes',
+      'Date notification personnes'
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      ...breaches.map((breach: Breach) => [
+        new Date(breach.incidentDate).toLocaleDateString(),
+        new Date(breach.discoveryDate).toLocaleDateString(),
+        `"${breach.description.replace(/"/g, '""')}"`,
+        `"${(breach.measures || '').replace(/"/g, '""')}"`,
+        `"${(breach.consequences || '').replace(/"/g, '""')}"`,
+        `"${(breach.riskAnalysisResult || 'Non analysé').replace(/"/g, '""')}"`,
+        breach.aiRecommendationAuthority === 'required' ? 'Requise' : 'Non requise',
+        breach.notificationDate ? new Date(breach.notificationDate).toLocaleDateString() : '',
+        breach.aiRecommendationDataSubject === 'required' ? 'Requise' : 'Non requise',
+        breach.dataSubjectNotificationDate ? new Date(breach.dataSubjectNotificationDate).toLocaleDateString() : ''
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tableau-synthese-violations-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export réussi",
+      description: "Le tableau de synthèse a été téléchargé au format CSV."
+    });
   };
 
   const getSeverityColor = (severity: string) => {
@@ -1360,12 +1455,18 @@ Généré le: ${new Date().toLocaleString()}
         <TabsContent value="summary">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Table className="w-5 h-5 mr-2" />
-                Tableau de Synthèse des Violations
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Table className="w-5 h-5 mr-2" />
+                  Tableau de Synthèse des Violations
+                </div>
+                <Button onClick={downloadSummaryTable} variant="outline" size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporter CSV
+                </Button>
               </CardTitle>
               <CardDescription>
-                Tableau récapitulatif éditable de toutes les violations analysées
+                Tableau récapitulatif éditable de toutes les violations analysées avec possibilité d'expansion et modification
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1374,6 +1475,7 @@ Généré le: ${new Date().toLocaleString()}
                   <table className="w-full border-collapse border border-gray-300">
                     <thead>
                       <tr className="bg-gray-50">
+                        <th className="border border-gray-300 p-2 text-left text-sm font-medium">Actions</th>
                         <th className="border border-gray-300 p-2 text-left text-sm font-medium">Date de début</th>
                         <th className="border border-gray-300 p-2 text-left text-sm font-medium">Date de découverte</th>
                         <th className="border border-gray-300 p-2 text-left text-sm font-medium">Description</th>
@@ -1381,23 +1483,387 @@ Généré le: ${new Date().toLocaleString()}
                         <th className="border border-gray-300 p-2 text-left text-sm font-medium">Répercussions</th>
                         <th className="border border-gray-300 p-2 text-left text-sm font-medium">Analyse du risque</th>
                         <th className="border border-gray-300 p-2 text-left text-sm font-medium">Notification CNIL</th>
+                        <th className="border border-gray-300 p-2 text-left text-sm font-medium">Date notification CNIL</th>
                         <th className="border border-gray-300 p-2 text-left text-sm font-medium">Notification personnes</th>
+                        <th className="border border-gray-300 p-2 text-left text-sm font-medium">Date notification personnes</th>
                       </tr>
                     </thead>
                     <tbody>
                       {breaches.map((breach: Breach) => (
-                        <tr key={breach.id}>
-                          <td className="border border-gray-300 p-2 text-sm">
-                            {new Date(breach.incidentDate).toLocaleDateString()}
-                          </td>
-                          <td className="border border-gray-300 p-2 text-sm">
-                            {new Date(breach.discoveryDate).toLocaleDateString()}
-                          </td>
-                          <td className="border border-gray-300 p-2 text-sm max-w-xs">
-                            <div className="truncate" title={breach.description}>
-                              {breach.description.substring(0, 50)}...
+                        <tr key={breach.id} className="hover:bg-gray-50">
+                          {/* Colonne Actions */}
+                          <td className="border border-gray-300 p-2">
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => toggleRowExpansion(breach.id)}
+                                title="Développer/Réduire"
+                                className="h-6 w-6 p-0"
+                              >
+                                {expandedRows.has(breach.id) ? '−' : '+'}
+                              </Button>
+                              {breach.aiJustification && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setShowAnalysisModal(breach)}
+                                  title="Voir l'analyse IA"
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Brain className="w-3 h-3" />
+                                </Button>
+                              )}
                             </div>
                           </td>
+                          
+                          {/* Date de début */}
+                          <td className="border border-gray-300 p-2 text-sm">
+                            {editingCell?.breachId === breach.id && editingCell?.field === 'incidentDate' ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  type="date"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="h-6 text-xs"
+                                />
+                                <Button size="sm" onClick={saveEdit} className="h-6 w-6 p-0">
+                                  <Save className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="cursor-pointer hover:bg-blue-50 p-1 rounded"
+                                onClick={() => startEditing(breach.id, 'incidentDate', breach.incidentDate.split('T')[0])}
+                              >
+                                {new Date(breach.incidentDate).toLocaleDateString()}
+                                <Edit className="w-3 h-3 inline ml-1 opacity-50" />
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* Date de découverte */}
+                          <td className="border border-gray-300 p-2 text-sm">
+                            {editingCell?.breachId === breach.id && editingCell?.field === 'discoveryDate' ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  type="date"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="h-6 text-xs"
+                                />
+                                <Button size="sm" onClick={saveEdit} className="h-6 w-6 p-0">
+                                  <Save className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="cursor-pointer hover:bg-blue-50 p-1 rounded"
+                                onClick={() => startEditing(breach.id, 'discoveryDate', breach.discoveryDate.split('T')[0])}
+                              >
+                                {new Date(breach.discoveryDate).toLocaleDateString()}
+                                <Edit className="w-3 h-3 inline ml-1 opacity-50" />
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* Description */}
+                          <td className="border border-gray-300 p-2 text-sm max-w-xs">
+                            {editingCell?.breachId === breach.id && editingCell?.field === 'description' ? (
+                              <div className="flex gap-1">
+                                <Textarea
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="min-h-20 text-xs"
+                                />
+                                <Button size="sm" onClick={saveEdit} className="h-6 w-6 p-0">
+                                  <Save className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="cursor-pointer hover:bg-blue-50 p-1 rounded"
+                                onClick={() => startEditing(breach.id, 'description', breach.description)}
+                              >
+                                {expandedRows.has(breach.id) ? (
+                                  <div>{breach.description}</div>
+                                ) : (
+                                  <div className="truncate" title={breach.description}>
+                                    {breach.description.substring(0, 50)}...
+                                  </div>
+                                )}
+                                <Edit className="w-3 h-3 inline ml-1 opacity-50" />
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* Mesures prises */}
+                          <td className="border border-gray-300 p-2 text-sm max-w-xs">
+                            {editingCell?.breachId === breach.id && editingCell?.field === 'measures' ? (
+                              <div className="flex gap-1">
+                                <Textarea
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="min-h-20 text-xs"
+                                />
+                                <Button size="sm" onClick={saveEdit} className="h-6 w-6 p-0">
+                                  <Save className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="cursor-pointer hover:bg-blue-50 p-1 rounded"
+                                onClick={() => startEditing(breach.id, 'measures', breach.measures || '')}
+                              >
+                                {expandedRows.has(breach.id) ? (
+                                  <div>{breach.measures || 'Aucune mesure spécifiée'}</div>
+                                ) : (
+                                  <div className="truncate" title={breach.measures || 'Aucune mesure spécifiée'}>
+                                    {(breach.measures || 'Aucune mesure spécifiée').substring(0, 30)}...
+                                  </div>
+                                )}
+                                <Edit className="w-3 h-3 inline ml-1 opacity-50" />
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* Répercussions */}
+                          <td className="border border-gray-300 p-2 text-sm max-w-xs">
+                            {editingCell?.breachId === breach.id && editingCell?.field === 'consequences' ? (
+                              <div className="flex gap-1">
+                                <Textarea
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="min-h-20 text-xs"
+                                />
+                                <Button size="sm" onClick={saveEdit} className="h-6 w-6 p-0">
+                                  <Save className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="cursor-pointer hover:bg-blue-50 p-1 rounded"
+                                onClick={() => startEditing(breach.id, 'consequences', breach.consequences || '')}
+                              >
+                                {expandedRows.has(breach.id) ? (
+                                  <div>{breach.consequences || 'Aucune répercussion spécifiée'}</div>
+                                ) : (
+                                  <div className="truncate" title={breach.consequences || 'Aucune répercussion spécifiée'}>
+                                    {(breach.consequences || 'Aucune répercussion spécifiée').substring(0, 30)}...
+                                  </div>
+                                )}
+                                <Edit className="w-3 h-3 inline ml-1 opacity-50" />
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* Analyse du risque */}
+                          <td className="border border-gray-300 p-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={breach.riskAnalysisResult === 'élevé' ? 'destructive' : 
+                                             breach.riskAnalysisResult === 'moyen' ? 'secondary' : 'default'}>
+                                {breach.riskAnalysisResult || 'Non analysé'}
+                              </Badge>
+                              {breach.aiJustification && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setShowAnalysisModal(breach)}
+                                  title="Voir les détails de l'analyse"
+                                  className="h-5 w-5 p-0"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                          
+                          {/* Notification CNIL */}
+                          <td className="border border-gray-300 p-2 text-sm">
+                            {breach.aiRecommendationAuthority === 'required' ? (
+                              <Badge variant="destructive">Requise</Badge>
+                            ) : (
+                              <Badge variant="secondary">Non requise</Badge>
+                            )}
+                          </td>
+                          
+                          {/* Date notification CNIL */}
+                          <td className="border border-gray-300 p-2 text-sm">
+                            {editingCell?.breachId === breach.id && editingCell?.field === 'notificationDate' ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  type="date"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="h-6 text-xs"
+                                />
+                                <Button size="sm" onClick={saveEdit} className="h-6 w-6 p-0">
+                                  <Save className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="cursor-pointer hover:bg-blue-50 p-1 rounded"
+                                onClick={() => startEditing(breach.id, 'notificationDate', breach.notificationDate?.split('T')[0] || '')}
+                              >
+                                {breach.notificationDate ? (
+                                  new Date(breach.notificationDate).toLocaleDateString()
+                                ) : (
+                                  <span className="text-gray-400">Non définie</span>
+                                )}
+                                <Edit className="w-3 h-3 inline ml-1 opacity-50" />
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* Notification personnes */}
+                          <td className="border border-gray-300 p-2 text-sm">
+                            {breach.aiRecommendationDataSubject === 'required' ? (
+                              <Badge variant="destructive">Requise</Badge>
+                            ) : (
+                              <Badge variant="secondary">Non requise</Badge>
+                            )}
+                          </td>
+                          
+                          {/* Date notification personnes */}
+                          <td className="border border-gray-300 p-2 text-sm">
+                            {editingCell?.breachId === breach.id && editingCell?.field === 'dataSubjectNotificationDate' ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  type="date"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="h-6 text-xs"
+                                />
+                                <Button size="sm" onClick={saveEdit} className="h-6 w-6 p-0">
+                                  <Save className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div
+                                className="cursor-pointer hover:bg-blue-50 p-1 rounded"
+                                onClick={() => startEditing(breach.id, 'dataSubjectNotificationDate', breach.dataSubjectNotificationDate?.split('T')[0] || '')}
+                              >
+                                {breach.dataSubjectNotificationDate ? (
+                                  new Date(breach.dataSubjectNotificationDate).toLocaleDateString()
+                                ) : (
+                                  <span className="text-gray-400">Non définie</span>
+                                )}
+                                <Edit className="w-3 h-3 inline ml-1 opacity-50" />
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Table className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    Aucune violation enregistrée
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    Créez votre première violation pour commencer à utiliser le tableau de synthèse.
+                  </p>
+                  <Button onClick={handleNewBreach}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nouvelle Violation
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Modale d'analyse IA */}
+      {showAnalysisModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Brain className="w-5 h-5 mr-2" />
+                  Analyse IA - Violation #{showAnalysisModal.id}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAnalysisModal(null)}
+                >
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2">Description de la violation</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-3 rounded">
+                    {showAnalysisModal.description}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Recommandations de notification</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">CNIL:</span>
+                        <Badge variant={showAnalysisModal.aiRecommendationAuthority === 'required' ? 'destructive' : 'secondary'}>
+                          {showAnalysisModal.aiRecommendationAuthority === 'required' ? 'Requise' : 'Non requise'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">Personnes concernées:</span>
+                        <Badge variant={showAnalysisModal.aiRecommendationDataSubject === 'required' ? 'destructive' : 'secondary'}>
+                          {showAnalysisModal.aiRecommendationDataSubject === 'required' ? 'Requise' : 'Non requise'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium mb-2">Niveau de risque</h3>
+                    <Badge variant={showAnalysisModal.riskAnalysisResult === 'élevé' ? 'destructive' : 
+                                   showAnalysisModal.riskAnalysisResult === 'moyen' ? 'secondary' : 'default'}>
+                      {showAnalysisModal.riskAnalysisResult || 'Non analysé'}
+                    </Badge>
+                  </div>
+                </div>
+                
+                {showAnalysisModal.aiJustification && (
+                  <div>
+                    <h3 className="font-medium mb-2">Justification détaillée</h3>
+                    <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded whitespace-pre-wrap">
+                      {showAnalysisModal.aiJustification}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-xs text-gray-500">
+                    Analyse basée sur les directives EDPB Guidelines 9/2022
+                  </span>
+                  <Button
+                    onClick={() => downloadJustification(showAnalysisModal)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Télécharger l'analyse
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
                           <td className="border border-gray-300 p-2 text-sm max-w-xs">
                             {(() => {
                               try {
