@@ -1604,13 +1604,36 @@ Généré le: ${new Date().toLocaleString()}
                                 className="cursor-pointer hover:bg-blue-50 p-1 rounded"
                                 onClick={() => startEditing(breach.id, 'measures', breach.measures || '')}
                               >
-                                {expandedRows.has(breach.id) ? (
-                                  <div>{breach.measures || 'Aucune mesure spécifiée'}</div>
-                                ) : (
-                                  <div className="truncate" title={breach.measures || 'Aucune mesure spécifiée'}>
-                                    {(breach.measures || 'Aucune mesure spécifiée').substring(0, 30)}...
-                                  </div>
-                                )}
+                                {(() => {
+                                  try {
+                                    const measures = breach.measures ? JSON.parse(breach.measures) : {};
+                                    const allMeasures = [measures.immediate, measures.mediumTerm, measures.longTerm, measures.other]
+                                      .filter(Boolean).join(', ');
+                                    return allMeasures ? (
+                                      expandedRows.has(breach.id) ? (
+                                        <div>{allMeasures}</div>
+                                      ) : (
+                                        <div className="truncate" title={allMeasures}>
+                                          {allMeasures.substring(0, 30)}...
+                                        </div>
+                                      )
+                                    ) : (
+                                      <span className="text-gray-400 italic">A renseigner par l'utilisateur</span>
+                                    );
+                                  } catch {
+                                    return breach.measures ? (
+                                      expandedRows.has(breach.id) ? (
+                                        <div>{breach.measures}</div>
+                                      ) : (
+                                        <div className="truncate" title={breach.measures}>
+                                          {breach.measures.substring(0, 30)}...
+                                        </div>
+                                      )
+                                    ) : (
+                                      <span className="text-gray-400 italic">A renseigner par l'utilisateur</span>
+                                    );
+                                  }
+                                })()}
                                 <Edit className="w-3 h-3 inline ml-1 opacity-50" />
                               </div>
                             )}
@@ -1634,13 +1657,38 @@ Généré le: ${new Date().toLocaleString()}
                                 className="cursor-pointer hover:bg-blue-50 p-1 rounded"
                                 onClick={() => startEditing(breach.id, 'consequences', breach.consequences || '')}
                               >
-                                {expandedRows.has(breach.id) ? (
-                                  <div>{breach.consequences || 'Aucune répercussion spécifiée'}</div>
-                                ) : (
-                                  <div className="truncate" title={breach.consequences || 'Aucune répercussion spécifiée'}>
-                                    {(breach.consequences || 'Aucune répercussion spécifiée').substring(0, 30)}...
-                                  </div>
-                                )}
+                                {(() => {
+                                  try {
+                                    const consequences = breach.consequences ? JSON.parse(breach.consequences) : {};
+                                    const allConsequences = [
+                                      ...(consequences.consequences || []),
+                                      ...(consequences.potentialHarms || [])
+                                    ].join(', ');
+                                    return allConsequences ? (
+                                      expandedRows.has(breach.id) ? (
+                                        <div>{allConsequences}</div>
+                                      ) : (
+                                        <div className="truncate" title={allConsequences}>
+                                          {allConsequences.substring(0, 30)}...
+                                        </div>
+                                      )
+                                    ) : (
+                                      <span className="text-gray-400 italic">A renseigner par l'utilisateur</span>
+                                    );
+                                  } catch {
+                                    return breach.consequences ? (
+                                      expandedRows.has(breach.id) ? (
+                                        <div>{breach.consequences}</div>
+                                      ) : (
+                                        <div className="truncate" title={breach.consequences}>
+                                          {breach.consequences.substring(0, 30)}...
+                                        </div>
+                                      )
+                                    ) : (
+                                      <span className="text-gray-400 italic">A renseigner par l'utilisateur</span>
+                                    );
+                                  }
+                                })()}
                                 <Edit className="w-3 h-3 inline ml-1 opacity-50" />
                               </div>
                             )}
