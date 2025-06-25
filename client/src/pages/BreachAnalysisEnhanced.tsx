@@ -1861,6 +1861,90 @@ Généré le: ${new Date().toLocaleString()}
           </div>
         </div>
       )}
+
+      {/* Modale d'analyse IA */}
+      {showAnalysisModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Brain className="w-5 h-5 mr-2" />
+                  Analyse IA - Violation #{showAnalysisModal.id}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAnalysisModal(null)}
+                >
+                  <XCircle className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2">Description de la violation</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-3 rounded">
+                    {showAnalysisModal.description}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Recommandations de notification</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">CNIL:</span>
+                        <Badge variant={showAnalysisModal.aiRecommendationAuthority === 'required' ? 'destructive' : 'secondary'}>
+                          {showAnalysisModal.aiRecommendationAuthority === 'required' ? 'Requise' : 'Non requise'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">Personnes concernées:</span>
+                        <Badge variant={showAnalysisModal.aiRecommendationDataSubject === 'required' ? 'destructive' : 'secondary'}>
+                          {showAnalysisModal.aiRecommendationDataSubject === 'required' ? 'Requise' : 'Non requise'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium mb-2">Niveau de risque</h3>
+                    <Badge variant={showAnalysisModal.riskAnalysisResult === 'élevé' ? 'destructive' : 
+                                   showAnalysisModal.riskAnalysisResult === 'moyen' ? 'secondary' : 'default'}>
+                      {showAnalysisModal.riskAnalysisResult || 'Non analysé'}
+                    </Badge>
+                  </div>
+                </div>
+                
+                {showAnalysisModal.aiJustification && (
+                  <div>
+                    <h3 className="font-medium mb-2">Justification détaillée</h3>
+                    <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded whitespace-pre-wrap">
+                      {showAnalysisModal.aiJustification}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-xs text-gray-500">
+                    Analyse basée sur les directives EDPB Guidelines 9/2022
+                  </span>
+                  <Button
+                    onClick={() => downloadJustification(showAnalysisModal)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Télécharger l'analyse
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
