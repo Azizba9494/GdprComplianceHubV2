@@ -91,7 +91,6 @@ export interface IStorage {
   getDataBreaches(companyId: number): Promise<DataBreach[]>;
   createDataBreach(breach: InsertDataBreach): Promise<DataBreach>;
   updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach>;
-  deleteDataBreach(id: number): Promise<void>;
 
   // DPIA Assessments
   getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]>;
