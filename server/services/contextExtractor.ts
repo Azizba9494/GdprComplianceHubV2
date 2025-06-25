@@ -96,6 +96,9 @@ export class ContextExtractor {
     // Calculate compliance score if available
     const complianceScore = await this.getComplianceScore(companyId);
 
+    // Extract security measures from DPIA data instead of processing record
+    const dpiaSecurityMeasures = this.extractDpiaSecurityMeasures(existingDpiaData);
+
     return {
       company: {
         name: company.name,
@@ -113,7 +116,7 @@ export class ContextExtractor {
         legalBasis: processingRecord.legalBasis || '',
         retentionPeriod: processingRecord.retention || '',
         transfersOutsideEU: processingRecord.transfersOutsideEU || false,
-        securityMeasures: Array.isArray(processingRecord.securityMeasures) ? processingRecord.securityMeasures : [],
+        securityMeasures: dpiaSecurityMeasures, // Use DPIA security measures instead
         riskLevel: this.assessProcessingRisk(processingRecord)
       } : undefined,
       relatedProcessingRecords: relatedRecords.slice(0, 3), // Limit to top 3 for relevance
@@ -278,6 +281,38 @@ export class ContextExtractor {
   }
 
   /**
+   * Extract security measures from DPIA data
+   */
+  private extractDpiaSecurityMeasures(dpiaData: any): string[] {
+    const measures: string[] = [];
+
+    // Extract from securityMeasures (predefined CNIL measures)
+    if (Array.isArray(dpiaData?.securityMeasures)) {
+      dpiaData.securityMeasures.forEach((measure: any) => {
+        if (measure.implemented && measure.name) {
+          measures.push(`${measure.name}: ${measure.description || 'Mesure mise en œuvre'}`);
+        }
+      });
+    }
+
+    // Extract from customSecurityMeasures (user-defined measures)
+    if (Array.isArray(dpiaData?.customSecurityMeasures)) {
+      dpiaData.customSecurityMeasures.forEach((measure: any) => {
+        if (measure.implemented && measure.name) {
+          measures.push(`${measure.name}: ${measure.description || 'Mesure personnalisée mise en œuvre'}`);
+        }
+      });
+    }
+
+    // If no DPIA measures found, fall back to processing record measures
+    if (measures.length === 0 && Array.isArray(dpiaData?.processingRecord?.securityMeasures)) {
+      return dpiaData.processingRecord.securityMeasures;
+    }
+
+    return measures;
+  }
+
+  /**
    * Get industry-specific context and recommendations
    */
   private getIndustryContext(sector?: string) {
@@ -399,7 +434,7 @@ ${context.company.complianceScore ? `- Score de conformité actuel: ${context.co
         : context.currentProcessing.recipients || 'Non spécifiés';
       
       const securityMeasures = Array.isArray(context.currentProcessing.securityMeasures) 
-        ? context.currentProcessing.securityMeasures.join(', ') 
+        ? context.currentProcessing.securityMeasures.join('; ') 
         : context.currentProcessing.securityMeasures || 'Non spécifiées';
 
       sections.push(`TRAITEMENT ANALYSÉ DANS CETTE AIPD:
@@ -410,7 +445,7 @@ ${context.company.complianceScore ? `- Score de conformité actuel: ${context.co
 - Base légale: ${context.currentProcessing.legalBasis || 'Non spécifiée'}
 - Durée de conservation: ${context.currentProcessing.retentionPeriod || 'Non spécifiée'}
 - Transferts hors UE: ${context.currentProcessing.transfersOutsideEU ? 'Oui' : 'Non'}
-- Mesures de sécurité existantes: ${securityMeasures}
+- Mesures de sécurité identifiées dans l'AIPD: ${securityMeasures}
 - Niveau de risque estimé: ${context.currentProcessing.riskLevel}`);
     }
 
