@@ -478,11 +478,17 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
     
     try {
       const activeLlmConfig = await storage.getActiveLlmConfiguration();
+      
+      // For breach analysis, use higher token limit to handle comprehensive data
+      const isBreachAnalysis = prompt.includes('violation') || prompt.includes('breach') || 
+                              (context && (context.description || context.comprehensiveData));
+      const maxTokens = isBreachAnalysis ? 8192 : (activeLlmConfig?.maxTokens || 3000);
+      
       const model = client.getGenerativeModel({ 
         model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
         generationConfig: {
           temperature: activeLlmConfig?.temperature || 0.3,
-          maxOutputTokens: activeLlmConfig?.maxTokens || 3000,
+          maxOutputTokens: maxTokens,
           responseMimeType: "application/json",
         }
       });
@@ -511,7 +517,8 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
       console.log('[LLM] Model configuration:', {
         model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
         temperature: activeLlmConfig?.temperature || 0.3,
-        maxTokens: activeLlmConfig?.maxTokens || 3000
+        maxTokens: maxTokens,
+        isBreachAnalysis: isBreachAnalysis
       });
 
       const result = await model.generateContent(fullPrompt);
