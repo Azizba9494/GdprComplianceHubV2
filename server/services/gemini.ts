@@ -787,7 +787,33 @@ ${processingRecords.map((record: any) => `
   Finalité: ${record.purpose}
   Base légale: ${record.legalBasis}
   Données: ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : 'Non spécifiées'}
-  Destinataires: ${Array.json/g, '')
+  Destinataires: ${Array.isArray(record.recipients) ? record.recipients.join(', ') : 'Non spécifiés'}
+`).join('')}
+`;
+
+      // Utiliser le prompt configuré ou un prompt par défaut
+      const prompt = activePrompt?.prompt || `
+Générez une politique de confidentialité complète et conforme au RGPD pour l'entreprise {{company}}.
+
+{{processingRecords}}
+
+{{ragContext}}
+
+La politique doit inclure toutes les sections obligatoires selon la CNIL et être rédigée en français.
+`;
+
+      // Construire le prompt final avec les variables de template
+      const finalPrompt = prompt
+        .replace(/{{company}}/g, company.name)
+        .replace(/{{processingRecords}}/g, companyInfo)
+        .replace(/{{ragContext}}/g, ragContext);
+
+      console.log('Génération de la politique de confidentialité avec Gemini...');
+
+      const result = await model.generateContent(finalPrompt);
+      const response = await result.response;
+      let cleanResponse = response.text()
+        .replace(/```json/g, '')
         .replace(/```/g, '')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/^### (.*$)/gm, '<h3>$1</h3>')
@@ -811,4 +837,22 @@ ${processingRecords.map((record: any) => `
         if (retryText && retryText.length > cleanResponse.length) {
           cleanResponse = retryText
             .replace(/```json/g, '')
-            .replace(/
+            .replace(/```/g, '')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gm, '<h2>$1</h2>')  
+            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+            .replace(/^\*\s+/gm, '• ')
+            .replace(/^\-\s+/gm, '• ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        }
+      }
+
+      return { content: cleanResponse };
+    } catch (error) {
+      console.error('Error generating privacy policy:', error);
+      throw new Error('Erreur lors de la génération de la politique de confidentialité');
+    }
+  }
+}
