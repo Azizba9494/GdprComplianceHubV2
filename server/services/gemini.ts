@@ -546,14 +546,32 @@ Répondez UNIQUEMENT avec un JSON valide, sans texte supplémentaire.`;
           }
         }
         
-        // Return fallback response for breach analysis
+        // Return specific fallback response for breach analysis based on context
         if (prompt.includes('violation') || prompt.includes('breach')) {
-          console.log('[LLM] Returning fallback response for breach analysis');
+          console.log('[LLM] Returning contextual fallback response for breach analysis');
+          
+          // Extract key information from breach data for contextual fallback
+          const contextualInfo = this.extractBreachContext(context);
+          
           return {
             notificationRequired: true,
-            dataSubjectNotificationRequired: true,
-            justification: "Analyse basée sur les critères CNIL : En cas de doute sur une violation de données impliquant un prestataire externe, il est recommandé de notifier l'autorité de contrôle dans les 72 heures et d'informer les personnes concernées si un risque élevé pour leurs droits et libertés est identifié. Cette recommandation suit le principe de précaution conformément aux articles 33 et 34 du RGPD.",
-            riskLevel: "élevé",
+            dataSubjectNotificationRequired: contextualInfo.hasPersonalData,
+            justification: `ANALYSE DE PRÉCAUTION - CONFORMITÉ EDPB Guidelines 9/2022
+
+CONTEXTE DE LA VIOLATION :
+${contextualInfo.description || 'Description non renseignée'}
+
+ÉVALUATION AUTOMATIQUE :
+• Type d'incident : ${contextualInfo.incidentType || 'Non spécifié'}
+• Données concernées : ${contextualInfo.dataTypes || 'Non spécifiées'}
+• Personnes affectées : ${contextualInfo.affectedCount || 'Non spécifié'}
+• Identification directe : ${contextualInfo.directlyIdentifiable ? 'Oui' : 'Non'}
+
+RECOMMANDATIONS CONFORMES AU RGPD :
+Selon l'article 33 du RGPD et les lignes directrices EDPB 9/2022, cette violation nécessite une évaluation approfondie. En l'absence d'analyse IA complète, le principe de précaution recommande une notification à l'autorité de contrôle dans les 72 heures.
+
+AVERTISSEMENT : Cette évaluation automatique de précaution ne remplace pas une analyse experte. Consultez votre DPO ou un conseil juridique spécialisé.`,
+            riskLevel: contextualInfo.riskLevel,
             recommendations: [
               "Effectuer une analyse manuelle complète",
               "Consulter un expert RGPD ou DPO",
@@ -933,7 +951,12 @@ ${ragDocuments.join('\n\n')}`
         recommendations: ["string"]
       };
 
-      return await this.generateStructuredResponse(finalPrompt, schema, breachData, ragDocuments);
+      const result = await this.generateStructuredResponse(finalPrompt, schema, breachData, ragDocuments);
+      
+      // Log successful analysis to verify it's working
+      console.log('[LLM] Successful AI analysis generated for breach:', breachData.id);
+      
+      return result;
     } catch (error) {
       console.error('[LLM] Error in analyzeDataBreach:', error);
       
@@ -965,6 +988,47 @@ Cette évaluation suit le principe de précaution conformément au RGPD.`,
         ]
       };
     }
+  }
+
+  private extractBreachContext(context: any): any {
+    const breach = context || {};
+    const parsedData = breach.parsedFormData || {};
+    
+    return {
+      description: breach.description || 'Violation de données non spécifiée',
+      incidentType: this.determineIncidentType(parsedData),
+      dataTypes: this.formatDataTypes(parsedData.dataCategories),
+      affectedCount: parsedData.affectedPersonsCount || breach.affectedPersons || 'Non spécifié',
+      directlyIdentifiable: parsedData.directlyIdentifiable || false,
+      hasPersonalData: parsedData.dataCategories?.length > 0 || true,
+      riskLevel: this.assessRiskLevel(parsedData)
+    };
+  }
+
+  private determineIncidentType(data: any): string {
+    if (data.consequences?.includes('confidentialite')) return 'Atteinte à la confidentialité';
+    if (data.consequences?.includes('integrite')) return 'Atteinte à l\'intégrité';
+    if (data.consequences?.includes('disponibilite')) return 'Atteinte à la disponibilité';
+    return 'Type non spécifié';
+  }
+
+  private formatDataTypes(categories: string[] = []): string {
+    if (!categories || categories.length === 0) return 'Non spécifiées';
+    const typeMap: Record<string, string> = {
+      'identification': 'Données d\'identification',
+      'contact': 'Données de contact',
+      'financieres': 'Données financières',
+      'sante': 'Données de santé',
+      'judiciaires': 'Données judiciaires'
+    };
+    return categories.map(cat => typeMap[cat] || cat).join(', ');
+  }
+
+  private assessRiskLevel(data: any): string {
+    if (data.dataCategories?.includes('sante') || data.dataCategories?.includes('judiciaires')) return 'critique';
+    if (data.directlyIdentifiable && parseInt(data.affectedPersonsCount) > 100) return 'élevé';
+    if (data.directlyIdentifiable) return 'moyen';
+    return 'faible';
   }
 
   async generateProcessingRecord(company: any, processingType: string, description: string): Promise<any> {
