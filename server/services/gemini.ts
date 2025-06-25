@@ -914,29 +914,16 @@ La politique doit être:
         throw new Error('Prompt d\'analyse des violations non trouvé ou inactif');
       }
 
-      // Enhanced prompt with better structure
-      const enhancedPrompt = `Analysez cette violation de données personnelles selon les critères EDPB Guidelines 9/2022 et le RGPD.
+      // Use the configured prompt from administration and replace the placeholder
+      const configuredPrompt = breachAnalysisPrompt.prompt.replace('{breach_data}', JSON.stringify(breachData, null, 2));
+      
+      // Add RAG documents context if available
+      const finalPrompt = ragDocuments && ragDocuments.length > 0 
+        ? `${configuredPrompt}
 
-DONNÉES DE LA VIOLATION:
-${JSON.stringify(breachData, null, 2)}
-
-DOCUMENTS DE RÉFÉRENCE:
-${ragDocuments?.join('\n\n') || ''}
-
-INSTRUCTIONS:
-1. Évaluez si la notification à l'autorité de contrôle (CNIL) est requise selon l'article 33 du RGPD
-2. Déterminez si la notification aux personnes concernées est nécessaire selon l'article 34 du RGPD
-3. Analysez le niveau de risque pour les droits et libertés des personnes
-4. Fournissez une justification détaillée basée sur les critères légaux
-
-Répondez UNIQUEMENT avec un JSON valide contenant:
-{
-  "notificationRequired": boolean,
-  "dataSubjectNotificationRequired": boolean,
-  "justification": "Justification détaillée basée sur les critères RGPD et EDPB",
-  "riskLevel": "faible|moyen|élevé|critique",
-  "recommendations": ["recommandation1", "recommandation2"]
-}`;
+DOCUMENTS DE RÉFÉRENCE SUPPLÉMENTAIRES:
+${ragDocuments.join('\n\n')}`
+        : configuredPrompt;
 
       const schema = {
         notificationRequired: "boolean",
@@ -946,7 +933,7 @@ Répondez UNIQUEMENT avec un JSON valide contenant:
         recommendations: ["string"]
       };
 
-      return await this.generateStructuredResponse(enhancedPrompt, schema, breachData, ragDocuments);
+      return await this.generateStructuredResponse(finalPrompt, schema, breachData, ragDocuments);
     } catch (error) {
       console.error('[LLM] Error in analyzeDataBreach:', error);
       

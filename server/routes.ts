@@ -701,6 +701,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
       
       const breachData = req.body;
+      
+      // Parse comprehensiveData if it exists to include all form details
+      let enrichedBreachData = { ...breachData };
+      if (breachData.comprehensiveData && typeof breachData.comprehensiveData === 'string') {
+        try {
+          const parsedData = JSON.parse(breachData.comprehensiveData);
+          enrichedBreachData = {
+            ...breachData,
+            parsedFormData: parsedData
+          };
+          console.log('Parsed comprehensive form data for AI analysis');
+        } catch (parseError) {
+          console.warn('Could not parse comprehensiveData:', parseError);
+        }
+      }
 
       // Get RAG documents for enhanced analysis
       const ragDocuments = await getRagDocuments();
