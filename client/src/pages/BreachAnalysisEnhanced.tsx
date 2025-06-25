@@ -1399,9 +1399,11 @@ Généré le: ${new Date().toLocaleString()}
                             {new Date(breach.discoveryDate).toLocaleDateString()}
                           </td>
                           <td className="border border-gray-300 p-2 text-sm max-w-xs">
-                            <div className="truncate" title={breach.description}>
-                              {breach.description.substring(0, 50)}...
-                            </div>
+                            <ExpandableText 
+                              text={breach.description}
+                              maxLength={50}
+                              className="text-sm"
+                            />
                           </td>
                           <td className="border border-gray-300 p-2 text-sm max-w-xs">
                             {(() => {
