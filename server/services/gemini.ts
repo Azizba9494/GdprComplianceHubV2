@@ -908,13 +908,14 @@ La politique doit être:
     
     try {
       // Get the configured prompt for breach analysis
-      const allPrompts = await storage.getAiPrompts();
-      const breachAnalysisPrompt = allPrompts.find(p => p.name.includes('Analyse') && p.name.includes('violation'));
+      const breachAnalysisPrompt = await storage.getAiPromptByName('Analyse Violation Données');
       
-      if (!breachAnalysisPrompt || !breachAnalysisPrompt.prompt) {
-        console.error('[BREACH] No breach analysis prompt found, using default');
+      if (!breachAnalysisPrompt || !breachAnalysisPrompt.prompt || !breachAnalysisPrompt.isActive) {
+        console.error('[BREACH] Prompt "Analyse Violation Données" not found or inactive in database');
         return this.getDefaultBreachAnalysis(breachData);
       }
+
+      console.log('[BREACH] Using configured prompt:', breachAnalysisPrompt.name);
 
       // Replace placeholder with actual breach data
       const prompt = breachAnalysisPrompt.prompt.replace('{breach_data}', JSON.stringify(breachData, null, 2));
