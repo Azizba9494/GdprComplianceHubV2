@@ -90,13 +90,8 @@ export default function BreachAnalysisEnhanced() {
   // Delete breach mutation
   const deleteBreach = useMutation({
     mutationFn: async (breachId: number) => {
-      const response = await fetch(`/api/breaches/${breachId}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error("Erreur lors de la suppression");
-      }
-      return response.json();
+      console.log('Attempting to delete breach:', breachId);
+      return await apiRequest("DELETE", `/api/breaches/${breachId}`);
     },
     onSuccess: () => {
       toast({
@@ -105,7 +100,8 @@ export default function BreachAnalysisEnhanced() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/breaches/1'] });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Delete mutation error:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer la violation.",
