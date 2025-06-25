@@ -289,8 +289,9 @@ export class ContextExtractor {
     // Extract from securityMeasures (predefined CNIL measures)
     if (Array.isArray(dpiaData?.securityMeasures)) {
       dpiaData.securityMeasures.forEach((measure: any) => {
-        if (measure.implemented && measure.name) {
-          measures.push(`${measure.name}: ${measure.description || 'Mesure mise en œuvre'}`);
+        if (measure.name) {
+          const status = measure.implemented ? 'mise en œuvre' : 'prévue';
+          measures.push(`${measure.name}: ${measure.description || `Mesure ${status}`} (${status})`);
         }
       });
     }
@@ -298,8 +299,9 @@ export class ContextExtractor {
     // Extract from customSecurityMeasures (user-defined measures)
     if (Array.isArray(dpiaData?.customSecurityMeasures)) {
       dpiaData.customSecurityMeasures.forEach((measure: any) => {
-        if (measure.implemented && measure.name) {
-          measures.push(`${measure.name}: ${measure.description || 'Mesure personnalisée mise en œuvre'}`);
+        if (measure.name) {
+          const status = measure.implemented ? 'mise en œuvre' : 'prévue';
+          measures.push(`${measure.name}: ${measure.description || `Mesure personnalisée ${status}`} (${status})`);
         }
       });
     }
