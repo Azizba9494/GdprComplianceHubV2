@@ -10,6 +10,24 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            '.line-clamp-2': {
+              overflow: 'hidden',
+              display: '-webkit-box',
+              '-webkit-box-orient': 'vertical',
+              '-webkit-line-clamp': '2',
+            },
+            '.line-clamp-3': {
+              overflow: 'hidden',
+              display: '-webkit-box',
+              '-webkit-box-orient': 'vertical',
+              '-webkit-line-clamp': '3',
+            },
+          }
+        }
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

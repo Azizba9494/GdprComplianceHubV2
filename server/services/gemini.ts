@@ -353,7 +353,13 @@ Répondez en JSON structuré:
     const client = await this.getClient();
     
     try {
-      const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = client.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
+        generationConfig: {
+          maxOutputTokens: 24576,
+          temperature: 0.7,
+        }
+      });
       
       let contextSection = '';
       if (ragDocuments && ragDocuments.length > 0) {
@@ -400,7 +406,13 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
   async generateDpiaResponse(customPrompt: string, context: AIContext, ragDocuments: string[] = []): Promise<{ response: string }> {
     try {
       const client = await this.getClient();
-      const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = client.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
+        generationConfig: {
+          maxOutputTokens: 24576,
+          temperature: 0.7,
+        }
+      });
 
       // Use the context extractor to format comprehensive context
       const contextString = contextExtractor.formatContextForAI(context);
