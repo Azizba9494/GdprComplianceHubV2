@@ -2241,7 +2241,7 @@ export default function DpiaAssessmentEnhanced() {
                           render={({ field }) => (
                             <FormItem>
                               <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Menaces et sources de risque</FormLabel>
+                                <FormLabel>Sources de risque</FormLabel>
                                 <Button
                                   type="button"
                                   variant="outline"
