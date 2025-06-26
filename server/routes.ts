@@ -675,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Debug session and headers information
       console.log('Session debug:', {
         sessionId: req.sessionID,
-        userId: req.session?.userId,
+        userId: (req.session as any)?.userId,
         hasSession: !!req.session,
         sessionKeys: req.session ? Object.keys(req.session) : 'no session',
         cookies: req.headers.cookie,
@@ -1646,7 +1646,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
 
   // Authentication middleware for protected routes
   const requireAuth = (req: any, res: any, next: any) => {
-    if (!req.session?.userId) {
+    if (!(req.session as any)?.userId) {
       return res.status(401).json({ error: "Authentication requise" });
     }
     next();

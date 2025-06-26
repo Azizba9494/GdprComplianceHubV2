@@ -257,7 +257,7 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
           .replace(/\{\{treatmentName\}\}/g, context.currentProcessing.name || '')
           .replace(/\{\{processingName\}\}/g, context.currentProcessing.name || '')
           .replace(/\{\{dataCategories\}\}/g, dataCategories)
-          .replace(/\{\{dataSubjects\}\}/g, context.currentProcessing.dataSubjects || 'Non spécifiées')
+          .replace(/\{\{dataSubjects\}\}/g, context.currentProcessing.recipients ? context.currentProcessing.recipients.join(', ') : 'Non spécifiées')
           .replace(/\{\{purpose\}\}/g, context.currentProcessing.purpose || 'Non spécifiée')
           .replace(/\{\{legalBasis\}\}/g, context.currentProcessing.legalBasis || 'Non spécifiée');
       }
