@@ -1737,9 +1737,9 @@ Répondez de manière complète et utile à cette question en respectant tous le
 
 Contexte du traitement:
 - Secteur: ${company?.sector || 'Non spécifié'}
-- Finalités: ${processingRecord?.purposes?.join(', ') || 'Non spécifiées'}
+- Finalités: ${processingRecord?.purpose || 'Non spécifiées'}
 - Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spécifiées'}
-- Personnes concernées: ${processingRecord?.dataSubjects?.join(', ') || 'Non spécifiées'}
+- Personnes concernées: ${processingRecord?.recipients?.join(', ') || 'Non spécifiées'}
 
 Décrivez les conséquences possibles pour les individus en cas de réalisation de ce risque, en tenant compte des vulnérabilités spécifiques et de la gravité des impacts.`;
       } else if (field === 'threats') {
@@ -1752,7 +1752,7 @@ Analysez:
 - Les scénarios de menaces réalistes
 
 Contexte technique:
-- Systèmes utilisés: ${processingRecord?.systems || 'Non spécifiés'}
+- Systèmes utilisés: ${processingRecord?.securityMeasures?.join(', ') || 'Non spécifiés'}
 - Mesures de sécurité existantes: ${processingRecord?.securityMeasures?.join(', ') || 'Non spécifiées'}`;
       } else if (field === 'riskSources' || field === 'sources') {
         basePrompt = `Identifiez les sources et origines du risque "${riskType}" pour le traitement "${processingRecord?.name || 'Non spécifié'}".
