@@ -694,19 +694,16 @@ export default function DpiaAssessmentEnhanced() {
       const fieldMapping: Record<string, Record<string, string>> = {
         'illegitimateAccess': {
           'impacts': 'illegitimateAccessImpacts',
-          'threats': 'illegitimateAccessThreats', 
           'sources': 'illegitimateAccessSources',
           'measures': 'illegitimateAccessMeasures'
         },
         'unwantedModification': {
           'impacts': 'dataModificationImpacts',
-          'threats': 'dataModificationThreats',
           'sources': 'dataModificationSources', 
           'measures': 'dataModificationMeasures'
         },
         'dataDisappearance': {
           'impacts': 'dataDisappearanceImpacts',
-          'threats': 'dataDisappearanceThreats',
           'sources': 'dataDisappearanceSources',
           'measures': 'dataDisappearanceMeasures'
         }

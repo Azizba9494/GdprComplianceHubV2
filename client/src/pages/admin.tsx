@@ -1187,7 +1187,7 @@ export default function Admin() {
                   <div>
                     <h4 className="font-medium mb-3 text-red-600">Accès illégitime aux données</h4>
                     <div className="grid gap-3">
-                      {['illegitimateAccessImpacts', 'illegitimateAccessThreats', 'illegitimateAccessSources', 'illegitimateAccessMeasures'].map(key => {
+                      {['illegitimateAccessImpacts', 'illegitimateAccessSources', 'illegitimateAccessMeasures'].map(key => {
                         const prompt = prompts?.find((p: AiPrompt) => p.category === key);
                         const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
                         
@@ -1246,7 +1246,7 @@ export default function Admin() {
                   <div>
                     <h4 className="font-medium mb-3 text-orange-600">Modification non désirée des données</h4>
                     <div className="grid gap-3">
-                      {['dataModificationImpacts', 'dataModificationThreats', 'dataModificationSources', 'dataModificationMeasures'].map(key => {
+                      {['dataModificationImpacts', 'dataModificationSources', 'dataModificationMeasures'].map(key => {
                         const prompt = prompts?.find((p: AiPrompt) => p.category === key);
                         const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
                         
@@ -1305,7 +1305,7 @@ export default function Admin() {
                   <div>
                     <h4 className="font-medium mb-3 text-blue-600">Disparition des données</h4>
                     <div className="grid gap-3">
-                      {['dataDisappearanceImpacts', 'dataDisappearanceThreats', 'dataDisappearanceSources', 'dataDisappearanceMeasures'].map(key => {
+                      {['dataDisappearanceImpacts', 'dataDisappearanceSources', 'dataDisappearanceMeasures'].map(key => {
                         const prompt = prompts?.find((p: AiPrompt) => p.category === key);
                         const label = dpiaPromptSubcategories[key as keyof typeof dpiaPromptSubcategories];
                         
