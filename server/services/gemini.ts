@@ -503,8 +503,10 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
       // For breach analysis and DPIA analysis, use higher token limit to handle comprehensive data
       const isBreachAnalysis = prompt.includes('violation') || prompt.includes('breach') || 
                               (context && (context.description || context.comprehensiveData));
-      const isDpiaAnalysis = prompt.includes('AIPD') || prompt.includes('DPIA') || prompt.includes('impacts');
-      const maxTokens = (isBreachAnalysis || isDpiaAnalysis) ? 8192 : (activeLlmConfig?.maxTokens || 3000);
+      const isDpiaAnalysis = prompt.includes('AIPD') || prompt.includes('DPIA') || prompt.includes('impacts') ||
+                            prompt.includes('risque') || prompt.includes('mesures') || prompt.includes('sécurité') ||
+                            prompt.includes('modification') || prompt.includes('disparition') || prompt.includes('accès');
+      const maxTokens = (isBreachAnalysis || isDpiaAnalysis) ? 16384 : (activeLlmConfig?.maxTokens || 3000);
       
       const model = client.getGenerativeModel({ 
         model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
