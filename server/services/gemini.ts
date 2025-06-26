@@ -257,7 +257,13 @@ Fournissez une réponse adaptée dans le contexte d'une AIPD RGPD pour ce traite
 Répondez de manière professionnelle, précise et directement applicable. Citez les articles RGPD pertinents quand approprié.`;
 
     const client = await this.getClient();
-    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = client.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      generationConfig: {
+        maxOutputTokens: 24576,
+        temperature: 0.7,
+      }
+    });
     
     const response = await model.generateContent(fullPrompt);
     return { response: response.response.text() || "" };
@@ -321,7 +327,13 @@ Répondez en JSON structuré:
 }`;
 
     const client = await this.getClient();
-    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = client.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      generationConfig: {
+        maxOutputTokens: 24576,
+        temperature: 0.7,
+      }
+    });
     
     const response = await model.generateContent(prompt);
     
@@ -505,8 +517,10 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
                               (context && (context.description || context.comprehensiveData));
       const isDpiaAnalysis = prompt.includes('AIPD') || prompt.includes('DPIA') || prompt.includes('impacts') ||
                             prompt.includes('risque') || prompt.includes('mesures') || prompt.includes('sécurité') ||
-                            prompt.includes('modification') || prompt.includes('disparition') || prompt.includes('accès');
-      const maxTokens = (isBreachAnalysis || isDpiaAnalysis) ? 16384 : (activeLlmConfig?.maxTokens || 3000);
+                            prompt.includes('modification') || prompt.includes('disparition') || prompt.includes('accès') ||
+                            prompt.includes('menaces') || prompt.includes('sources') || prompt.includes('potentiels') ||
+                            prompt.includes('évaluation') || prompt.includes('analyse');
+      const maxTokens = (isBreachAnalysis || isDpiaAnalysis) ? 24576 : (activeLlmConfig?.maxTokens || 4000);
       
       const model = client.getGenerativeModel({ 
         model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
