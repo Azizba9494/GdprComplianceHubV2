@@ -214,20 +214,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", (req, res) => {
     req.session.destroy((err) => {
       if (err) {
+        console.error('Session destruction error:', err);
         return res.status(500).json({ error: "Erreur lors de la déconnexion" });
       }
-      res.clearCookie('connect.sid');
+      res.clearCookie('gdpr.sid');
+      res.clearCookie('connect.sid'); // Clear default cookie name too
       res.json({ success: true, message: "Déconnexion réussie" });
     });
   });
 
   app.get("/api/auth/me", (req, res) => {
-    if ((req.session as any)?.userId) {
-      res.json({ 
-        user: (req.session as any).user,
-        authenticated: true 
+    try {
+      const session = req.session as any;
+      
+      // Debug session information
+      console.log('Session check:', {
+        hasSession: !!session,
+        userId: session?.userId,
+        sessionId: req.sessionID,
+        cookieExists: !!req.headers.cookie?.includes('gdpr.sid')
       });
-    } else {
+
+      if (session?.userId && session?.user) {
+        // Refresh session on each auth check
+        session.touch();
+        
+        res.json({ 
+          user: session.user,
+          authenticated: true 
+        });
+      } else {
+        res.json({ authenticated: false });
+      }
+    } catch (error) {
+      console.error('Session check error:', error);
       res.json({ authenticated: false });
     }
   });

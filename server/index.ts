@@ -17,12 +17,15 @@ app.use(session({
   store: new PgSession({
     conString: process.env.DATABASE_URL,
     tableName: 'sessions',
-    createTableIfMissing: false
+    createTableIfMissing: false,
+    pruneSessionInterval: 60 * 15, // Cleanup every 15 minutes
+    errorLog: console.error
   }),
   secret: process.env.SESSION_SECRET || 'gdpr-compliance-platform-secret-key',
   resave: false,
   saveUninitialized: false,
   rolling: true,
+  name: 'gdpr.sid', // Custom session name
   cookie: {
     secure: false, // Force non-secure for development
     httpOnly: true,
