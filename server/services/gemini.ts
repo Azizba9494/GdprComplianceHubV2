@@ -500,10 +500,11 @@ Répondez de manière structurée et professionnelle en français. Concentrez-vo
     try {
       const activeLlmConfig = await storage.getActiveLlmConfiguration();
       
-      // For breach analysis, use higher token limit to handle comprehensive data
+      // For breach analysis and DPIA analysis, use higher token limit to handle comprehensive data
       const isBreachAnalysis = prompt.includes('violation') || prompt.includes('breach') || 
                               (context && (context.description || context.comprehensiveData));
-      const maxTokens = isBreachAnalysis ? 8192 : (activeLlmConfig?.maxTokens || 3000);
+      const isDpiaAnalysis = prompt.includes('AIPD') || prompt.includes('DPIA') || prompt.includes('impacts');
+      const maxTokens = (isBreachAnalysis || isDpiaAnalysis) ? 8192 : (activeLlmConfig?.maxTokens || 3000);
       
       const model = client.getGenerativeModel({ 
         model: activeLlmConfig?.modelName || 'gemini-2.5-flash',
