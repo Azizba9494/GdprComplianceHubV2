@@ -268,7 +268,6 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
   riskScenarios: jsonb("risk_scenarios").$type<{
     illegitimateAccess?: {
       impacts?: string;
-      threats?: string;
       sources?: string;
       measures?: string;
       severity?: "undefined" | "negligible" | "limited" | "important" | "maximum";
@@ -278,7 +277,6 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
     };
     unwantedModification?: {
       impacts?: string;
-      threats?: string;
       sources?: string;
       measures?: string;
       severity?: "undefined" | "negligible" | "limited" | "important" | "maximum";
@@ -288,7 +286,6 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
     };
     dataDisappearance?: {
       impacts?: string;
-      threats?: string;
       sources?: string;
       measures?: string;
       severity?: "undefined" | "negligible" | "limited" | "important" | "maximum";
