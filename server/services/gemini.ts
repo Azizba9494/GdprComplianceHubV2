@@ -89,185 +89,7 @@ export class GeminiService {
     return new GoogleGenerativeAI(apiKey);
   }
 
-  // AI-assisted DPIA questionnaire responses
-  async generateDpiaResponse(
-    questionField: string, 
-    companyInfo: any, 
-    existingDpiaData: any, 
-    processingRecords: any[], 
-    ragDocuments?: string[]
-  ): Promise<{ response: string }> {
-    // Find the specific processing record for this DPIA
-    const specificProcessingRecord = processingRecords.find(r => r.id === existingDpiaData?.processingRecordId);
-    
-    // Context analysis focused on the specific treatment
-    const companyContext = `
-Profil de l'entreprise:
-- Nom: ${companyInfo.name}
-- Secteur: ${companyInfo.sector || 'Non spécifié'}  
-- Taille: ${companyInfo.size || 'Non spécifiée'}
 
-TRAITEMENT ANALYSÉ DANS CETTE AIPD:
-${specificProcessingRecord ? `
-- Nom: ${specificProcessingRecord.name}
-- Finalité: ${specificProcessingRecord.purpose}
-- Base légale: ${specificProcessingRecord.legalBasis || 'Non spécifiée'}
-- Catégories de données: ${specificProcessingRecord.dataCategories || 'Non spécifiées'}
-- Personnes concernées: ${specificProcessingRecord.dataSubjects || 'Non spécifiées'}
-- Durée de conservation: ${specificProcessingRecord.retentionPeriod || 'Non spécifiée'}
-` : 'Aucun traitement spécifique identifié'}
-
-IMPORTANT: Cette AIPD concerne UNIQUEMENT le traitement "${specificProcessingRecord?.name || 'en cours d\'analyse'}", pas l'ensemble des activités de l'entreprise.
-`;
-
-    // Knowledge base from RAG documents
-    const knowledgeBase = ragDocuments && ragDocuments.length > 0 ? 
-      `\n\nDocuments de référence CNIL à prioriser:\n${ragDocuments.join('\n\n---\n\n')}` : '';
-
-    let specificPrompt = '';
-    
-    switch (questionField) {
-      case 'generalDescription':
-        specificPrompt = `En tant qu'expert DPIA, rédigez une description générale UNIQUEMENT pour le traitement "${specificProcessingRecord?.name}" en cours d'analyse.
-
-ATTENTION: Ne mentionnez pas l'ensemble des traitements de l'entreprise. Concentrez-vous exclusivement sur ce traitement spécifique.
-
-Incluez pour ce traitement uniquement:
-- Nature précise du traitement analysé
-- Portée spécifique (qui est concerné par ce traitement particulier)
-- Contexte et objectifs de ce traitement
-
-Commencez par: "Le traitement '${specificProcessingRecord?.name}' consiste en..."`;
-        break;
-
-      case 'processingPurposes':
-        specificPrompt = `Définissez les finalités précises de ce traitement AIPD selon les exigences RGPD.
-        
-Les finalités doivent être déterminées, explicites et légitimes. Distinguez:
-- Finalité principale (objectif principal du traitement)
-- Finalités secondaires éventuelles (statistiques, amélioration du service)
-
-Basez-vous sur le secteur d'activité "${companyInfo.sector}" pour proposer des finalités cohérentes.`;
-        break;
-
-      case 'dataProcessors':
-        specificPrompt = `Identifiez les sous-traitants potentiels pour ce type de traitement.
-        
-D'après vos informations, votre entreprise utilise déjà plusieurs prestataires. Analysez lesquels pourraient être impliqués dans ce nouveau traitement et rappellez les obligations contractuelles RGPD.
-
-Structure attendue: Pour chaque sous-traitant, précisez son rôle et rappelez la nécessité d'un contrat de sous-traitance conforme à l'article 28 du RGPD.`;
-        break;
-
-      case 'dataMinimization':
-        specificPrompt = `Analysez la minimisation des données pour ce traitement selon l'article 5.1.c du RGPD.
-        
-Pour chaque catégorie de données collectées, justifiez en quoi elle est "adéquate, pertinente et limitée à ce qui est nécessaire".
-Proposez des alternatives si certaines données semblent excessives.
-
-Exemple: "Pour la finalité de livraison, l'adresse complète est nécessaire, mais le numéro de téléphone fixe pourrait être optionnel si le mobile est fourni."`;
-        break;
-
-      case 'retentionJustification':
-        specificPrompt = `Justifiez les durées de conservation selon les obligations légales du secteur "${companyInfo.sector}".
-        
-Référez-vous aux délais légaux applicables et proposez des durées différenciées selon:
-- La phase active du traitement
-- L'archivage intermédiaire (si applicable)
-- Les obligations légales de conservation
-
-Mentionnez les processus de suppression/archivage à mettre en place.`;
-        break;
-
-      case 'rightsInformation':
-        specificPrompt = `Décrivez les modalités d'information des personnes concernées selon les articles 13-14 du RGPD.
-        
-Précisez:
-- Les supports d'information (formulaires, site web, affichage)
-- Le moment de l'information (collecte directe/indirecte)
-- Le contenu obligatoire (responsable, finalités, droits, etc.)
-- L'adaptation au public cible`;
-        break;
-
-      case 'securityMeasures':
-        specificPrompt = `Listez les mesures de sécurité techniques et organisationnelles selon l'article 32 du RGPD.
-        
-Structurez par catégories:
-- Contrôle d'accès (authentification, habilitations)
-- Chiffrement (stockage, transit)  
-- Traçabilité et logging
-- Sauvegardes et continuité
-- Sécurité physique
-- Formation du personnel
-- Gestion des incidents
-
-Adaptez au niveau de risque et aux moyens d'une ${companyInfo.size || 'PME'}.`;
-        break;
-
-      case 'dpoAdvice':
-        specificPrompt = `Rédigez l'avis du Délégué à la Protection des Données sur cette AIPD.
-        
-L'avis doit porter sur:
-- La méthodologie utilisée
-- La complétude de l'analyse
-- La pertinence des mesures proposées
-- Les points d'attention particuliers
-- Les recommandations d'amélioration
-
-Adoptez un ton professionnel de DPO expérimenté.`;
-        break;
-
-      case 'riskScenarios':
-        specificPrompt = `Analysez les risques pour les droits et libertés des personnes selon la méthodologie CNIL pour le traitement "${specificProcessingRecord?.name}".
-
-Évaluez les 3 scénarios de risque fondamentaux:
-
-1. ACCÈS ILLÉGITIME AUX DONNÉES
-- Impacts potentiels sur les personnes concernées
-- Menaces identifiées (piratage, vol, indiscrétion, etc.)
-- Sources de risque (humaines, techniques, organisationnelles)
-- Mesures existantes ou prévues
-
-2. MODIFICATION NON DÉSIRÉE DES DONNÉES
-- Impacts sur les personnes (erreurs, décisions erronées, etc.)
-- Menaces (erreurs humaines, bugs, malveillance, etc.)
-- Sources de risque spécifiques à l'intégrité
-- Mesures de protection
-
-3. DISPARITION DES DONNÉES
-- Conséquences pour les personnes concernées
-- Menaces (pannes, suppressions, catastrophes, etc.)
-- Sources de risque pour la disponibilité
-- Mesures de sauvegarde et continuité
-
-Pour chaque scénario, proposez une évaluation sur l'échelle CNIL: négligeable, limitée, importante, maximale.
-
-Répondez en format structuré avec des sections claires pour chaque scénario.`;
-        break;
-
-      default:
-        specificPrompt = `Analysez le champ "${questionField}" UNIQUEMENT pour le traitement "${specificProcessingRecord?.name}" en cours d'analyse.
-
-IMPORTANT: Cette analyse concerne exclusivement ce traitement spécifique, pas l'ensemble des activités de l'entreprise.
-
-Fournissez une réponse adaptée dans le contexte d'une AIPD RGPD pour ce traitement particulier.`;
-    }
-
-    const fullPrompt = `${companyContext}${specificPrompt}${knowledgeBase}
-
-Répondez de manière professionnelle, précise et directement applicable. Citez les articles RGPD pertinents quand approprié.`;
-
-    const client = await this.getClient();
-    const model = client.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
-      generationConfig: {
-        maxOutputTokens: 24576,
-        temperature: 0.7,
-      }
-    });
-    
-    const response = await model.generateContent(fullPrompt);
-    return { response: response.response.text() || "" };
-  }
 
   // Generate risk assessment suggestions
   async generateRiskAssessment(
@@ -422,12 +244,32 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
         ? `\n\nDOCUMENTS DE RÉFÉRENCE CNIL (à prioriser dans votre réponse):\n${ragDocuments.join('\n\n---\n\n')}` 
         : '';
 
+      // Replace template variables with actual data
+      let processedPrompt = customPrompt;
+      
+      // Replace common template variables
+      if (context.currentProcessing) {
+        processedPrompt = processedPrompt
+          .replace(/\{\{treatmentName\}\}/g, context.currentProcessing.name || '')
+          .replace(/\{\{dataCategories\}\}/g, context.currentProcessing.dataCategories || 'Non spécifiées')
+          .replace(/\{\{dataSubjects\}\}/g, context.currentProcessing.dataSubjects || 'Non spécifiées')
+          .replace(/\{\{purpose\}\}/g, context.currentProcessing.purpose || 'Non spécifiée')
+          .replace(/\{\{legalBasis\}\}/g, context.currentProcessing.legalBasis || 'Non spécifiée');
+      }
+      
+      if (context.company) {
+        processedPrompt = processedPrompt
+          .replace(/\{\{companyName\}\}/g, context.company.name || '')
+          .replace(/\{\{sector\}\}/g, context.company.sector || 'Non spécifié')
+          .replace(/\{\{companySize\}\}/g, context.company.size || 'Non spécifiée');
+      }
+
       // Enhanced prompt with intelligent context integration
-      const finalPrompt = `${customPrompt}
+      const finalPrompt = `${processedPrompt}
 
 CONSIGNES IMPORTANTES POUR LA GÉNÉRATION:
+- RESPECTEZ STRICTEMENT la structure demandée dans le prompt (points a), b), c) si spécifiés)
 - Utilisez OBLIGATOIREMENT les informations réelles fournies dans le contexte ci-dessous
-- Remplacez tous les placeholders comme {{treatmentName}}, {{companyName}}, etc. par les vraies données
 - Adaptez votre réponse au secteur d'activité spécifique (${context.company.sector})
 - Tenez compte du niveau de risque du traitement ${context.currentProcessing?.riskLevel ? `(${context.currentProcessing.riskLevel})` : ''}
 - Intégrez les bonnes pratiques sectorielles quand pertinentes
@@ -440,10 +282,11 @@ CHAMP À COMPLÉTER: ${context.field}
 
 RÉPONSE ATTENDUE:
 Rédigez une réponse précise, personnalisée et professionnelle qui:
-1. Utilise exclusivement les données réelles fournies
-2. S'adapte au contexte sectoriel et aux risques identifiés
-3. Propose des éléments concrets et actionnables
-4. Respecte la méthodologie CNIL pour les AIPD`;
+1. RESPECTE EXACTEMENT la structure et le format demandés dans le prompt original
+2. Utilise exclusivement les données réelles fournies
+3. S'adapte au contexte sectoriel et aux risques identifiés
+4. Propose des éléments concrets et actionnables
+5. Respecte la méthodologie CNIL pour les AIPD`;
       
       console.log("[DPIA AI] Using automated context extraction for field:", context.field);
       console.log("[DPIA AI] Custom prompt length:", customPrompt.length, "chars");
@@ -473,7 +316,13 @@ Rédigez une réponse précise, personnalisée et professionnelle qui:
     const client = await this.getClient();
     
     try {
-      const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = client.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
+        generationConfig: {
+          maxOutputTokens: 24576,
+          temperature: 0.3,
+        }
+      });
 
       const contextInfo = `
 Entreprise: ${company.name} (${company.sector || 'Non spécifié'})
