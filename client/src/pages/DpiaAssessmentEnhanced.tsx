@@ -2236,35 +2236,7 @@ export default function DpiaAssessmentEnhanced() {
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="riskScenarios.illegitimateAccess.threats"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Menaces identifiées</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'threats')}
-                                  disabled={isGenerating}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Listez les menaces qui pourraient conduire à un accès illégitime..."
-                                  className="min-h-[100px]"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+
 
                         <FormField
                           control={form.control}
@@ -2464,35 +2436,7 @@ export default function DpiaAssessmentEnhanced() {
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="riskScenarios.unwantedModification.threats"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Menaces identifiées</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'threats')}
-                                  disabled={isGenerating}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Listez les menaces qui pourraient conduire à une modification non désirée..."
-                                  className="min-h-[100px]"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+
 
                         <FormField
                           control={form.control}
@@ -2692,35 +2636,7 @@ export default function DpiaAssessmentEnhanced() {
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="riskScenarios.dataDisappearance.threats"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Menaces identifiées</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'threats')}
-                                  disabled={isGenerating}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Listez les menaces qui pourraient conduire à la disparition des données..."
-                                  className="min-h-[100px]"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+
 
                         <FormField
                           control={form.control}
