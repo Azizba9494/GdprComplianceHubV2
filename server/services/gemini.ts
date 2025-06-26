@@ -249,9 +249,14 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
       
       // Replace common template variables
       if (context.currentProcessing) {
+        const dataCategories = Array.isArray(context.currentProcessing.dataCategories) 
+          ? context.currentProcessing.dataCategories.join(', ') 
+          : context.currentProcessing.dataCategories || 'Non spécifiées';
+        
         processedPrompt = processedPrompt
           .replace(/\{\{treatmentName\}\}/g, context.currentProcessing.name || '')
-          .replace(/\{\{dataCategories\}\}/g, context.currentProcessing.dataCategories || 'Non spécifiées')
+          .replace(/\{\{processingName\}\}/g, context.currentProcessing.name || '')
+          .replace(/\{\{dataCategories\}\}/g, dataCategories)
           .replace(/\{\{dataSubjects\}\}/g, context.currentProcessing.dataSubjects || 'Non spécifiées')
           .replace(/\{\{purpose\}\}/g, context.currentProcessing.purpose || 'Non spécifiée')
           .replace(/\{\{legalBasis\}\}/g, context.currentProcessing.legalBasis || 'Non spécifiée');
@@ -268,8 +273,9 @@ ${prompt}${context ? `\n\nContexte additionnel: ${JSON.stringify(context)}` : ''
       const finalPrompt = `${processedPrompt}
 
 CONSIGNES IMPORTANTES POUR LA GÉNÉRATION:
-- RESPECTEZ STRICTEMENT la structure demandée dans le prompt (points a), b), c) si spécifiés)
+- RESPECTEZ STRICTEMENT la structure demandée dans le prompt avec les points a), b), c) pour chaque catégorie d'impact
 - Utilisez OBLIGATOIREMENT les informations réelles fournies dans le contexte ci-dessous
+- Pour chaque catégorie d'impact, structurez votre réponse EXACTEMENT comme demandé : a) Justification, b) Exemple, c) Qualification CNIL
 - Adaptez votre réponse au secteur d'activité spécifique (${context.company.sector})
 - Tenez compte du niveau de risque du traitement ${context.currentProcessing?.riskLevel ? `(${context.currentProcessing.riskLevel})` : ''}
 - Intégrez les bonnes pratiques sectorielles quand pertinentes
