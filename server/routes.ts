@@ -578,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Privacy policy routes
-  app.get("/api/privacy-policies/:companyId", async (req, res) => {
+  app.get("/api/privacy-policies/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const policies = await storage.getPrivacyPolicies(companyId);
@@ -598,7 +598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/privacy-policies/generate", async (req, res) => {
+  app.post("/api/privacy-policies/generate", requireAuth, async (req, res) => {
     try {
       const { companyId } = req.body;
 
@@ -763,7 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data subject requests routes
-  app.get("/api/requests/:companyId", async (req, res) => {
+  app.get("/api/requests/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const requests = await storage.getDataSubjectRequests(companyId);
@@ -773,7 +773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/requests", async (req, res) => {
+  app.post("/api/requests", requireAuth, async (req, res) => {
     try {
       const requestData = insertDataSubjectRequestSchema.parse(req.body);
       // Auto-calculate due date (1 month from now)
@@ -1020,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DPIA Evaluation endpoints
-  app.get("/api/dpia-evaluations/:companyId", async (req, res) => {
+  app.get("/api/dpia-evaluations/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const evaluations = await storage.getDpiaEvaluations(companyId);
@@ -1030,7 +1030,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/dpia-evaluations", async (req, res) => {
+  app.post("/api/dpia-evaluations", requireAuth, async (req, res) => {
     try {
       const evaluationData = {
         ...req.body,
@@ -1046,7 +1046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/dpia-evaluations/:id", async (req, res) => {
+  app.put("/api/dpia-evaluations/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const evaluation = await storage.updateDpiaEvaluation(id, req.body);
