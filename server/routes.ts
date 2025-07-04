@@ -486,9 +486,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records/generate", async (req, res) => {
+  app.post("/api/records/generate", requireAuth, async (req, res) => {
     try {
       const { companyId, processingType, description } = req.body;
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess((req.session as any).userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       const company = await storage.getCompany(companyId);
       if (!company) {
@@ -519,9 +525,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records", async (req, res) => {
+  app.post("/api/records", requireAuth, async (req, res) => {
     try {
       const recordData = insertProcessingRecordSchema.parse(req.body);
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess((req.session as any).userId, recordData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       // Auto-fill data controller information from company data if not provided
       if (!recordData.dataControllerName || !recordData.dataControllerAddress) {
@@ -541,7 +553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/records/:id", async (req, res) => {
+  app.put("/api/records/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -552,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/records/:id", async (req, res) => {
+  app.delete("/api/records/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteProcessingRecord(id);
@@ -663,12 +675,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches", async (req, res) => {
+  app.post("/api/breaches", requireAuth, async (req, res) => {
     try {
       console.log('Raw breach data received:', JSON.stringify(req.body, null, 2));
 
       // Validate with the schema that handles string-to-date transformation
       const breachData = insertDataBreachSchema.parse(req.body);
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, breachData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       console.log('Validated breach data:', JSON.stringify(breachData, null, 2));
 
@@ -680,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/breaches/:id", async (req, res) => {
+  app.put("/api/breaches/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -691,9 +709,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/analyze", async (req, res) => {
+  app.post("/api/breaches/analyze", requireAuth, async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, breachData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       // Get RAG documents for enhanced analysis
       const ragDocuments = await getRagDocuments('Analyse Violation Données');
@@ -714,7 +738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/ai-analysis", async (req, res) => {
+  app.post("/api/breaches/ai-analysis", requireAuth, async (req, res) => {
     try {
       // Debug session and headers information
       console.log('Session debug:', {
@@ -727,18 +751,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Temporary workaround: bypass authentication for breach analysis during development
-      // TODO: Fix session persistence issue
-      console.log('Bypassing authentication for breach analysis (development mode)');
-
-      // Skip authentication check for now
-      // if (!req.session?.userId) {
-      //   console.log('Authentication failed - no userId in session');
-      //   return res.status(401).json({ error: "Authentication requise" });
-      // }
-
       console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
 
       const breachData = req.body;
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, breachData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       // Get RAG documents for enhanced analysis
       const ragDocuments = await getRagDocuments('Analyse Violation Données');
