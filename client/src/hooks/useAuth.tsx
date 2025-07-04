@@ -47,9 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
+    console.log('Auth data changed:', authData);
     if (authData?.authenticated && authData.user) {
+      console.log('Setting user:', authData.user);
       setUser(authData.user);
     } else {
+      console.log('No auth data or user, clearing user');
       setUser(null);
     }
   }, [authData]);
