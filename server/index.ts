@@ -17,7 +17,7 @@ app.use(session({
   store: new PgSession({
     conString: process.env.DATABASE_URL,
     tableName: 'sessions',
-    createTableIfMissing: false,
+    createTableIfMissing: true,
     pruneSessionInterval: 60 * 15, // Cleanup every 15 minutes
     errorLog: console.error
   }),
