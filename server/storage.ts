@@ -46,6 +46,7 @@ export interface IStorage {
   getCompanyByUserId(userId: number): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
+  verifyUserCompanyAccess(userId: number, companyId: number): Promise<boolean>;
 
   // Diagnostic Questions
   getDiagnosticQuestions(): Promise<DiagnosticQuestion[]>;
@@ -239,6 +240,31 @@ export class DatabaseStorage implements IStorage {
   async updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company> {
     const [company] = await db.update(companies).set(updates).where(eq(companies.id, id)).returning();
     return company;
+  }
+
+  async verifyUserCompanyAccess(userId: number, companyId: number): Promise<boolean> {
+    try {
+      // Check if user has direct access to company
+      const access = await db.select()
+        .from(userCompanyAccess)
+        .where(and(eq(userCompanyAccess.userId, userId), eq(userCompanyAccess.companyId, companyId)))
+        .limit(1);
+      
+      if (access.length > 0) {
+        return true;
+      }
+
+      // Check if user owns the company directly
+      const company = await db.select()
+        .from(companies)
+        .where(and(eq(companies.id, companyId), eq(companies.userId, userId)))
+        .limit(1);
+      
+      return company.length > 0;
+    } catch (error) {
+      console.error('Error verifying user company access:', error);
+      return false;
+    }
   }
 
   // Diagnostic Questions
