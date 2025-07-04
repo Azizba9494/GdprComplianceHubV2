@@ -25,8 +25,6 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
 
-  console.log('Login component rendering');
-
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {

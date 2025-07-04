@@ -30,10 +30,7 @@ import Chatbot from "@/components/chatbot/chatbot";
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  console.log('AuthenticatedApp render:', { isAuthenticated, isLoading });
-
   if (isLoading) {
-    console.log('Showing loading screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="text-center">
@@ -45,7 +42,6 @@ function AuthenticatedApp() {
   }
 
   if (!isAuthenticated) {
-    console.log('User not authenticated, showing login/register routes');
     return (
       <Switch>
         <Route path="/register" component={Register} />
