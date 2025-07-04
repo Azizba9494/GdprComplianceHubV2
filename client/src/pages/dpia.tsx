@@ -17,8 +17,6 @@ import { BarChart3, Loader2, Search, Download, AlertTriangle, Shield, CheckCircl
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { dpiaApi, recordsApi } from "@/lib/api";
 
-const COMPANY_ID = 1;
-
 const CNIL_MANDATORY_TREATMENTS = [
   "Traitements d'évaluation, y compris de profilage, et de prédiction relatifs aux aspects concernant les performances au travail, la situation économique, la santé, les préférences ou centres d'intérêt personnels, la fiabilité ou le comportement, la localisation ou les déplacements de la personne concernée",
   "Traitements ayant pour effet d'exclure des personnes du bénéfice d'un droit, d'un service ou d'un contrat en l'absence de motif légitime",
@@ -115,6 +113,20 @@ export default function DPIA() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Get authenticated user and company
+  const { data: authResponse } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
+  });
+  
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies', authResponse?.user?.id],
+    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
+    enabled: !!authResponse?.user?.id,
+  });
+
+  const COMPANY_ID = userCompany?.id;
+
   // Formulaires
   const evaluationForm = useForm({
     defaultValues: {
@@ -142,16 +154,19 @@ export default function DPIA() {
   const { data: records, isLoading: recordsLoading } = useQuery({
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => recordsApi.get(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const { data: assessments, isLoading: assessmentsLoading } = useQuery({
     queryKey: ['/api/dpia', COMPANY_ID],
     queryFn: () => dpiaApi.get(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
     queryKey: ['/api/dpia-evaluations', COMPANY_ID],
     queryFn: () => fetch(`/api/dpia-evaluations/${COMPANY_ID}`).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   // Filtrer les traitements de responsable uniquement
@@ -623,6 +638,13 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
         </div>
       </div>
     );
+  }
+
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
   }
 
   // Interface principale - Liste des traitements

@@ -9,11 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ExpandableText } from "@/components/ui/expandable-text";
-import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit } from "lucide-react";
+import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-const COMPANY_ID = 1; // Mock company ID
 
 const statusLabels = {
   todo: "À faire",
@@ -38,9 +36,24 @@ export default function ActionPlan() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Get authenticated user and company
+  const { data: authResponse } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
+  });
+  
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies', authResponse?.user?.id],
+    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
+    enabled: !!authResponse?.user?.id,
+  });
+
+  const COMPANY_ID = userCompany?.id;
+
   const { data: actions, isLoading } = useQuery({
     queryKey: ['/api/actions', COMPANY_ID],
     queryFn: () => actionsApi.get(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const updateActionMutation = useMutation({
@@ -115,6 +128,19 @@ export default function ActionPlan() {
         </Card>
       </div>
     );
+  }
+
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
+
+  if (!actions || isLoading) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
   }
 
   const completedActions = actions.filter((a: any) => a.status === 'completed');

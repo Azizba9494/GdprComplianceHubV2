@@ -10,8 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ArrowRight, ArrowLeft, FileText, Shield, Users, Settings, Book, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const COMPANY_ID = 1; // Mock company ID
-
 const categoryIcons = {
   "Gouvernance": Settings,
   "Documentation": FileText,
@@ -40,6 +38,20 @@ export default function Diagnostic() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Get authenticated user and company
+  const { data: authResponse } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
+  });
+  
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies', authResponse?.user?.id],
+    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
+    enabled: !!authResponse?.user?.id,
+  });
+
+  const COMPANY_ID = userCompany?.id;
+
   const { data: allQuestions, isLoading } = useQuery({
     queryKey: ['/api/diagnostic/questions'],
     queryFn: () => diagnosticApi.getQuestions().then(res => res.json()),
@@ -48,6 +60,7 @@ export default function Diagnostic() {
   const { data: existingResponses } = useQuery({
     queryKey: ['/api/diagnostic/responses', COMPANY_ID],
     queryFn: () => diagnosticApi.getResponses(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const submitResponseMutation = useMutation({
