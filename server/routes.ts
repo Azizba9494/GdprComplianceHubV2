@@ -127,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const user = await storage.getUserById(req.session.userId);
+      const user = await storage.getUser(req.session.userId);
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
@@ -1214,7 +1214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Prompts management (Admin only)
-  app.get("/api/admin/prompts", async (req, res) => {
+  app.get("/api/admin/prompts", requireAdmin, async (req, res) => {
     try {
       const prompts = await storage.getAiPrompts();
       res.json(prompts);
