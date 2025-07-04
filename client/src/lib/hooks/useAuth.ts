@@ -15,6 +15,8 @@ interface Company {
   sector: string;
   size: string;
   userId: number;
+  address?: string;
+  phone?: string;
 }
 
 interface AuthData {
@@ -29,7 +31,8 @@ export function useAuth(): AuthData {
   const { data: authResponse, isLoading: isAuthLoading } = useQuery({
     queryKey: ['/api/auth/me'],
     queryFn: () => fetch('/api/auth/me').then(res => res.json()),
-    retry: false
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const user = authResponse?.user || null;
@@ -40,7 +43,8 @@ export function useAuth(): AuthData {
     queryKey: ['/api/companies', user?.id],
     queryFn: () => fetch(`/api/companies/${user.id}`).then(res => res.json()),
     enabled: !!user?.id,
-    retry: false
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return {
@@ -49,9 +53,4 @@ export function useAuth(): AuthData {
     isLoading: isAuthLoading || isCompanyLoading,
     isAuthenticated
   };
-}
-
-export function useCompanyId(): number | null {
-  const { company } = useAuth();
-  return company?.id || null;
 }
