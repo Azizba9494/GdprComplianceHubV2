@@ -10,7 +10,7 @@ import { ExpandableText } from "@/components/ui/expandable-text";
 import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-const COMPANY_ID = 1; // Mock company ID
+// Use dynamic company ID instead of hardcoded value
 
 interface PrivacyPolicy {
   id: number;
@@ -25,13 +25,28 @@ export default function PrivacyPolicy() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Get authenticated user and company
+  const { data: authResponse } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
+  });
+  
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies', authResponse?.user?.id],
+    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
+    enabled: !!authResponse?.user?.id,
+  });
+  
+  const COMPANY_ID = userCompany?.id;
+
   const { data: policies, isLoading } = useQuery({
     queryKey: ['/api/privacy-policies', COMPANY_ID],
     queryFn: () => privacyPolicyApi.get(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const generateMutation = useMutation({
-    mutationFn: () => privacyPolicyApi.generate(COMPANY_ID),
+    mutationFn: () => privacyPolicyApi.generate(COMPANY_ID!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/privacy-policies'] });
       toast({
@@ -101,6 +116,13 @@ export default function PrivacyPolicy() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
 
   const activePolicy = policies?.find((p: PrivacyPolicy) => p.isActive);
 

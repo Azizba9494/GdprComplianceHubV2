@@ -35,13 +35,6 @@ export default function Dashboard() {
     enabled: !!COMPANY_ID,
   });
 
-  // Show loading while getting company info
-  if (!userCompany && authResponse?.user) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
-
   // Fetch additional data for heat map
   const { data: actions } = useQuery({
     queryKey: ['/api/actions', COMPANY_ID],
@@ -49,19 +42,29 @@ export default function Dashboard() {
     enabled: !!COMPANY_ID,
   });
 
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
+
   const { data: breaches } = useQuery({
     queryKey: ['/api/breaches', COMPANY_ID],
     queryFn: () => breachApi.get(COMPANY_ID).then((res: any) => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const { data: records } = useQuery({
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => recordsApi.get(COMPANY_ID).then((res: any) => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const { data: requests } = useQuery({
     queryKey: ['/api/requests', COMPANY_ID],
     queryFn: () => requestsApi.get(COMPANY_ID).then((res: any) => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const heatMapData = {

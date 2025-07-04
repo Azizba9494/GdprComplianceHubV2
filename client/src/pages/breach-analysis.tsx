@@ -178,6 +178,13 @@ export default function BreachAnalysis() {
     },
   });
 
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
+
   const onSubmit = async (data: BreachFormData) => {
     setIsAnalyzing(true);
     
