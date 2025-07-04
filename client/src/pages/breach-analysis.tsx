@@ -92,8 +92,9 @@ export default function BreachAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { company, isLoading: isAuthLoading } = useAuth();
   
+  // Always call hooks at the top level
+  const { company, isLoading: isAuthLoading } = useAuth();
   const COMPANY_ID = company?.id;
 
   // Don't render if not authenticated or company not loaded

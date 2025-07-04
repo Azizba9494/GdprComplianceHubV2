@@ -14,6 +14,7 @@ import RecentActivity from "@/components/dashboard/recent-activity";
 import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function Dashboard() {
+  // Always call hooks at the top level
   const { company, isLoading: isAuthLoading } = useAuth();
   const COMPANY_ID = company?.id;
 

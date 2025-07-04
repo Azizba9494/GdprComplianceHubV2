@@ -131,6 +131,17 @@ export default function Records() {
   const [editingValues, setEditingValues] = useState<{[key: string]: any}>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Always call hooks at the top level
+  const { company: authCompany, isLoading: isAuthLoading } = useAuth();
+  const COMPANY_ID = authCompany?.id;
+
+  // Don't render if not authenticated or company not loaded
+  if (isAuthLoading || !COMPANY_ID) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
 
   const generateForm = useForm({
     defaultValues: {
@@ -191,23 +202,12 @@ export default function Records() {
     },
   });
 
-  const { company: authCompany, isLoading: isAuthLoading } = useAuth();
-  
-  const COMPANY_ID = authCompany?.id;
-
-  // Don't render if not authenticated or company not loaded
-  if (isAuthLoading || !COMPANY_ID) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
-
   const { data: records, isLoading } = useQuery({
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => recordsApi.get(COMPANY_ID).then(res => res.json()),
   });
 
-  // Get company data for auto-filling (use the authenticated company)
+  // Use the authenticated company for auto-filling
   const company = authCompany;
 
   // Auto-fill company data when forms open
