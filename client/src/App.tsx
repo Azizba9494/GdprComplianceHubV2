@@ -28,9 +28,7 @@ import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
 
 function AuthenticatedApp() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  console.log('App state:', { isAuthenticated, isLoading, user });
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (

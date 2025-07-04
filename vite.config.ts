@@ -33,10 +33,5 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-    host: '0.0.0.0', // Make the server accessible to users 
-    port: 5000, // Set the port for the development server
-    hmr: {
-      overlay: false // Optional based on your preference
-    }
   },
 });

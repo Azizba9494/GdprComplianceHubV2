@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Use dynamic company ID instead of hardcoded value
+const COMPANY_ID = 1; // Mock company ID
 
 interface DataSubjectRequest {
   id: number;
@@ -64,20 +64,6 @@ export default function RightsManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get authenticated user and company
-  const { data: authResponse } = useQuery({
-    queryKey: ['/api/auth/me'],
-    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
-  });
-  
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies', authResponse?.user?.id],
-    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
-    enabled: !!authResponse?.user?.id,
-  });
-  
-  const COMPANY_ID = userCompany?.id;
-
   const form = useForm({
     defaultValues: {
       requesterId: "",
@@ -90,14 +76,13 @@ export default function RightsManagement() {
   const { data: requests, isLoading } = useQuery({
     queryKey: ['/api/requests', COMPANY_ID],
     queryFn: () => requestsApi.get(COMPANY_ID).then(res => res.json()),
-    enabled: !!COMPANY_ID,
   });
 
   const createMutation = useMutation({
     mutationFn: (data: any) => {
       const requestData = {
         ...data,
-        companyId: COMPANY_ID!,
+        companyId: COMPANY_ID,
         status: "new",
         identityVerified: false,
       };
@@ -176,13 +161,6 @@ export default function RightsManagement() {
       request.requesterId.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   }) || [];
-
-  // Show loading while getting company info
-  if (!userCompany && authResponse?.user) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
 
   if (isLoading) {
     return (

@@ -438,17 +438,11 @@ export default function DpiaAssessmentEnhanced() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Get authenticated user and company
-  const { data: authResponse } = useQuery({
-    queryKey: ['/api/auth/me'],
-    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
-  });
-  
+  // Get user company
+  const userId = parseInt(localStorage.getItem("userId") || "1");
   const { data: company } = useQuery({
-    queryKey: ['/api/companies', authResponse?.user?.id],
-    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
-    enabled: !!authResponse?.user?.id,
-  });
+    queryKey: [`/api/companies/${userId}`],
+  }) as { data: any };
 
   // Get DPIA data
   const { data: dpia, isLoading } = useQuery({
@@ -824,13 +818,6 @@ export default function DpiaAssessmentEnhanced() {
     const current = form.getValues("internationalTransfersMeasures") || [];
     form.setValue("internationalTransfersMeasures", current.filter((_, i) => i !== index));
   };
-
-  // Show loading while getting company info
-  if (!company && authResponse?.user) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
 
   if (isLoading) {
     return (

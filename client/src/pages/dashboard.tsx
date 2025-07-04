@@ -8,63 +8,38 @@ import { RiskTrends } from "@/components/dashboard/risk-trends";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileDown, User, Loader2 } from "lucide-react";
+import { ArrowRight, FileDown, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import RecentActivity from "@/components/dashboard/recent-activity";
-// Temporarily remove useAuth to fix hooks error
-// import { useAuth } from "@/lib/hooks/useAuth";
+
+// Mock company ID - in a real app, this would come from authentication
+const COMPANY_ID = 1;
 
 export default function Dashboard() {
-  // Temporarily use a direct API call to get the user's company
-  const { data: authResponse } = useQuery({
-    queryKey: ['/api/auth/me'],
-    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
-  });
-  
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies', authResponse?.user?.id],
-    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
-    enabled: !!authResponse?.user?.id,
-  });
-  
-  const COMPANY_ID = userCompany?.id;
-
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard', COMPANY_ID],
     queryFn: () => dashboardApi.getStats(COMPANY_ID).then(res => res.json()),
-    enabled: !!COMPANY_ID,
   });
 
   // Fetch additional data for heat map
   const { data: actions } = useQuery({
     queryKey: ['/api/actions', COMPANY_ID],
     queryFn: () => actionsApi.get(COMPANY_ID).then((res: any) => res.json()),
-    enabled: !!COMPANY_ID,
   });
-
-  // Show loading while getting company info
-  if (!userCompany && authResponse?.user) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
 
   const { data: breaches } = useQuery({
     queryKey: ['/api/breaches', COMPANY_ID],
     queryFn: () => breachApi.get(COMPANY_ID).then((res: any) => res.json()),
-    enabled: !!COMPANY_ID,
   });
 
   const { data: records } = useQuery({
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => recordsApi.get(COMPANY_ID).then((res: any) => res.json()),
-    enabled: !!COMPANY_ID,
   });
 
   const { data: requests } = useQuery({
     queryKey: ['/api/requests', COMPANY_ID],
     queryFn: () => requestsApi.get(COMPANY_ID).then((res: any) => res.json()),
-    enabled: !!COMPANY_ID,
   });
 
   const heatMapData = {

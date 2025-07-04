@@ -15,8 +15,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertTriangle, Shield, Download, Loader2, CheckCircle, XCircle, Info, Calendar } from "lucide-react";
 
-// Temporarily remove useAuth to fix hooks error
-// import { useAuth } from "@/lib/hooks/useAuth";
+const COMPANY_ID = 1; // Mock company ID
 
 interface BreachFormData {
   // Nature de la violation
@@ -93,27 +92,6 @@ export default function BreachAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // Temporarily use a direct API call to get the user's company
-  const { data: authResponse } = useQuery({
-    queryKey: ['/api/auth/me'],
-    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
-  });
-  
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies', authResponse?.user?.id],
-    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
-    enabled: !!authResponse?.user?.id,
-  });
-  
-  const COMPANY_ID = userCompany?.id;
-
-  // Show loading while getting company info
-  if (!userCompany && authResponse?.user) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
 
   const form = useForm<BreachFormData>({
     defaultValues: {
@@ -156,7 +134,6 @@ export default function BreachAnalysis() {
   const { data: breaches, isLoading } = useQuery({
     queryKey: ['/api/breaches', COMPANY_ID],
     queryFn: () => breachApi.get(COMPANY_ID).then(res => res.json()),
-    enabled: !!COMPANY_ID,
   });
 
   const createBreachMutation = useMutation({
@@ -177,13 +154,6 @@ export default function BreachAnalysis() {
       });
     },
   });
-
-  // Show loading while getting company info
-  if (!userCompany && authResponse?.user) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
 
   const onSubmit = async (data: BreachFormData) => {
     setIsAnalyzing(true);
