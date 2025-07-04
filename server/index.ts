@@ -7,6 +7,20 @@ const app = express();
 // Trust proxy for secure cookies in production
 app.set('trust proxy', 1);
 
+// Add CORS middleware to handle credentials properly
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:5000');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,Cache-Control,Pragma');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 // Session configuration
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
@@ -30,7 +44,8 @@ app.use(session({
     secure: false, // Force non-secure for development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax'
+    sameSite: 'lax',
+    domain: undefined // Don't set domain for localhost
   }
 }));
 
