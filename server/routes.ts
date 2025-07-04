@@ -120,24 +120,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
-  // Admin role middleware - restricts access to admin-only features
-  const requireAdmin = async (req: any, res: any, next: any) => {
-    if (!req.session?.userId) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-
-    try {
-      const user = await storage.getUser(req.session.userId);
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ error: "Admin access required" });
-      }
-    } catch (error) {
-      return res.status(500).json({ error: "Error verifying admin access" });
-    }
-    
-    next();
-  };
-
   // Enhanced Authentication routes with security
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -1214,7 +1196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Prompts management (Admin only)
-  app.get("/api/admin/prompts", requireAdmin, async (req, res) => {
+  app.get("/api/admin/prompts", async (req, res) => {
     try {
       const prompts = await storage.getAiPrompts();
       res.json(prompts);
@@ -1223,7 +1205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/prompts", requireAdmin, async (req, res) => {
+  app.post("/api/admin/prompts", async (req, res) => {
     try {
       const promptData = insertAiPromptSchema.parse(req.body);
       const prompt = await storage.createAiPrompt(promptData);
@@ -1233,7 +1215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/prompts/:id", requireAdmin, async (req, res) => {
+  app.put("/api/admin/prompts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1277,7 +1259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // RAG Documents management (Admin only)
-  app.get("/api/admin/documents", requireAdmin, async (req, res) => {
+  app.get("/api/admin/documents", async (req, res) => {
     try {
       const documents = await storage.getRagDocuments();
       res.json(documents);
@@ -1311,7 +1293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/documents/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/admin/documents/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteRagDocument(id);
@@ -1376,7 +1358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all prompt-document associations
-  app.get("/api/admin/prompt-documents", requireAdmin, async (req, res) => {
+  app.get("/api/admin/prompt-documents", async (req, res) => {
     try {
       // Récupérer toutes les associations via une requête SQL directe
       const allAssociations = await storage.getAllPromptDocuments();
@@ -1663,7 +1645,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
   });
 
   // LLM Configuration routes
-  app.get("/api/admin/llm-configs", requireAdmin, async (req, res) => {
+  app.get("/api/admin/llm-configs", async (req, res) => {
     try {
       const configs = await storage.getLlmConfigurations();
       res.json(configs);
@@ -1672,7 +1654,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
     }
   });
 
-  app.post("/api/admin/llm-configs", requireAdmin, async (req, res) => {
+  app.post("/api/admin/llm-configs", async (req, res) => {
     try {
       const configData = insertLlmConfigurationSchema.parse(req.body);
       const config = await storage.createLlmConfiguration(configData);
@@ -1682,7 +1664,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
     }
   });
 
-  app.put("/api/admin/llm-configs/:id", requireAdmin, async (req, res) => {
+  app.put("/api/admin/llm-configs/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = insertLlmConfigurationSchema.partial().parse(req.body);
@@ -1693,7 +1675,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
     }
   });
 
-  app.delete("/api/admin/llm-configs/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/admin/llm-configs/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteLlmConfiguration(id);
