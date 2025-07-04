@@ -27,17 +27,26 @@ export default function Dashboard() {
     enabled: !!authResponse?.user?.id,
   });
   
-  const COMPANY_ID = userCompany?.id || 3; // Fallback to user's company ID 3
+  const COMPANY_ID = userCompany?.id;
 
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard', COMPANY_ID],
     queryFn: () => dashboardApi.getStats(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
+
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
 
   // Fetch additional data for heat map
   const { data: actions } = useQuery({
     queryKey: ['/api/actions', COMPANY_ID],
     queryFn: () => actionsApi.get(COMPANY_ID).then((res: any) => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const { data: breaches } = useQuery({

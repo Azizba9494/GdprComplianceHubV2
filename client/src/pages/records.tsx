@@ -145,7 +145,7 @@ export default function Records() {
     enabled: !!authResponse?.user?.id,
   });
   
-  const COMPANY_ID = userCompany?.id || 3; // Fallback to user's company ID 3
+  const COMPANY_ID = userCompany?.id;
 
   const generateForm = useForm({
     defaultValues: {
@@ -209,10 +209,18 @@ export default function Records() {
   const { data: records, isLoading } = useQuery({
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => recordsApi.get(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   // Use the fetched company for auto-filling
   const company = userCompany;
+
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
 
   // Auto-fill company data when forms open
   const handleOpenCreateDialog = () => {

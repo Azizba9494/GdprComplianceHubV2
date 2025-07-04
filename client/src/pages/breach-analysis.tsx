@@ -106,7 +106,14 @@ export default function BreachAnalysis() {
     enabled: !!authResponse?.user?.id,
   });
   
-  const COMPANY_ID = userCompany?.id || 3; // Fallback to user's company ID 3
+  const COMPANY_ID = userCompany?.id;
+
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
 
   const form = useForm<BreachFormData>({
     defaultValues: {
@@ -149,6 +156,7 @@ export default function BreachAnalysis() {
   const { data: breaches, isLoading } = useQuery({
     queryKey: ['/api/breaches', COMPANY_ID],
     queryFn: () => breachApi.get(COMPANY_ID).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   const createBreachMutation = useMutation({
