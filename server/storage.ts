@@ -47,6 +47,7 @@ export interface IStorage {
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
   verifyUserCompanyAccess(userId: number, companyId: number): Promise<boolean>;
+  createUserCompanyAccess(access: InsertUserCompanyAccess): Promise<UserCompanyAccess>;
 
   // Diagnostic Questions
   getDiagnosticQuestions(): Promise<DiagnosticQuestion[]>;
@@ -265,6 +266,11 @@ export class DatabaseStorage implements IStorage {
       console.error('Error verifying user company access:', error);
       return false;
     }
+  }
+
+  async createUserCompanyAccess(access: InsertUserCompanyAccess): Promise<UserCompanyAccess> {
+    const [result] = await db.insert(userCompanyAccess).values(access).returning();
+    return result;
   }
 
   // Diagnostic Questions

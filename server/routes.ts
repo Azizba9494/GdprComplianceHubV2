@@ -93,6 +93,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('Database connection failed, some routes may not work properly');
   }
 
+  // Authentication middleware
+  const requireAuth = (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    next();
+  };
+
+  // Multi-tenancy middleware - ensures data isolation by company
+  const requireCompanyAccess = async (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const companyId = req.params.companyId || req.body.companyId || req.query.companyId;
+    
+    if (companyId) {
+      // Verify user has access to this specific company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, parseInt(companyId));
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+    }
+    
+    next();
+  };
+
   // Enhanced Authentication routes with security
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -117,6 +144,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword
+      });
+
+      // Create a new company for the user (multi-tenancy)
+      const newCompany = await storage.createCompany({
+        name: `${user.firstName} ${user.lastName} Company`,
+        userId: user.id,
+        sector: 'Non spécifié',
+        size: 'Non spécifié'
+      });
+
+      // Grant user access to their company
+      await storage.createUserCompanyAccess({
+        userId: user.id,
+        companyId: newCompany.id,
+        role: 'owner',
+        permissions: ['read', 'write', 'admin'],
+        status: 'active'
       });
 
       // Store user session
@@ -287,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Company routes
-  app.get("/api/companies/:userId", async (req, res) => {
+  app.get("/api/companies/:userId", requireAuth, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
       const company = await storage.getCompanyByUserId(userId);
@@ -307,8 +351,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diagnostic routes
-  app.get("/api/diagnostic/questions", async (req, res) => {
+  // Diagnostic routes (questions are global)
+  app.get("/api/diagnostic/questions", requireAuth, async (req, res) => {
     try {
       const questions = await storage.getDiagnosticQuestions();
       res.json(questions);
@@ -317,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diagnostic/responses/:companyId", async (req, res) => {
+  app.get("/api/diagnostic/responses/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const responses = await storage.getDiagnosticResponses(companyId);
@@ -327,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/diagnostic/responses", async (req, res) => {
+  app.post("/api/diagnostic/responses", requireAuth, async (req, res) => {
     try {
       const responseData = insertDiagnosticResponseSchema.parse(req.body);
       const response = await storage.createDiagnosticResponse(responseData);
@@ -404,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Compliance actions routes
-  app.get("/api/actions/:companyId", async (req, res) => {
+  app.get("/api/actions/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const actions = await storage.getComplianceActions(companyId);
@@ -432,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Processing records routes
-  app.get("/api/records/:companyId", async (req, res) => {
+  app.get("/api/records/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const records = await storage.getProcessingRecords(companyId);
@@ -609,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data breach routes
-  app.get("/api/breaches/:companyId", async (req, res) => {
+  app.get("/api/breaches/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const breaches = await storage.getDataBreaches(companyId);
@@ -1461,7 +1505,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
   });
 
   // Dashboard stats
-  app.get("/api/dashboard/:companyId", async (req, res) => {
+  app.get("/api/dashboard/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
 
@@ -1641,13 +1685,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
     }
   });
 
-  // Authentication middleware for protected routes
-  const requireAuth = (req: any, res: any, next: any) => {
-    if (!(req.session as any)?.userId) {
-      return res.status(401).json({ error: "Authentication requise" });
-    }
-    next();
-  };
+
 
   // Update user profile route
   app.put("/api/user/profile", requireAuth, async (req, res) => {
@@ -1703,7 +1741,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
   ], requireAuth);
 
   // Compliance snapshots routes
-  app.get("/api/compliance-snapshots/:companyId", async (req, res) => {
+  app.get("/api/compliance-snapshots/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
