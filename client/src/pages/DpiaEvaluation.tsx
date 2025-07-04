@@ -27,7 +27,8 @@ import {
   Lightbulb,
   Users,
   FileSearch,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { 
   Select, 
@@ -111,8 +112,6 @@ const CNIL_MANDATORY_TREATMENTS = [
   "Traitements qui empêchent les personnes d'exercer un droit ou de bénéficier d'un service",
 ];
 
-const COMPANY_ID = 1;
-
 export default function DpiaEvaluation() {
   const [, setLocation] = useLocation();
   const [selectedRecord, setSelectedRecord] = useState<ProcessingRecord | null>(null);
@@ -123,16 +122,39 @@ export default function DpiaEvaluation() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Get authenticated user and company
+  const { data: authResponse } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: () => fetch('/api/auth/me').then(res => res.json()),
+  });
+  
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies', authResponse?.user?.id],
+    queryFn: () => fetch(`/api/companies/${authResponse.user.id}`).then(res => res.json()),
+    enabled: !!authResponse?.user?.id,
+  });
+
+  const COMPANY_ID = userCompany?.id;
+
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>;
+  }
+
   // Get processing records
   const { data: records, isLoading: recordsLoading } = useQuery({
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => fetch(`/api/records/${COMPANY_ID}`).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   // Get stored evaluations
   const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
     queryKey: ['/api/dpia-evaluations', COMPANY_ID],
     queryFn: () => fetch(`/api/dpia-evaluations/${COMPANY_ID}`).then(res => res.json()),
+    enabled: !!COMPANY_ID,
   });
 
   // Filter controller records only

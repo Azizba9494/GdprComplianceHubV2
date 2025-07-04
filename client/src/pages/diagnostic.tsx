@@ -86,6 +86,13 @@ export default function Diagnostic() {
     },
   });
 
+  // Show loading while getting company info
+  if (!userCompany && authResponse?.user) {
+    return <div className="flex items-center justify-center h-96">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>;
+  }
+
   // Process data
   const categories = allQuestions ? Array.from(new Set(allQuestions.map((q: any) => q.category))) as string[] : [];
   const questionsByCategory = allQuestions ? allQuestions.filter((q: any) => q.category === selectedCategory) : [];
