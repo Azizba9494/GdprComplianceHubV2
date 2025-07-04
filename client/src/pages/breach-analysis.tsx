@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertTriangle, Shield, Download, Loader2, CheckCircle, XCircle, Info, Calendar } from "lucide-react";
 
-import { useAuth } from "@/lib/hooks/useAuth"; // Mock company ID
+const COMPANY_ID = 1; // Mock company ID
 
 interface BreachFormData {
   // Nature de la violation
@@ -92,16 +92,6 @@ export default function BreachAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { company, isLoading: isAuthLoading } = useAuth();
-  
-  const COMPANY_ID = company?.id;
-
-  // Don't render if not authenticated or company not loaded
-  if (isAuthLoading || !COMPANY_ID) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
 
   const form = useForm<BreachFormData>({
     defaultValues: {

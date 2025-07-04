@@ -18,7 +18,8 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch } from "lucide-react";
-import { useAuth } from "@/lib/hooks/useAuth";
+
+const COMPANY_ID = 1;
 
 // Bases légales complètes du RGPD
 const LEGAL_BASES = [
@@ -191,24 +192,16 @@ export default function Records() {
     },
   });
 
-  const { company: authCompany, isLoading: isAuthLoading } = useAuth();
-  
-  const COMPANY_ID = authCompany?.id;
-
-  // Don't render if not authenticated or company not loaded
-  if (isAuthLoading || !COMPANY_ID) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
-
   const { data: records, isLoading } = useQuery({
     queryKey: ['/api/records', COMPANY_ID],
     queryFn: () => recordsApi.get(COMPANY_ID).then(res => res.json()),
   });
 
-  // Get company data for auto-filling (use the authenticated company)
-  const company = authCompany;
+  // Get company data for auto-filling
+  const { data: company } = useQuery({
+    queryKey: ['/api/companies', COMPANY_ID],
+    queryFn: () => companyApi.get(COMPANY_ID).then(res => res.json()),
+  });
 
   // Auto-fill company data when forms open
   const handleOpenCreateDialog = () => {

@@ -8,22 +8,14 @@ import { RiskTrends } from "@/components/dashboard/risk-trends";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileDown, User, Loader2 } from "lucide-react";
+import { ArrowRight, FileDown, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import RecentActivity from "@/components/dashboard/recent-activity";
-import { useAuth } from "@/lib/hooks/useAuth";
+
+// Mock company ID - in a real app, this would come from authentication
+const COMPANY_ID = 1;
 
 export default function Dashboard() {
-  const { company, isLoading: isAuthLoading } = useAuth();
-  const COMPANY_ID = company?.id;
-
-  // Don't render if not authenticated or company not loaded
-  if (isAuthLoading || !COMPANY_ID) {
-    return <div className="flex items-center justify-center h-96">
-      <Loader2 className="h-8 w-8 animate-spin" />
-    </div>;
-  }
-
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard', COMPANY_ID],
     queryFn: () => dashboardApi.getStats(COMPANY_ID).then(res => res.json()),
