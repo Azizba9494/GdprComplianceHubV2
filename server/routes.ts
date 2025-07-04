@@ -93,6 +93,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn('Database connection failed, some routes may not work properly');
   }
 
+  // Authentication middleware
+  const requireAuth = (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    next();
+  };
+
+  // Multi-tenancy middleware - ensures data isolation by company
+  const requireCompanyAccess = async (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const companyId = req.params.companyId || req.body.companyId || req.query.companyId;
+    
+    if (companyId) {
+      // Verify user has access to this specific company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, parseInt(companyId));
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+    }
+    
+    next();
+  };
+
   // Enhanced Authentication routes with security
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -117,6 +144,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         ...userData,
         password: hashedPassword
+      });
+
+      // Create a new company for the user (multi-tenancy)
+      const newCompany = await storage.createCompany({
+        name: `${user.firstName} ${user.lastName} Company`,
+        userId: user.id,
+        sector: 'Non spécifié',
+        size: 'Non spécifié'
+      });
+
+      // Grant user access to their company
+      await storage.createUserCompanyAccess({
+        userId: user.id,
+        companyId: newCompany.id,
+        role: 'owner',
+        permissions: ['read', 'write', 'admin'],
+        status: 'active'
       });
 
       // Store user session
@@ -287,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Company routes
-  app.get("/api/companies/:userId", async (req, res) => {
+  app.get("/api/companies/:userId", requireAuth, async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
       const company = await storage.getCompanyByUserId(userId);
@@ -307,8 +351,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Diagnostic routes
-  app.get("/api/diagnostic/questions", async (req, res) => {
+  // Diagnostic routes (questions are global)
+  app.get("/api/diagnostic/questions", requireAuth, async (req, res) => {
     try {
       const questions = await storage.getDiagnosticQuestions();
       res.json(questions);
@@ -317,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diagnostic/responses/:companyId", async (req, res) => {
+  app.get("/api/diagnostic/responses/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const responses = await storage.getDiagnosticResponses(companyId);
@@ -327,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/diagnostic/responses", async (req, res) => {
+  app.post("/api/diagnostic/responses", requireAuth, async (req, res) => {
     try {
       const responseData = insertDiagnosticResponseSchema.parse(req.body);
       const response = await storage.createDiagnosticResponse(responseData);
@@ -404,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Compliance actions routes
-  app.get("/api/actions/:companyId", async (req, res) => {
+  app.get("/api/actions/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const actions = await storage.getComplianceActions(companyId);
@@ -432,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Processing records routes
-  app.get("/api/records/:companyId", async (req, res) => {
+  app.get("/api/records/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const records = await storage.getProcessingRecords(companyId);
@@ -442,9 +486,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records/generate", async (req, res) => {
+  app.post("/api/records/generate", requireAuth, async (req, res) => {
     try {
       const { companyId, processingType, description } = req.body;
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess((req.session as any).userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       const company = await storage.getCompany(companyId);
       if (!company) {
@@ -475,9 +525,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records", async (req, res) => {
+  app.post("/api/records", requireAuth, async (req, res) => {
     try {
       const recordData = insertProcessingRecordSchema.parse(req.body);
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess((req.session as any).userId, recordData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       // Auto-fill data controller information from company data if not provided
       if (!recordData.dataControllerName || !recordData.dataControllerAddress) {
@@ -497,7 +553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/records/:id", async (req, res) => {
+  app.put("/api/records/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -508,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/records/:id", async (req, res) => {
+  app.delete("/api/records/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteProcessingRecord(id);
@@ -534,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Privacy policy routes
-  app.get("/api/privacy-policies/:companyId", async (req, res) => {
+  app.get("/api/privacy-policies/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const policies = await storage.getPrivacyPolicies(companyId);
@@ -554,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/privacy-policies/generate", async (req, res) => {
+  app.post("/api/privacy-policies/generate", requireAuth, async (req, res) => {
     try {
       const { companyId } = req.body;
 
@@ -609,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data breach routes
-  app.get("/api/breaches/:companyId", async (req, res) => {
+  app.get("/api/breaches/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const breaches = await storage.getDataBreaches(companyId);
@@ -619,12 +675,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches", async (req, res) => {
+  app.post("/api/breaches", requireAuth, async (req, res) => {
     try {
       console.log('Raw breach data received:', JSON.stringify(req.body, null, 2));
 
       // Validate with the schema that handles string-to-date transformation
       const breachData = insertDataBreachSchema.parse(req.body);
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, breachData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       console.log('Validated breach data:', JSON.stringify(breachData, null, 2));
 
@@ -636,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/breaches/:id", async (req, res) => {
+  app.put("/api/breaches/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -647,9 +709,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/analyze", async (req, res) => {
+  app.post("/api/breaches/analyze", requireAuth, async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, breachData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       // Get RAG documents for enhanced analysis
       const ragDocuments = await getRagDocuments('Analyse Violation Données');
@@ -670,7 +738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/ai-analysis", async (req, res) => {
+  app.post("/api/breaches/ai-analysis", requireAuth, async (req, res) => {
     try {
       // Debug session and headers information
       console.log('Session debug:', {
@@ -683,18 +751,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Temporary workaround: bypass authentication for breach analysis during development
-      // TODO: Fix session persistence issue
-      console.log('Bypassing authentication for breach analysis (development mode)');
-
-      // Skip authentication check for now
-      // if (!req.session?.userId) {
-      //   console.log('Authentication failed - no userId in session');
-      //   return res.status(401).json({ error: "Authentication requise" });
-      // }
-
       console.log('AI Analysis request for breach:', JSON.stringify(req.body, null, 2));
 
       const breachData = req.body;
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, breachData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       // Get RAG documents for enhanced analysis
       const ragDocuments = await getRagDocuments('Analyse Violation Données');
@@ -719,7 +784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data subject requests routes
-  app.get("/api/requests/:companyId", async (req, res) => {
+  app.get("/api/requests/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const requests = await storage.getDataSubjectRequests(companyId);
@@ -729,7 +794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/requests", async (req, res) => {
+  app.post("/api/requests", requireAuth, async (req, res) => {
     try {
       const requestData = insertDataSubjectRequestSchema.parse(req.body);
       // Auto-calculate due date (1 month from now)
@@ -976,7 +1041,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DPIA Evaluation endpoints
-  app.get("/api/dpia-evaluations/:companyId", async (req, res) => {
+  app.get("/api/dpia-evaluations/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const evaluations = await storage.getDpiaEvaluations(companyId);
@@ -986,7 +1051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/dpia-evaluations", async (req, res) => {
+  app.post("/api/dpia-evaluations", requireAuth, async (req, res) => {
     try {
       const evaluationData = {
         ...req.body,
@@ -1002,7 +1067,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/dpia-evaluations/:id", async (req, res) => {
+  app.put("/api/dpia-evaluations/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const evaluation = await storage.updateDpiaEvaluation(id, req.body);
@@ -1461,7 +1526,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
   });
 
   // Dashboard stats
-  app.get("/api/dashboard/:companyId", async (req, res) => {
+  app.get("/api/dashboard/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
 
@@ -1641,13 +1706,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
     }
   });
 
-  // Authentication middleware for protected routes
-  const requireAuth = (req: any, res: any, next: any) => {
-    if (!(req.session as any)?.userId) {
-      return res.status(401).json({ error: "Authentication requise" });
-    }
-    next();
-  };
+
 
   // Update user profile route
   app.put("/api/user/profile", requireAuth, async (req, res) => {
@@ -1703,7 +1762,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
   ], requireAuth);
 
   // Compliance snapshots routes
-  app.get("/api/compliance-snapshots/:companyId", async (req, res) => {
+  app.get("/api/compliance-snapshots/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
