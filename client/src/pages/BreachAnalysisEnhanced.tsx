@@ -171,8 +171,7 @@ export default function BreachAnalysisEnhanced() {
 
   // Fetch breaches
   const { data: breaches, isLoading, refetch: refetchBreaches } = useQuery({
-    queryKey: ['/api/breaches', company?.id],
-    queryFn: () => apiRequest("GET", `/api/breaches/${company.id}`),
+    queryKey: [`/api/breaches/${company?.id}`],
     enabled: !!company?.id,
     staleTime: 0, // Pas de cache pour s'assurer d'avoir les données fraîches
   });
@@ -189,7 +188,7 @@ export default function BreachAnalysisEnhanced() {
         title: "Analyse IA terminée",
         description: "L'analyse de la violation selon les directives EDPB a été effectuée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
       setIsAnalyzing(false);
     },
     onError: () => {
@@ -217,7 +216,7 @@ export default function BreachAnalysisEnhanced() {
         description: "Les informations ont été sauvegardées avec succès.",
       });
       // Invalidate et refetch pour s'assurer que la liste est mise à jour
-      await queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
       await refetchBreaches();
       setShowForm(false);
       setSelectedBreach(null);
@@ -494,7 +493,7 @@ Généré le: ${new Date().toLocaleString()}
         [editingCell.field]: editValue
       });
       
-      queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
       toast({
         title: "Modification sauvegardée",
         description: "La violation a été mise à jour avec succès."
