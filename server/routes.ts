@@ -394,17 +394,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/diagnostic/responses", requireAuth, async (req, res) => {
     try {
-      const responseData = insertDiagnosticResponseSchema.parse(req.body);
+      // Get user's company ID from authenticated session
+      const userCompany = await storage.getUserCompany(req.user!.id);
+      if (!userCompany) {
+        return res.status(404).json({ error: "Aucune entreprise associée à cet utilisateur" });
+      }
+
+      // Override companyId with authenticated user's company
+      const responseData = insertDiagnosticResponseSchema.parse({
+        ...req.body,
+        companyId: userCompany.id
+      });
+      
+      console.log(`[DIAGNOSTIC] Creating response for user ${req.user!.id}, company ${userCompany.id}`);
       const response = await storage.createDiagnosticResponse(responseData);
       res.json(response);
     } catch (error: any) {
+      console.error("[DIAGNOSTIC] Error creating response:", error);
       res.status(400).json({ error: error.message });
     }
   });
 
-  app.post("/api/diagnostic/analyze", async (req, res) => {
+  app.post("/api/diagnostic/analyze", requireAuth, async (req, res) => {
     try {
-      const { companyId } = req.body;
+      // Get user's company ID from authenticated session
+      const userCompany = await storage.getUserCompany(req.user!.id);
+      if (!userCompany) {
+        return res.status(404).json({ error: "Aucune entreprise associée à cet utilisateur" });
+      }
+      const companyId = userCompany.id;
 
       const company = await storage.getCompany(companyId);
       if (!company) {

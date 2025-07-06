@@ -9,8 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ArrowRight, ArrowLeft, FileText, Shield, Users, Settings, Book, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const COMPANY_ID = 1; // Mock company ID
+import { useAuth } from "@/hooks/useAuth";
 
 const categoryIcons = {
   "Gouvernance": Settings,
@@ -39,6 +38,7 @@ export default function Diagnostic() {
   const [completedCategories, setCompletedCategories] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, userCompany } = useAuth();
 
   const { data: allQuestions, isLoading } = useQuery({
     queryKey: ['/api/diagnostic/questions'],
@@ -46,8 +46,9 @@ export default function Diagnostic() {
   });
 
   const { data: existingResponses } = useQuery({
-    queryKey: ['/api/diagnostic/responses', COMPANY_ID],
-    queryFn: () => diagnosticApi.getResponses(COMPANY_ID).then(res => res.json()),
+    queryKey: ['/api/diagnostic/responses', userCompany?.id],
+    queryFn: () => userCompany ? diagnosticApi.getResponses(userCompany.id).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
   });
 
   const submitResponseMutation = useMutation({
@@ -64,9 +65,11 @@ export default function Diagnostic() {
         title: "Questionnaire terminé !",
         description: "Vos réponses ont été enregistrées et analysées.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/actions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/diagnostic/responses'] });
+      if (userCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/actions', userCompany.id] });
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard', userCompany.id] });
+        queryClient.invalidateQueries({ queryKey: ['/api/diagnostic/responses', userCompany.id] });
+      }
       setSelectedCategory(null);
       setCurrentQuestionIndex(0);
       setResponses({});
@@ -103,6 +106,20 @@ export default function Diagnostic() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p>Chargement du diagnostic...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!user || !userCompany) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p>Vous devez être connecté et avoir une entreprise associée pour accéder au diagnostic.</p>
             </div>
           </CardContent>
         </Card>
@@ -205,8 +222,17 @@ export default function Diagnostic() {
 
     // Submit the response
     const score = response === "oui" ? 1 : 0;
+    if (!userCompany) {
+      toast({
+        title: "Erreur",
+        description: "Aucune entreprise associée à votre compte",
+        variant: "destructive",
+      });
+      return;
+    }
+
     await submitResponseMutation.mutateAsync({
-      companyId: COMPANY_ID,
+      companyId: userCompany.id,
       questionId: currentQuestion.id,
       response,
       score,
@@ -214,7 +240,7 @@ export default function Diagnostic() {
 
     if (isLastQuestion) {
       // Analyze all responses and generate action plan
-      await analyzeMutation.mutateAsync(COMPANY_ID);
+      await analyzeMutation.mutateAsync(userCompany.id);
     } else {
       setCurrentQuestionIndex(prev => prev + 1);
     }
