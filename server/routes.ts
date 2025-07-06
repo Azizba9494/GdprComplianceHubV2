@@ -395,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/diagnostic/responses", requireAuth, async (req, res) => {
     try {
       // Get user's company ID from authenticated session
-      const userCompany = await storage.getUserCompany(req.user!.id);
+      const userCompany = await storage.getCompanyByUserId(req.user!.id);
       if (!userCompany) {
         return res.status(404).json({ error: "Aucune entreprise associée à cet utilisateur" });
       }
@@ -418,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/diagnostic/analyze", requireAuth, async (req, res) => {
     try {
       // Get user's company ID from authenticated session
-      const userCompany = await storage.getUserCompany(req.user!.id);
+      const userCompany = await storage.getCompanyByUserId(req.user!.id);
       if (!userCompany) {
         return res.status(404).json({ error: "Aucune entreprise associée à cet utilisateur" });
       }
