@@ -14,12 +14,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch } from "lucide-react";
-
-const COMPANY_ID = 1;
 
 // Bases légales complètes du RGPD
 const LEGAL_BASES = [
@@ -192,16 +191,23 @@ export default function Records() {
     },
   });
 
-  const { data: records, isLoading } = useQuery({
-    queryKey: ['/api/records', COMPANY_ID],
-    queryFn: () => recordsApi.get(COMPANY_ID).then(res => res.json()),
+  const { user } = useAuth();
+
+  // Get user's company
+  const { data: company } = useQuery({
+    queryKey: [`/api/companies/user/${user?.id}`],
+    enabled: !!user?.id,
   });
 
-  // Get company data for auto-filling
-  const { data: company } = useQuery({
-    queryKey: ['/api/companies', COMPANY_ID],
-    queryFn: () => companyApi.get(COMPANY_ID).then(res => res.json()),
+  const companyId = company?.id;
+
+  const { data: records, isLoading } = useQuery({
+    queryKey: ['/api/records', companyId],
+    queryFn: () => recordsApi.get(companyId).then(res => res.json()),
+    enabled: !!companyId,
   });
+
+  // Company data is already retrieved above
 
   // Auto-fill company data when forms open
   const handleOpenCreateDialog = () => {
@@ -227,7 +233,7 @@ export default function Records() {
   const generateMutation = useMutation({
     mutationFn: (data: any) => {
       const requestData = {
-        companyId: COMPANY_ID,
+        companyId: companyId,
         processingType: data.processingType,
         description: `
 Activité de traitement: ${data.activityDescription}
@@ -339,7 +345,7 @@ Informations complémentaires: ${data.additionalInfo}
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       const recordData = {
-        companyId: COMPANY_ID,
+        companyId: companyId,
         name: data.name,
         purpose: data.purpose,
         legalBasis: data.legalBasis,
