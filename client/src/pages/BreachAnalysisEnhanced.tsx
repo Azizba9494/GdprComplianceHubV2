@@ -170,11 +170,11 @@ export default function BreachAnalysisEnhanced() {
   });
 
   // Fetch breaches
-  const { data: breaches, isLoading } = useQuery({
+  const { data: breaches, isLoading, refetch: refetchBreaches } = useQuery({
     queryKey: ['/api/breaches', company?.id],
     queryFn: () => apiRequest("GET", `/api/breaches/${company.id}`),
     enabled: !!company?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Pas de cache pour s'assurer d'avoir les données fraîches
   });
 
   // AI Analysis mutation
@@ -211,14 +211,17 @@ export default function BreachAnalysisEnhanced() {
         return await apiRequest("POST", "/api/breaches", { ...data, companyId: company.id });
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: selectedBreach ? "Violation mise à jour" : "Violation créée",
         description: "Les informations ont été sauvegardées avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
+      // Invalidate et refetch pour s'assurer que la liste est mise à jour
+      await queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
+      await refetchBreaches();
       setShowForm(false);
       setSelectedBreach(null);
+      setActiveTab("list"); // Retourner à la liste après création
       resetForm();
     },
     onError: () => {
@@ -622,6 +625,10 @@ Généré le: ${new Date().toLocaleString()}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
+          {/* Debug info - temporarily display data info */}
+          <div className="text-xs text-gray-500 mb-2">
+            Debug: breaches = {JSON.stringify(breaches)} | isLoading = {isLoading.toString()}
+          </div>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin" />
