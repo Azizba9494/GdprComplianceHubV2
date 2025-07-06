@@ -100,6 +100,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.session?.userId) {
       return res.status(401).json({ error: "Authentication required" });
     }
+    // Populate req.user from session
+    req.user = req.session.user || { id: req.session.userId };
     next();
   };
 
@@ -826,10 +828,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/requests", requireAuth, async (req, res) => {
     try {
+      console.log('Request user:', req.user);
       const requestData = insertDataSubjectRequestSchema.parse(req.body);
+      console.log('Request data:', requestData);
+      
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
       
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, requestData.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user.id, requestData.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
@@ -845,6 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(request);
     } catch (error: any) {
+      console.error('Error creating data subject request:', error);
       res.status(400).json({ error: error.message });
     }
   });

@@ -25,7 +25,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   rolling: true,
-  name: 'gdpr.sid', // Custom session name
+  name: 'connect.sid', // Use default session name for compatibility
   cookie: {
     secure: false, // Force non-secure for development
     httpOnly: true,
