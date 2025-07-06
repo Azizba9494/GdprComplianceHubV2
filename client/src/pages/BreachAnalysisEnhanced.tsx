@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -73,6 +74,7 @@ interface Breach {
 export default function BreachAnalysisEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedBreach, setSelectedBreach] = useState<Breach | null>(null);
   const [previewBreach, setPreviewBreach] = useState<Breach | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -82,6 +84,20 @@ export default function BreachAnalysisEnhanced() {
   const [editingCell, setEditingCell] = useState<{breachId: number, field: string} | null>(null);
   const [editValue, setEditValue] = useState("");
   const [showAnalysisModal, setShowAnalysisModal] = useState<Breach | null>(null);
+
+  // Fetch company data for the current user
+  const { data: company, isLoading: companyLoading } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const res = await fetch(`/api/companies/user/${user.id}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to fetch company');
+      return res.json();
+    },
+    enabled: !!user?.id,
+  });
 
   const [formData, setFormData] = useState({
     // Nature de la violation
@@ -155,7 +171,9 @@ export default function BreachAnalysisEnhanced() {
 
   // Fetch breaches
   const { data: breaches, isLoading } = useQuery({
-    queryKey: ['/api/breaches/1'],
+    queryKey: ['/api/breaches', company?.id],
+    queryFn: () => apiRequest("GET", `/api/breaches/${company.id}`),
+    enabled: !!company?.id,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -171,7 +189,7 @@ export default function BreachAnalysisEnhanced() {
         title: "Analyse IA terminée",
         description: "L'analyse de la violation selon les directives EDPB a été effectuée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/breaches/1'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
       setIsAnalyzing(false);
     },
     onError: () => {
@@ -190,7 +208,7 @@ export default function BreachAnalysisEnhanced() {
       if (selectedBreach) {
         return await apiRequest("PUT", `/api/breaches/${selectedBreach.id}`, data);
       } else {
-        return await apiRequest("POST", "/api/breaches", { ...data, companyId: 1 });
+        return await apiRequest("POST", "/api/breaches", { ...data, companyId: company.id });
       }
     },
     onSuccess: () => {
@@ -198,7 +216,7 @@ export default function BreachAnalysisEnhanced() {
         title: selectedBreach ? "Violation mise à jour" : "Violation créée",
         description: "Les informations ont été sauvegardées avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/breaches/1'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
       setShowForm(false);
       setSelectedBreach(null);
       resetForm();
@@ -359,7 +377,7 @@ export default function BreachAnalysisEnhanced() {
     
     // Transform comprehensive form data for storage
     const breachData = {
-      companyId: 1,
+      companyId: company.id,
       description: formData.discoveryCircumstances,
       incidentDate: formData.startDate ? formData.startDate + (formData.startTime ? `T${formData.startTime}:00` : 'T12:00:00') : new Date().toISOString(),
       discoveryDate: formData.discoveryDate ? formData.discoveryDate + (formData.discoveryTime ? `T${formData.discoveryTime}:00` : 'T12:00:00') : new Date().toISOString(),
@@ -473,7 +491,7 @@ Généré le: ${new Date().toLocaleString()}
         [editingCell.field]: editValue
       });
       
-      queryClient.invalidateQueries({ queryKey: ['/api/breaches/1'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/breaches', company.id] });
       toast({
         title: "Modification sauvegardée",
         description: "La violation a été mise à jour avec succès."
@@ -556,6 +574,29 @@ Généré le: ${new Date().toLocaleString()}
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Show loading states
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-muted-foreground">Connexion requise</h2>
+          <p className="text-muted-foreground">Veuillez vous connecter pour accéder à cette page.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (companyLoading || !company) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-muted-foreground">Chargement...</h2>
+          <p className="text-muted-foreground">Récupération des données de l'entreprise...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
