@@ -827,6 +827,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/requests", requireAuth, async (req, res) => {
     try {
       const requestData = insertDataSubjectRequestSchema.parse(req.body);
+      
+      // Verify user has access to this company
+      const hasAccess = await verifyUserCompanyAccess(req.user!.id, requestData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
       // Auto-calculate due date (1 month from now)
       const dueDate = new Date();
       dueDate.setMonth(dueDate.getMonth() + 1);
@@ -842,10 +849,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/requests/:id", async (req, res) => {
+  app.put("/api/requests/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
+      
+      // Get the existing request to verify company access
+      const existingRequest = await storage.getDataSubjectRequest(id);
+      if (!existingRequest) {
+        return res.status(404).json({ error: "Request not found" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await verifyUserCompanyAccess(req.user!.id, existingRequest.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
       const request = await storage.updateDataSubjectRequest(id, updates);
       res.json(request);
     } catch (error: any) {

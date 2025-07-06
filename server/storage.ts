@@ -78,6 +78,7 @@ export interface IStorage {
 
   // Data Subject Requests
   getDataSubjectRequests(companyId: number): Promise<DataSubjectRequest[]>;
+  getDataSubjectRequest(id: number): Promise<DataSubjectRequest | undefined>;
   createDataSubjectRequest(request: InsertDataSubjectRequest): Promise<DataSubjectRequest>;
   updateDataSubjectRequest(id: number, updates: Partial<InsertDataSubjectRequest>): Promise<DataSubjectRequest>;
 
@@ -362,6 +363,11 @@ export class DatabaseStorage implements IStorage {
   // Data Subject Requests
   async getDataSubjectRequests(companyId: number): Promise<DataSubjectRequest[]> {
     return await db.select().from(dataSubjectRequests).where(eq(dataSubjectRequests.companyId, companyId)).orderBy(desc(dataSubjectRequests.createdAt));
+  }
+
+  async getDataSubjectRequest(id: number): Promise<DataSubjectRequest | undefined> {
+    const [request] = await db.select().from(dataSubjectRequests).where(eq(dataSubjectRequests.id, id));
+    return request;
   }
 
   async createDataSubjectRequest(request: InsertDataSubjectRequest & { dueDate: Date }): Promise<DataSubjectRequest> {

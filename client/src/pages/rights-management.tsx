@@ -19,8 +19,7 @@ import {
   User, Mail, FileText, Loader2, Filter, Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const COMPANY_ID = 1; // Mock company ID
+import { useAuth } from "@/hooks/useAuth";
 
 interface DataSubjectRequest {
   id: number;
@@ -63,6 +62,13 @@ export default function RightsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Get user's company
+  const { data: company } = useQuery({
+    queryKey: [`/api/companies/user/${user?.id}`],
+    enabled: !!user?.id,
+  }) as { data: any };
 
   const form = useForm({
     defaultValues: {
@@ -74,23 +80,24 @@ export default function RightsManagement() {
   });
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ['/api/requests', COMPANY_ID],
-    queryFn: () => requestsApi.get(COMPANY_ID).then(res => res.json()),
+    queryKey: ['/api/requests', company?.id],
+    queryFn: () => requestsApi.get(company?.id).then(res => res.json()),
+    enabled: !!company?.id,
   });
 
   const createMutation = useMutation({
     mutationFn: (data: any) => {
       const requestData = {
         ...data,
-        companyId: COMPANY_ID,
+        companyId: company?.id,
         status: "new",
         identityVerified: false,
       };
       return requestsApi.create(requestData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/requests', company?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard', company?.id] });
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
@@ -111,8 +118,8 @@ export default function RightsManagement() {
     mutationFn: ({ id, updates }: { id: number; updates: any }) =>
       requestsApi.update(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/requests', company?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard', company?.id] });
       toast({
         title: "Demande mise à jour",
         description: "Le statut de la demande a été modifié.",
