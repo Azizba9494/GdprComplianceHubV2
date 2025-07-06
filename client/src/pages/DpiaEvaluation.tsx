@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { 
   ArrowLeft, 
@@ -111,8 +112,6 @@ const CNIL_MANDATORY_TREATMENTS = [
   "Traitements qui empêchent les personnes d'exercer un droit ou de bénéficier d'un service",
 ];
 
-const COMPANY_ID = 1;
-
 export default function DpiaEvaluation() {
   const [, setLocation] = useLocation();
   const [selectedRecord, setSelectedRecord] = useState<ProcessingRecord | null>(null);
@@ -122,17 +121,27 @@ export default function DpiaEvaluation() {
   const [evaluationResults, setEvaluationResults] = useState<Record<number, any>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Get user's company information
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
+    enabled: !!user,
+  });
 
   // Get processing records
   const { data: records, isLoading: recordsLoading } = useQuery({
-    queryKey: ['/api/records', COMPANY_ID],
-    queryFn: () => fetch(`/api/records/${COMPANY_ID}`).then(res => res.json()),
+    queryKey: ['/api/records', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/records/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
   });
 
   // Get stored evaluations
   const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
-    queryKey: ['/api/dpia-evaluations', COMPANY_ID],
-    queryFn: () => fetch(`/api/dpia-evaluations/${COMPANY_ID}`).then(res => res.json()),
+    queryKey: ['/api/dpia-evaluations', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/dpia-evaluations/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
   });
 
   // Filter controller records only

@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { MessageCircle, Send, X, Bot } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   id: string;
@@ -24,12 +25,20 @@ export default function Chatbot() {
     },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const { user } = useAuth();
+
+  // Get user's company information
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
+    enabled: !!user,
+  });
 
   const chatMutation = useMutation({
     mutationFn: async ({ message }: { message: string }) => {
       const response = await apiRequest("POST", "/api/chatbot", {
         message,
-        companyId: 1
+        companyId: userCompany?.id
       });
       return response.json();
     },

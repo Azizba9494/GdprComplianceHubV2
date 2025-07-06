@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { 
   BarChart3, 
@@ -31,8 +32,6 @@ import {
   HelpCircle 
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-
-const COMPANY_ID = 1;
 
 const CNIL_MANDATORY_TREATMENTS = [
   "Traitements d'évaluation, y compris de profilage, et de prédiction relatifs aux aspects concernant les performances au travail, la situation économique, la santé, les préférences ou centres d'intérêt personnels, la fiabilité ou le comportement, la localisation ou les déplacements de la personne concernée",
@@ -130,6 +129,14 @@ export default function DpiaEvaluationOriginal() {
   const [evaluationResults, setEvaluationResults] = useState<Record<number, any>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Get user's company information
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
+    enabled: !!user,
+  });
 
   // Formulaires
   const evaluationForm = useForm({
@@ -156,18 +163,21 @@ export default function DpiaEvaluationOriginal() {
 
   // Requêtes de données
   const { data: records, isLoading: recordsLoading } = useQuery({
-    queryKey: ['/api/records', COMPANY_ID],
-    queryFn: () => fetch(`/api/records/${COMPANY_ID}`).then(res => res.json()),
+    queryKey: ['/api/records', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/records/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
   });
 
   const { data: assessments, isLoading: assessmentsLoading } = useQuery({
-    queryKey: ['/api/dpia', COMPANY_ID],
-    queryFn: () => fetch(`/api/dpia/${COMPANY_ID}`).then(res => res.json()),
+    queryKey: ['/api/dpia', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/dpia/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
   });
 
   const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
-    queryKey: ['/api/dpia-evaluations', COMPANY_ID],
-    queryFn: () => fetch(`/api/dpia-evaluations/${COMPANY_ID}`).then(res => res.json()),
+    queryKey: ['/api/dpia-evaluations', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/dpia-evaluations/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
   });
 
   // Filtrer les traitements de responsable uniquement
@@ -278,7 +288,7 @@ export default function DpiaEvaluationOriginal() {
 
       // Sauvegarder en base de données
       const evaluationData = {
-        companyId: COMPANY_ID,
+        companyId: userCompany?.id,
         recordId: selectedRecord!.id,
         score,
         recommendation,
@@ -321,7 +331,9 @@ export default function DpiaEvaluationOriginal() {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations'] });
+      if (userCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations', userCompany.id] });
+      }
       toast({
         title: "Évaluation terminée",
         description: "L'évaluation AIPD a été enregistrée avec succès."
