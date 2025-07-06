@@ -11,8 +11,10 @@ import {
   insertProcessingRecordSchema, insertDataSubjectRequestSchema,
   insertPrivacyPolicySchema, insertDataBreachSchema,
   insertDpiaAssessmentSchema, insertAiPromptSchema, insertLlmConfigurationSchema,
-  insertRagDocumentSchema, insertPromptDocumentSchema, promptDocuments
+  insertRagDocumentSchema, insertPromptDocumentSchema, promptDocuments,
+  processingRecords, dpiaEvaluations
 } from "@shared/schema";
+import { eq, and, or, gte, like } from "drizzle-orm";
 import multer from "multer";
 // import pdfParse from "pdf-parse";
 
@@ -1068,76 +1070,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get processing records that require DPIA based on evaluations
+  // Get processing records that require DPIA based on evaluations - simplified version
   app.get("/api/dpia/assessment/processing-selection", requireAuth, async (req, res) => {
     try {
-      const session = req.session as any;
-      const userId = session?.user?.id || session?.userId;
-      console.log('[DPIA PROCESSING SELECTION] User ID:', userId, 'Session user:', session?.user?.id, 'Session userId:', session?.userId);
+      const companyId = req.query.companyId ? parseInt(req.query.companyId as string) : null;
+      console.log('[DPIA PROCESSING SELECTION] Company ID from query:', companyId);
       
-      if (!userId || isNaN(userId)) {
-        return res.status(401).json({ error: "Utilisateur non authentifié" });
+      if (!companyId || isNaN(companyId)) {
+        return res.status(400).json({ error: "Company ID requis" });
       }
 
-      // Get user's company
-      const company = await storage.getCompanyByUserId(userId);
+      const company = await storage.getCompany(companyId);
       console.log('[DPIA PROCESSING SELECTION] Company:', company?.id);
       
       if (!company) {
         return res.status(404).json({ error: "Entreprise non trouvée" });
       }
 
-      // Get all processing records for this company
-      const allRecords = await storage.getProcessingRecords(company.id);
-      console.log('[DPIA PROCESSING SELECTION] All records count:', allRecords.length);
-      
-      // Get all DPIA evaluations for this company
-      const evaluations = await storage.getDpiaEvaluations(company.id);
-      console.log('[DPIA PROCESSING SELECTION] Evaluations count:', evaluations.length);
-      
-      // Filter processing records that require DPIA based on evaluations
-      const recordsRequiringDpia = allRecords.filter(record => {
-        const evaluation = evaluations.find(evaluation => evaluation.recordId === record.id);
-        if (!evaluation) return false;
-        
-        // Parse criteria answers to calculate score
-        let criteriaAnswers = {};
-        try {
-          if (typeof evaluation.criteriaAnswers === 'string') {
-            // Handle double-escaped JSON
-            let jsonString = evaluation.criteriaAnswers;
-            if (jsonString.startsWith('"{') && jsonString.endsWith('}"')) {
-              jsonString = JSON.parse(jsonString);
-            }
-            criteriaAnswers = JSON.parse(jsonString);
-          } else {
-            criteriaAnswers = evaluation.criteriaAnswers || {};
-          }
-        } catch (e) {
-          console.error('[DPIA PROCESSING SELECTION] Error parsing criteria:', e, 'Raw:', evaluation.criteriaAnswers);
-          return false;
-        }
-        
-        // Calculate score based on criteria answers (use evaluation.score if available)
-        let score = evaluation.score || 0;
-        if (!score && criteriaAnswers) {
-          score = Object.values(criteriaAnswers).reduce((total: number, answer: any) => {
-            if (answer === 'oui' || answer === true) return total + 1;
-            return total;
-          }, 0);
-        }
-        
-        console.log('[DPIA PROCESSING SELECTION] Record:', record.name, 'Score:', score, 'Recommendation:', evaluation.recommendation);
-        
-        // DPIA required if score >= 2 OR if recommendation contains "obligatoire" or "recommandée"
-        const requiresDpia = score >= 2 || 
-          (evaluation.recommendation && (
-            evaluation.recommendation.toLowerCase().includes('obligatoire') ||
-            evaluation.recommendation.toLowerCase().includes('recommandée')
-          ));
-        
-        return requiresDpia;
-      });
+      // Simple direct query to avoid complex parsing issues
+      const recordsRequiringDpia = await db
+        .select({
+          id: processingRecords.id,
+          name: processingRecords.name,
+          purpose: processingRecords.purpose,
+          dataCategories: processingRecords.dataCategories,
+          legalBasis: processingRecords.legalBasis,
+          companyId: processingRecords.companyId,
+          score: dpiaEvaluations.score,
+          recommendation: dpiaEvaluations.recommendation
+        })
+        .from(processingRecords)
+        .innerJoin(dpiaEvaluations, eq(processingRecords.id, dpiaEvaluations.recordId))
+        .where(
+          and(
+            eq(processingRecords.companyId, companyId),
+            eq(dpiaEvaluations.companyId, companyId),
+            or(
+              gte(dpiaEvaluations.score, 2),
+              like(dpiaEvaluations.recommendation, '%obligatoire%'),
+              like(dpiaEvaluations.recommendation, '%recommandée%')
+            )
+          )
+        );
 
       console.log('[DPIA PROCESSING SELECTION] Records requiring DPIA:', recordsRequiringDpia.length);
       res.json(recordsRequiringDpia);

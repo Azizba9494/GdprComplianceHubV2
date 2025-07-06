@@ -32,16 +32,37 @@ export default function DpiaProcessingSelection() {
     enabled: !!user?.id,
   }) as { data: any };
 
-  // Get processing records that require DPIA based on evaluations
-  const { data: records = [], isLoading } = useQuery({
-    queryKey: ['/api/dpia/assessment/processing-selection'],
-    enabled: !!user?.id,
+  // Get all processing records
+  const { data: allRecords = [] } = useQuery({
+    queryKey: [`/api/records/${company?.id}`],
+    enabled: !!company?.id,
+  }) as { data: any[] };
+
+  // Get DPIA evaluations
+  const { data: dpiaEvaluations = [], isLoading } = useQuery({
+    queryKey: [`/api/dpia-evaluations/${company?.id}`],
+    enabled: !!company?.id,
   }) as { data: any[], isLoading: boolean };
+
+  // Filter records that require DPIA based on evaluations
+  const recordsRequiringDpia = allRecords.filter(record => {
+    const evaluation = dpiaEvaluations.find(evaluation => evaluation.recordId === record.id);
+    if (!evaluation) return false;
+    
+    // DPIA required if score >= 2 OR if recommendation contains "obligatoire" or "recommandée"
+    const requiresDpia = evaluation.score >= 2 || 
+      (evaluation.recommendation && (
+        evaluation.recommendation.toLowerCase().includes('obligatoire') ||
+        evaluation.recommendation.toLowerCase().includes('recommandée')
+      ));
+    
+    return requiresDpia;
+  });
 
   // Create new DPIA mutation
   const createDpiaMutation = useMutation({
     mutationFn: async (recordId: number) => {
-      const record = records.find((r: any) => r.id === recordId);
+      const record = recordsRequiringDpia.find((r: any) => r.id === recordId);
       const response = await fetch("/api/dpia", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,8 +97,8 @@ export default function DpiaProcessingSelection() {
     },
   });
 
-  // Filter records based on search only (records already require DPIA from API)
-  const filteredRecords = records.filter((record: any) => {
+  // Filter records based on search only (records already require DPIA from evaluation)
+  const filteredRecords = recordsRequiringDpia.filter((record: any) => {
     const matchesSearch = record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          record.purpose?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;

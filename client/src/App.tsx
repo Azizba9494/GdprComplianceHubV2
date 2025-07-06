@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -29,6 +29,7 @@ import Chatbot from "@/components/chatbot/chatbot";
 
 function AuthenticatedApp() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
 
   if (isLoading) {
     return (
@@ -70,7 +71,7 @@ function AuthenticatedApp() {
             <Route path="/breach-analysis" component={BreachAnalysisEnhanced} />
             <Route path="/rights" component={RightsManagement} />
             <Route path="/dpia" component={DpiaList} />
-            <Route path="/dpia/evaluation" component={DpiaEvaluationOriginal} />
+            <Route path="/dpia/evaluation" component={() => { setLocation('/dpia'); return null; }} />
             <Route path="/dpia/new" component={DpiaProcessingSelection} />
             <Route path="/dpia/:id" component={DpiaAssessmentEnhanced} />
             <Route path="/dpia-old" component={DPIA} />
