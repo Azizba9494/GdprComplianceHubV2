@@ -11,9 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-
-const COMPANY_ID = 1; // Mock company ID
 
 const statusLabels = {
   todo: "À faire",
@@ -37,18 +36,29 @@ export default function ActionPlan() {
   const [newDueDate, setNewDueDate] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Get user's company information
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
+    enabled: !!user,
+  });
 
   const { data: actions, isLoading } = useQuery({
-    queryKey: ['/api/actions', COMPANY_ID],
-    queryFn: () => actionsApi.get(COMPANY_ID).then(res => res.json()),
+    queryKey: ['/api/actions', userCompany?.id],
+    queryFn: () => userCompany ? actionsApi.get(userCompany.id).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
   });
 
   const updateActionMutation = useMutation({
     mutationFn: ({ id, updates }: { id: number; updates: any }) => 
       actionsApi.update(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/actions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      if (userCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/actions', userCompany.id] });
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard', userCompany.id] });
+      }
       toast({
         title: "Action mise à jour",
         description: "Le statut de l'action a été modifié avec succès.",
@@ -83,12 +93,26 @@ export default function ActionPlan() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="p-6">
         <Card>
           <CardContent className="pt-6">
             <p className="text-center">Chargement du plan d'actions...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!userCompany) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p>Vous devez être connecté et avoir une entreprise associée pour accéder au plan d'actions.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
