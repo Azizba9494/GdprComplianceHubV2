@@ -38,7 +38,14 @@ export default function Diagnostic() {
   const [completedCategories, setCompletedCategories] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, userCompany } = useAuth();
+  const { user } = useAuth();
+
+  // Get user's company information
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
+    enabled: !!user,
+  });
 
   const { data: allQuestions, isLoading } = useQuery({
     queryKey: ['/api/diagnostic/questions'],
