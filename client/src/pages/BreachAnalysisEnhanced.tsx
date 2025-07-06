@@ -624,10 +624,6 @@ Généré le: ${new Date().toLocaleString()}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          {/* Debug info - temporarily display data info */}
-          <div className="text-xs text-gray-500 mb-2">
-            Debug: breaches = {JSON.stringify(breaches)} | isLoading = {isLoading.toString()}
-          </div>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin" />
