@@ -9,8 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-
-const COMPANY_ID = 1; // Mock company ID
+import { useAuth } from "@/hooks/useAuth";
 
 interface PrivacyPolicy {
   id: number;
@@ -24,14 +23,27 @@ export default function PrivacyPolicy() {
   const [selectedPolicy, setSelectedPolicy] = useState<PrivacyPolicy | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, company } = useAuth();
+
+  if (!user || !company) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">Chargement...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const { data: policies, isLoading } = useQuery({
-    queryKey: ['/api/privacy-policies', COMPANY_ID],
-    queryFn: () => privacyPolicyApi.get(COMPANY_ID).then(res => res.json()),
+    queryKey: ['/api/privacy-policies', company.id],
+    queryFn: () => privacyPolicyApi.get(company.id).then(res => res.json()),
   });
 
   const generateMutation = useMutation({
-    mutationFn: () => privacyPolicyApi.generate(COMPANY_ID),
+    mutationFn: () => privacyPolicyApi.generate(company.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/privacy-policies'] });
       toast({

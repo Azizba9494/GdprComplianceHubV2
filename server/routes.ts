@@ -630,6 +630,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/privacy-policies/generate", requireAuth, async (req, res) => {
     try {
       const { companyId } = req.body;
+      const userId = req.session?.userId;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifié" });
+      }
+
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
 
       const company = await storage.getCompany(companyId);
       if (!company) {
