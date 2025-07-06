@@ -14,8 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertTriangle, Shield, Download, Loader2, CheckCircle, XCircle, Info, Calendar } from "lucide-react";
-
-const COMPANY_ID = 1; // Mock company ID
+import { useAuth } from "@/hooks/useAuth";
 
 interface BreachFormData {
   // Nature de la violation
@@ -92,6 +91,21 @@ export default function BreachAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Fetch company data for the current user
+  const { data: company, isLoading: companyLoading } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const res = await fetch(`/api/companies/user/${user.id}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to fetch company');
+      return res.json();
+    },
+    enabled: !!user?.id,
+  });
 
   const form = useForm<BreachFormData>({
     defaultValues: {
@@ -132,8 +146,9 @@ export default function BreachAnalysis() {
   });
 
   const { data: breaches, isLoading } = useQuery({
-    queryKey: ['/api/breaches', COMPANY_ID],
-    queryFn: () => breachApi.get(COMPANY_ID).then(res => res.json()),
+    queryKey: ['/api/breaches', company?.id],
+    queryFn: () => breachApi.get(company.id).then(res => res.json()),
+    enabled: !!company?.id,
   });
 
   const createBreachMutation = useMutation({
@@ -154,6 +169,31 @@ export default function BreachAnalysis() {
       });
     },
   });
+
+  // Early returns after all hooks for loading states
+  if (!user || companyLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">Chargement...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">Aucune entreprise trouvée pour cet utilisateur.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const onSubmit = async (data: BreachFormData) => {
     setIsAnalyzing(true);
@@ -185,7 +225,7 @@ export default function BreachAnalysis() {
 
     // Save to database
     const breachData = {
-      companyId: COMPANY_ID,
+      companyId: company.id,
       description: `Violation ${data.violationStatus} - ${data.discoveryCircumstances}`,
       incidentDate: data.startDate || data.discoveryDate,
       dataCategories: data.dataCategories,
