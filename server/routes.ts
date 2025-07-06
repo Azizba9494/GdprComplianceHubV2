@@ -1068,6 +1068,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get processing records that require DPIA based on evaluations
+  app.get("/api/dpia/assessment/processing-selection", requireAuth, async (req, res) => {
+    try {
+      const user = req.session.user;
+      console.log('[DPIA PROCESSING SELECTION] User:', user?.id);
+      
+      if (!user?.id) {
+        return res.status(401).json({ error: "Utilisateur non authentifié" });
+      }
+
+      // Get user's company
+      const company = await storage.getCompanyByUserId(user.id);
+      console.log('[DPIA PROCESSING SELECTION] Company:', company?.id);
+      
+      if (!company) {
+        return res.status(404).json({ error: "Entreprise non trouvée" });
+      }
+
+      // Get all processing records for this company
+      const allRecords = await storage.getProcessingRecords(company.id);
+      console.log('[DPIA PROCESSING SELECTION] All records count:', allRecords.length);
+      
+      // Get all DPIA evaluations for this company
+      const evaluations = await storage.getDpiaEvaluations(company.id);
+      console.log('[DPIA PROCESSING SELECTION] Evaluations count:', evaluations.length);
+      
+      // Filter processing records that require DPIA based on evaluations
+      const recordsRequiringDpia = allRecords.filter(record => {
+        const evaluation = evaluations.find(evaluation => evaluation.recordId === record.id);
+        if (!evaluation) return false;
+        
+        // Parse criteria answers to calculate score
+        let criteriaAnswers = {};
+        try {
+          criteriaAnswers = typeof evaluation.criteriaAnswers === 'string' 
+            ? JSON.parse(evaluation.criteriaAnswers) 
+            : evaluation.criteriaAnswers || {};
+        } catch (e) {
+          console.error('[DPIA PROCESSING SELECTION] Error parsing criteria:', e);
+          return false;
+        }
+        
+        // Calculate score based on criteria answers
+        const score = Object.values(criteriaAnswers).reduce((total: number, answer: any) => {
+          if (answer === 'oui') return total + 1;
+          return total;
+        }, 0);
+        
+        console.log('[DPIA PROCESSING SELECTION] Record:', record.name, 'Score:', score);
+        
+        // DPIA required if score >= 2
+        return score >= 2;
+      });
+
+      console.log('[DPIA PROCESSING SELECTION] Records requiring DPIA:', recordsRequiringDpia.length);
+      res.json(recordsRequiringDpia);
+    } catch (error: any) {
+      console.error('Error fetching processing records requiring DPIA:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // DPIA Evaluation endpoints
   app.get("/api/dpia-evaluations/:companyId", requireCompanyAccess, async (req, res) => {
     try {

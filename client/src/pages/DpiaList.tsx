@@ -366,7 +366,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
                     {getAipdRecommendation().type === "obligatoire" && (
                       <Button 
                         variant="outline"
-                        onClick={() => setLocation('/dpia/processing-selection')}
+                        onClick={() => setLocation('/dpia/new')}
                         className="flex-1"
                       >
                         <Plus className="h-4 w-4 mr-2" />

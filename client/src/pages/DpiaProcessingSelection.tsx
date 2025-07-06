@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   ArrowLeft,
   FileText, 
@@ -13,7 +14,8 @@ import {
   AlertTriangle, 
   CheckCircle,
   Shield,
-  Plus
+  Plus,
+  Loader2
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -22,24 +24,19 @@ export default function DpiaProcessingSelection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuth();
 
-  // Get user company
-  const userId = parseInt(localStorage.getItem("userId") || "1");
+  // Get user's company
   const { data: company } = useQuery({
-    queryKey: [`/api/companies/${userId}`],
+    queryKey: [`/api/companies/user/${user?.id}`],
+    enabled: !!user?.id,
   }) as { data: any };
 
-  // Get processing records
+  // Get processing records that require DPIA based on evaluations
   const { data: records = [], isLoading } = useQuery({
-    queryKey: [`/api/records/${(company as any)?.id}`],
-    enabled: !!(company as any)?.id,
+    queryKey: ['/api/dpia/assessment/processing-selection'],
+    enabled: !!user?.id,
   }) as { data: any[], isLoading: boolean };
-
-  // Get existing DPIA evaluations to check which treatments require DPIA
-  const { data: dpiaEvaluations = [] } = useQuery({
-    queryKey: [`/api/dpia-evaluations/${(company as any)?.id}`],
-    enabled: !!(company as any)?.id,
-  }) as { data: any[] };
 
   // Create new DPIA mutation
   const createDpiaMutation = useMutation({
@@ -79,43 +76,47 @@ export default function DpiaProcessingSelection() {
     },
   });
 
-  // Filter records based on search and DPIA requirements
+  // Filter records based on search only (records already require DPIA from API)
   const filteredRecords = records.filter((record: any) => {
     const matchesSearch = record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          record.purpose?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Check if this record has a preliminary evaluation suggesting DPIA is needed
-    const evaluation = dpiaEvaluations.find((evaluation: any) => evaluation.recordId === record.id);
-    const needsDpia = evaluation && (
-      evaluation.recommendation?.includes("obligatoire") ||
-      evaluation.recommendation?.includes("recommandée")
-    );
-    
-    return matchesSearch && needsDpia;
+    return matchesSearch;
   });
 
-  const getStatusBadge = (record: any) => {
-    const evaluation = dpiaEvaluations.find((evaluation: any) => evaluation.recordId === record.id);
-    
-    if (!evaluation) {
-      return <Badge variant="secondary">Évaluation requise</Badge>;
-    }
-    
-    if (evaluation.recommendation?.includes("obligatoire")) {
-      return <Badge variant="destructive">AIPD obligatoire</Badge>;
-    }
-    
-    if (evaluation.recommendation?.includes("recommandée")) {
-      return <Badge variant="outline" className="border-orange-500 text-orange-600">AIPD recommandée</Badge>;
-    }
-    
-    return <Badge variant="secondary">À évaluer</Badge>;
+  const getStatusBadge = () => {
+    return <Badge variant="destructive">AIPD obligatoire</Badge>;
   };
+
+  // Show loading states
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-muted-foreground">Connexion requise</h2>
+          <p className="text-muted-foreground">Veuillez vous connecter pour accéder à cette page.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Chargement des données de l'entreprise...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center">Chargement des traitements...</div>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Chargement des traitements nécessitant une AIPD...</p>
+        </div>
       </div>
     );
   }
