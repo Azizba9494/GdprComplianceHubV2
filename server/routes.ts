@@ -1526,13 +1526,21 @@ Répondez de manière complète et utile à cette question en respectant tous le
   });
 
   // Update company route
-  app.put("/api/companies/:id", async (req, res) => {
+  app.put("/api/companies/:id", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.id);
       const updates = req.body;
+      const userId = req.session?.userId;
 
-      // For demo purposes, we'll skip authentication check
-      // In production, verify user has permission to update this company
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifié" });
+      }
+
+      // Verify user has permission to update this company
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
       const updatedCompany = await storage.updateCompany(companyId, updates);
       res.json(updatedCompany);

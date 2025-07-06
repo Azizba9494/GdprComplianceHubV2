@@ -37,8 +37,7 @@ const inviteCollaboratorSchema = z.object({
 // GET /api/user/profile - Get current user profile
 router.get('/profile', async (req, res) => {
   try {
-    // For demo purposes, use hardcoded user ID 1
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -60,7 +59,7 @@ router.get('/profile', async (req, res) => {
 // PATCH /api/user/profile - Update user profile
 router.patch('/profile', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -80,7 +79,7 @@ router.patch('/profile', async (req, res) => {
 // PATCH /api/user/password - Update user password
 router.patch('/password', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -108,7 +107,7 @@ router.patch('/password', async (req, res) => {
 // GET /api/user/subscription - Get user subscription
 router.get('/subscription', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -124,7 +123,7 @@ router.get('/subscription', async (req, res) => {
 // GET /api/user/company-access - Get user's company access
 router.get('/company-access', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -140,7 +139,7 @@ router.get('/company-access', async (req, res) => {
 // POST /api/user/companies - Create new company
 router.post('/companies', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -191,7 +190,7 @@ router.post('/companies', async (req, res) => {
 // GET /api/user/invoices - Get user invoices
 router.get('/invoices', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -207,7 +206,7 @@ router.get('/invoices', async (req, res) => {
 // GET /api/company/collaborators/:companyId - Get company collaborators
 router.get('/collaborators/:companyId', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     const companyId = parseInt(req.params.companyId);
     
     if (!userId) {
@@ -235,7 +234,7 @@ router.get('/collaborators/:companyId', async (req, res) => {
 // POST /api/company/invite - Invite collaborator
 router.post('/invite', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     if (!userId) {
       return res.status(401).json({ error: "Non authentifié" });
     }
@@ -282,7 +281,7 @@ router.post('/invite', async (req, res) => {
 // DELETE /api/company/access/:accessId - Revoke access
 router.delete('/access/:accessId', async (req, res) => {
   try {
-    const userId = 1; // req.session?.user?.id || 1;
+    const userId = req.session?.userId;
     const accessId = parseInt(req.params.accessId);
     
     if (!userId) {
