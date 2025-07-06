@@ -829,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requestData = insertDataSubjectRequestSchema.parse(req.body);
       
       // Verify user has access to this company
-      const hasAccess = await verifyUserCompanyAccess(req.user!.id, requestData.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, requestData.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
@@ -861,7 +861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify user has access to this company
-      const hasAccess = await verifyUserCompanyAccess(req.user!.id, existingRequest.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, existingRequest.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
