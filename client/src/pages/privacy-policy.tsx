@@ -39,32 +39,8 @@ export default function PrivacyPolicy() {
     enabled: !!user?.id,
   });
 
-  if (!user || companyLoading) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-center text-muted-foreground">Chargement...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!company) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-center text-muted-foreground">Aucune entreprise trouvée pour cet utilisateur.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const { data: policies, isLoading } = useQuery({
-    queryKey: ['/api/privacy-policies', company.id],
+    queryKey: ['/api/privacy-policies', company?.id],
     queryFn: () => privacyPolicyApi.get(company.id).then(res => res.json()),
     enabled: !!company?.id,
   });
@@ -128,6 +104,31 @@ export default function PrivacyPolicy() {
       });
     },
   });
+
+  // Early returns after all hooks
+  if (!user || companyLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">Chargement...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">Aucune entreprise trouvée pour cet utilisateur.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const downloadPolicy = (policy: PrivacyPolicy) => {
     const blob = new Blob([policy.content], { type: 'text/html' });
