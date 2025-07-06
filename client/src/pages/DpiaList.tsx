@@ -363,16 +363,6 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
                     >
                       {createEvaluationMutation.isPending ? "Sauvegarde..." : "Sauvegarder l'évaluation"}
                     </Button>
-                    {getAipdRecommendation().type === "obligatoire" && (
-                      <Button 
-                        variant="outline"
-                        onClick={() => setLocation('/dpia/new')}
-                        className="flex-1"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Créer l'AIPD
-                      </Button>
-                    )}
                   </div>
                 </div>
               </CardContent>
