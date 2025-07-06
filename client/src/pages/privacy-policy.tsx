@@ -23,9 +23,23 @@ export default function PrivacyPolicy() {
   const [selectedPolicy, setSelectedPolicy] = useState<PrivacyPolicy | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, company } = useAuth();
+  const { user } = useAuth();
 
-  if (!user || !company) {
+  // Fetch company data for the current user
+  const { data: company, isLoading: companyLoading } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const res = await fetch(`/api/companies/user/${user.id}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to fetch company');
+      return res.json();
+    },
+    enabled: !!user?.id,
+  });
+
+  if (!user || companyLoading) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -37,9 +51,22 @@ export default function PrivacyPolicy() {
     );
   }
 
+  if (!company) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">Aucune entreprise trouvée pour cet utilisateur.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const { data: policies, isLoading } = useQuery({
     queryKey: ['/api/privacy-policies', company.id],
     queryFn: () => privacyPolicyApi.get(company.id).then(res => res.json()),
+    enabled: !!company?.id,
   });
 
   const generateMutation = useMutation({
