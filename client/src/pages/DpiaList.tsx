@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Plus, FileText, Clock, CheckCircle, AlertCircle, Eye, Edit, BookOpen, Users, Shield, Globe, Search, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -478,11 +479,12 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
 
 export default function DpiaList() {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
 
-  // Get company information
-  const userId = 1; // This should come from auth context
+  // Get company information - use the user ID to get their company
   const { data: company } = useQuery({
-    queryKey: [`/api/companies/${userId}`],
+    queryKey: [`/api/companies/user/${user?.id}`],
+    enabled: !!user?.id,
   }) as { data: any };
 
   // Delete DPIA mutation
@@ -589,6 +591,16 @@ export default function DpiaList() {
 
   const inProgressDpias = dpias.filter(d => d.status === "draft" || d.status === "inprogress");
   const completedDpias = dpias.filter(d => d.status === "completed" || d.status === "validated");
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6 max-w-6xl">
+        <div className="text-center">
+          <p>Veuillez vous connecter pour accéder aux AIPD.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

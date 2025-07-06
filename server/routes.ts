@@ -341,6 +341,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get company by user ID - specific route for user context
+  app.get("/api/companies/user/:userId", requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Verify that the user is requesting their own company or is an admin
+      if (req.session.userId !== userId && req.session.user?.role !== 'admin') {
+        return res.status(403).json({ error: "Access denied to this user's company data" });
+      }
+      
+      const company = await storage.getCompanyByUserId(userId);
+      res.json(company);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/companies", async (req, res) => {
     try {
       const companyData = insertCompanySchema.parse(req.body);
