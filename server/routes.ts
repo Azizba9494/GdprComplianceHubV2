@@ -1071,15 +1071,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get processing records that require DPIA based on evaluations
   app.get("/api/dpia/assessment/processing-selection", requireAuth, async (req, res) => {
     try {
-      const user = req.session.user;
-      console.log('[DPIA PROCESSING SELECTION] User:', user?.id);
+      const session = req.session as any;
+      const userId = session?.user?.id || session?.userId;
+      console.log('[DPIA PROCESSING SELECTION] User ID:', userId, 'Session user:', session?.user?.id, 'Session userId:', session?.userId);
       
-      if (!user?.id) {
+      if (!userId || isNaN(userId)) {
         return res.status(401).json({ error: "Utilisateur non authentifié" });
       }
 
       // Get user's company
-      const company = await storage.getCompanyByUserId(user.id);
+      const company = await storage.getCompanyByUserId(userId);
       console.log('[DPIA PROCESSING SELECTION] Company:', company?.id);
       
       if (!company) {
@@ -1102,24 +1103,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Parse criteria answers to calculate score
         let criteriaAnswers = {};
         try {
-          criteriaAnswers = typeof evaluation.criteriaAnswers === 'string' 
-            ? JSON.parse(evaluation.criteriaAnswers) 
-            : evaluation.criteriaAnswers || {};
+          if (typeof evaluation.criteriaAnswers === 'string') {
+            // Handle double-escaped JSON
+            let jsonString = evaluation.criteriaAnswers;
+            if (jsonString.startsWith('"{') && jsonString.endsWith('}"')) {
+              jsonString = JSON.parse(jsonString);
+            }
+            criteriaAnswers = JSON.parse(jsonString);
+          } else {
+            criteriaAnswers = evaluation.criteriaAnswers || {};
+          }
         } catch (e) {
-          console.error('[DPIA PROCESSING SELECTION] Error parsing criteria:', e);
+          console.error('[DPIA PROCESSING SELECTION] Error parsing criteria:', e, 'Raw:', evaluation.criteriaAnswers);
           return false;
         }
         
-        // Calculate score based on criteria answers
-        const score = Object.values(criteriaAnswers).reduce((total: number, answer: any) => {
-          if (answer === 'oui') return total + 1;
-          return total;
-        }, 0);
+        // Calculate score based on criteria answers (use evaluation.score if available)
+        let score = evaluation.score || 0;
+        if (!score && criteriaAnswers) {
+          score = Object.values(criteriaAnswers).reduce((total: number, answer: any) => {
+            if (answer === 'oui' || answer === true) return total + 1;
+            return total;
+          }, 0);
+        }
         
-        console.log('[DPIA PROCESSING SELECTION] Record:', record.name, 'Score:', score);
+        console.log('[DPIA PROCESSING SELECTION] Record:', record.name, 'Score:', score, 'Recommendation:', evaluation.recommendation);
         
-        // DPIA required if score >= 2
-        return score >= 2;
+        // DPIA required if score >= 2 OR if recommendation contains "obligatoire" or "recommandée"
+        const requiresDpia = score >= 2 || 
+          (evaluation.recommendation && (
+            evaluation.recommendation.toLowerCase().includes('obligatoire') ||
+            evaluation.recommendation.toLowerCase().includes('recommandée')
+          ));
+        
+        return requiresDpia;
       });
 
       console.log('[DPIA PROCESSING SELECTION] Records requiring DPIA:', recordsRequiringDpia.length);
