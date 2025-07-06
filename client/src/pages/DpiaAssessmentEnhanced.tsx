@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Brain, Save, FileText, Shield, AlertTriangle, CheckCircle, Loader2, Plus, Trash2, ArrowLeft, Download } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -435,13 +436,22 @@ export default function DpiaAssessmentEnhanced() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   // Get user company
-  const userId = parseInt(localStorage.getItem("userId") || "1");
   const { data: company } = useQuery({
-    queryKey: [`/api/companies/${userId}`],
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const res = await fetch(`/api/companies/user/${user.id}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to fetch company');
+      return res.json();
+    },
+    enabled: !!user?.id,
   }) as { data: any };
 
   // Get DPIA data
@@ -818,6 +828,29 @@ export default function DpiaAssessmentEnhanced() {
     const current = form.getValues("internationalTransfersMeasures") || [];
     form.setValue("internationalTransfersMeasures", current.filter((_, i) => i !== index));
   };
+
+  // Show loading states
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-muted-foreground">Connexion requise</h2>
+          <p className="text-muted-foreground">Veuillez vous connecter pour accéder à cette page.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Chargement des données de l'entreprise...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
