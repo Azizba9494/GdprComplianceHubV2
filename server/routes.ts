@@ -506,6 +506,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (updates.dueDate && typeof updates.dueDate === 'string') {
         updates.dueDate = new Date(updates.dueDate);
       }
+      if (updates.completedAt && typeof updates.completedAt === 'string') {
+        updates.completedAt = new Date(updates.completedAt);
+      }
 
       const action = await storage.updateComplianceAction(id, updates);
       res.json(action);
