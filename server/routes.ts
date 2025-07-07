@@ -762,6 +762,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/breaches/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get the existing breach to verify company access
+      const existingBreach = await storage.getDataBreach(id);
+      if (!existingBreach) {
+        return res.status(404).json({ error: "Violation not found" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, existingBreach.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      await storage.deleteDataBreach(id);
+      res.json({ success: true, message: "Violation supprimée avec succès" });
+    } catch (error: any) {
+      console.error('Breach deletion error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/breaches/analyze", requireAuth, async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);

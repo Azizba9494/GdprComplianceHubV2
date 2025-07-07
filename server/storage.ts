@@ -92,8 +92,10 @@ export interface IStorage {
 
   // Data Breaches
   getDataBreaches(companyId: number): Promise<DataBreach[]>;
+  getDataBreach(id: number): Promise<DataBreach | undefined>;
   createDataBreach(breach: InsertDataBreach): Promise<DataBreach>;
   updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach>;
+  deleteDataBreach(id: number): Promise<void>;
 
   // DPIA Assessments
   getDpiaAssessments(companyId: number): Promise<DpiaAssessment[]>;
@@ -427,9 +429,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getDataBreach(id: number): Promise<DataBreach | undefined> {
+    const [breach] = await db.select().from(dataBreaches).where(eq(dataBreaches.id, id));
+    return breach || undefined;
+  }
+
   async updateDataBreach(id: number, updates: Partial<InsertDataBreach>): Promise<DataBreach> {
     const [updated] = await db.update(dataBreaches).set(updates).where(eq(dataBreaches.id, id)).returning();
     return updated;
+  }
+
+  async deleteDataBreach(id: number): Promise<void> {
+    await db.delete(dataBreaches).where(eq(dataBreaches.id, id));
   }
 
   // DPIA Assessments

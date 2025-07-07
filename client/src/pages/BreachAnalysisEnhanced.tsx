@@ -32,7 +32,8 @@ import {
   AlertCircle,
   Table,
   Loader2,
-  Save
+  Save,
+  Trash2
 } from "lucide-react";
 
 interface Breach {
@@ -231,6 +232,35 @@ export default function BreachAnalysisEnhanced() {
       });
     },
   });
+
+  // Delete breach mutation
+  const deleteBreachMutation = useMutation({
+    mutationFn: async (breachId: number) => {
+      return await apiRequest("DELETE", `/api/breaches/${breachId}`);
+    },
+    onSuccess: async () => {
+      toast({
+        title: "Violation supprimée",
+        description: "La violation a été supprimée avec succès.",
+      });
+      // Invalidate et refetch pour s'assurer que la liste est mise à jour
+      await queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
+      await refetchBreaches();
+    },
+    onError: () => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la violation.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteBreach = async (breach: Breach) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer la violation #${breach.id} ? Cette action est irréversible.`)) {
+      deleteBreachMutation.mutate(breach.id);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -733,6 +763,20 @@ Généré le: ${new Date().toLocaleString()}
                             Analyse IA
                           </Button>
                         )}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleDeleteBreach(breach)}
+                          disabled={deleteBreachMutation.isPending}
+                          className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
+                        >
+                          {deleteBreachMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4 mr-2" />
+                          )}
+                          Supprimer
+                        </Button>
                       </div>
                       {breach.notificationRequired && (
                         <Button
