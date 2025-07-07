@@ -17,24 +17,6 @@ interface PriorityAction {
 
 interface PriorityActionsProps {
   actions: PriorityAction[];
-  diagnosticData?: {
-    compliance: {
-      categoryScores?: Record<string, { score: number; total: number; answered: number }>;
-    };
-    riskMapping?: {
-      riskAreas: Array<{ 
-        category: string; 
-        score: number; 
-        severity: string; 
-        specificRisks: Array<{ 
-          questionId: number; 
-          question: string; 
-          response: string; 
-          riskLevel: string 
-        }> 
-      }>;
-    };
-  };
 }
 
 const priorityColors = {
@@ -47,14 +29,7 @@ const priorityBadgeColors = {
   important: "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300",
 };
 
-const riskBadgeColors = {
-  critique: "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300",
-  elevé: "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300", 
-  moyen: "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300",
-  faible: "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
-};
-
-export default function PriorityActions({ actions, diagnosticData }: PriorityActionsProps) {
+export default function PriorityActions({ actions }: PriorityActionsProps) {
   const getActionLink = (category: string) => {
     switch (category) {
       case "registres":
@@ -65,37 +40,6 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
         return "/dpia";
       default:
         return "/actions";
-    }
-  };
-
-  const getRiskLevelForAction = (actionTitle: string): string => {
-    if (!diagnosticData?.riskMapping?.riskAreas) return "moyen";
-    
-    // Extract question content from action title to match with diagnostic responses
-    const questionText = actionTitle.replace("Action pour: ", "").substring(0, 50);
-    
-    // Find the specific question this action is related to
-    for (const riskArea of diagnosticData.riskMapping.riskAreas) {
-      const matchingRisk = riskArea.specificRisks.find(risk => 
-        risk.question.substring(0, 50).includes(questionText.substring(0, 30)) ||
-        questionText.substring(0, 30).includes(risk.question.substring(0, 30))
-      );
-      
-      if (matchingRisk) {
-        return matchingRisk.riskLevel;
-      }
-    }
-    
-    return "moyen";
-  };
-
-  const getRiskLabel = (riskLevel: string): string => {
-    switch (riskLevel) {
-      case "critique": return "Critique";
-      case "elevé": return "Élevé";
-      case "moyen": return "Moyen";
-      case "faible": return "Faible";
-      default: return "Moyen";
     }
   };
 
@@ -139,21 +83,13 @@ export default function PriorityActions({ actions, diagnosticData }: PriorityAct
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-medium text-foreground">{action.title.replace(/^Action pour:\s*/, '')}</h3>
-                    <div className="flex items-center space-x-2">
-                      <Badge 
-                        variant="secondary"
-                        className={cn("text-xs", priorityBadgeColors[action.priority as keyof typeof priorityBadgeColors])}
-                      >
-                        {action.priority === "urgent" ? "Urgent" :
-                         action.priority === "important" ? "Important" : "Normal"}
-                      </Badge>
-                      <Badge 
-                        variant="outline"
-                        className={cn("text-xs", riskBadgeColors[getRiskLevelForAction(action.title) as keyof typeof riskBadgeColors])}
-                      >
-                        Risque {getRiskLabel(getRiskLevelForAction(action.title))}
-                      </Badge>
-                    </div>
+                    <Badge 
+                      variant="secondary"
+                      className={cn("text-xs", priorityBadgeColors[action.priority as keyof typeof priorityBadgeColors])}
+                    >
+                      {action.priority === "urgent" ? "Urgent" :
+                       action.priority === "important" ? "Important" : "Normal"}
+                    </Badge>
                   </div>
                   
                   <p className="text-sm text-muted-foreground mb-3">{action.description}</p>
