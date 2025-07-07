@@ -165,15 +165,6 @@ export default function LaTeam() {
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   {bot.description}
                 </p>
-                
-                {/* Expertise badges */}
-                <div className="flex flex-wrap gap-2">
-                  {bot.expertise.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="text-xs">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
 
                 {/* Action buttons */}
                 <div className="space-y-3">
