@@ -359,6 +359,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProcessingRecord(id: number): Promise<void> {
+    // First delete related DPIA assessments to avoid foreign key constraint violation
+    await db.delete(dpiaAssessments).where(eq(dpiaAssessments.processingRecordId, id));
+    
+    // Then delete the processing record
     await db.delete(processingRecords).where(eq(processingRecords.id, id));
   }
 
