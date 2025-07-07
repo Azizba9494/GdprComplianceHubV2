@@ -4,6 +4,7 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -183,6 +184,7 @@ export default function LaTeamChat() {
       e.preventDefault();
       handleSendMessage();
     }
+    // Allow Shift+Enter for line breaks
   };
 
   if (conversationLoading || messagesLoading) {
@@ -306,18 +308,20 @@ export default function LaTeamChat() {
 
         {/* Input */}
         <div className="border-t p-4">
-          <div className="flex space-x-3">
-            <Input
+          <div className="flex space-x-3 items-end">
+            <Textarea
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={`Posez votre question à ${botInfo.name}...`}
+              placeholder={`Posez votre question à ${botInfo.name}...\n\nUtilisez Shift+Entrée pour aller à la ligne\nAppuyez sur Entrée pour envoyer`}
               disabled={sendMessageMutation.isPending}
-              className="flex-1"
+              className="flex-1 min-h-[60px] max-h-[200px] resize-none"
+              rows={2}
             />
             <Button 
               onClick={handleSendMessage}
               disabled={!messageInput.trim() || sendMessageMutation.isPending}
+              className="h-[60px] px-4"
             >
               {sendMessageMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -325,6 +329,9 @@ export default function LaTeamChat() {
                 <Send className="w-4 h-4" />
               )}
             </Button>
+          </div>
+          <div className="text-xs text-muted-foreground mt-2">
+            💡 <strong>Astuce :</strong> Utilisez <kbd className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs">Shift + Entrée</kbd> pour aller à la ligne, <kbd className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs">Entrée</kbd> pour envoyer
           </div>
         </div>
       </Card>
