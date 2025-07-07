@@ -62,6 +62,7 @@ export default function SubprocessorRegistry() {
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
+  const [customSecurityMeasure, setCustomSecurityMeasure] = useState("");
 
   // Get user's company
   const { data: company } = useQuery({
@@ -119,6 +120,7 @@ export default function SubprocessorRegistry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", company?.id] });
       setIsCreateDialogOpen(false);
+      setCustomSecurityMeasure("");
       form.reset();
       toast({
         title: "Enregistrement créé",
@@ -147,6 +149,7 @@ export default function SubprocessorRegistry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", company?.id] });
       setEditingRecord(null);
+      setCustomSecurityMeasure("");
       form.reset();
       toast({
         title: "Enregistrement mis à jour",
@@ -644,6 +647,72 @@ export default function SubprocessorRegistry() {
                               />
                             ))}
                           </div>
+                          
+                          {/* Custom security measures input */}
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Ajouter une mesure de sécurité personnalisée..."
+                                value={customSecurityMeasure}
+                                onChange={(e) => setCustomSecurityMeasure(e.target.value)}
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (customSecurityMeasure.trim()) {
+                                      const currentMeasures = form.getValues('securityMeasures') || [];
+                                      if (!currentMeasures.includes(customSecurityMeasure.trim())) {
+                                        form.setValue('securityMeasures', [...currentMeasures, customSecurityMeasure.trim()]);
+                                      }
+                                      setCustomSecurityMeasure("");
+                                    }
+                                  }
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (customSecurityMeasure.trim()) {
+                                    const currentMeasures = form.getValues('securityMeasures') || [];
+                                    if (!currentMeasures.includes(customSecurityMeasure.trim())) {
+                                      form.setValue('securityMeasures', [...currentMeasures, customSecurityMeasure.trim()]);
+                                    }
+                                    setCustomSecurityMeasure("");
+                                  }
+                                }}
+                                disabled={!customSecurityMeasure.trim()}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            
+                            {/* Display custom added measures */}
+                            {form.watch('securityMeasures')?.filter(measure => !SECURITY_MEASURES.includes(measure)).length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium">Mesures personnalisées ajoutées:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {form.watch('securityMeasures')
+                                    ?.filter(measure => !SECURITY_MEASURES.includes(measure))
+                                    .map((measure, index) => (
+                                      <Badge 
+                                        key={index} 
+                                        variant="secondary" 
+                                        className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                                        onClick={() => {
+                                          const currentMeasures = form.getValues('securityMeasures') || [];
+                                          form.setValue('securityMeasures', currentMeasures.filter(m => m !== measure));
+                                        }}
+                                        title="Cliquer pour supprimer"
+                                      >
+                                        {measure} ×
+                                      </Badge>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
                           <FormMessage />
                         </FormItem>
                       )}
@@ -657,6 +726,7 @@ export default function SubprocessorRegistry() {
                       onClick={() => {
                         setIsCreateDialogOpen(false);
                         setEditingRecord(null);
+                        setCustomSecurityMeasure("");
                         form.reset();
                       }}
                     >
