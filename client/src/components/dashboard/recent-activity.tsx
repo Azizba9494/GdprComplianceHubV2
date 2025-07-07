@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText, UserCheck, Building, Calendar, AlertTriangle } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface ActivityItem {
   id: string;
@@ -21,6 +22,7 @@ interface RecentActivityProps {
 }
 
 function RecentActivity({ companyId, actions = [], requests = [], records = [] }: RecentActivityProps) {
+  const [, setLocation] = useLocation();
   // Generate dynamic activity based on actual data
   const generateActivity = (): ActivityItem[] => {
     const activities: ActivityItem[] = [];
@@ -113,6 +115,25 @@ function RecentActivity({ companyId, actions = [], requests = [], records = [] }
     }
   };
 
+  const handleViewClick = (activity: ActivityItem) => {
+    switch (activity.type) {
+      case 'action':
+        setLocation('/action-plan');
+        break;
+      case 'request':
+        setLocation('/demandes-acces');
+        break;
+      case 'record':
+        setLocation('/registre-traitements');
+        break;
+      case 'policy':
+        setLocation('/politique-confidentialite');
+        break;
+      default:
+        setLocation('/dashboard');
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -138,7 +159,11 @@ function RecentActivity({ companyId, actions = [], requests = [], records = [] }
                     {getTimeAgo(activity.timestamp)}
                   </p>
                 </div>
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleViewClick(activity)}
+                >
                   Voir
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
