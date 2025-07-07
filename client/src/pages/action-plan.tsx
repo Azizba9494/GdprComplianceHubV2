@@ -31,32 +31,27 @@ const priorityColors = {
   important: "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300",
 };
 
-// Action categories for filtering
+// Action categories for filtering - aligned with diagnostic categories
 const actionCategories = {
   "gouvernance": {
-    name: "Gouvernance et responsabilité",
+    name: "Gouvernance et principes fondamentaux",
     icon: Shield,
-    keywords: ["gouvernance", "responsabilité", "dpo", "délégué", "registre", "politique"]
+    keywords: ["gouvernance", "responsabilité", "dpo", "délégué", "registre", "politique", "principes", "fondamentaux"]
   },
   "bases-legales": {
-    name: "Bases légales et consentement", 
+    name: "Bases légales et gestion du consentement", 
     icon: FileText,
-    keywords: ["base légale", "consentement", "consentements", "légalité", "finalité", "collecte"]
+    keywords: ["base légale", "consentement", "consentements", "légalité", "finalité", "collecte", "gestion"]
   },
   "droits": {
-    name: "Droits des personnes",
+    name: "Information et droit des personnes concernées",
     icon: Users,
-    keywords: ["droits", "accès", "rectification", "effacement", "portabilité", "opposition"]
+    keywords: ["droits", "accès", "rectification", "effacement", "portabilité", "opposition", "information", "personnes concernées"]
   },
   "securite": {
-    name: "Sécurité et mesures techniques",
+    name: "Sécurité",
     icon: Shield,
-    keywords: ["sécurité", "chiffrement", "authentification", "sauvegarde", "technique", "protection"]
-  },
-  "documentation": {
-    name: "Documentation et procédures",
-    icon: FileText,
-    keywords: ["documentation", "procédure", "processus", "manuel", "guide", "formation"]
+    keywords: ["sécurité", "chiffrement", "authentification", "sauvegarde", "technique", "protection", "mesures"]
   },
   "autres": {
     name: "Autres actions",
