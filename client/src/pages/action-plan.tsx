@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
-import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit } from "lucide-react";
+import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, Filter, Search, AlertTriangle, FileText, Shield, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -30,10 +31,61 @@ const priorityColors = {
   important: "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300",
 };
 
+// Action categories for filtering
+const actionCategories = {
+  "gouvernance": {
+    name: "Gouvernance et responsabilité",
+    icon: Shield,
+    keywords: ["gouvernance", "responsabilité", "dpo", "délégué", "registre", "politique"]
+  },
+  "bases-legales": {
+    name: "Bases légales et consentement", 
+    icon: FileText,
+    keywords: ["base légale", "consentement", "consentements", "légalité", "finalité", "collecte"]
+  },
+  "droits": {
+    name: "Droits des personnes",
+    icon: Users,
+    keywords: ["droits", "accès", "rectification", "effacement", "portabilité", "opposition"]
+  },
+  "securite": {
+    name: "Sécurité et mesures techniques",
+    icon: Shield,
+    keywords: ["sécurité", "chiffrement", "authentification", "sauvegarde", "technique", "protection"]
+  },
+  "documentation": {
+    name: "Documentation et procédures",
+    icon: FileText,
+    keywords: ["documentation", "procédure", "processus", "manuel", "guide", "formation"]
+  },
+  "autres": {
+    name: "Autres actions",
+    icon: Circle,
+    keywords: []
+  }
+};
+
+function getActionCategory(action: any): string {
+  const title = action.title?.toLowerCase() || "";
+  const description = action.description?.toLowerCase() || "";
+  const content = `${title} ${description}`;
+
+  for (const [key, category] of Object.entries(actionCategories)) {
+    if (key === "autres") continue;
+    if (category.keywords.some(keyword => content.includes(keyword.toLowerCase()))) {
+      return key;
+    }
+  }
+  return "autres";
+}
+
 export default function ActionPlan() {
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
   const [newDueDate, setNewDueDate] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<string>("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -141,8 +193,41 @@ export default function ActionPlan() {
     );
   }
 
+  // Filter and organize actions
+  const filterActions = (actions: any[], status?: string, category?: string, search?: string) => {
+    return actions.filter((action: any) => {
+      const matchesStatus = !status || status === 'all' || action.status === status;
+      const matchesCategory = !category || category === 'all' || getActionCategory(action) === category;
+      const matchesSearch = !search || 
+        action.title?.toLowerCase().includes(search.toLowerCase()) ||
+        action.description?.toLowerCase().includes(search.toLowerCase());
+      
+      return matchesStatus && matchesCategory && matchesSearch;
+    });
+  };
+
   const completedActions = actions.filter((a: any) => a.status === 'completed');
+  const inProgressActions = actions.filter((a: any) => a.status === 'inprogress');
+  const todoActions = actions.filter((a: any) => a.status === 'todo');
   const progressPercentage = Math.round((completedActions.length / actions.length) * 100);
+
+  // Get filtered actions based on current tab and filters
+  const getFilteredActions = () => {
+    const statusFilter = activeTab === 'all' ? undefined : activeTab;
+    return filterActions(actions, statusFilter, selectedCategory, searchTerm);
+  };
+
+  const filteredActions = getFilteredActions();
+
+  // Group actions by category for better organization
+  const actionsByCategory = filteredActions.reduce((acc: any, action: any) => {
+    const category = getActionCategory(action);
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(action);
+    return acc;
+  }, {});
 
   return (
     <div className="p-6 space-y-6">
@@ -165,105 +250,205 @@ export default function ActionPlan() {
           <p className="text-sm text-muted-foreground mt-2">
             {completedActions.length} actions terminées sur {actions.length}
           </p>
-        </CardContent>
-      </Card>
-
-      {/* Actions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Actions de conformité</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {actions.map((action: any) => (
-              <div
-                key={action.id}
-                className={cn(
-                  "p-4 rounded-lg border",
-                  action.priority === 'urgent' ? 'priority-urgent' : 'priority-important'
-                )}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-foreground whitespace-pre-wrap break-words">
-                        {action.title.replace(/^Action pour:\s*/, '')}
-                      </h3>
-                    </div>
-                    <Badge 
-                      variant="secondary"
-                      className={`${priorityColors[action.priority as keyof typeof priorityColors]} flex-shrink-0`}
-                    >
-                      {priorityLabels[action.priority as keyof typeof priorityLabels]}
-                    </Badge>
-                  </div>
-                    
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
-                    {action.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-1">
-                      <span className="font-medium">Catégorie:</span>
-                      <span>{action.category}</span>
-                    </div>
-                    
-                    {action.dueDate && (
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="w-4 h-4" />
-                        <span className="font-medium">Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
-                      </div>
-                    )}
-                    {!action.dueDate && (
-                      <div className="flex items-center space-x-1 text-orange-600">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-medium">Aucune échéance définie</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center justify-end gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openDateDialog(action)}
-                      className="flex items-center space-x-1"
-                    >
-                      <CalendarDays className="w-4 h-4" />
-                      <span>Échéance</span>
-                    </Button>
-                    
-                    <Select
-                      value={action.status}
-                      onValueChange={(value) => handleStatusChange(action.id, value)}
-                      disabled={updateActionMutation.isPending}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todo">À faire</SelectItem>
-                        <SelectItem value="inprogress">En cours</SelectItem>
-                        <SelectItem value="completed">Terminé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    {action.status === 'completed' && (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    )}
-                    {action.status === 'inprogress' && (
-                      <Clock className="w-5 h-5 text-orange-500" />
-                    )}
-                    {action.status === 'todo' && (
-                      <Circle className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+          
+          {/* Quick stats */}
+          <div className="grid grid-cols-3 gap-4 mt-4">
+            <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+              <div className="text-lg font-bold text-blue-600">{todoActions.length}</div>
+              <div className="text-xs text-muted-foreground">À faire</div>
+            </div>
+            <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+              <div className="text-lg font-bold text-orange-600">{inProgressActions.length}</div>
+              <div className="text-xs text-muted-foreground">En cours</div>
+            </div>
+            <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+              <div className="text-lg font-bold text-green-600">{completedActions.length}</div>
+              <div className="text-xs text-muted-foreground">Terminées</div>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Filters and Search */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Rechercher une action..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {/* Category Filter */}
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-64">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filtrer par catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les catégories</SelectItem>
+                {Object.entries(actionCategories).map(([key, category]) => (
+                  <SelectItem key={key} value={key}>{category.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabbed Actions */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            <Circle className="w-4 h-4" />
+            Toutes ({actions.length})
+          </TabsTrigger>
+          <TabsTrigger value="todo" className="flex items-center gap-2">
+            <Circle className="w-4 h-4" />
+            À faire ({todoActions.length})
+          </TabsTrigger>
+          <TabsTrigger value="inprogress" className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            En cours ({inProgressActions.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            Terminées ({completedActions.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="mt-6">
+          {filteredActions.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <Circle className="w-16 h-16 text-muted-foreground mx-auto" />
+                  <h3 className="text-lg font-medium">Aucune action trouvée</h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm || selectedCategory !== 'all' 
+                      ? "Aucune action ne correspond aux filtres sélectionnés."
+                      : "Aucune action disponible pour cette catégorie."
+                    }
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(actionsByCategory).map(([categoryKey, categoryActions]: [string, any]) => {
+                const category = actionCategories[categoryKey as keyof typeof actionCategories];
+                const IconComponent = category.icon;
+                
+                return (
+                  <Card key={categoryKey}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <IconComponent className="w-5 h-5" />
+                        {category.name} ({categoryActions.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {categoryActions.map((action: any) => (
+                          <div
+                            key={action.id}
+                            className={cn(
+                              "p-4 rounded-lg border",
+                              action.priority === 'urgent' ? 'priority-urgent' : 'priority-important'
+                            )}
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-medium text-foreground whitespace-pre-wrap break-words">
+                                    {action.title.replace(/^Action pour:\s*/, '')}
+                                  </h3>
+                                </div>
+                                <Badge 
+                                  variant="secondary"
+                                  className={`${priorityColors[action.priority as keyof typeof priorityColors]} flex-shrink-0`}
+                                >
+                                  {priorityLabels[action.priority as keyof typeof priorityLabels]}
+                                </Badge>
+                              </div>
+                                
+                              <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                                {action.description}
+                              </p>
+                              
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center space-x-1">
+                                  <span className="font-medium">Catégorie:</span>
+                                  <span>{action.category}</span>
+                                </div>
+                                
+                                {action.dueDate && (
+                                  <div className="flex items-center space-x-1">
+                                    <Calendar className="w-4 h-4" />
+                                    <span className="font-medium">Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
+                                  </div>
+                                )}
+                                {!action.dueDate && (
+                                  <div className="flex items-center space-x-1 text-orange-600">
+                                    <Clock className="w-4 h-4" />
+                                    <span className="font-medium">Aucune échéance définie</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center justify-end gap-3">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openDateDialog(action)}
+                                  className="flex items-center space-x-1"
+                                >
+                                  <CalendarDays className="w-4 h-4" />
+                                  <span>Échéance</span>
+                                </Button>
+                                
+                                <Select
+                                  value={action.status}
+                                  onValueChange={(value) => handleStatusChange(action.id, value)}
+                                  disabled={updateActionMutation.isPending}
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="todo">À faire</SelectItem>
+                                    <SelectItem value="inprogress">En cours</SelectItem>
+                                    <SelectItem value="completed">Terminé</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                
+                                {action.status === 'completed' && (
+                                  <CheckCircle className="w-5 h-5 text-green-500" />
+                                )}
+                                {action.status === 'inprogress' && (
+                                  <Clock className="w-5 h-5 text-orange-500" />
+                                )}
+                                {action.status === 'todo' && (
+                                  <Circle className="w-5 h-5 text-muted-foreground" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Date Picker Dialog */}
       <Dialog open={isDateDialogOpen} onOpenChange={setIsDateDialogOpen}>
