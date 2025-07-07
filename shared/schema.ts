@@ -104,6 +104,13 @@ export const processingRecords = pgTable("processing_records", {
   transfersOutsideEU: boolean("transfers_outside_eu").default(false),
   type: text("type").notNull(), // controller, joint-controller, processor
   jointControllerInfo: text("joint_controller_info"), // Information du responsable conjoint
+  
+  // Processor-specific fields (sous-traitant)
+  clientControllerInfo: text("client_controller_info"), // Nom et coordonnées du client responsable de traitement
+  subProcessors: text("sub_processors"), // Sous-traitants auxquels on fait appel
+  processingCategories: text("processing_categories"), // Catégories de traitements effectués
+  internationalTransfers: text("international_transfers"), // Transferts vers pays tiers
+  processorSecurityMeasures: text("processor_security_measures"), // Mesures de sécurité spécifiques
   dpiaRequired: boolean("dpia_required"),
   dpiaJustification: text("dpia_justification"),
   // DPIA Criteria (9 criteria for DPIA assessment)

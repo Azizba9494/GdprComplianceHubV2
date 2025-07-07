@@ -193,6 +193,12 @@ export default function Records() {
       dpoEmail: "",
       // Joint Controller field
       jointControllerInfo: "",
+      // Processor-specific fields
+      clientControllerInfo: "",
+      subProcessors: "",
+      processingCategories: "",
+      internationalTransfers: "",
+      processorSecurityMeasures: "",
     },
   });
 
@@ -731,6 +737,7 @@ Informations complémentaires: ${data.additionalInfo}
                             <SelectContent>
                               <SelectItem value="controller">Responsable de traitement</SelectItem>
                               <SelectItem value="joint-controller">Responsable de traitement conjoint</SelectItem>
+                              <SelectItem value="processor">Sous-traitant</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -759,42 +766,145 @@ Informations complémentaires: ${data.additionalInfo}
                       />
                     )}
 
-                    <FormField
-                      control={manualForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nom du traitement *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex: Gestion de la paie, Prospection commerciale..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Champs conditionnels pour le sous-traitant */}
+                    {manualForm.watch("type") === "processor" && (
+                      <>
+                        <FormField
+                          control={manualForm.control}
+                          name="clientControllerInfo"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Nom et coordonnées du client responsable de traitement *</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Nom et coordonnées du client, responsable de traitement, pour le compte duquel sont traitées les données et, le cas échéant, le nom et les coordonnées de leur représentant..."
+                                  {...field}
+                                  rows={3}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={manualForm.control}
-                      name="purpose"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Finalité du traitement *</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Décrivez la finalité du traitement de données..."
-                              {...field}
-                              rows={3}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={manualForm.control}
+                          name="subProcessors"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Sous-traitants auxquels vous faites appel</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Nom et coordonnées des sous-traitants auxquels vous-même faites appel dans le cadre de cette activité..."
+                                  {...field}
+                                  rows={3}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={manualForm.control}
-                      name="legalBasis"
-                      render={({ field }) => (
+                        <FormField
+                          control={manualForm.control}
+                          name="processingCategories"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Catégories de traitements effectués *</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Les catégories de traitements effectués pour le compte de chacun des clients, c'est-à-dire les opérations effectivement réalisées pour leur compte..."
+                                  {...field}
+                                  rows={3}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="internationalTransfers"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Transferts vers pays tiers ou organisations internationales</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Les transferts de données à caractère personnel vers un pays tiers ou à une organisation internationale..."
+                                  {...field}
+                                  rows={3}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={manualForm.control}
+                          name="processorSecurityMeasures"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Mesures de sécurité mises en œuvre *</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Les mesures de sécurité mises en œuvre..."
+                                  {...field}
+                                  rows={3}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+
+                    {/* Champs uniquement visibles pour controller et joint-controller */}
+                    {manualForm.watch("type") !== "processor" && (
+                      <FormField
+                        control={manualForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nom du traitement *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: Gestion de la paie, Prospection commerciale..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {manualForm.watch("type") !== "processor" && (
+                      <FormField
+                        control={manualForm.control}
+                        name="purpose"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Finalité du traitement *</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Décrivez la finalité du traitement de données..."
+                                {...field}
+                                rows={3}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {/* Tous les champs standards pour controller et joint-controller */}
+                    {manualForm.watch("type") !== "processor" && (
+                      <>
+                        <FormField
+                          control={manualForm.control}
+                          name="legalBasis"
+                          render={({ field }) => (
                         <FormItem>
                           <FormLabel>Base légale *</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -1099,6 +1209,8 @@ Informations complémentaires: ${data.additionalInfo}
                         )}
                       </div>
                     </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex justify-end space-x-2 pt-4 border-t">
@@ -1538,6 +1650,7 @@ Informations complémentaires: ${data.additionalInfo}
                     <TabsTrigger value="all">Tous</TabsTrigger>
                     <TabsTrigger value="controller">Responsable de traitement</TabsTrigger>
                     <TabsTrigger value="joint-controller">Responsable conjoint</TabsTrigger>
+                    <TabsTrigger value="processor">Sous-traitant</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
