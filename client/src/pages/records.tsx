@@ -444,12 +444,22 @@ Informations complémentaires: ${data.additionalInfo}
     const typeMatch = filterType === "all" || record.type === filterType;
     
     // Filter by search term
-    const searchMatch = searchTerm === "" || 
-      record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.dataCategories?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.recipients?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getLegalBasisLabel(record.legalBasis || "").toLowerCase().includes(searchTerm.toLowerCase());
+    if (searchTerm === "") {
+      return typeMatch;
+    }
+    
+    const searchLower = searchTerm.toLowerCase();
+    const searchMatch = 
+      record.name?.toLowerCase().includes(searchLower) ||
+      record.purpose?.toLowerCase().includes(searchLower) ||
+      record.recipients?.toLowerCase().includes(searchLower) ||
+      record.retention?.toLowerCase().includes(searchLower) ||
+      record.securityMeasures?.toLowerCase().includes(searchLower) ||
+      getLegalBasisLabel(record.legalBasis || "").toLowerCase().includes(searchLower) ||
+      // Handle dataCategories as array or string
+      (Array.isArray(record.dataCategories) 
+        ? record.dataCategories.some(cat => cat?.toLowerCase().includes(searchLower))
+        : record.dataCategories?.toLowerCase().includes(searchLower));
     
     return typeMatch && searchMatch;
   }) || [];
