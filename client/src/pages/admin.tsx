@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { 
   Settings, Plus, Edit, Brain, MessageSquare, ClipboardList, 
   FileText, AlertTriangle, BarChart3, Loader2, CheckCircle, Clock,
-  Upload, Trash2, Link, FileIcon
+  Upload, Trash2, Link, FileIcon, Users, Scale, MapPin, Archive, Gavel
 } from "lucide-react";
 
 interface AiPrompt {
@@ -154,6 +154,10 @@ const categoryIcons = {
   breach: AlertTriangle,
   dpia: BarChart3,
   chatbot: MessageSquare,
+  "Jean Michel Fondement": Scale,
+  "Jean Michel Voyages": MapPin,
+  "Jean Michel Archive": Archive,
+  "Jean Michel Irma": Gavel,
 };
 
 export default function Admin() {
