@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { 
   Settings, Plus, Edit, Brain, MessageSquare, ClipboardList, 
   FileText, AlertTriangle, BarChart3, Loader2, CheckCircle, Clock,
-  Upload, Trash2, Link, FileIcon
+  Upload, Trash2, Link, FileIcon, Users
 } from "lucide-react";
 
 interface AiPrompt {
@@ -652,6 +652,10 @@ export default function Admin() {
           <TabsTrigger value="dpia-prompts" className="flex items-center space-x-2">
             <BarChart3 className="w-4 h-4" />
             <span>Prompts AIPD</span>
+          </TabsTrigger>
+          <TabsTrigger value="lateam-prompts" className="flex items-center space-x-2">
+            <Users className="w-4 h-4" />
+            <span>Prompts La Team</span>
           </TabsTrigger>
           <TabsTrigger value="questions" className="flex items-center space-x-2">
             <ClipboardList className="w-4 h-4" />
@@ -1360,6 +1364,258 @@ export default function Admin() {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* LA Team Prompts Management */}
+        <TabsContent value="lateam-prompts" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Gestion des prompts LA Team Jean Michel</h3>
+            <div className="text-sm text-muted-foreground">
+              Configurez les personnalités et expertises de vos bots spécialisés
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            {/* Jean Michel Fondement */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">JM</span>
+                  </div>
+                  <span>Jean Michel Fondement</span>
+                  <Badge variant="secondary">Expert en Bases Légales</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const prompt = prompts?.find((p: AiPrompt) => p.category === "Jean Michel Fondement");
+                  return (
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Expert en détermination des fondements juridiques pour les traitements RGPD
+                        </p>
+                        {prompt ? (
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                              {prompt.isActive ? "Actif" : "Inactif"}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              Dernière modification: {new Date(prompt.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Prompt non configuré</span>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        {prompt && (
+                          <Switch
+                            checked={prompt.isActive}
+                            onCheckedChange={() => togglePromptStatus(prompt)}
+                            disabled={updatePromptMutation.isPending}
+                          />
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (prompt) {
+                              openPromptDialog(prompt);
+                            }
+                          }}
+                          disabled={!prompt}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Jean Michel Voyages */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">JM</span>
+                  </div>
+                  <span>Jean Michel Voyages</span>
+                  <Badge variant="secondary">Expert en Transferts Internationaux</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const prompt = prompts?.find((p: AiPrompt) => p.category === "Jean Michel Voyages");
+                  return (
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Spécialiste des transferts de données vers les pays tiers et décisions d'adéquation
+                        </p>
+                        {prompt ? (
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                              {prompt.isActive ? "Actif" : "Inactif"}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              Dernière modification: {new Date(prompt.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Prompt non configuré</span>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        {prompt && (
+                          <Switch
+                            checked={prompt.isActive}
+                            onCheckedChange={() => togglePromptStatus(prompt)}
+                            disabled={updatePromptMutation.isPending}
+                          />
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (prompt) {
+                              openPromptDialog(prompt);
+                            }
+                          }}
+                          disabled={!prompt}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Jean Michel Archive */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">JM</span>
+                  </div>
+                  <span>Jean Michel Archive</span>
+                  <Badge variant="secondary">Spécialiste des Durées de Conservation</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const prompt = prompts?.find((p: AiPrompt) => p.category === "Jean Michel Archive");
+                  return (
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Expert en durées de conservation et archivage des données personnelles
+                        </p>
+                        {prompt ? (
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                              {prompt.isActive ? "Actif" : "Inactif"}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              Dernière modification: {new Date(prompt.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Prompt non configuré</span>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        {prompt && (
+                          <Switch
+                            checked={prompt.isActive}
+                            onCheckedChange={() => togglePromptStatus(prompt)}
+                            disabled={updatePromptMutation.isPending}
+                          />
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (prompt) {
+                              openPromptDialog(prompt);
+                            }
+                          }}
+                          disabled={!prompt}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Jean Michel Irma */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">JM</span>
+                  </div>
+                  <span>Jean Michel Irma</span>
+                  <Badge variant="secondary">Expert en Jurisprudence et Sanctions</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const prompt = prompts?.find((p: AiPrompt) => p.category === "Jean Michel Irma");
+                  return (
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Spécialiste en jurisprudence CNIL et calcul des sanctions administratives
+                        </p>
+                        {prompt ? (
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={prompt.isActive ? "default" : "secondary"}>
+                              {prompt.isActive ? "Actif" : "Inactif"}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              Dernière modification: {new Date(prompt.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Prompt non configuré</span>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        {prompt && (
+                          <Switch
+                            checked={prompt.isActive}
+                            onCheckedChange={() => togglePromptStatus(prompt)}
+                            disabled={updatePromptMutation.isPending}
+                          />
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (prompt) {
+                              openPromptDialog(prompt);
+                            }
+                          }}
+                          disabled={!prompt}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifier
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </div>
