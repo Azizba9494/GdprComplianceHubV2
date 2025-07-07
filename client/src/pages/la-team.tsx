@@ -103,6 +103,7 @@ export default function LaTeam() {
   });
 
   const startChatWithBot = (botType: string, botName: string) => {
+    console.log('Starting chat with bot:', { botType, botName });
     const title = `Conversation avec ${botName}`;
     createConversationMutation.mutate({ botType, title });
   };

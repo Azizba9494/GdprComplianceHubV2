@@ -72,7 +72,7 @@ export default function LaTeamChat() {
   const { data: conversation, isLoading: conversationLoading } = useQuery({
     queryKey: ['/api/bots/conversation', conversationId],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/bots/conversations/${conversationId}`);
+      const response = await apiRequest("GET", `/api/bots/conversation/${conversationId}`);
       return response.json();
     },
     enabled: !!conversationId,
