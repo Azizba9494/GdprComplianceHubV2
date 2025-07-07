@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, MessageCircle, Plus, Bot, Scale, MapPin, Archive, Gavel, Settings } from "lucide-react";
+import { Users, MessageCircle, Plus, Bot, Scale, MapPin, Archive, Gavel, Settings, Calendar, ChevronRight, History, Clock } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -140,69 +140,103 @@ export default function LaTeam() {
       </div>
 
       {/* Bots Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {BOTS.map((bot) => {
           const botConversations = getBotConversations(bot.id);
           const IconComponent = bot.icon;
           
           return (
-            <Card key={bot.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+            <Card key={bot.id} className="hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+              <CardHeader className="pb-4">
                 <div className="flex items-start space-x-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback className={`${bot.color} text-white flex items-center justify-center`}>
-                      <IconComponent className="h-8 w-8" />
+                  <Avatar className="h-18 w-18 shadow-lg">
+                    <AvatarFallback className={`${bot.color} text-white flex items-center justify-center shadow-inner`}>
+                      <IconComponent className="h-9 w-9" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <CardTitle className="text-xl">{bot.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground font-medium">{bot.title}</p>
+                    <CardTitle className="text-2xl text-gray-900 dark:text-white">{bot.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground font-medium mt-1">{bot.title}</p>
                   </div>
                 </div>
               </CardHeader>
               
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+              <CardContent className="space-y-5 pt-2">
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                   {bot.description}
                 </p>
 
                 {/* Action buttons */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Button 
                     onClick={() => startChatWithBot(bot.id, bot.name)}
-                    className="w-full"
+                    className="w-full h-12 text-base font-medium shadow-md hover:shadow-lg transition-all duration-200"
                     disabled={createConversationMutation.isPending}
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
+                    <MessageCircle className="w-5 h-5 mr-2" />
                     Nouvelle conversation avec {bot.name.split(' ').slice(-1)[0]}
                   </Button>
 
                   {/* Existing conversations */}
                   {botConversations.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground font-medium">
-                        Conversations existantes ({botConversations.length})
-                      </p>
-                      {botConversations.slice(0, 3).map((conversation: BotConversation) => (
-                        <Button
-                          key={conversation.id}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openExistingConversation(conversation.id)}
-                          className="w-full justify-start text-xs"
-                        >
-                          <Bot className="w-3 h-3 mr-2" />
-                          {conversation.title.length > 50 
-                            ? conversation.title.substring(0, 50) + "..."
-                            : conversation.title
-                          }
-                        </Button>
-                      ))}
-                      {botConversations.length > 3 && (
-                        <p className="text-xs text-muted-foreground text-center">
-                          +{botConversations.length - 3} autre(s) conversation(s)
+                    <div className="space-y-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <History className="w-4 h-4 text-blue-600" />
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          Conversations récentes ({botConversations.length})
                         </p>
-                      )}
+                      </div>
+                      <div className="space-y-2">
+                        {botConversations.slice(0, 3).map((conversation: BotConversation) => (
+                          <div
+                            key={conversation.id}
+                            onClick={() => openExistingConversation(conversation.id)}
+                            className="group p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-white dark:hover:bg-gray-700 cursor-pointer transition-all duration-200 hover:shadow-md"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-2">
+                                  <Bot className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {conversation.title.length > 35 
+                                      ? conversation.title.substring(0, 35) + "..."
+                                      : conversation.title
+                                    }
+                                  </p>
+                                </div>
+                                <div className="flex items-center mt-1 space-x-2">
+                                  <Clock className="w-3 h-3 text-muted-foreground" />
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(conversation.createdAt).toLocaleDateString('fr-FR', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+                            </div>
+                          </div>
+                        ))}
+                        {botConversations.length > 3 && (
+                          <div className="text-center py-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                              onClick={() => {
+                                // TODO: Implement view all conversations
+                                console.log('View all conversations for bot:', bot.id);
+                              }}
+                            >
+                              Voir toutes les conversations ({botConversations.length})
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -213,17 +247,19 @@ export default function LaTeam() {
       </div>
 
       {/* Jean Michel "Sur Mesure" - Custom bot section */}
-      <Card className="border-dashed border-2 border-gray-300 dark:border-gray-600">
-        <CardContent className="p-8 text-center space-y-4">
+      <Card className="border-dashed border-2 border-gray-300 dark:border-gray-600 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+        <CardContent className="p-8 text-center space-y-6">
           <div className="flex items-center justify-center space-x-3">
-            <Settings className="h-8 w-8 text-gray-400" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Jean Michel "Sur Mesure"</h3>
+            <div className="p-3 rounded-full bg-gray-100 dark:bg-gray-700">
+              <Settings className="h-8 w-8 text-gray-600 dark:text-gray-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Jean Michel "Sur Mesure"</h3>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Bientôt disponible ! En fonction de votre offre, nous pourrons configurer votre propre Jean Michel 
             personnalisé à partir de vos documents et spécificités métier.
           </p>
-          <Badge variant="outline" className="text-sm">
+          <Badge variant="outline" className="text-sm px-4 py-2 bg-white dark:bg-gray-800 shadow-sm">
             Prochainement
           </Badge>
         </CardContent>
