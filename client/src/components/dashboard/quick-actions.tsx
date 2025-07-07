@@ -50,12 +50,20 @@ export default function QuickActions({ stats }: QuickActionsProps) {
   const calculateProgressData = () => {
     const categoryScores = stats.compliance?.categoryScores || {};
     
+    // Debug: log available categories
+    console.log('Available categories:', Object.keys(categoryScores));
+    console.log('Category scores:', categoryScores);
+    
     // Map categories to display names and colors
     const categoryMappings = {
       'Gouvernance': { label: 'Gouvernance', color: 'bg-blue-500' },
       'Documentation': { label: 'Documentation', color: 'bg-green-500' },
+      'Consentement': { label: 'Consentement', color: 'bg-yellow-500' },
       'Sécurité': { label: 'Sécurité', color: 'bg-red-500' },
+      'Droits': { label: 'Droits des personnes', color: 'bg-purple-500' },
       'Droits des personnes': { label: 'Droits des personnes', color: 'bg-purple-500' },
+      'Formation': { label: 'Formation', color: 'bg-teal-500' },
+      'Violations': { label: 'Violations', color: 'bg-orange-500' },
       'Bases légales': { label: 'Bases légales', color: 'bg-orange-500' },
       'Transferts': { label: 'Transferts', color: 'bg-indigo-500' }
     };
