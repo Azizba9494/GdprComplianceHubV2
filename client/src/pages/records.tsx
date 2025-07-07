@@ -1881,6 +1881,36 @@ Informations complémentaires: ${data.additionalInfo}
                   </div>
                 </div>
 
+                {/* Responsable conjoint - seulement pour les traitements conjoints */}
+                {record.type === "joint-controller" && (
+                  <div className="pt-4 border-t">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Users className="w-4 h-4" />
+                      <Label className="font-medium text-base">Responsable conjoint du traitement</Label>
+                    </div>
+                    <div className="pl-6">
+                      <div>
+                        <Label className="text-sm font-medium">Nom et coordonnées du responsable conjoint</Label>
+                        {editingRecord === record.id ? (
+                          <Textarea
+                            defaultValue={getFieldValue(record, 'jointControllerInfo') || ""}
+                            onChange={(e) => handleFieldChange(record.id, 'jointControllerInfo', e.target.value)}
+                            className="mt-1"
+                            rows={3}
+                            placeholder="Indiquez le nom, l'adresse, les coordonnées de contact du responsable de traitement conjoint..."
+                          />
+                        ) : (
+                          <div className="mt-1 p-3 bg-muted rounded-md">
+                            <p className="text-sm whitespace-pre-wrap">
+                              {record.jointControllerInfo || "Informations du responsable conjoint non renseignées"}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-4 border-t">
                   <Label className="font-medium">Mesures de sécurité</Label>
                   <EditableList
