@@ -553,6 +553,9 @@ export default function Admin() {
   };
 
   const openPromptDialog = (prompt?: AiPrompt) => {
+    console.log("openPromptDialog called with:", prompt);
+    console.log("Current isPromptDialogOpen state:", isPromptDialogOpen);
+    
     if (prompt) {
       setEditingPrompt(prompt);
       promptForm.reset({
@@ -570,7 +573,13 @@ export default function Admin() {
         prompt: "",
       });
     }
+    
+    console.log("Setting isPromptDialogOpen to true");
     setIsPromptDialogOpen(true);
+    
+    setTimeout(() => {
+      console.log("After setState - isPromptDialogOpen:", isPromptDialogOpen);
+    }, 100);
   };
 
   const openQuestionDialog = (question?: DiagnosticQuestion) => {
@@ -1427,9 +1436,14 @@ export default function Admin() {
                         )}
                         <Button
                           variant="outline"
-                          onClick={() => {
+                          onClick={(e) => {
+                            console.log("Button JM Fondement clicked!", e, prompt);
+                            e.preventDefault();
+                            e.stopPropagation();
                             if (prompt) {
                               openPromptDialog(prompt);
+                            } else {
+                              console.log("No prompt found for JM Fondement!");
                             }
                           }}
                           disabled={!prompt}
