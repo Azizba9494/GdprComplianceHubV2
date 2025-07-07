@@ -2246,7 +2246,10 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
       
       let finalPrompt = "";
       if (botPrompt) {
-        finalPrompt = botPrompt.prompt + "\n\nQuestion de l'utilisateur : " + message;
+        // Use template replacement if available, otherwise append message
+        finalPrompt = botPrompt.prompt.includes('{{message}}') 
+          ? botPrompt.prompt.replace('{{message}}', message)
+          : botPrompt.prompt + "\n\nQuestion de l'utilisateur : " + message;
       } else {
         // Fallback prompts for each bot type
         const fallbackPrompts = {
