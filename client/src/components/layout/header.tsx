@@ -48,6 +48,10 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/admin": {
     title: "Administration",
     subtitle: "Gérez la plateforme et les paramètres IA"
+  },
+  "/help": {
+    title: "Centre d'aide",
+    subtitle: "Documentation et support pour votre conformité RGPD"
   }
 };
 
@@ -98,10 +102,7 @@ export default function Header() {
   };
 
   const handleHelpClick = () => {
-    toast({
-      title: "Aide",
-      description: "Consultez notre documentation ou contactez le support.",
-    });
+    setLocation("/help");
   };
 
   // Generate dynamic notifications from real data
