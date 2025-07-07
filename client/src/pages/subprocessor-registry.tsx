@@ -72,6 +72,12 @@ export default function SubprocessorRegistry() {
   // Get subprocessor records
   const { data: records = [], isLoading } = useQuery({
     queryKey: ["/api/subprocessor-records", company?.id],
+    queryFn: async () => {
+      if (!company?.id) throw new Error("No company ID");
+      const response = await fetch(`/api/subprocessor-records/${company.id}`);
+      if (!response.ok) throw new Error("Failed to fetch records");
+      return response.json();
+    },
     enabled: !!company?.id,
   });
 

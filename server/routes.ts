@@ -1234,9 +1234,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Subprocessor records endpoints
-  app.get("/api/subprocessor-records/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/subprocessor-records/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+      
       const records = await storage.getSubprocessorRecords(companyId);
       res.json(records);
     } catch (error: any) {
