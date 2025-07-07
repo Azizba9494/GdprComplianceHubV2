@@ -83,12 +83,55 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Button variant="ghost" size="icon">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="px-2 py-1.5 text-sm font-medium border-b">
+                Notifications
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                <DropdownMenuItem 
+                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                  onClick={() => setLocation('/actions')}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Action urgente requise</p>
+                    <p className="text-xs text-gray-500 mt-1">Certaines actions de conformité nécessitent votre attention immédiate</p>
+                    <p className="text-xs text-gray-400 mt-1">Il y a 2 heures</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                  onClick={() => setLocation('/rights')}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Nouvelle demande d'accès</p>
+                    <p className="text-xs text-gray-500 mt-1">Francine Lebon a soumis une demande d'accès aux données</p>
+                    <p className="text-xs text-gray-400 mt-1">Il y a 5 heures</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                  onClick={() => setLocation('/diagnostic')}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Rappel diagnostic RGPD</p>
+                    <p className="text-xs text-gray-500 mt-1">Il est recommandé de compléter votre diagnostic RGPD</p>
+                    <p className="text-xs text-gray-400 mt-1">Il y a 1 jour</p>
+                  </div>
+                </DropdownMenuItem>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-center text-sm text-blue-600 dark:text-blue-400">
+                Voir toutes les notifications
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
