@@ -2193,8 +2193,8 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
 async function generateAIContent(prompt: string): Promise<string> {
   try {
     // Use your AI service to generate content based on the prompt
-    const aiResponse = await geminiService.getGeminiResponse(prompt);
-    return aiResponse.content;
+    const aiResponse = await geminiService.generateResponse(prompt);
+    return aiResponse.response;
   } catch (error) {
     console.error('AI content generation failed:', error);
     throw new Error('AI content generation failed');
