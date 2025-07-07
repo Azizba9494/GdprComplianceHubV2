@@ -556,14 +556,19 @@ export default function Admin() {
     if (prompt) {
       setEditingPrompt(prompt);
       promptForm.reset({
-        name: prompt.name,
-        description: prompt.description,
-        category: prompt.category,
-        prompt: prompt.prompt,
+        name: prompt.name || "",
+        description: prompt.description || "",
+        category: prompt.category || "",
+        prompt: prompt.prompt || "",
       });
     } else {
       setEditingPrompt(null);
-      promptForm.reset();
+      promptForm.reset({
+        name: "",
+        description: "",
+        category: "",
+        prompt: "",
+      });
     }
     setIsPromptDialogOpen(true);
   };
@@ -713,7 +718,7 @@ export default function Admin() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Catégorie</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Sélectionner" />
@@ -1423,8 +1428,12 @@ export default function Admin() {
                         <Button
                           variant="outline"
                           onClick={() => {
+                            console.log("Bouton Modifier Jean Michel Fondement cliqué", prompt);
                             if (prompt) {
+                              console.log("Opening dialog for:", prompt);
                               openPromptDialog(prompt);
+                            } else {
+                              console.log("Aucun prompt trouvé pour Jean Michel Fondement");
                             }
                           }}
                           disabled={!prompt}
