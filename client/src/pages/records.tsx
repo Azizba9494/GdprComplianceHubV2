@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ExpandableText } from "@/components/ui/expandable-text";
-import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch } from "lucide-react";
+import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch, Search } from "lucide-react";
 
 // Bases légales complètes du RGPD
 const LEGAL_BASES = [
@@ -125,6 +125,7 @@ export default function Records() {
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [filterType, setFilterType] = useState<"all" | "controller" | "processor">("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [showJustification, setShowJustification] = useState<{[key: string]: boolean}>({});
   const [dpiaResults, setDpiaResults] = useState<{[key: number]: {required: boolean, justification: string}}>({});
@@ -439,8 +440,18 @@ Informations complémentaires: ${data.additionalInfo}
   };
 
   const filteredRecords = records?.filter((record: ProcessingRecord) => {
-    if (filterType === "all") return true;
-    return record.type === filterType;
+    // Filter by type
+    const typeMatch = filterType === "all" || record.type === filterType;
+    
+    // Filter by search term
+    const searchMatch = searchTerm === "" || 
+      record.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.dataCategories?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.recipients?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getLegalBasisLabel(record.legalBasis || "").toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return typeMatch && searchMatch;
   }) || [];
 
   const toggleJustification = (recordId: number, field: string) => {
@@ -1434,22 +1445,37 @@ Informations complémentaires: ${data.additionalInfo}
           </Dialog>
         </div>
       </div>
-      {/* Filtres */}
+      {/* Filtres et Recherche */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Label>Filtrer par type :</Label>
-              <Tabs value={filterType} onValueChange={(value: any) => setFilterType(value)}>
-                <TabsList>
-                  <TabsTrigger value="all">Tous</TabsTrigger>
-                  <TabsTrigger value="controller">Responsable de traitement</TabsTrigger>
-                  <TabsTrigger value="processor">Sous-traitant</TabsTrigger>
-                </TabsList>
-              </Tabs>
+          <div className="space-y-4">
+            {/* Barre de recherche */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une fiche de traitement (nom, finalité, données, destinataires, base légale...)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-            <div className="text-sm text-muted-foreground">
-              {filteredRecords.length} fiche{filteredRecords.length > 1 ? 's' : ''} de traitement
+            
+            {/* Filtres par type */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Label>Filtrer par type :</Label>
+                <Tabs value={filterType} onValueChange={(value: any) => setFilterType(value)}>
+                  <TabsList>
+                    <TabsTrigger value="all">Tous</TabsTrigger>
+                    <TabsTrigger value="controller">Responsable de traitement</TabsTrigger>
+                    <TabsTrigger value="processor">Sous-traitant</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {filteredRecords.length} fiche{filteredRecords.length > 1 ? 's' : ''} de traitement
+                {searchTerm && ` (recherche: "${searchTerm}")`}
+              </div>
             </div>
           </div>
         </CardContent>
