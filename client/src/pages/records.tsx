@@ -260,6 +260,8 @@ Informations complémentaires: ${data.additionalInfo}
         dpoName: data.dpoName,
         dpoPhone: data.dpoPhone,
         dpoEmail: data.dpoEmail,
+        // Joint Controller field
+        jointControllerInfo: data.jointControllerInfo,
       };
       
       console.log('Sending generateMutation data:', requestData);
@@ -369,6 +371,18 @@ Informations complémentaires: ${data.additionalInfo}
         hasVulnerablePersons: data.hasVulnerablePersons,
         hasInnovativeTechnology: data.hasInnovativeTechnology,
         preventsRightsExercise: data.preventsRightsExercise,
+        // Data Controller fields
+        dataControllerName: data.dataControllerName,
+        dataControllerAddress: data.dataControllerAddress,
+        dataControllerPhone: data.dataControllerPhone,
+        dataControllerEmail: data.dataControllerEmail,
+        // DPO fields
+        hasDpo: data.hasDpo,
+        dpoName: data.dpoName,
+        dpoPhone: data.dpoPhone,
+        dpoEmail: data.dpoEmail,
+        // Joint Controller field
+        jointControllerInfo: data.jointControllerInfo,
       };
       
       const response = await recordsApi.create(recordData);
