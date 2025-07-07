@@ -83,13 +83,6 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
-          {location === "/" && (
-            <Button className="btn-primary">
-              <Play className="w-4 h-4 mr-2" />
-              Nouveau diagnostic
-            </Button>
-          )}
-
           <div className="relative">
             <Button variant="ghost" size="icon">
               <Bell className="w-5 h-5" />
