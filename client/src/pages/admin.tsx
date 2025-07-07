@@ -84,11 +84,15 @@ interface PromptDocument {
 
 const promptCategories = {
   diagnostic: "Diagnostic",
-  records: "Registres",
+  records: "Registres", 
   policy: "Politique",
   breach: "Violations",
   dpia: "AIPD",
   chatbot: "Chatbot",
+  "Jean Michel Fondement": "Jean Michel Fondement",
+  "Jean Michel Voyages": "Jean Michel Voyages", 
+  "Jean Michel Archive": "Jean Michel Archive",
+  "Jean Michel Irma": "Jean Michel Irma",
 };
 
 // DPIA-specific prompt subcategories
