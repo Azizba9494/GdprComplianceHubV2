@@ -112,7 +112,8 @@ export default function LaTeam() {
   };
 
   const getBotConversations = (botType: string) => {
-    return conversations?.filter((conv: BotConversation) => conv.botType === botType) || [];
+    if (!conversations || !Array.isArray(conversations)) return [];
+    return conversations.filter((conv: BotConversation) => conv.botType === botType);
   };
 
   if (isLoading) {
