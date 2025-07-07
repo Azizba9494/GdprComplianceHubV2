@@ -10,6 +10,7 @@ import {
 import { Bell, Play, User, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/": {
@@ -56,6 +57,35 @@ export default function Header() {
   const { toast } = useToast();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
 
+  // Get user's company for notifications
+  const { data: userCompany } = useQuery({
+    queryKey: ['/api/companies/user', user?.id],
+    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
+    enabled: !!user,
+  });
+
+  // Get recent activity for notifications
+  const { data: recentRequests = [] } = useQuery({
+    queryKey: ['/api/requests', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/requests/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const { data: recentActions = [] } = useQuery({
+    queryKey: ['/api/actions', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/actions/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
+    refetchInterval: 30000,
+  });
+
+  const { data: recentBreaches = [] } = useQuery({
+    queryKey: ['/api/breaches', userCompany?.id],
+    queryFn: () => userCompany ? fetch(`/api/breaches/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!userCompany,
+    refetchInterval: 30000,
+  });
+
   const handleProfileClick = () => {
     setLocation("/user-back-office");
   };
@@ -74,6 +104,87 @@ export default function Header() {
     });
   };
 
+  // Generate dynamic notifications from real data
+  const generateNotifications = () => {
+    const notifications: any[] = [];
+    const now = new Date();
+
+    // Recent requests (within last 7 days)
+    const recentNewRequests = recentRequests
+      .filter((req: any) => req.status === 'new' && new Date(req.createdAt) > new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3);
+
+    recentNewRequests.forEach((req: any) => {
+      const typeLabel = req.requestType === 'access' ? 'accès' : req.requestType === 'portability' ? 'portabilité' : req.requestType === 'deletion' ? 'suppression' : req.requestType;
+      notifications.push({
+        id: `request-${req.id}`,
+        type: 'request',
+        title: `Nouvelle demande de ${typeLabel}`,
+        description: `${req.requesterId} a soumis une demande`,
+        timestamp: new Date(req.createdAt),
+        route: '/rights'
+      });
+    });
+
+    // Urgent actions (due within next 3 days)
+    const urgentActions = recentActions
+      .filter((action: any) => action.status !== 'completed' && action.dueDate && new Date(action.dueDate) <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000))
+      .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .slice(0, 2);
+
+    urgentActions.forEach((action: any) => {
+      notifications.push({
+        id: `action-${action.id}`,
+        type: 'action',
+        title: 'Action urgente requise',
+        description: action.title,
+        timestamp: new Date(action.dueDate),
+        route: '/actions'
+      });
+    });
+
+    // Recent breaches (within last 30 days)
+    const recentNewBreaches = recentBreaches
+      .filter((breach: any) => new Date(breach.createdAt) > new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 2);
+
+    recentNewBreaches.forEach((breach: any) => {
+      notifications.push({
+        id: `breach-${breach.id}`,
+        type: 'breach',
+        title: 'Nouvelle violation détectée',
+        description: breach.description.substring(0, 60) + '...',
+        timestamp: new Date(breach.createdAt),
+        route: '/breach-analysis'
+      });
+    });
+
+    // Sort by timestamp and return most recent
+    return notifications
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 5);
+  };
+
+  const notifications = generateNotifications();
+
+  const getTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+    
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    return `Il y a ${diffInWeeks} semaine${diffInWeeks > 1 ? 's' : ''}`;
+  };
+
   return (
     <header className="bg-background border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
@@ -87,49 +198,44 @@ export default function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full"></span>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <div className="px-2 py-1.5 text-sm font-medium border-b">
-                Notifications
+                Notifications {notifications.length > 0 && `(${notifications.length})`}
               </div>
               <div className="max-h-64 overflow-y-auto">
-                <DropdownMenuItem 
-                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                  onClick={() => setLocation('/actions')}
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Action urgente requise</p>
-                    <p className="text-xs text-gray-500 mt-1">Certaines actions de conformité nécessitent votre attention immédiate</p>
-                    <p className="text-xs text-gray-400 mt-1">Il y a 2 heures</p>
+                {notifications.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <p className="text-sm text-gray-500">Aucune notification récente</p>
                   </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                  onClick={() => setLocation('/rights')}
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Nouvelle demande d'accès</p>
-                    <p className="text-xs text-gray-500 mt-1">Francine Lebon a soumis une demande d'accès aux données</p>
-                    <p className="text-xs text-gray-400 mt-1">Il y a 5 heures</p>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                  onClick={() => setLocation('/diagnostic')}
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Rappel diagnostic RGPD</p>
-                    <p className="text-xs text-gray-500 mt-1">Il est recommandé de compléter votre diagnostic RGPD</p>
-                    <p className="text-xs text-gray-400 mt-1">Il y a 1 jour</p>
-                  </div>
-                </DropdownMenuItem>
+                ) : (
+                  notifications.map((notification) => (
+                    <DropdownMenuItem 
+                      key={notification.id}
+                      className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                      onClick={() => setLocation(notification.route)}
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{notification.title}</p>
+                        <p className="text-xs text-gray-500 mt-1">{notification.description}</p>
+                        <p className="text-xs text-gray-400 mt-1">{getTimeAgo(notification.timestamp)}</p>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                )}
               </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-center text-sm text-blue-600 dark:text-blue-400">
-                Voir toutes les notifications
-              </DropdownMenuItem>
+              {notifications.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-center text-sm text-blue-600 dark:text-blue-400">
+                    Voir toutes les notifications
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
