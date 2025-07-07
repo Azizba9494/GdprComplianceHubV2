@@ -2035,6 +2035,29 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
+  // Get specific bot conversation by ID
+  app.get("/api/bots/conversation/:conversationId", requireAuth, async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.conversationId);
+      
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+      
+      res.json(conversation);
+    } catch (error: any) {
+      console.error('Get bot conversation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/bots/conversations", requireAuth, async (req, res) => {
     try {
       const { companyId, botType, title } = req.body;

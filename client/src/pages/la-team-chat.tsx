@@ -72,9 +72,7 @@ export default function LaTeamChat() {
   const { data: conversation, isLoading: conversationLoading } = useQuery({
     queryKey: ['/api/bots/conversation', conversationId],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/bots/conversations/${conversationId}/messages`);
-      // The API returns messages, but we need conversation details too
-      // We'll get conversation details from the messages context or create a separate call
+      const response = await apiRequest("GET", `/api/bots/conversations/${conversationId}`);
       return response.json();
     },
     enabled: !!conversationId,
@@ -87,12 +85,8 @@ export default function LaTeamChat() {
     enabled: !!conversationId,
   });
 
-  // Detect bot type from first message or conversation context
-  const botType = messages && messages.length > 0 
-    ? Object.keys(BOT_INFO).find(type => 
-        messages[0]?.content?.includes(BOT_INFO[type as keyof typeof BOT_INFO].name)
-      ) || 'fondement'
-    : 'fondement';
+  // Get bot type from conversation data
+  const botType = conversation?.botType || 'fondement';
 
   const botInfo = BOT_INFO[botType as keyof typeof BOT_INFO];
 
