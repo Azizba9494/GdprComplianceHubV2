@@ -1428,12 +1428,8 @@ export default function Admin() {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            console.log("Bouton Modifier Jean Michel Fondement cliqué", prompt);
                             if (prompt) {
-                              console.log("Opening dialog for:", prompt);
                               openPromptDialog(prompt);
-                            } else {
-                              console.log("Aucun prompt trouvé pour Jean Michel Fondement");
                             }
                           }}
                           disabled={!prompt}
