@@ -1167,7 +1167,10 @@ export default function Help() {
                     <CardContent>
                       <div className="prose prose-sm max-w-none dark:prose-invert">
                         <div className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
-                          {isExpanded ? article.content : `${article.content.substring(0, 300)}...`}
+                          {isExpanded 
+                            ? article.content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')
+                            : `${article.content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').substring(0, 300)}...`
+                          }
                         </div>
                       </div>
                       {!isExpanded && (
