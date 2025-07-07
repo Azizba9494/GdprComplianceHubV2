@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, MessageCircle, Plus, Bot, Scale, MapPin, Archive, Gavel, Settings, Calendar, ChevronRight, History, Clock } from "lucide-react";
+import { Users, MessageCircle, Plus, Bot, Scale, MapPin, Archive, Gavel, Settings, Calendar, ChevronRight, History, Clock, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -102,6 +102,28 @@ export default function LaTeam() {
     },
   });
 
+  const deleteConversationMutation = useMutation({
+    mutationFn: async (conversationId: number) => {
+      const response = await apiRequest("DELETE", `/api/bots/conversations/${conversationId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bots/conversations', companyId] });
+      toast({
+        title: "Conversation supprimée",
+        description: "La conversation a été supprimée avec succès",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Delete conversation error:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la conversation",
+        variant: "destructive",
+      });
+    },
+  });
+
   const startChatWithBot = (botType: string, botName: string) => {
     console.log('Starting chat with bot:', { botType, botName });
     const title = `Conversation avec ${botName}`;
@@ -110,6 +132,13 @@ export default function LaTeam() {
 
   const openExistingConversation = (conversationId: number) => {
     setLocation(`/la-team/chat/${conversationId}`);
+  };
+
+  const handleDeleteConversation = (conversationId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent conversation opening
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette conversation ?")) {
+      deleteConversationMutation.mutate(conversationId);
+    }
   };
 
   const getBotConversations = (botType: string) => {
@@ -198,8 +227,8 @@ export default function LaTeam() {
                                 <div className="flex items-center space-x-2">
                                   <Bot className="w-4 h-4 text-blue-600 flex-shrink-0" />
                                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                    {conversation.title.length > 35 
-                                      ? conversation.title.substring(0, 35) + "..."
+                                    {conversation.title.length > 30 
+                                      ? conversation.title.substring(0, 30) + "..."
                                       : conversation.title
                                     }
                                   </p>
@@ -217,7 +246,18 @@ export default function LaTeam() {
                                   </p>
                                 </div>
                               </div>
-                              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
+                                  onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                                  title="Supprimer la conversation"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+                              </div>
                             </div>
                           </div>
                         ))}

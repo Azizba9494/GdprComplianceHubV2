@@ -2282,7 +2282,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
       }
       
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, conversation.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
