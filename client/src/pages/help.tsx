@@ -66,7 +66,7 @@ export default function Help() {
     {
       id: "diagnostic-rgpd",
       title: "Comment réaliser le diagnostic RGPD",
-      category: "Diagnostic",
+      category: "Gouvernance",
       icon: Shield,
       tags: ["diagnostic", "conformité", "évaluation"],
       content: `
@@ -106,7 +106,7 @@ export default function Help() {
     {
       id: "premiers-pas-rgpd",
       title: "Premiers pas : comprendre le RGPD pour les PME",
-      category: "Démarrage",
+      category: "Gouvernance",
       icon: Shield,
       tags: ["RGPD", "bases", "premiers pas", "PME"],
       content: `
@@ -649,25 +649,25 @@ export default function Help() {
       id: "rgpd-applicable",
       question: "Mon entreprise est-elle concernée par le RGPD ?",
       answer: "Oui, si vous traitez des données personnelles de résidents européens, peu importe votre localisation. Cela inclut : fichiers clients, employés, prospects, cookies sur votre site web, vidéosurveillance, etc. Même une micro-entreprise avec un simple formulaire de contact est concernée.",
-      category: "Général"
+      category: "Gouvernance"
     },
     {
       id: "donnees-personnelles",
       question: "Qu'est-ce qu'une donnée personnelle ?",
       answer: "Toute information permettant d'identifier directement ou indirectement une personne physique : nom, email, téléphone, adresse IP, numéro client, photo, empreinte digitale, données de géolocalisation, historique de navigation, etc. Même un pseudonyme peut être une donnée personnelle si on peut remonter à la personne.",
-      category: "Général"
+      category: "Gouvernance"
     },
     {
       id: "donnees-sensibles",
       question: "Quelles sont les données sensibles ?",
       answer: "Données révélant l'origine raciale/ethnique, opinions politiques, convictions religieuses, appartenance syndicale, données de santé, vie sexuelle, données biométriques/génétiques. Elles nécessitent des protections renforcées et souvent un consentement explicite.",
-      category: "Général"
+      category: "Gouvernance"
     },
     {
       id: "rgpd-vs-loi",
       question: "Quelle différence entre RGPD et loi informatique et libertés ?",
       answer: "Le RGPD est le règlement européen qui s'applique directement. La loi informatique et libertés a été modifiée pour s'adapter au RGPD. En cas de conflit, le RGPD prime. Les deux textes se complètent pour former le cadre juridique français.",
-      category: "Général"
+      category: "Gouvernance"
     },
 
     // Organisation et gouvernance
@@ -675,25 +675,25 @@ export default function Help() {
       id: "dpo-obligatoire",
       question: "Dois-je nommer un DPO (Délégué à la Protection des Données) ?",
       answer: "C'est obligatoire si : vous êtes un organisme public, votre activité principale nécessite un suivi régulier et systématique des personnes, ou vous traitez des données sensibles à grande échelle. Sinon, c'est recommandé mais pas obligatoire. Un DPO peut être mutualisé ou externe.",
-      category: "Organisation"
+      category: "Gouvernance"
     },
     {
       id: "qui-responsable",
       question: "Qui est responsable de la conformité RGPD dans mon entreprise ?",
       answer: "Le dirigeant est le responsable légal final. Il peut déléguer opérationnellement à un DPO, un responsable informatique ou juridique, mais reste redevable devant les autorités. Toute l'entreprise doit être sensibilisée et impliquée.",
-      category: "Organisation"
+      category: "Gouvernance"
     },
     {
       id: "registre-obligatoire",
       question: "Le registre des traitements est-il obligatoire pour les PME ?",
       answer: "Oui, sauf exception pour les entreprises de moins de 250 salariés qui ne traitent que occasionnellement des données, sans risque pour les droits des personnes, et sans données sensibles. En pratique, quasiment toutes les entreprises doivent tenir un registre.",
-      category: "Organisation"
+      category: "Documentation"
     },
     {
       id: "comite-direction",
       question: "Dois-je impliquer ma direction dans le RGPD ?",
       answer: "Absolument. La direction doit porter la démarche, allouer les ressources nécessaires, valider les politiques et être formée aux enjeux. C'est un prérequis pour une conformité durable et crédible.",
-      category: "Organisation"
+      category: "Gouvernance"
     },
 
     // Mise en œuvre pratique
@@ -701,25 +701,25 @@ export default function Help() {
       id: "duree-conformite",
       question: "Combien de temps pour être conforme ?",
       answer: "Cela dépend de votre situation de départ. Avec notre plateforme : diagnostic en 1h, plan d'action généré automatiquement, conformité de base en 3-6 mois, conformité complète en 6-12 mois. L'important est de commencer et de progresser étape par étape.",
-      category: "Mise en œuvre"
+      category: "Gouvernance"
     },
     {
       id: "cout-conformite",
       question: "Combien coûte la mise en conformité RGPD ?",
       answer: "Pour une PME : 5 000-20 000€ la première année (conseil, outils, formation), puis 2 000-5 000€/an en maintenance. Notre plateforme divise ces coûts par 3-5 en automatisant la documentation et les processus. ROI souvent positif dès la première année.",
-      category: "Budget"
+      category: "Gouvernance"
     },
     {
       id: "par-ou-commencer",
       question: "Par où commencer ma mise en conformité ?",
       answer: "1) Faites notre diagnostic RGPD (30 min), 2) Cartographiez vos traitements principaux, 3) Vérifiez vos mentions légales et politique de confidentialité, 4) Sécurisez vos données critiques, 5) Formez vos équipes. Notre plateforme vous guide étape par étape.",
-      category: "Mise en œuvre"
+      category: "Gouvernance"
     },
     {
       id: "priorisation-actions",
       question: "Comment prioriser mes actions de conformité ?",
       answer: "Notre algorithme priorise automatiquement selon : 1) Risque juridique (sanctions), 2) Risque opérationnel (incidents), 3) Facilité de mise en œuvre, 4) Impact sur la conformité globale. Traitez d'abord les actions urgentes (rouges), puis importantes (orange).",
-      category: "Mise en œuvre"
+      category: "Gouvernance"
     },
 
     // Gestion des données
@@ -727,19 +727,19 @@ export default function Help() {
       id: "conservation-donnees",
       question: "Combien de temps puis-je conserver les données ?",
       answer: "Durées légales courantes : clients actifs (pendant la relation + 3 ans), prospects (3 ans sans contact), employés (5 ans après départ), candidats non retenus (2 ans), vidéosurveillance (1 mois), logs techniques (1 an). À adapter selon votre secteur et obligations légales.",
-      category: "Conservation"
+      category: "Documentation"
     },
     {
       id: "suppression-donnees",
       question: "Comment supprimer définitivement des données ?",
       answer: "Suppression physique des fichiers + vidage des corbeilles + effacement des sauvegardes + nettoyage des caches. Pour les bases de données : suppression + réorganisation. Documentez le processus et gardez une trace de la suppression (sans garder les données supprimées).",
-      category: "Conservation"
+      category: "Documentation"
     },
     {
       id: "archivage-donnees",
       question: "Puis-je archiver les données au lieu de les supprimer ?",
       answer: "L'archivage intermédiaire est possible pour respecter des obligations légales (comptables, sociales). Les données archivées doivent être isolées, chiffrées, avec accès restreint et durée limitée. L'archivage définitif équivaut à une suppression avec obligation de conservation.",
-      category: "Conservation"
+      category: "Documentation"
     },
 
     // Bases légales et consentement
@@ -747,19 +747,19 @@ export default function Help() {
       id: "base-legale-choisir",
       question: "Comment choisir la bonne base légale ?",
       answer: "Consentement : marketing, newsletters. Contrat : livraison, facturation. Obligation légale : comptabilité, paie. Intérêt légitime : prospection B2B, sécurité. Mission d'intérêt public : services publics. Intérêts vitaux : urgences médicales. Notre outil vous aide à choisir.",
-      category: "Bases légales"
+      category: "Consentement"
     },
     {
       id: "consentement-valide",
       question: "Comment obtenir un consentement RGPD valide ?",
       answer: "Le consentement doit être libre (sans contrainte), spécifique (par finalité), éclairé (information claire), univoque (action positive). Évitez les cases pré-cochées, proposez des choix granulaires, permettez le retrait facile. Documentez la preuve du consentement.",
-      category: "Bases légales"
+      category: "Consentement"
     },
     {
       id: "interet-legitime",
       question: "Puis-je utiliser l'intérêt légitime comme base légale ?",
       answer: "Oui, si votre intérêt est réel, nécessaire et équilibré par rapport aux droits de la personne. Exemples : prévention de la fraude, sécurité des biens, prospection de clients existants. Vous devez faire un test de proportionnalité et informer les personnes de leur droit d'opposition.",
-      category: "Bases légales"
+      category: "Consentement"
     },
 
     // Droits des personnes
@@ -787,19 +787,19 @@ export default function Help() {
       id: "sous-traitants",
       question: "Comment gérer mes sous-traitants ?",
       answer: "1) Identifiez tous vos sous-traitants, 2) Signez des contrats RGPD spécifiques (DPA - Data Processing Agreement), 3) Vérifiez leurs mesures de sécurité, 4) Auditez régulièrement, 5) Tenez un registre des sous-traitants. Ils doivent vous notifier toute violation sous 72h.",
-      category: "Sous-traitance"
+      category: "Documentation"
     },
     {
       id: "contrat-sous-traitant",
       question: "Que doit contenir un contrat de sous-traitance RGPD ?",
       answer: "Objet, durée, nature et finalité du traitement, catégories de données, obligations du sous-traitant (sécurité, confidentialité, assistance), possibilité d'audit, retour/destruction des données, sous-traitance ultérieure autorisée, notification des violations, transferts hors UE.",
-      category: "Sous-traitance"
+      category: "Documentation"
     },
     {
       id: "cloud-rgpd",
       question: "Puis-je utiliser des services cloud américains ?",
       answer: "Oui, mais avec précautions. Vérifiez que le fournisseur propose des clauses contractuelles types (CCT), évaluez les risques d'accès par les autorités étrangères, chiffrez vos données sensibles, choisissez la localisation UE quand c'est possible. Documentez votre analyse de risque.",
-      category: "Sous-traitance"
+      category: "Sécurité"
     },
 
     // Sécurité et violations
@@ -807,13 +807,13 @@ export default function Help() {
       id: "violation-detecter",
       question: "Comment détecter une violation de données ?",
       answer: "Surveillez : accès non autorisés, modifications suspectes, pertes d'équipements, piratages, erreurs humaines, pannes système. Mettez en place des logs, alertes automatiques, formations du personnel. Notre plateforme inclut une checklist de détection.",
-      category: "Sécurité"
+      category: "Violations"
     },
     {
       id: "violation-notifier",
       question: "Dois-je toujours notifier une violation à la CNIL ?",
       answer: "Oui, sauf si la violation ne présente aucun risque pour les droits des personnes. Délai : 72h maximum. Décrivez les faits, les conséquences probables, les mesures prises. Si risque élevé, informez aussi les personnes concernées. Notre outil vous guide dans l'évaluation.",
-      category: "Sécurité"
+      category: "Violations"
     },
     {
       id: "mesures-securite",
@@ -827,19 +827,19 @@ export default function Help() {
       id: "cookies-conformite",
       question: "Mon site web est-il conforme pour les cookies ?",
       answer: "Vérifiez : bandeau de consentement granulaire, refus aussi facile que l'acceptation, information claire sur chaque cookie, pas de dépôt avant consentement (sauf cookies essentiels), possibilité de retirer le consentement. Auditez régulièrement avec des outils spécialisés.",
-      category: "Digital"
+      category: "Consentement"
     },
     {
       id: "google-analytics",
       question: "Puis-je utiliser Google Analytics en conformité RGPD ?",
       answer: "Oui, avec précautions : configurez GA4 en mode consentement, anonymisez les IP, signez les CCT avec Google, informez dans votre politique de confidentialité, permettez l'opt-out. Alternative : solutions européennes comme Matomo ou AT Internet.",
-      category: "Digital"
+      category: "Consentement"
     },
     {
       id: "newsletter-rgpd",
       question: "Comment envoyer des newsletters conformes RGPD ?",
       answer: "Base légale : consentement explicite (double opt-in recommandé). Informez sur : finalité, fréquence, type de contenu, droit de désinscription. Facilitez l'opt-out (lien dans chaque email), tenez un registre des consentements, nettoyez régulièrement vos listes.",
-      category: "Digital"
+      category: "Consentement"
     },
 
     // Sanctions et contrôles
@@ -847,19 +847,19 @@ export default function Help() {
       id: "sanctions-rgpd",
       question: "Quels risques si je ne suis pas conforme ?",
       answer: "Amendes jusqu'à 4% du CA annuel ou 20M€, sanctions pénales possibles, interdiction de traitement, atteinte à la réputation, perte de confiance client. La CNIL privilégie l'accompagnement pour les TPE/PME de bonne foi. L'important est de démontrer vos efforts de conformité.",
-      category: "Sanctions"
+      category: "Violations"
     },
     {
       id: "controle-cnil",
       question: "Comment se déroule un contrôle CNIL ?",
       answer: "Contrôle sur place, en ligne ou sur convocation. La CNIL vérifie vos registres, politiques, mesures de sécurité, gestion des droits. Préparez : documentation à jour, désignation d'un interlocuteur, accès aux systèmes. Coopérez pleinement et montrez votre bonne foi.",
-      category: "Sanctions"
+      category: "Gouvernance"
     },
     {
       id: "recours-cnil",
       question: "Puis-je contester une sanction CNIL ?",
       answer: "Oui, recours devant le Conseil d'État dans les 2 mois. Vous pouvez aussi demander un référé-suspension si la sanction cause un préjudice grave. Faites-vous accompagner par un avocat spécialisé. La jurisprudence évolue en faveur d'une approche proportionnée.",
-      category: "Sanctions"
+      category: "Violations"
     },
 
     // Transferts internationaux
@@ -867,13 +867,13 @@ export default function Help() {
       id: "transferts-hors-ue",
       question: "Puis-je transférer des données hors UE ?",
       answer: "Oui, avec garanties : pays avec décision d'adéquation (UK, Suisse, Canada...), clauses contractuelles types (CCT), règles d'entreprise contraignantes (BCR), certification approuvée, ou dérogations spécifiques (consentement, contrat, intérêt public).",
-      category: "Transferts"
+      category: "Documentation"
     },
     {
       id: "privacy-shield",
       question: "Le Privacy Shield existe-t-il encore ?",
       answer: "Non, invalidé en juillet 2020. Pour les USA : utilisez les nouvelles clauses contractuelles types (CCT), évaluez les risques d'accès gouvernemental, implémentez des mesures supplémentaires (chiffrement, pseudonymisation). Le Data Privacy Framework est en cours de négociation.",
-      category: "Transferts"
+      category: "Documentation"
     },
 
     // Secteurs spécifiques
@@ -881,19 +881,19 @@ export default function Help() {
       id: "rgpd-sante",
       question: "Quelles spécificités RGPD dans le secteur santé ?",
       answer: "Données de santé = données sensibles, besoin d'une base légale renforcée (consentement explicite ou intérêt public), sécurité renforcée, secret médical, hébergement de données de santé (HDS), durées de conservation spécifiques. Impliquez votre DPO et juriste santé.",
-      category: "Sectoriel"
+      category: "Sécurité"
     },
     {
       id: "rgpd-rh",
       question: "Comment appliquer le RGPD aux ressources humaines ?",
       answer: "Licéité : contrat de travail principalement. Informez les candidats et employés, limitez la collecte au nécessaire, sécurisez les dossiers, respectez les durées de conservation (5 ans post-départ), gérez les droits d'accès/rectification. Attention aux données sensibles (santé, syndicats).",
-      category: "Sectoriel"
+      category: "Formation"
     },
     {
       id: "rgpd-ecommerce",
       question: "Spécificités RGPD pour un site e-commerce ?",
       answer: "Gestion complexe : clients, prospects, cookies, paiements, livraisons, avis. Bases légales multiples (contrat, consentement, intérêt légitime). Sécurisez les paiements, gérez les comptes clients, cookies de panier, analytics, remarketing. Politiques claires et consentement granulaire.",
-      category: "Sectoriel"
+      category: "Consentement"
     }
   ];
 
