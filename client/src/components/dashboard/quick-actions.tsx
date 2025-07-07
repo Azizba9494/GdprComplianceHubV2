@@ -65,7 +65,8 @@ export default function QuickActions({ stats }: QuickActionsProps) {
       .filter(([category]) => categoryMappings[category as keyof typeof categoryMappings])
       .map(([category, data]) => {
         const mapping = categoryMappings[category as keyof typeof categoryMappings];
-        const percentage = data.total > 0 ? Math.round((data.score / data.total) * 100) : 0;
+        // data.score is already a percentage (0-100), no need to recalculate
+        const percentage = Math.max(0, Math.min(100, data.score || 0));
         
         return {
           label: mapping.label,
