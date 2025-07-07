@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   Shield, Home, ClipboardList, Book, FileText, 
-  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap, User 
+  AlertTriangle, ShieldX, BarChart3, Settings, GraduationCap, User, Users 
 } from "lucide-react";
 
 const navigation = [
@@ -15,6 +15,7 @@ const navigation = [
   { name: "Analyse de violations", href: "/breach-analysis", icon: AlertTriangle },
   { name: "Demandes des personnes", href: "/rights", icon: ShieldX },
   { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3 },
+  { name: "LA Team Jean Michel", href: "/la-team", icon: Users },
   { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap },
   { name: "👤 Mon Compte", href: "/user-back-office", icon: User },
   { name: "⚙️ Administration", href: "/admin", icon: Settings },

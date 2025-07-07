@@ -24,6 +24,8 @@ import Learning from "@/pages/learning";
 import Admin from "@/pages/admin";
 import UserBackOfficeEnhanced from "@/pages/UserBackOfficeEnhanced";
 import Help from "@/pages/help";
+import LaTeam from "@/pages/la-team";
+import LaTeamChat from "@/pages/la-team-chat";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
@@ -80,6 +82,8 @@ function AuthenticatedApp() {
             <Route path="/admin" component={Admin} />
             <Route path="/user-back-office" component={UserBackOfficeEnhanced} />
             <Route path="/help" component={Help} />
+            <Route path="/la-team" component={LaTeam} />
+            <Route path="/la-team/chat/:id" component={LaTeamChat} />
             <Route component={NotFound} />
           </Switch>
         </div>

@@ -4,10 +4,11 @@ import {
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
   quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
-  subscriptions, userCompanyAccess, invitations, invoices,
+  subscriptions, userCompanyAccess, invitations, invoices, botConversations, botMessages,
   type User, type InsertUser, type Company, type InsertCompany,
   type Subscription, type InsertSubscription, type UserCompanyAccess, type InsertUserCompanyAccess,
   type Invitation, type InsertInvitation, type Invoice, type InsertInvoice,
+  type BotConversation, type InsertBotConversation, type BotMessage, type InsertBotMessage,
   type DiagnosticQuestion, type InsertDiagnosticQuestion,
   type DiagnosticResponse, type InsertDiagnosticResponse,
   type ComplianceSnapshot, type InsertComplianceSnapshot,
@@ -1063,6 +1064,48 @@ export class DatabaseStorage implements IStorage {
 
   async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
     const [created] = await db.insert(invoices).values(invoice).returning();
+    return created;
+  }
+
+  // Bot conversation methods
+  async getBotConversations(companyId: number): Promise<BotConversation[]> {
+    return await db.select().from(botConversations)
+      .where(eq(botConversations.companyId, companyId))
+      .orderBy(desc(botConversations.updatedAt));
+  }
+
+  async getBotConversation(id: number): Promise<BotConversation | undefined> {
+    const [conversation] = await db.select().from(botConversations)
+      .where(eq(botConversations.id, id));
+    return conversation;
+  }
+
+  async createBotConversation(conversation: InsertBotConversation): Promise<BotConversation> {
+    const [created] = await db.insert(botConversations).values(conversation).returning();
+    return created;
+  }
+
+  async updateBotConversation(id: number, updates: Partial<InsertBotConversation>): Promise<BotConversation> {
+    const [updated] = await db.update(botConversations).set(updates)
+      .where(eq(botConversations.id, id)).returning();
+    return updated;
+  }
+
+  async deleteBotConversation(id: number): Promise<void> {
+    // Delete messages first
+    await db.delete(botMessages).where(eq(botMessages.conversationId, id));
+    // Then delete conversation
+    await db.delete(botConversations).where(eq(botConversations.id, id));
+  }
+
+  async getBotMessages(conversationId: number): Promise<BotMessage[]> {
+    return await db.select().from(botMessages)
+      .where(eq(botMessages.conversationId, conversationId))
+      .orderBy(botMessages.timestamp);
+  }
+
+  async createBotMessage(message: InsertBotMessage): Promise<BotMessage> {
+    const [created] = await db.insert(botMessages).values(message).returning();
     return created;
   }
 

@@ -2016,6 +2016,176 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
+  // Bot conversation routes
+  app.get("/api/bots/conversations/:companyId", requireAuth, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const conversations = await storage.getBotConversations(companyId);
+      res.json(conversations);
+    } catch (error: any) {
+      console.error('Get bot conversations error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/bots/conversations", requireAuth, async (req, res) => {
+    try {
+      const { companyId, botType, title } = req.body;
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const conversation = await storage.createBotConversation({
+        userId: req.user!.id,
+        companyId,
+        botType,
+        title,
+      });
+      res.json(conversation);
+    } catch (error: any) {
+      console.error('Create bot conversation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      
+      // Get conversation to verify access
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const messages = await storage.getBotMessages(conversationId);
+      res.json(messages);
+    } catch (error: any) {
+      console.error('Get bot messages error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const { content, isBot } = req.body;
+      
+      // Get conversation to verify access
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const message = await storage.createBotMessage({
+        conversationId,
+        content,
+        isBot,
+      });
+
+      // Update conversation timestamp
+      await storage.updateBotConversation(conversationId, {
+        updatedAt: new Date(),
+      });
+
+      res.json(message);
+    } catch (error: any) {
+      console.error('Create bot message error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/bots/:botType/chat", requireAuth, async (req, res) => {
+    try {
+      const { botType } = req.params;
+      const { message, conversationId } = req.body;
+
+      // Get conversation to verify access and get company context
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      // Get bot-specific prompt
+      const promptName = `Jean Michel ${botType.charAt(0).toUpperCase() + botType.slice(1)}`;
+      const botPrompt = await storage.getActivePromptByCategory(promptName);
+      
+      let finalPrompt = "";
+      if (botPrompt) {
+        finalPrompt = botPrompt.prompt + "\n\nQuestion de l'utilisateur : " + message;
+      } else {
+        // Fallback prompts for each bot type
+        const fallbackPrompts = {
+          fondement: "Vous êtes Jean Michel Fondement, expert en détermination des fondements juridiques pour les traitements de données personnelles selon le RGPD. Votre mission est d'aider les entreprises à identifier la base légale appropriée pour leurs traitements. Posez des questions complémentaires si nécessaire pour bien comprendre le contexte avant de donner votre réponse.\n\nQuestion : ",
+          voyages: "Vous êtes Jean Michel Voyages, expert en transferts de données personnelles vers les pays tiers. Vous connaissez parfaitement les décisions d'adéquation, les clauses contractuelles types et toutes les modalités de transfert selon le RGPD. Posez des questions complémentaires si nécessaire.\n\nQuestion : ",
+          archive: "Vous êtes Jean Michel Archive, spécialiste des durées de conservation des données personnelles. Vous aidez à déterminer les durées appropriées selon les obligations légales et les finalités de traitement. Donnez toujours des justifications détaillées.\n\nQuestion : ",
+          irma: "Vous êtes Jean Michel Irma, spécialiste en jurisprudence CNIL et sanctions. Vous analysez les risques de non-conformité et estimez les sanctions potentielles selon les décisions de la CNIL et les guidelines EDPB.\n\nQuestion : "
+        };
+        finalPrompt = (fallbackPrompts[botType as keyof typeof fallbackPrompts] || fallbackPrompts.fondement) + message;
+      }
+
+      // Generate AI response
+      const aiResponse = await generateAIContent(finalPrompt);
+
+      res.json({ response: aiResponse });
+    } catch (error: any) {
+      console.error('Bot chat error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/bots/conversations/:id", requireAuth, async (req, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      
+      // Get conversation to verify access
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      await storage.deleteBotConversation(conversationId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Delete bot conversation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

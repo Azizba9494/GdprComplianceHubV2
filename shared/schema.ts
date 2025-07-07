@@ -798,6 +798,27 @@ export const invoices = pgTable("invoices", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Bot conversations table for LA Team
+export const botConversations = pgTable("bot_conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  botType: text("bot_type").notNull(), // fondement, voyages, archive, irma, custom
+  title: text("title").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Bot messages table
+export const botMessages = pgTable("bot_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => botConversations.id),
+  content: text("content").notNull(),
+  isBot: boolean("is_bot").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
 export const insertRagDocumentSchema = createInsertSchema(ragDocuments).omit({
   id: true,
   createdAt: true,
@@ -829,11 +850,28 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   createdAt: true,
 });
 
+export const insertBotConversationSchema = createInsertSchema(botConversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBotMessageSchema = createInsertSchema(botMessages).omit({
+  id: true,
+  timestamp: true,
+});
+
 // RAG Document types
 export type RagDocument = typeof ragDocuments.$inferSelect;
 export type InsertRagDocument = z.infer<typeof insertRagDocumentSchema>;
 export type PromptDocument = typeof promptDocuments.$inferSelect;
 export type InsertPromptDocument = z.infer<typeof insertPromptDocumentSchema>;
+
+// Bot types
+export type BotConversation = typeof botConversations.$inferSelect;
+export type InsertBotConversation = z.infer<typeof insertBotConversationSchema>;
+export type BotMessage = typeof botMessages.$inferSelect;
+export type InsertBotMessage = z.infer<typeof insertBotMessageSchema>;
 
 // Multi-tenant types
 export type Subscription = typeof subscriptions.$inferSelect;

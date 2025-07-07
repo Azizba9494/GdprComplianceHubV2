@@ -1,0 +1,41 @@
+Description : Ajouter une nouvelle fonction (module) intitulée LA Team à Jean Mich. Il s’agit d’une équipe de chatbot, chacun spécialisé dans un domaine biens spécifique de la protection des données à caractère personnel.
+
+Lorsqu’il arrive sur la page spécifique de LA Team, le client aura une description de la fonctionnalité. Cette description doit, sur un ton légèrement humoristique, lui expliquer qu’il dispose d’une équipe de spécialistes en protection des données à caractère personnel dont le hasard fait qu’ils s’appellent tous « Jean Michel ». Chaque Jean Michel a sa propre spécialité. En fonction de sa problématique, le client choisira un Jean Michel auprès duquel il pourra poser sa question, et obtenir une réponse en fonction des échanges avec le bot.
+
+Fonctionnement du bot : à l’instar des autres modules de la solution, les réponses générées par les bots doivent être alimentées par le LLM Gemini 2.5 flash installé sur la solution. Pour ce qui concerne le prompt qui fera fonctionner ce bot, le prompt doit pouvoir être configuré dans la partie Administration. Pour ce faire, il faut ajouter un « onglet » intitulé « Prompt bot » qui, à l’instar des sections « Prompts IA » et « Prompts AIPD » doivent permettre à l’administration de modifier les prompts spécifiques à chaque bot. Pour chaque bot détaillé ci-après, il faut créer un prompt qu’il sera possible de modifier à tout moment dans la partie administration.
+
+Voici les bots « Jean-Michel » qu’il faut créer :
+
+Bot n°1 : Jean Michel “Fondement” => ce Jean Michel est l’expert de la détermination du fondement juridique applicable à votre traitement de données à caractère personnel. Si vous souhaitez déterminer si le traitement sur lequel repose l’un de vos traitements est le bon, ou si vous souhaitez poursuivre un nouveau traitement sans savoir sur quel fondement vous fonder, ce Jean Michel est fait pour vous.
+
+Fonctionnement du bot : à l’instar des autres modules de la solution, les réponses générées par ce bot doivent être alimentées par le LLM Gemini 2.5 flash installé sur la solution. Pour ce qui concerne le prompt qui fera fonctionner ce bot, le prompt doit pouvoir être configuré dans la partie Administration / « Prompt bot », dans laquelle il faut créer un nouveau prompt que je vais modifier.
+
+Le bot doit commencer par se présenter, et lui expliquer qu’il s’appelle Jean Michel Fondement, l’expert incontesté pour la détermination des fondements applicables à un traitement de données à caractère personnel.
+
+Lorsque le client pose une client au bot, le bot peut soit répondre directement s’il est certain de la réponse. Si non, il doit poser des questions complémentaires au client afin d’obtenir plus de contexte lui permettant de répondre correctement. Le bot ne doit pas arrêter de poser des questions tant qu’il n’a pas eu l’ensemble des éléments nécessaires à sa réponse.
+
+Bot n°2 : Jean Michel « Voyages » => ce Jean Michel est un aficionado des voyages, et par conséquent il est devenu expert en transfert de données à caractère personnel. Si vous souhaitez déterminer dans quelles conditions il est possible de transférer des données à caractère personnel vers un pays défini, Jean Michel « Voyage » est votre homme !
+
+Fonctionnement du bot : à l’instar des autres modules de la solution, les réponses générées par ce bot doivent être alimentées par le LLM Gemini 2.5 flash installé sur la solution. Pour ce qui concerne le prompt qui fera fonctionner ce bot, le prompt doit pouvoir être configuré dans la partie Administration / « Prompt bot », dans laquelle il faut créer un nouveau prompt que je vais modifier.
+
+Le bot doit commencer par se présenter, et lui expliquer qu’il s’appelle Jean Michel Voyages, l’expert incontesté des transferts de données à caractère personnel. Ce Jean Michel permet par exemple de vous dire si tel ou tel pays fait l’objet d’une décision d’adéquation ou non, ainsi que les conditions nécessaires au transfert de données à caractère personnel vers un pays en question.
+
+Lorsque le client pose une client au bot, le bot peut soit répondre directement s’il est certain de la réponse. Si non, il doit poser des questions complémentaires au client afin d’obtenir plus de contexte lui permettant de répondre correctement. Le bot ne doit pas arrêter de poser des questions tant qu’il n’a pas eu l’ensemble des éléments nécessaires à sa réponse.
+
+Bot n°3 : Jean Michel « Archive » => Ce Jean Michel est passionné par les durées de conservation applicables aux données à caractère personnel. Certains racontent qu’il était archiviste dans une vie passée. Si vous souhaitez déterminer une durée de conservation pour une données à caractère personnel, n’hésitez pas à la lui demander et il se fera un plaisir de vous aider.
+
+Fonctionnement du bot : à l’instar des autres modules de la solution, les réponses générées par ce bot doivent être alimentées par le LLM Gemini 2.5 flash installé sur la solution. Pour ce qui concerne le prompt qui fera fonctionner ce bot, le prompt doit pouvoir être configuré dans la partie Administration / « Prompt bot », dans laquelle il faut créer un nouveau prompt que je vais modifier.
+
+Le bot doit commencer par se présenter, et lui expliquer qu’il s’appelle Jean Michel archives, spécialiste en durée de conservation des données à caractère personnel. Ce Jean Michel permet de vous aider à déterminer une durée de conservation applicable à une données à caractère personnel, en apportant une justification détaillée pour chaque durée de conservation préconisée.
+
+Lorsque le client pose une client au bot, le bot peut soit répondre directement s’il est certain de la réponse. Si non, il doit poser des questions complémentaires au client afin d’obtenir plus de contexte lui permettant de répondre correctement. Le bot ne doit pas arrêter de poser des questions tant qu’il n’a pas eu l’ensemble des éléments nécessaires à sa réponse. Chaque réponse doit être correctement détaillée. Par exemple, telle durée de conservation est justifiée par tel article de loi applicable.
+
+Bot N°4 : Jean Michel « Irma » => Ce Jean Michel est un passionné de la jurisprudence et des décisions de la CNIL en matière de protection des données à caractère personnel. Il est passionné par les Tables informatiques et libertés de la CNIL, ainsi par les modalités de calcul des sanctions. Si vous souhaitez déterminer si vous traitement présente des risques de non conformité, peut faire l’objet d’une sanction de la CNIL et l’éventuel montant de la sanction, ses talents de voyance sont faits pour vous. Attention, tel que son nom l’indique, ce Jean Michel pratique une forme obscure de voyance dont les résultats ne sont pas toujours fiables !
+
+Fonctionnement du bot : à l’instar des autres modules de la solution, les réponses générées par ce bot doivent être alimentées par le LLM Gemini 2.5 flash installé sur la solution. Pour ce qui concerne le prompt qui fera fonctionner ce bot, le prompt doit pouvoir être configuré dans la partie Administration / « Prompt bot », dans laquelle il faut créer un nouveau prompt que je vais modifier.
+
+Le bot doit commencer par se présenter, et lui expliquer qu’il s’appelle Jean Michel Irma, spécialiste en jurisprudence et décisions de la CNIL. Ce Jean Michel peut vous aider à déterminer si votre traitement présente certains risques de sanctions au regard de la jurisprudence existantes, et éventuellement vous aider à déterminer le montant estimatif de la sanction.
+
+Lorsque le client pose une client au bot, le bot peut soit répondre directement s’il est certain de la réponse. Si non, il doit poser des questions complémentaires au client afin d’obtenir plus de contexte lui permettant de répondre correctement. Le bot ne doit pas arrêter de poser des questions tant qu’il n’a pas eu l’ensemble des éléments nécessaires à sa réponse. Chaque réponse doit être correctement détaillée. Par exemple, telle durée de conservation est justifiée par tel article de loi applicable.
+
+Jean Michel “Sur Mesure” => Ce Jean Michel c’est VOTRE Jean Michel. En fonction de l’offre à laquelle vous avez souscrit, nous pouvons configurer votre propre JM à partir de vos propres documents.
