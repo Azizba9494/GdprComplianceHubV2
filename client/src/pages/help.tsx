@@ -59,6 +59,7 @@ interface UpdateItem {
 export default function Help() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [expandedArticle, setExpandedArticle] = useState<string | null>(null);
 
   // Articles explicatifs détaillés
   const helpArticles: HelpArticle[] = [
@@ -1124,6 +1125,7 @@ export default function Help() {
             ) : (
               filteredArticles.map((article) => {
                 const IconComponent = article.icon;
+                const isExpanded = expandedArticle === article.id;
                 return (
                   <Card key={article.id} className="group hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
@@ -1148,15 +1150,39 @@ export default function Help() {
                             </div>
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedArticle(isExpanded ? null : article.id)}
+                          className="shrink-0"
+                        >
+                          {isExpanded ? "Réduire" : "Lire plus"}
+                          <ChevronRight className={cn(
+                            "w-4 h-4 ml-1 transition-transform",
+                            isExpanded && "rotate-90"
+                          )} />
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="prose prose-sm max-w-none dark:prose-invert">
                         <div className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">
-                          {article.content.substring(0, 300)}...
+                          {isExpanded ? article.content : `${article.content.substring(0, 300)}...`}
                         </div>
                       </div>
+                      {!isExpanded && (
+                        <div className="mt-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setExpandedArticle(article.id)}
+                            className="w-full"
+                          >
+                            Lire l'article complet
+                            <ChevronRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
