@@ -87,8 +87,7 @@ export default function PriorityActions({ actions }: PriorityActionsProps) {
                       variant="secondary"
                       className={cn("text-xs", priorityBadgeColors[action.priority as keyof typeof priorityBadgeColors])}
                     >
-                      {action.priority === "urgent" ? "Urgent" :
-                       action.priority === "important" ? "Important" : "Normal"}
+                      {action.priority === "urgent" ? "Urgent" : "Important"}
                     </Badge>
                   </div>
                   
