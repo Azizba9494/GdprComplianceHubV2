@@ -118,19 +118,19 @@ function RecentActivity({ companyId, actions = [], requests = [], records = [] }
   const handleViewClick = (activity: ActivityItem) => {
     switch (activity.type) {
       case 'action':
-        setLocation('/action-plan');
+        setLocation('/actions');
         break;
       case 'request':
-        setLocation('/demandes-acces');
+        setLocation('/rights');
         break;
       case 'record':
-        setLocation('/registre-traitements');
+        setLocation('/records');
         break;
       case 'policy':
-        setLocation('/politique-confidentialite');
+        setLocation('/privacy-policy');
         break;
       default:
-        setLocation('/dashboard');
+        setLocation('/');
     }
   };
 
