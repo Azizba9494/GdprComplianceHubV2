@@ -560,6 +560,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dpoName: req.body.dpoName || null,
         dpoPhone: req.body.dpoPhone || null,
         dpoEmail: req.body.dpoEmail || null,
+        // Include joint controller information if provided
+        jointControllerInfo: req.body.jointControllerInfo || null,
       });
 
       res.json(record);
