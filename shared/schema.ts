@@ -102,7 +102,8 @@ export const processingRecords = pgTable("processing_records", {
   retention: text("retention"),
   securityMeasures: text("security_measures").array(),
   transfersOutsideEU: boolean("transfers_outside_eu").default(false),
-  type: text("type").notNull(), // controller, processor
+  type: text("type").notNull(), // controller, joint-controller, processor
+  jointControllerInfo: text("joint_controller_info"), // Information du responsable conjoint
   dpiaRequired: boolean("dpia_required"),
   dpiaJustification: text("dpia_justification"),
   // DPIA Criteria (9 criteria for DPIA assessment)

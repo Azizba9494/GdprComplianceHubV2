@@ -155,6 +155,8 @@ export default function Records() {
       dpoName: "",
       dpoPhone: "",
       dpoEmail: "",
+      // Joint Controller field
+      jointControllerInfo: "",
     },
   });
 
@@ -189,6 +191,8 @@ export default function Records() {
       dpoName: "",
       dpoPhone: "",
       dpoEmail: "",
+      // Joint Controller field
+      jointControllerInfo: "",
     },
   });
 
@@ -423,7 +427,8 @@ Informations complémentaires: ${data.additionalInfo}
       record.retention,
       Array.isArray(record.securityMeasures) ? record.securityMeasures.join("; ") : record.securityMeasures,
       record.transfersOutsideEU ? "Oui" : "Non",
-      record.type === "controller" ? "Responsable de traitement" : "Sous-traitant",
+      record.type === "controller" ? "Responsable de traitement" : 
+        record.type === "joint-controller" ? "Responsable de traitement conjoint" : "Sous-traitant",
       record.dpiaRequired ? "Oui" : "Non",
       new Date(record.createdAt).toLocaleDateString('fr-FR')
     ]);
@@ -725,13 +730,34 @@ Informations complémentaires: ${data.additionalInfo}
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="controller">Responsable de traitement</SelectItem>
-                              <SelectItem value="processor">Sous-traitant</SelectItem>
+                              <SelectItem value="joint-controller">Responsable de traitement conjoint</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    {/* Champ conditionnel pour le responsable conjoint */}
+                    {manualForm.watch("type") === "joint-controller" && (
+                      <FormField
+                        control={manualForm.control}
+                        name="jointControllerInfo"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Nom et coordonnées du responsable conjoint du traitement *</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Indiquez le nom, l'adresse, les coordonnées de contact du responsable de traitement conjoint..."
+                                {...field}
+                                rows={3}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <FormField
                       control={manualForm.control}
@@ -1127,13 +1153,34 @@ Informations complémentaires: ${data.additionalInfo}
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="controller">Responsable de traitement</SelectItem>
-                              <SelectItem value="processor">Sous-traitant</SelectItem>
+                              <SelectItem value="joint-controller">Responsable de traitement conjoint</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    {/* Champ conditionnel pour le responsable conjoint */}
+                    {generateForm.watch("processingType") === "joint-controller" && (
+                      <FormField
+                        control={generateForm.control}
+                        name="jointControllerInfo"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Nom et coordonnées du responsable conjoint du traitement *</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Indiquez le nom, l'adresse, les coordonnées de contact du responsable de traitement conjoint..."
+                                {...field}
+                                rows={3}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <FormField
                       control={generateForm.control}
@@ -1490,7 +1537,7 @@ Informations complémentaires: ${data.additionalInfo}
                   <TabsList>
                     <TabsTrigger value="all">Tous</TabsTrigger>
                     <TabsTrigger value="controller">Responsable de traitement</TabsTrigger>
-                    <TabsTrigger value="processor">Sous-traitant</TabsTrigger>
+                    <TabsTrigger value="joint-controller">Responsable conjoint</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -1541,7 +1588,8 @@ Informations complémentaires: ${data.additionalInfo}
                       )}
                     </CardTitle>
                     <Badge variant={record.type === "controller" ? "default" : "secondary"}>
-                      {record.type === "controller" ? "Responsable" : "Sous-traitant"}
+                      {record.type === "controller" ? "Responsable" : 
+                        record.type === "joint-controller" ? "Resp. conjoint" : "Sous-traitant"}
                     </Badge>
                   </div>
                   <div className="flex gap-2">
