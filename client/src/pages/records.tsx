@@ -449,17 +449,29 @@ Informations complémentaires: ${data.additionalInfo}
     }
     
     const searchLower = searchTerm.toLowerCase();
+    
+    // Helper function to search in field (string or array)
+    const searchInField = (field: any): boolean => {
+      if (!field) return false;
+      if (typeof field === 'string') {
+        return field.toLowerCase().includes(searchLower);
+      }
+      if (Array.isArray(field)) {
+        return field.some(item => 
+          typeof item === 'string' && item.toLowerCase().includes(searchLower)
+        );
+      }
+      return false;
+    };
+    
     const searchMatch = 
-      record.name?.toLowerCase().includes(searchLower) ||
-      record.purpose?.toLowerCase().includes(searchLower) ||
-      record.recipients?.toLowerCase().includes(searchLower) ||
-      record.retention?.toLowerCase().includes(searchLower) ||
-      record.securityMeasures?.toLowerCase().includes(searchLower) ||
-      getLegalBasisLabel(record.legalBasis || "").toLowerCase().includes(searchLower) ||
-      // Handle dataCategories as array or string
-      (Array.isArray(record.dataCategories) 
-        ? record.dataCategories.some(cat => cat?.toLowerCase().includes(searchLower))
-        : record.dataCategories?.toLowerCase().includes(searchLower));
+      searchInField(record.name) ||
+      searchInField(record.purpose) ||
+      searchInField(record.recipients) ||
+      searchInField(record.retention) ||
+      searchInField(record.securityMeasures) ||
+      searchInField(record.dataCategories) ||
+      getLegalBasisLabel(record.legalBasis || "").toLowerCase().includes(searchLower);
     
     return typeMatch && searchMatch;
   }) || [];
