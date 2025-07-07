@@ -10,6 +10,11 @@ interface QuickActionsProps {
       total: number;
       completed: number;
     };
+    compliance?: {
+      categoryScores?: Record<string, { score: number; total: number; answered: number }>;
+    };
+    records?: { total: number };
+    policies?: { total: number };
   };
 }
 
@@ -40,14 +45,48 @@ const quickActions = [
   },
 ];
 
-const progressData = [
-  { label: "Registres", value: 80, color: "bg-primary" },
-  { label: "Politiques", value: 60, color: "bg-orange-500" },
-  { label: "Sécurité", value: 45, color: "bg-red-500" },
-  { label: "Formation", value: 90, color: "bg-green-500" },
-];
-
 export default function QuickActions({ stats }: QuickActionsProps) {
+  // Calculate dynamic progress data based on real compliance scores
+  const calculateProgressData = () => {
+    const categoryScores = stats.compliance?.categoryScores || {};
+    
+    // Map categories to display names and colors
+    const categoryMappings = {
+      'Gouvernance': { label: 'Gouvernance', color: 'bg-blue-500' },
+      'Documentation': { label: 'Documentation', color: 'bg-green-500' },
+      'Sécurité': { label: 'Sécurité', color: 'bg-red-500' },
+      'Droits des personnes': { label: 'Droits des personnes', color: 'bg-purple-500' },
+      'Bases légales': { label: 'Bases légales', color: 'bg-orange-500' },
+      'Transferts': { label: 'Transferts', color: 'bg-indigo-500' }
+    };
+
+    // Calculate progress for each available category
+    const progressData = Object.entries(categoryScores)
+      .filter(([category]) => categoryMappings[category as keyof typeof categoryMappings])
+      .map(([category, data]) => {
+        const mapping = categoryMappings[category as keyof typeof categoryMappings];
+        const percentage = data.total > 0 ? Math.round((data.score / data.total) * 100) : 0;
+        
+        return {
+          label: mapping.label,
+          value: percentage,
+          color: mapping.color
+        };
+      })
+      .sort((a, b) => b.value - a.value); // Sort by value descending
+
+    // If no categories available, show default message
+    if (progressData.length === 0) {
+      return [
+        { label: 'Diagnostic', value: 0, color: 'bg-gray-400' },
+        { label: 'En attente', value: 0, color: 'bg-gray-300' }
+      ];
+    }
+
+    return progressData;
+  };
+
+  const progressData = calculateProgressData();
   return (
     <div className="space-y-6">
       <Card>
@@ -85,10 +124,18 @@ export default function QuickActions({ stats }: QuickActionsProps) {
           {progressData.map((item) => (
             <div key={item.label}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-foreground">{item.label}</span>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
+                  <span className="text-sm font-medium text-foreground">{item.label}</span>
+                </div>
                 <span className="text-sm text-muted-foreground">{item.value}%</span>
               </div>
-              <Progress value={item.value} className="h-2" />
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-300 ${item.color}`}
+                  style={{ width: `${item.value}%` }}
+                ></div>
+              </div>
             </div>
           ))}
         </CardContent>
