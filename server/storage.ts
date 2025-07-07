@@ -1,6 +1,6 @@
 import { 
   users, companies, diagnosticQuestions, diagnosticResponses, complianceActions,
-  processingRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
+  processingRecords, subprocessorRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
   quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
@@ -14,6 +14,7 @@ import {
   type ComplianceSnapshot, type InsertComplianceSnapshot,
   type ComplianceAction, type InsertComplianceAction,
   type ProcessingRecord, type InsertProcessingRecord,
+  type SubprocessorRecord, type InsertSubprocessorRecord,
   type DataSubjectRequest, type InsertDataSubjectRequest,
   type PrivacyPolicy, type InsertPrivacyPolicy,
   type DataBreach, type InsertDataBreach,
@@ -76,6 +77,13 @@ export interface IStorage {
   createProcessingRecord(record: InsertProcessingRecord): Promise<ProcessingRecord>;
   updateProcessingRecord(id: number, updates: Partial<InsertProcessingRecord>): Promise<ProcessingRecord>;
   deleteProcessingRecord(id: number): Promise<void>;
+
+  // Subprocessor Records
+  getSubprocessorRecords(companyId: number): Promise<SubprocessorRecord[]>;
+  getSubprocessorRecord(id: number): Promise<SubprocessorRecord | undefined>;
+  createSubprocessorRecord(record: InsertSubprocessorRecord): Promise<SubprocessorRecord>;
+  updateSubprocessorRecord(id: number, updates: Partial<InsertSubprocessorRecord>): Promise<SubprocessorRecord>;
+  deleteSubprocessorRecord(id: number): Promise<void>;
 
   // Data Subject Requests
   getDataSubjectRequests(companyId: number): Promise<DataSubjectRequest[]>;
@@ -370,6 +378,30 @@ export class DatabaseStorage implements IStorage {
     
     // Finally delete the processing record
     await db.delete(processingRecords).where(eq(processingRecords.id, id));
+  }
+
+  // Subprocessor Records
+  async getSubprocessorRecords(companyId: number): Promise<SubprocessorRecord[]> {
+    return await db.select().from(subprocessorRecords).where(eq(subprocessorRecords.companyId, companyId)).orderBy(desc(subprocessorRecords.createdAt));
+  }
+
+  async getSubprocessorRecord(id: number): Promise<SubprocessorRecord | undefined> {
+    const [record] = await db.select().from(subprocessorRecords).where(eq(subprocessorRecords.id, id));
+    return record || undefined;
+  }
+
+  async createSubprocessorRecord(record: InsertSubprocessorRecord): Promise<SubprocessorRecord> {
+    const [created] = await db.insert(subprocessorRecords).values(record).returning();
+    return created;
+  }
+
+  async updateSubprocessorRecord(id: number, updates: Partial<InsertSubprocessorRecord>): Promise<SubprocessorRecord> {
+    const [updated] = await db.update(subprocessorRecords).set(updates).where(eq(subprocessorRecords.id, id)).returning();
+    return updated;
+  }
+
+  async deleteSubprocessorRecord(id: number): Promise<void> {
+    await db.delete(subprocessorRecords).where(eq(subprocessorRecords.id, id));
   }
 
   // Data Subject Requests

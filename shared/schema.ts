@@ -132,6 +132,40 @@ export const processingRecords = pgTable("processing_records", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Subprocessor records (Registre du sous-traitant)
+export const subprocessorRecords = pgTable("subprocessor_records", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  
+  // Client information (responsable de traitement)
+  clientName: text("client_name").notNull(),
+  clientAddress: text("client_address").notNull(),
+  clientPhone: text("client_phone"),
+  clientEmail: text("client_email"),
+  clientRepresentativeName: text("client_representative_name"),
+  clientRepresentativeAddress: text("client_representative_address"),
+  clientRepresentativePhone: text("client_representative_phone"),
+  clientRepresentativeEmail: text("client_representative_email"),
+  
+  // Sub-subprocessors information
+  subprocessorName: text("subprocessor_name"),
+  subprocessorAddress: text("subprocessor_address"),
+  subprocessorPhone: text("subprocessor_phone"),
+  subprocessorEmail: text("subprocessor_email"),
+  
+  // Processing categories
+  processingCategories: text("processing_categories").notNull(),
+  
+  // International transfers
+  hasInternationalTransfers: boolean("has_international_transfers").default(false),
+  transferDetails: text("transfer_details"),
+  
+  // Security measures (reusing the same list as processing records)
+  securityMeasures: text("security_measures").array(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Data subject requests
 export const dataSubjectRequests = pgTable("data_subject_requests", {
   id: serial("id").primaryKey(),
@@ -502,6 +536,11 @@ export const insertLlmConfigurationSchema = createInsertSchema(llmConfigurations
   updatedAt: true,
 });
 
+export const insertSubprocessorRecordSchema = createInsertSchema(subprocessorRecords).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -540,6 +579,8 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type LlmConfiguration = typeof llmConfigurations.$inferSelect;
 export type InsertLlmConfiguration = z.infer<typeof insertLlmConfigurationSchema>;
+export type SubprocessorRecord = typeof subprocessorRecords.$inferSelect;
+export type InsertSubprocessorRecord = z.infer<typeof insertSubprocessorRecordSchema>;
 
 // Gamification tables
 export const learningModules = pgTable("learning_modules", {

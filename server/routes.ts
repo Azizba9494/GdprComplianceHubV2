@@ -8,11 +8,12 @@ import userRoutes from "./routes/userRoutes";
 import { 
   insertUserSchema, insertCompanySchema, insertDiagnosticQuestionSchema,
   insertDiagnosticResponseSchema, insertComplianceActionSchema,
-  insertProcessingRecordSchema, insertDataSubjectRequestSchema,
+  insertProcessingRecordSchema, insertSubprocessorRecordSchema,
+  insertDataSubjectRequestSchema,
   insertPrivacyPolicySchema, insertDataBreachSchema,
   insertDpiaAssessmentSchema, insertAiPromptSchema, insertLlmConfigurationSchema,
   insertRagDocumentSchema, insertPromptDocumentSchema, promptDocuments,
-  processingRecords, dpiaEvaluations
+  processingRecords, subprocessorRecords, dpiaEvaluations
 } from "@shared/schema";
 import { eq, and, or, gte, like } from "drizzle-orm";
 import multer from "multer";
@@ -1227,6 +1228,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const evaluation = await storage.updateDpiaEvaluation(id, req.body);
       res.json(evaluation);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Subprocessor records endpoints
+  app.get("/api/subprocessor-records/:companyId", requireCompanyAccess, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const records = await storage.getSubprocessorRecords(companyId);
+      res.json(records);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/subprocessor-records", requireAuth, async (req, res) => {
+    try {
+      const recordData = insertSubprocessorRecordSchema.parse(req.body);
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, recordData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const record = await storage.createSubprocessorRecord(recordData);
+      res.json(record);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/subprocessor-records/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const recordData = req.body;
+      
+      // Verify user has access to this record's company
+      const existingRecord = await storage.getSubprocessorRecord(id);
+      if (!existingRecord) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, existingRecord.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const record = await storage.updateSubprocessorRecord(id, recordData);
+      res.json(record);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/subprocessor-records/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Verify user has access to this record's company
+      const existingRecord = await storage.getSubprocessorRecord(id);
+      if (!existingRecord) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, existingRecord.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      await storage.deleteSubprocessorRecord(id);
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

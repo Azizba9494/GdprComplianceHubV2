@@ -11,6 +11,7 @@ import Dashboard from "@/pages/dashboard";
 import Diagnostic from "@/pages/diagnostic";
 import ActionPlan from "@/pages/action-plan";
 import Records from "@/pages/records";
+import SubprocessorRegistry from "@/pages/subprocessor-registry";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import BreachAnalysisEnhanced from "@/pages/BreachAnalysisEnhanced";
 import RightsManagement from "@/pages/rights-management";
@@ -70,6 +71,7 @@ function AuthenticatedApp() {
             <Route path="/diagnostic" component={Diagnostic} />
             <Route path="/actions" component={ActionPlan} />
             <Route path="/records" component={Records} />
+            <Route path="/subprocessor-registry" component={SubprocessorRegistry} />
             <Route path="/privacy-policy" component={PrivacyPolicy} />
             <Route path="/breach-analysis" component={BreachAnalysisEnhanced} />
             <Route path="/rights" component={RightsManagement} />

@@ -11,6 +11,7 @@ const navigation = [
   { name: "Diagnostic initial", href: "/diagnostic", icon: ClipboardList },
   { name: "Plan d'actions", href: "/actions", icon: BarChart3 },
   { name: "Registre des traitements", href: "/records", icon: Book },
+  { name: "Registre du sous-traitant", href: "/subprocessor-registry", icon: FileText },
   { name: "Politique de confidentialité", href: "/privacy-policy", icon: FileText },
   { name: "Analyse de violations", href: "/breach-analysis", icon: AlertTriangle },
   { name: "Demandes des personnes", href: "/rights", icon: ShieldX },
