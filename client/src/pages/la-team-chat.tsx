@@ -8,10 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Send, Bot, User, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface BotMessage {
   id: number;
@@ -129,26 +128,6 @@ export default function LaTeamChat() {
     },
   });
 
-  // Delete conversation mutation
-  const deleteConversationMutation = useMutation({
-    mutationFn: () => apiRequest("DELETE", `/api/bots/conversations/${conversationId}`),
-    onSuccess: () => {
-      toast({
-        title: "Conversation supprimée",
-        description: "La conversation a été supprimée avec succès",
-      });
-      setLocation("/la-team");
-    },
-    onError: (error: any) => {
-      console.error('Delete conversation error:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la conversation",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Initialize conversation with welcome message if no messages exist
   const initializeConversationMutation = useMutation({
     mutationFn: async () => {
@@ -218,27 +197,7 @@ export default function LaTeamChat() {
               </div>
             </div>
 
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer la conversation</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action est irréversible.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteConversationMutation.mutate()}>
-                    Supprimer
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+
           </div>
         </CardHeader>
       </Card>
