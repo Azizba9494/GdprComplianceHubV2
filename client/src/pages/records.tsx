@@ -584,9 +584,14 @@ Informations complémentaires: ${data.additionalInfo}
     });
   };
 
-  // Enhanced AI justification with detailed legal references
+  // Enhanced AI justification with detailed legal references  
   const [justificationCache, setJustificationCache] = useState<{[key: string]: string}>({});
   const [loadingJustifications, setLoadingJustifications] = useState<{[key: string]: boolean}>({});
+
+  // Clear cache to force regeneration with new parameters
+  const clearJustificationCache = () => {
+    setJustificationCache({});
+  };
 
   const generateDetailedJustification = async (field: string, record: ProcessingRecord): Promise<string> => {
     const cacheKey = `${record.id}_${field}`;

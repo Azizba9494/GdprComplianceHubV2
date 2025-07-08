@@ -2030,16 +2030,14 @@ Répondez de manière complète et utile à cette question en respectant tous le
       
       switch (field) {
         case 'purpose':
-          basePrompt = `En tant qu'expert juridique RGPD, expliquez pourquoi la finalité "${record.purpose}" est conforme au RGPD pour le traitement "${record.name}" dans le secteur ${record.sector}.
+          basePrompt = `Justifiez la finalité "${record.purpose}" pour le traitement "${record.name}" (secteur : ${record.sector}).
 
-Votre justification doit inclure :
-1. Références précises aux articles du RGPD (notamment art. 5.1.b sur les finalités déterminées, explicites et légitimes)
-2. Conformité aux lignes directrices du CEPD
-3. Jurisprudence pertinente si applicable (CJUE, Conseil d'État)
-4. Standards sectoriels pour le secteur ${record.sector}
-5. Respect du principe de transparence (art. 12 RGPD)
+Répondez en 2-3 phrases maximum avec :
+- Conformité à l'art. 5.1.b du RGPD (finalités déterminées, explicites, légitimes)
+- Standards sectoriels applicables
+- Références juridiques précises
 
-Rédigez une justification détaillée en 3-4 phrases avec des références légales précises.`;
+Soyez factuel et concis, sans formule d'introduction.`;
           break;
 
         case 'legalBasis':
@@ -2054,44 +2052,39 @@ Rédigez une justification détaillée en 3-4 phrases avec des références lég
           
           const basisLabel = basisTranslations[record.legalBasis] || record.legalBasis;
           
-          basePrompt = `En tant qu'expert juridique RGPD, justifiez pourquoi la base légale "${basisLabel}" est appropriée pour le traitement "${record.name}" ayant pour finalité "${record.purpose}".
+          basePrompt = `Justifiez la base légale "${basisLabel}" pour le traitement "${record.name}" (finalité : ${record.purpose}).
 
-Votre justification doit inclure :
-1. Référence précise à l'article 6.1 du RGPD
-2. Critères d'application selon les lignes directrices du CEPD
-3. Test de nécessité et de proportionnalité
-4. Jurisprudence pertinente (arrêts CJUE)
-5. Conformité aux recommandations de la CNIL
+Répondez en 2-3 phrases maximum avec :
+- Critères d'application de l'art. 6.1 du RGPD
+- Test de nécessité selon les lignes directrices CEPD
+- Références CNIL ou jurisprudence si pertinente
 
-Secteur d'activité : ${record.sector}
-Données traitées : ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : record.dataCategories || 'Non spécifiées'}
+Secteur : ${record.sector}
+Données : ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : record.dataCategories || 'Non spécifiées'}
 
-Rédigez une justification juridique détaillée en 4-5 phrases.`;
+Soyez précis et factuel, sans formule d'introduction.`;
           break;
 
         case 'retention':
-          basePrompt = `En tant qu'expert juridique RGPD, justifiez la durée de conservation "${record.retention}" pour le traitement "${record.name}" dans le secteur ${record.sector}.
+          basePrompt = `Justifiez la durée "${record.retention}" pour le traitement "${record.name}" (secteur : ${record.sector}).
 
-Votre justification doit analyser :
-1. Conformité à l'art. 5.1.e du RGPD (limitation de la conservation)
-2. Principe de minimisation des données (art. 5.1.c)
-3. Obligations légales sectorielles (Code de commerce, Code du travail, etc.)
-4. Références aux délibérations et référentiels CNIL
-5. Jurisprudence en matière de proportionnalité (CJUE, Conseil d'État)
+Répondez en 2-3 phrases maximum avec :
+- Conformité art. 5.1.e RGPD (limitation conservation)
+- Obligations légales sectorielles applicables
+- Références CNIL/jurisprudence
 
 Finalité : ${record.purpose}
 Base légale : ${record.legalBasis}
-Secteur : ${record.sector}
 
-Fournissez une justification précise avec références juridiques en 4-5 phrases.`;
+Soyez factuel et concis, sans formule d'introduction.`;
           break;
 
         default:
-          basePrompt = `En tant qu'expert juridique RGPD, fournissez une justification détaillée pour le champ "${field}" du traitement "${record.name}". Incluez des références aux articles du RGPD, aux lignes directrices du CEPD et à la jurisprudence pertinente.`;
+          basePrompt = `Justifiez le champ "${field}" pour le traitement "${record.name}". Répondez en 2-3 phrases avec références RGPD/CEPD/CNIL pertinentes. Soyez factuel et concis.`;
       }
 
       try {
-        const aiResponse = await generateAIContent(basePrompt);
+        const aiResponse = await generateAIContent(basePrompt, { temperature: 0.1 });
         
         console.log('[JUSTIFICATION AI] Response generated successfully');
         
@@ -2393,10 +2386,10 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   return httpServer;
 }
 
-async function generateAIContent(prompt: string): Promise<string> {
+async function generateAIContent(prompt: string, options: { temperature?: number } = {}): Promise<string> {
   try {
     // Use your AI service to generate content based on the prompt
-    const aiResponse = await geminiService.generateResponse(prompt);
+    const aiResponse = await geminiService.generateResponse(prompt, undefined, undefined, options);
     return aiResponse.response;
   } catch (error) {
     console.error('AI content generation failed:', error);

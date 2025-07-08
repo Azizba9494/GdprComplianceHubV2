@@ -171,7 +171,7 @@ Répondez en JSON structuré:
     return { risks: [] };
   }
 
-  async generateResponse(prompt: string, context?: any, ragDocuments?: string[]): Promise<{ response: string }> {
+  async generateResponse(prompt: string, context?: any, ragDocuments?: string[], options?: { temperature?: number }): Promise<{ response: string }> {
     const client = await this.getClient();
     
     try {
@@ -179,7 +179,7 @@ Répondez en JSON structuré:
         model: 'gemini-2.5-flash',
         generationConfig: {
           maxOutputTokens: 24576,
-          temperature: 0.7,
+          temperature: options?.temperature !== undefined ? options.temperature : 0.7,
         }
       });
       
