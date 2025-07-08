@@ -440,7 +440,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPrivacyPolicy(policy: InsertPrivacyPolicy): Promise<PrivacyPolicy> {
-    const [created] = await db.insert(privacyPolicies).values(policy).returning();
+    // Get the highest version number for this company
+    const existingPolicies = await db.select({ version: privacyPolicies.version })
+      .from(privacyPolicies)
+      .where(eq(privacyPolicies.companyId, policy.companyId))
+      .orderBy(desc(privacyPolicies.version))
+      .limit(1);
+
+    // Calculate next version number
+    const nextVersion = existingPolicies.length > 0 ? existingPolicies[0].version + 1 : 1;
+
+    // Deactivate all existing policies for the company if this new policy should be active
+    if (policy.isActive) {
+      await db.update(privacyPolicies)
+        .set({ isActive: false })
+        .where(eq(privacyPolicies.companyId, policy.companyId));
+    }
+
+    // Create new policy with calculated version
+    const [created] = await db.insert(privacyPolicies)
+      .values({ ...policy, version: nextVersion })
+      .returning();
     return created;
   }
 

@@ -504,6 +504,7 @@ export const insertDataSubjectRequestSchema = createInsertSchema(dataSubjectRequ
 export const insertPrivacyPolicySchema = createInsertSchema(privacyPolicies).omit({
   id: true,
   createdAt: true,
+  version: true, // Version is auto-calculated
 });
 
 export const insertDataBreachSchema = createInsertSchema(dataBreaches).omit({

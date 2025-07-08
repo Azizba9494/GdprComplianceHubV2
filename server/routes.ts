@@ -683,7 +683,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const policy = await storage.createPrivacyPolicy({
           companyId,
           content: policyData.content,
-          version: 1,
           isActive: true,
         });
 
