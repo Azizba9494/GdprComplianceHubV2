@@ -2018,6 +2018,101 @@ Répondez de manière complète et utile à cette question en respectant tous le
     }
   });
 
+  // AI justification generation for processing records
+  app.post('/api/ai/generate-detailed-justification', requireAuth, async (req, res) => {
+    try {
+      const { field, record } = req.body;
+      
+      console.log('[JUSTIFICATION AI] Request:', { field, recordName: record.name });
+
+      // Build context-specific prompt for legal justification
+      let basePrompt = '';
+      
+      switch (field) {
+        case 'purpose':
+          basePrompt = `En tant qu'expert juridique RGPD, expliquez pourquoi la finalité "${record.purpose}" est conforme au RGPD pour le traitement "${record.name}" dans le secteur ${record.sector}.
+
+Votre justification doit inclure :
+1. Références précises aux articles du RGPD (notamment art. 5.1.b sur les finalités déterminées, explicites et légitimes)
+2. Conformité aux lignes directrices du CEPD
+3. Jurisprudence pertinente si applicable (CJUE, Conseil d'État)
+4. Standards sectoriels pour le secteur ${record.sector}
+5. Respect du principe de transparence (art. 12 RGPD)
+
+Rédigez une justification détaillée en 3-4 phrases avec des références légales précises.`;
+          break;
+
+        case 'legalBasis':
+          const basisTranslations = {
+            'consent': 'consentement (art. 6.1.a)',
+            'contract': 'exécution du contrat (art. 6.1.b)', 
+            'legal_obligation': 'obligation légale (art. 6.1.c)',
+            'vital_interests': 'sauvegarde des intérêts vitaux (art. 6.1.d)',
+            'public_task': 'mission d\'intérêt public (art. 6.1.e)',
+            'legitimate_interests': 'intérêts légitimes (art. 6.1.f)'
+          };
+          
+          const basisLabel = basisTranslations[record.legalBasis] || record.legalBasis;
+          
+          basePrompt = `En tant qu'expert juridique RGPD, justifiez pourquoi la base légale "${basisLabel}" est appropriée pour le traitement "${record.name}" ayant pour finalité "${record.purpose}".
+
+Votre justification doit inclure :
+1. Référence précise à l'article 6.1 du RGPD
+2. Critères d'application selon les lignes directrices du CEPD
+3. Test de nécessité et de proportionnalité
+4. Jurisprudence pertinente (arrêts CJUE)
+5. Conformité aux recommandations de la CNIL
+
+Secteur d'activité : ${record.sector}
+Données traitées : ${Array.isArray(record.dataCategories) ? record.dataCategories.join(', ') : record.dataCategories || 'Non spécifiées'}
+
+Rédigez une justification juridique détaillée en 4-5 phrases.`;
+          break;
+
+        case 'retention':
+          basePrompt = `En tant qu'expert juridique RGPD, justifiez la durée de conservation "${record.retention}" pour le traitement "${record.name}" dans le secteur ${record.sector}.
+
+Votre justification doit analyser :
+1. Conformité à l'art. 5.1.e du RGPD (limitation de la conservation)
+2. Principe de minimisation des données (art. 5.1.c)
+3. Obligations légales sectorielles (Code de commerce, Code du travail, etc.)
+4. Références aux délibérations et référentiels CNIL
+5. Jurisprudence en matière de proportionnalité (CJUE, Conseil d'État)
+
+Finalité : ${record.purpose}
+Base légale : ${record.legalBasis}
+Secteur : ${record.sector}
+
+Fournissez une justification précise avec références juridiques en 4-5 phrases.`;
+          break;
+
+        default:
+          basePrompt = `En tant qu'expert juridique RGPD, fournissez une justification détaillée pour le champ "${field}" du traitement "${record.name}". Incluez des références aux articles du RGPD, aux lignes directrices du CEPD et à la jurisprudence pertinente.`;
+      }
+
+      try {
+        const aiResponse = await generateAIContent(basePrompt);
+        
+        console.log('[JUSTIFICATION AI] Response generated successfully');
+        
+        res.json({ 
+          justification: aiResponse,
+          field,
+          recordName: record.name
+        });
+      } catch (aiError: any) {
+        console.error('AI justification generation failed:', aiError);
+        res.status(500).json({ 
+          error: 'Erreur lors de la génération de la justification',
+          fallback: 'Cette recommandation s\'appuie sur l\'analyse des obligations du RGPD et les lignes directrices du CEPD.'
+        });
+      }
+    } catch (error: any) {
+      console.error('Justification generation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // AI content generation for risk assessment
   app.post('/api/ai/generate-risk-content', async (req, res) => {
     try {

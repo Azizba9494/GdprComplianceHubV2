@@ -495,12 +495,30 @@ Informations complémentaires: ${data.additionalInfo}
     return typeMatch && searchMatch;
   }) || [];
 
-  const toggleJustification = (recordId: number, field: string) => {
+  const toggleJustification = async (recordId: number, field: string) => {
     const key = `${recordId}_${field}`;
+    const isCurrentlyShown = showJustification[key];
+    
+    // If hiding, just toggle off
+    if (isCurrentlyShown) {
+      setShowJustification(prev => ({
+        ...prev,
+        [key]: false
+      }));
+      return;
+    }
+
+    // If showing for the first time, generate the justification
     setShowJustification(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: true
     }));
+
+    // Find the record
+    const record = records?.find(r => r.id === recordId);
+    if (record && !justificationCache[key]) {
+      await generateDetailedJustification(field, record);
+    }
   };
 
   const handleFieldChange = (recordId: number, field: string, value: any) => {
@@ -564,6 +582,57 @@ Informations complémentaires: ${data.additionalInfo}
       id: recordId,
       data: { [field]: value }
     });
+  };
+
+  // Enhanced AI justification with detailed legal references
+  const [justificationCache, setJustificationCache] = useState<{[key: string]: string}>({});
+  const [loadingJustifications, setLoadingJustifications] = useState<{[key: string]: boolean}>({});
+
+  const generateDetailedJustification = async (field: string, record: ProcessingRecord): Promise<string> => {
+    const cacheKey = `${record.id}_${field}`;
+    
+    // Return cached justification if available
+    if (justificationCache[cacheKey]) {
+      return justificationCache[cacheKey];
+    }
+
+    // Show loading state
+    setLoadingJustifications(prev => ({ ...prev, [cacheKey]: true }));
+
+    try {
+      const response = await fetch('/api/ai/generate-detailed-justification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          field,
+          record: {
+            name: record.name,
+            purpose: record.purpose,
+            legalBasis: record.legalBasis,
+            retention: record.retention,
+            dataCategories: record.dataCategories,
+            sector: company?.sector || 'Non spécifié'
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération de la justification');
+      }
+
+      const data = await response.json();
+      const justification = data.justification;
+
+      // Cache the result
+      setJustificationCache(prev => ({ ...prev, [cacheKey]: justification }));
+      
+      return justification;
+    } catch (error) {
+      console.error('Error generating justification:', error);
+      return 'Cette recommandation s\'appuie sur l\'analyse des obligations du RGPD et les lignes directrices du CEPD.';
+    } finally {
+      setLoadingJustifications(prev => ({ ...prev, [cacheKey]: false }));
+    }
   };
 
   // Composant pour éditer les listes (catégories, destinataires, mesures)
@@ -1666,7 +1735,17 @@ Informations complémentaires: ${data.additionalInfo}
                     )}
                     {showJustification[`${record.id}_purpose`] && (
                       <div className="mt-2 p-3 bg-muted rounded-md text-xs">
-                        <strong>Justification IA :</strong> Cette finalité a été déterminée en analysant l'activité décrite et les obligations légales applicables.
+                        <strong>Justification IA :</strong> {
+                          loadingJustifications[`${record.id}_purpose`] ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Génération de l'analyse juridique...
+                            </span>
+                          ) : (
+                            justificationCache[`${record.id}_purpose`] || 
+                            'Cette finalité a été déterminée en analysant l\'activité décrite et les obligations légales applicables.'
+                          )
+                        }
                       </div>
                     )}
                   </div>
@@ -1703,7 +1782,17 @@ Informations complémentaires: ${data.additionalInfo}
                     )}
                     {showJustification[`${record.id}_legalBasis`] && (
                       <div className="mt-2 p-3 bg-muted rounded-md text-xs">
-                        <strong>Justification IA :</strong> Cette base légale a été sélectionnée selon la finalité du traitement et le contexte d'utilisation des données.
+                        <strong>Justification IA :</strong> {
+                          loadingJustifications[`${record.id}_legalBasis`] ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Analyse de la base légale...
+                            </span>
+                          ) : (
+                            justificationCache[`${record.id}_legalBasis`] || 
+                            'Cette base légale a été sélectionnée selon la finalité du traitement et le contexte d\'utilisation des données.'
+                          )
+                        }
                       </div>
                     )}
                   </div>
@@ -1751,7 +1840,17 @@ Informations complémentaires: ${data.additionalInfo}
                     )}
                     {showJustification[`${record.id}_retention`] && (
                       <div className="mt-2 p-3 bg-muted rounded-md text-xs">
-                        <strong>Justification IA :</strong> Cette durée respecte les obligations légales sectorielles et le principe de minimisation des données.
+                        <strong>Justification IA :</strong> {
+                          loadingJustifications[`${record.id}_retention`] ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Analyse de la durée de conservation...
+                            </span>
+                          ) : (
+                            justificationCache[`${record.id}_retention`] || 
+                            'Cette durée respecte les obligations légales sectorielles et le principe de minimisation des données.'
+                          )
+                        }
                       </div>
                     )}
                   </div>
