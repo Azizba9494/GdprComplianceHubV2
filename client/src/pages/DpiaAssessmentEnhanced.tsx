@@ -816,10 +816,7 @@ export default function DpiaAssessmentEnhanced() {
     const current = form.getValues("internationalTransfersMeasures") || [];
     form.setValue("internationalTransfersMeasures", [...current, {
       dataType: "",
-      france: false,
-      eu: false,
-      adequateCountry: false,
-      otherCountry: false,
+      country: "",
       justification: ""
     }]);
   };
@@ -1854,68 +1851,22 @@ export default function DpiaAssessmentEnhanced() {
                             )}
                           />
                           
-                          <div className="grid grid-cols-4 gap-4">
-                            <FormField
-                              control={form.control}
-                              name={`internationalTransfersMeasures.${index}.france`}
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                  <FormLabel>France</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`internationalTransfersMeasures.${index}.eu`}
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                  <FormLabel>UE</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`internationalTransfersMeasures.${index}.adequateCountry`}
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                  <FormLabel>Pays reconnu adéquat par l'UE</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`internationalTransfersMeasures.${index}.otherCountry`}
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                  <FormLabel>Autre pays</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
+                          <FormField
+                            control={form.control}
+                            name={`internationalTransfersMeasures.${index}.country`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Pays de destination</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Ex: États-Unis, Royaume-Uni, Suisse, Canada, etc." 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
                           <FormField
                             control={form.control}

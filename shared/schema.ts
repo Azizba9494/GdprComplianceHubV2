@@ -269,10 +269,7 @@ export const dpiaAssessments = pgTable("dpia_assessments", {
   }>>(), // 2.2.6 - New
   internationalTransfersMeasures: jsonb("international_transfers_measures").$type<Array<{
     dataType: string,
-    france: boolean,
-    eu: boolean,
-    adequateCountry: boolean,
-    otherCountry: boolean,
+    country: string,
     justification: string
   }>>(), // 2.2.7 - New
   rightsProtectionEvaluation: jsonb("rights_protection_evaluation").$type<{
