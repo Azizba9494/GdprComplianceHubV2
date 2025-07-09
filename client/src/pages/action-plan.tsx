@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CollaborativeActionModal } from "@/components/CollaborativeActionModal";
-import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, Filter, Search, AlertTriangle, FileText, Shield, Users, MessageSquare, UserCheck, Activity } from "lucide-react";
+import { KanbanBoard } from "@/components/KanbanBoard";
+import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, Filter, Search, AlertTriangle, FileText, Shield, Users, MessageSquare, UserCheck, Activity, LayoutGrid, List } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -84,6 +85,7 @@ export default function ActionPlan() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -332,210 +334,236 @@ export default function ActionPlan() {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 border rounded-lg p-1">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="h-8 px-3"
+              >
+                <List className="h-4 w-4 mr-2" />
+                Liste
+              </Button>
+              <Button
+                variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('kanban')}
+                className="h-8 px-3"
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Kanban
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabbed Actions */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            <Circle className="w-4 h-4" />
-            Toutes ({actions.length})
-          </TabsTrigger>
-          <TabsTrigger value="todo" className="flex items-center gap-2">
-            <Circle className="w-4 h-4" />
-            À faire ({todoActions.length})
-          </TabsTrigger>
-          <TabsTrigger value="inprogress" className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            En cours ({inProgressActions.length})
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            Terminées ({completedActions.length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Actions Display */}
+      {viewMode === 'kanban' ? (
+        <KanbanBoard companyId={userCompany?.id} />
+      ) : (
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all" className="flex items-center gap-2">
+              <Circle className="w-4 h-4" />
+              Toutes ({actions.length})
+            </TabsTrigger>
+            <TabsTrigger value="todo" className="flex items-center gap-2">
+              <Circle className="w-4 h-4" />
+              À faire ({todoActions.length})
+            </TabsTrigger>
+            <TabsTrigger value="inprogress" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              En cours ({inProgressActions.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Terminées ({completedActions.length})
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value={activeTab} className="mt-6">
-          {filteredActions.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <Circle className="w-16 h-16 text-muted-foreground mx-auto" />
-                  <h3 className="text-lg font-medium">Aucune action trouvée</h3>
-                  <p className="text-muted-foreground">
-                    {searchTerm || selectedCategory !== 'all' 
-                      ? "Aucune action ne correspond aux filtres sélectionnés."
-                      : "Aucune action disponible pour cette catégorie."
-                    }
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {Object.entries(actionsByCategory).map(([categoryKey, categoryActions]: [string, any]) => {
-                const category = actionCategories[categoryKey as keyof typeof actionCategories];
-                const IconComponent = category.icon;
-                
-                return (
-                  <Card key={categoryKey}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <IconComponent className="w-5 h-5" />
-                        {category.name} ({categoryActions.length})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {categoryActions.map((action: any) => (
-                          <div
-                            key={action.id}
-                            className={cn(
-                              "p-4 rounded-lg border",
-                              action.priority === 'urgent' ? 'priority-urgent' : 'priority-important'
-                            )}
-                          >
-                            <div className="space-y-3">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="min-w-0 flex-1">
-                                  <h3 className="font-medium text-foreground whitespace-pre-wrap break-words">
-                                    {action.title.replace(/^Action pour:\s*/, '')}
-                                  </h3>
-                                </div>
-                                <Badge 
-                                  variant="secondary"
-                                  className={`${priorityColors[action.priority as keyof typeof priorityColors]} flex-shrink-0`}
-                                >
-                                  {priorityLabels[action.priority as keyof typeof priorityLabels]}
-                                </Badge>
-                              </div>
-                                
-                              <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
-                                {action.description}
-                              </p>
-                              
-                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center space-x-1">
-                                  <span className="font-medium">Catégorie:</span>
-                                  <span>{action.category}</span>
-                                </div>
-                                
-                                {action.dueDate && (
-                                  <div className="flex items-center space-x-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span className="font-medium">Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
+          <TabsContent value={activeTab} className="mt-6">
+            {filteredActions.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <Circle className="w-16 h-16 text-muted-foreground mx-auto" />
+                    <h3 className="text-lg font-medium">Aucune action trouvée</h3>
+                    <p className="text-muted-foreground">
+                      {searchTerm || selectedCategory !== 'all' 
+                        ? "Aucune action ne correspond aux filtres sélectionnés."
+                        : "Aucune action disponible pour cette catégorie."
+                      }
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(actionsByCategory).map(([categoryKey, categoryActions]: [string, any]) => {
+                  const category = actionCategories[categoryKey as keyof typeof actionCategories];
+                  const IconComponent = category.icon;
+                  
+                  return (
+                    <Card key={categoryKey}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <IconComponent className="w-5 h-5" />
+                          {category.name} ({categoryActions.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {categoryActions.map((action: any) => (
+                            <div
+                              key={action.id}
+                              className={cn(
+                                "p-4 rounded-lg border",
+                                action.priority === 'urgent' ? 'priority-urgent' : 'priority-important'
+                              )}
+                            >
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="min-w-0 flex-1">
+                                    <h3 className="font-medium text-foreground whitespace-pre-wrap break-words">
+                                      {action.title.replace(/^Action pour:\s*/, '')}
+                                    </h3>
                                   </div>
-                                )}
-                                {!action.dueDate && (
-                                  <div className="flex items-center space-x-1 text-orange-600">
-                                    <Clock className="w-4 h-4" />
-                                    <span className="font-medium">Aucune échéance définie</span>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Collaborative indicators */}
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  {/* Assigned users */}
-                                  <div className="flex items-center gap-1">
-                                    {getActionAssignments(action.id).slice(0, 3).map((assignment, index) => (
-                                      <Avatar key={index} className="h-6 w-6 border-2 border-white dark:border-gray-800">
-                                        <AvatarFallback className="text-xs">
-                                          {getUserInitials(assignment.userId)}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                    ))}
-                                    {getActionAssignments(action.id).length > 3 && (
-                                      <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium">
-                                        +{getActionAssignments(action.id).length - 3}
-                                      </div>
-                                    )}
-                                    {getActionAssignments(action.id).length > 0 && (
-                                      <UserCheck className="h-4 w-4 text-green-600 ml-1" />
-                                    )}
-                                  </div>
-
-                                  {/* Comments indicator */}
-                                  <div className="flex items-center gap-1">
-                                    <MessageSquare className="h-4 w-4 text-blue-600" />
-                                    <span className="text-sm text-muted-foreground">
-                                      {getActionCommentsCount(action.id)}
-                                    </span>
-                                  </div>
-
-                                  {/* Activity indicator */}
-                                  <div className="flex items-center gap-1">
-                                    <Activity className="h-4 w-4 text-purple-600" />
-                                    <span className="text-xs text-muted-foreground">
-                                      récent
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => openDateDialog(action)}
-                                    className="flex items-center space-x-1"
+                                  <Badge 
+                                    variant="secondary"
+                                    className={`${priorityColors[action.priority as keyof typeof priorityColors]} flex-shrink-0`}
                                   >
-                                    <CalendarDays className="w-4 h-4" />
-                                    <span>Échéance</span>
-                                  </Button>
+                                    {priorityLabels[action.priority as keyof typeof priorityLabels]}
+                                  </Badge>
+                                </div>
                                   
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => openCollaborativeModal(action)}
-                                    className="flex items-center space-x-1"
-                                  >
-                                    <Users className="w-4 h-4" />
-                                    <span>Collaborer</span>
-                                  </Button>
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-wrap items-center justify-end gap-3">
-                                <Select
-                                  value={action.status}
-                                  onValueChange={(value) => handleStatusChange(action.id, value)}
-                                  disabled={updateActionMutation.isPending}
-                                >
-                                  <SelectTrigger className="w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="todo">À faire</SelectItem>
-                                    <SelectItem value="inprogress">En cours</SelectItem>
-                                    <SelectItem value="completed">Terminé</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                                  {action.description}
+                                </p>
                                 
-                                {action.status === 'completed' && (
-                                  <CheckCircle className="w-5 h-5 text-green-500" />
-                                )}
-                                {action.status === 'inprogress' && (
-                                  <Clock className="w-5 h-5 text-orange-500" />
-                                )}
-                                {action.status === 'todo' && (
-                                  <Circle className="w-5 h-5 text-muted-foreground" />
-                                )}
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                                  <div className="flex items-center space-x-1">
+                                    <span className="font-medium">Catégorie:</span>
+                                    <span>{action.category}</span>
+                                  </div>
+                                  
+                                  {action.dueDate && (
+                                    <div className="flex items-center space-x-1">
+                                      <Calendar className="w-4 h-4" />
+                                      <span className="font-medium">Échéance: {new Date(action.dueDate).toLocaleDateString('fr-FR')}</span>
+                                    </div>
+                                  )}
+                                  {!action.dueDate && (
+                                    <div className="flex items-center space-x-1 text-orange-600">
+                                      <Clock className="w-4 h-4" />
+                                      <span className="font-medium">Aucune échéance définie</span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Collaborative indicators */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    {/* Assigned users */}
+                                    <div className="flex items-center gap-1">
+                                      {getActionAssignments(action.id).slice(0, 3).map((assignment, index) => (
+                                        <Avatar key={index} className="h-6 w-6 border-2 border-white dark:border-gray-800">
+                                          <AvatarFallback className="text-xs">
+                                            {getUserInitials(assignment.userId)}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                      ))}
+                                      {getActionAssignments(action.id).length > 3 && (
+                                        <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium">
+                                          +{getActionAssignments(action.id).length - 3}
+                                        </div>
+                                      )}
+                                      {getActionAssignments(action.id).length > 0 && (
+                                        <UserCheck className="h-4 w-4 text-green-600 ml-1" />
+                                      )}
+                                    </div>
+
+                                    {/* Comments indicator */}
+                                    <div className="flex items-center gap-1">
+                                      <MessageSquare className="h-4 w-4 text-blue-600" />
+                                      <span className="text-sm text-muted-foreground">
+                                        {getActionCommentsCount(action.id)}
+                                      </span>
+                                    </div>
+
+                                    {/* Activity indicator */}
+                                    <div className="flex items-center gap-1">
+                                      <Activity className="h-4 w-4 text-purple-600" />
+                                      <span className="text-xs text-muted-foreground">
+                                        récent
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openDateDialog(action)}
+                                      className="flex items-center space-x-1"
+                                    >
+                                      <CalendarDays className="w-4 h-4" />
+                                      <span>Échéance</span>
+                                    </Button>
+                                    
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openCollaborativeModal(action)}
+                                      className="flex items-center space-x-1"
+                                    >
+                                      <Users className="w-4 h-4" />
+                                      <span>Collaborer</span>
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex flex-wrap items-center justify-end gap-3">
+                                  <Select
+                                    value={action.status}
+                                    onValueChange={(value) => handleStatusChange(action.id, value)}
+                                    disabled={updateActionMutation.isPending}
+                                  >
+                                    <SelectTrigger className="w-32">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="todo">À faire</SelectItem>
+                                      <SelectItem value="inprogress">En cours</SelectItem>
+                                      <SelectItem value="completed">Terminé</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  {action.status === 'completed' && (
+                                    <CheckCircle className="w-5 h-5 text-green-500" />
+                                  )}
+                                  {action.status === 'inprogress' && (
+                                    <Clock className="w-5 h-5 text-orange-500" />
+                                  )}
+                                  {action.status === 'todo' && (
+                                    <Circle className="w-5 h-5 text-muted-foreground" />
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      )}
 
       {/* Date Picker Dialog */}
       <Dialog open={isDateDialogOpen} onOpenChange={setIsDateDialogOpen}>
