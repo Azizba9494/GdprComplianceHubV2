@@ -105,7 +105,7 @@ const MODULE_PERMISSIONS = [
     id: 'team', 
     label: 'LA Team Jean Michel', 
     description: 'Assistants IA spécialisés',
-    levels: ['read', 'chat'] 
+    levels: ['read', 'write'] 
   },
   { 
     id: 'learning', 

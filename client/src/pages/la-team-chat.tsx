@@ -72,13 +72,13 @@ export default function LaTeamChat() {
   const conversationId = parseInt(id || "0");
 
   // Check permissions after all hooks
-  const hasTeamChatAccess = hasPermission('team', 'chat');
+  const hasTeamWriteAccess = hasPermission('team', 'write');
   
-  if (!hasTeamChatAccess) {
+  if (!hasTeamWriteAccess) {
     return (
       <AccessDenied 
         module="LA Team Jean Michel" 
-        requiredPermission="team.chat"
+        requiredPermission="team.write"
         description="Vous n'avez pas accès au chat LA Team Jean Michel car vos droits ne le permettent pas."
       />
     );

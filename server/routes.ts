@@ -2711,7 +2711,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(404).json({ error: "Conversation not found" });
       }
       
-      // Check user has team.chat permission for this company
+      // Check user has team.write permission for this company
       const userAccess = await storage.getUserCompanyAccess(userId);
       const access = userAccess.find(a => a.companyId === conversation.companyId);
       
@@ -2719,7 +2719,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(403).json({ error: "Access denied to this company" });
       }
       
-      if (access.role !== 'owner' && !access.permissions?.includes('team.chat')) {
+      if (access.role !== 'owner' && !access.permissions?.includes('team.write')) {
         return res.status(403).json({ error: "Droits insuffisants pour discuter avec la formation équipe" });
       }
       
