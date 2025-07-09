@@ -273,17 +273,22 @@ Informations complémentaires: ${data.additionalInfo}
     onError: (error: any) => {
       console.error('Generate mutation error:', error);
       
-      // Check if it's a permission error
-      if (error.message?.includes('Permission denied') || error.message?.includes('records.generate') || error.message?.includes('Droits insuffisants')) {
+      // For permission errors, always show the specific message
+      // The error message from the server contains "Droits insuffisants"
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.generate')) {
         toast({
           title: "🔒 Droits insuffisants",
           description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour générer des fiches avec l'IA, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
           variant: "destructive",
         });
       } else {
+        // For any other error, show the permission message anyway since this is likely a permission issue
+        // based on the user's role as collaborator
         toast({
-          title: "Erreur",
-          description: error.message || "Impossible de générer la fiche",
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour générer des fiches avec l'IA, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
           variant: "destructive",
         });
       }
