@@ -1357,9 +1357,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/dpia/:id", requireModulePermission('dpia', 'write'), async (req, res) => {
+  app.delete("/api/dpia/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+      
+      // Get the DPIA assessment to verify company access
+      const assessment = await storage.getDpiaAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ error: "AIPD non trouvée" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, assessment.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+      
       await storage.deleteDpiaAssessment(id);
       res.json({ success: true });
     } catch (error: any) {
