@@ -55,6 +55,7 @@ export interface IStorage {
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, updates: Partial<InsertCompany>): Promise<Company>;
   verifyUserCompanyAccess(userId: number, companyId: number): Promise<boolean>;
+  getUserCompanyAccessForCompany(userId: number, companyId: number): Promise<UserCompanyAccess | null>;
   createUserCompanyAccess(access: InsertUserCompanyAccess): Promise<UserCompanyAccess>;
 
   // Diagnostic Questions
@@ -1180,6 +1181,41 @@ export class DatabaseStorage implements IStorage {
     .from(userCompanyAccess)
     .leftJoin(companies, eq(userCompanyAccess.companyId, companies.id))
     .where(eq(userCompanyAccess.userId, userId));
+  }
+
+  async getUserCompanyAccessForCompany(userId: number, companyId: number): Promise<UserCompanyAccess | null> {
+    // First check if user has direct access via userCompanyAccess table
+    const [access] = await db.select()
+      .from(userCompanyAccess)
+      .where(and(eq(userCompanyAccess.userId, userId), eq(userCompanyAccess.companyId, companyId)))
+      .limit(1);
+    
+    if (access) {
+      return access;
+    }
+
+    // Check if user owns the company directly
+    const [company] = await db.select()
+      .from(companies)
+      .where(and(eq(companies.id, companyId), eq(companies.userId, userId)))
+      .limit(1);
+    
+    if (company) {
+      // Return a virtual access object for the owner
+      return {
+        id: 0, // Virtual ID
+        userId,
+        companyId,
+        role: 'owner',
+        permissions: ['all'],
+        invitedBy: null,
+        invitedAt: null,
+        status: 'active',
+        createdAt: new Date()
+      } as UserCompanyAccess;
+    }
+
+    return null;
   }
 
   async createUserCompanyAccess(access: InsertUserCompanyAccess): Promise<UserCompanyAccess> {

@@ -2888,13 +2888,13 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
       }
 
       // Verify current user is owner/admin of this company
-      const userAccess = await storage.getUserCompanyAccess(currentUserId, companyId);
-      if (!userAccess || userAccess.role !== 'owner') {
-        return res.status(403).json({ error: "Seuls les propriétaires peuvent ajouter des collaborateurs" });
+      const userAccess = await storage.getUserCompanyAccessForCompany(currentUserId, companyId);
+      if (!userAccess || !['owner', 'admin'].includes(userAccess.role || '')) {
+        return res.status(403).json({ error: "Seuls les propriétaires et administrateurs peuvent ajouter des collaborateurs" });
       }
 
       // Check if user is already a collaborator for this company
-      const existingAccess = await storage.getUserCompanyAccess(userId, companyId);
+      const existingAccess = await storage.getUserCompanyAccessForCompany(userId, companyId);
       if (existingAccess) {
         return res.status(400).json({ error: "Cet utilisateur est déjà collaborateur de cette entreprise" });
       }
