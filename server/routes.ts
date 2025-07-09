@@ -125,6 +125,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
+  // Granular permission middleware - checks specific module permissions
+  const requireModulePermission = (module: string, permission: string) => {
+    return async (req: any, res: any, next: any) => {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      const companyId = req.params.companyId || req.body.companyId || req.query.companyId;
+      if (!companyId) {
+        return res.status(400).json({ error: "Company ID required" });
+      }
+
+      try {
+        // Get user's company access
+        const userAccess = await storage.getUserCompanyAccess(req.session.userId);
+        const access = userAccess.find(a => a.companyId === parseInt(companyId));
+        
+        if (!access) {
+          return res.status(403).json({ error: "Access denied to this company" });
+        }
+
+        // Owners have all permissions (but we'll still log for testing)
+        if (access.role === 'owner') {
+          console.log(`[PERMISSIONS] Owner ${req.session.userId} bypassing permission check for ${module}.${permission}`);
+          return next();
+        }
+
+        // Check specific permission
+        const requiredPermission = `${module}.${permission}`;
+        console.log(`[PERMISSIONS] User ${req.session.userId} (role: ${access.role}) checking ${requiredPermission}. Has permissions:`, access.permissions);
+        
+        if (!access.permissions?.includes(requiredPermission)) {
+          console.log(`[PERMISSIONS] DENIED - User ${req.session.userId} missing permission: ${requiredPermission}`);
+          return res.status(403).json({ 
+            error: `Permission denied. Required: ${requiredPermission}`,
+            userPermissions: access.permissions,
+            requiredPermission 
+          });
+        }
+
+        console.log(`[PERMISSIONS] GRANTED - User ${req.session.userId} has permission: ${requiredPermission}`);
+        next();
+      } catch (error: any) {
+        console.error('Permission check error:', error);
+        res.status(500).json({ error: "Permission check failed" });
+      }
+    };
+  };
+
   // Enhanced Authentication routes with security
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -766,7 +815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records/generate", requireAuth, async (req, res) => {
+  app.post("/api/records/generate", requireAuth, requireModulePermission('records', 'generate'), async (req, res) => {
     try {
       const { companyId, processingType, description } = req.body;
 
@@ -807,7 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records", requireAuth, async (req, res) => {
+  app.post("/api/records", requireAuth, requireModulePermission('records', 'write'), async (req, res) => {
     try {
       const recordData = insertProcessingRecordSchema.parse(req.body);
 
@@ -835,7 +884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/records/:id", requireAuth, async (req, res) => {
+  app.put("/api/records/:id", requireAuth, requireModulePermission('records', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -846,7 +895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/records/:id", requireAuth, async (req, res) => {
+  app.delete("/api/records/:id", requireAuth, requireModulePermission('records', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteProcessingRecord(id);
