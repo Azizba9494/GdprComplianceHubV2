@@ -2140,11 +2140,20 @@ Répondez de manière complète et utile à cette question en respectant tous le
   app.get("/api/dashboard/:companyId", requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      console.log(`\n=== DASHBOARD REQUEST ===`);
+      console.log(`User ID: ${req.session?.userId}`);
+      console.log(`Company ID from URL: ${companyId}`);
+      console.log(`========================\n`);
 
       const actions = await storage.getComplianceActions(companyId);
       const requests = await storage.getDataSubjectRequests(companyId);
       const diagnosticResponses = await storage.getDiagnosticResponses(companyId);
       const questions = await storage.getDiagnosticQuestions();
+      
+      console.log(`Dashboard data for company ${companyId}:`);
+      console.log(`- Actions: ${actions.length} items`);
+      console.log(`- Requests: ${requests.length} items`);
+      console.log(`- Diagnostic Responses: ${diagnosticResponses.length} items`);
 
       // Calculate category-based compliance scores
       const categoryScores: Record<string, { score: number; total: number; answered: number }> = {};

@@ -21,14 +21,27 @@ export default function Dashboard() {
 
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard', companyId],
-    queryFn: () => dashboardApi.getStats(companyId).then(res => res.json()),
+    queryFn: () => {
+      console.log('Dashboard - Fetching stats for company:', companyId);
+      return dashboardApi.getStats(companyId).then(res => {
+        console.log('Dashboard - API response for company', companyId, ':', res);
+        return res.json();
+      });
+    },
     enabled: !!companyId,
   });
 
   // Fetch additional data for heat map
   const { data: actions } = useQuery({
     queryKey: ['/api/actions', companyId],
-    queryFn: () => actionsApi.get(companyId).then((res: any) => res.json()),
+    queryFn: () => {
+      console.log('Dashboard - Fetching actions for company:', companyId);
+      return actionsApi.get(companyId).then((res: any) => {
+        const data = res.json();
+        console.log('Dashboard - Actions received for company', companyId, ':', data);
+        return data;
+      });
+    },
     enabled: !!companyId,
   });
 
