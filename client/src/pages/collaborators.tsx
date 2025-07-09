@@ -246,7 +246,17 @@ export default function Collaborators() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate collaborators list
       queryClient.invalidateQueries({ queryKey: [`/api/companies/${companyId}/collaborators`] });
+      
+      // Invalidate user companies cache to refresh permissions immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/users', user?.id, 'companies'] });
+      
+      // Force refresh of current user's permissions if they are editing their own
+      if (editingCollaborator?.userId === user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      }
+      
       setEditingCollaborator(null);
       setEditPermissions([]);
       toast({ title: "Permissions mises à jour avec succès" });
