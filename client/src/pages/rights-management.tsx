@@ -212,7 +212,10 @@ export default function RightsManagement() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button 
+              disabled={!hasPermission('requests', 'write')}
+              title={!hasPermission('requests', 'write') ? "Droits insuffisants pour créer de nouvelles demandes" : ""}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle demande
             </Button>
