@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -63,19 +62,29 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
   // Update action status mutation
   const updateActionMutation = useMutation({
     mutationFn: async ({ actionId, status }: { actionId: number; status: string }) => {
-      return apiRequest(`/api/actions/${actionId}`, {
+      const response = await fetch(`/api/actions/${actionId}`, {
         method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ 
           status,
           completedAt: status === 'completed' ? new Date().toISOString() : null
         }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update action');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/actions', companyId] });
       toast({ title: "Action mise à jour avec succès" });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Update error:', error);
       toast({ title: "Erreur lors de la mise à jour", variant: "destructive" });
     },
   });
