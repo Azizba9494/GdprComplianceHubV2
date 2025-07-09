@@ -76,7 +76,10 @@ export default function PrivacyPolicy() {
       const response = await fetch(`/api/privacy-policies/${policyId}`, {
         method: "DELETE",
       });
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Erreur lors de la suppression");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/privacy-policies'] });
@@ -86,6 +89,7 @@ export default function PrivacyPolicy() {
       });
     },
     onError: (error: any) => {
+      console.log('Delete policy error:', error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible de supprimer la politique",
@@ -338,35 +342,54 @@ export default function PrivacyPolicy() {
                       <Download className="w-4 h-4 mr-2" />
                       Télécharger
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Supprimer
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Supprimer la politique</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Êtes-vous sûr de vouloir supprimer cette politique de confidentialité ? Cette action est irréversible.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteMutation.mutate(policy.id)}
-                            className="bg-red-600 hover:bg-red-700"
+                    {hasPermission('policies', 'write') || hasPermission('policies', 'delete') ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
+                            <Trash2 className="w-4 h-4 mr-2" />
                             Supprimer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer la politique</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Êtes-vous sûr de vouloir supprimer cette politique de confidentialité ? Cette action est irréversible.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteMutation.mutate(policy.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled
+                        className="text-muted-foreground"
+                        onClick={() => {
+                          toast({
+                            title: "Accès refusé",
+                            description: "Vous n'avez pas les droits pour supprimer des politiques de confidentialité.",
+                            variant: "destructive",
+                          });
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

@@ -1021,9 +1021,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/privacy-policies/:id", async (req, res) => {
+  app.delete("/api/privacy-policies/:id", requireAuth, async (req, res) => {
     try {
       const policyId = parseInt(req.params.id);
+      const userId = req.session?.userId;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Non authentifié" });
+      }
+
+      // Get policy to check which company it belongs to
+      const policy = await storage.getPrivacyPolicy(policyId);
+      if (!policy) {
+        return res.status(404).json({ error: "Politique non trouvée" });
+      }
+
+      // Check user has policies.write permission for this company
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === policy.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      }
+      
+      if (access.role !== 'owner' && !access.permissions?.includes('policies.write') && !access.permissions?.includes('policies.delete')) {
+        return res.status(403).json({ error: "Droits insuffisants pour supprimer des politiques de confidentialité" });
+      }
+
       await storage.deletePrivacyPolicy(policyId);
       res.json({ success: true });
     } catch (error: any) {
