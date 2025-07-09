@@ -52,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (authData?.authenticated && authData.user) {
       setUser(authData.user);
+      // Reset currentCompany to null so it will be properly initialized from localStorage
+      setCurrentCompany(null);
     } else {
       setUser(null);
       setCurrentCompany(null);
@@ -68,21 +70,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (userCompanies && userCompanies.length > 0 && !currentCompany) {
       const savedCompanyId = localStorage.getItem('currentCompanyId');
+      console.log('Auth - Available companies:', userCompanies);
+      console.log('Auth - Saved company ID from localStorage:', savedCompanyId);
       
       if (savedCompanyId) {
         // Validate user has access to saved company
         const savedCompany = userCompanies.find((c: any) => c.id === parseInt(savedCompanyId));
         if (savedCompany) {
+          console.log('Auth - Found saved company, setting as current:', savedCompany);
           setCurrentCompany(savedCompany);
         } else {
-          // Fallback to first available company if saved company not accessible
-          setCurrentCompany(userCompanies[0]);
-          localStorage.setItem('currentCompanyId', userCompanies[0].id.toString());
+          // Fallback to owned company if saved company not accessible
+          const ownedCompany = userCompanies.find((c: any) => c.role === 'owner');
+          const fallbackCompany = ownedCompany || userCompanies[0];
+          console.log('Auth - Saved company not accessible, using fallback:', fallbackCompany);
+          setCurrentCompany(fallbackCompany);
+          localStorage.setItem('currentCompanyId', fallbackCompany.id.toString());
         }
       } else {
-        // Set first company as default
-        setCurrentCompany(userCompanies[0]);
-        localStorage.setItem('currentCompanyId', userCompanies[0].id.toString());
+        // Set first company as default - but this should prefer the user's own company
+        const ownedCompany = userCompanies.find((c: any) => c.role === 'owner');
+        const defaultCompany = ownedCompany || userCompanies[0];
+        console.log('Auth - No saved company, using default:', defaultCompany);
+        setCurrentCompany(defaultCompany);
+        localStorage.setItem('currentCompanyId', defaultCompany.id.toString());
       }
     }
   }, [userCompanies, currentCompany]);
@@ -241,15 +252,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setCurrentCompany(selectedCompany);
           localStorage.setItem('currentCompanyId', companyId.toString());
           
-          // Refetch all queries after state update
-          setTimeout(() => {
-            queryClient.invalidateQueries();
-          }, 50);
-          
-          toast({
-            title: "Entreprise changée",
-            description: `Vous consultez maintenant ${selectedCompany.name}`,
-          });
+          // Force a complete page reload to ensure clean state
+          window.location.reload();
         }
       }
     } catch (error) {
