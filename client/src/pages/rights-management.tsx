@@ -62,13 +62,10 @@ export default function RightsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
 
-  // Get user's company
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/user/${user?.id}`],
-    enabled: !!user?.id,
-  }) as { data: any };
+  // Use current company from auth context instead of fetching
+  const company = currentCompany;
 
   const form = useForm({
     defaultValues: {

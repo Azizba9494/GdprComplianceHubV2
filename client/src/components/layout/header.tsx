@@ -64,6 +64,10 @@ export default function Header() {
 
   // Use current company from context - this is the key fix for multi-company switching
   const companyId = currentCompany?.id;
+  
+  // Debug logging
+  console.log('Header - Current company:', currentCompany);
+  console.log('Header - Company ID being used for queries:', companyId);
 
   // Get recent activity for notifications - only when current company is set
   const { data: recentRequests = [] } = useQuery({

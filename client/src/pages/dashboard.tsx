@@ -14,15 +14,10 @@ import RecentActivity from "@/components/dashboard/recent-activity";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
 
-  // Get user's company
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/user/${user?.id}`],
-    enabled: !!user?.id,
-  });
-
-  const companyId = company?.id;
+  // Use current company from auth context instead of fetching
+  const companyId = currentCompany?.id;
 
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['/api/dashboard', companyId],

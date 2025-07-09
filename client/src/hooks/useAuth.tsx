@@ -236,21 +236,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (selectedCompany) {
           console.log('Switching to company:', selectedCompany);
           
-          // First clear all cached data
+          // Clear all cached data and update state
           queryClient.clear();
-          
-          // Update state
           setCurrentCompany(selectedCompany);
           localStorage.setItem('currentCompanyId', companyId.toString());
           
-          // Force a page reload to ensure clean state
+          // Refetch all queries after state update
           setTimeout(() => {
-            window.location.reload();
-          }, 500);
+            queryClient.invalidateQueries();
+          }, 50);
           
           toast({
             title: "Entreprise changée",
-            description: `Changement vers ${selectedCompany.name}...`,
+            description: `Vous consultez maintenant ${selectedCompany.name}`,
           });
         }
       }
