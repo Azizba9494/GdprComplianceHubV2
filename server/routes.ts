@@ -617,7 +617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Compliance actions routes
-  app.get("/api/actions/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/actions/:companyId", requireModulePermission('actions', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const actions = await storage.getComplianceActions(companyId);
@@ -627,7 +627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/actions/:id", async (req, res) => {
+  app.put("/api/actions/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -885,7 +885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Processing records routes
-  app.get("/api/records/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/records/:companyId", requireModulePermission('records', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const records = await storage.getProcessingRecords(companyId);
@@ -1086,7 +1086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data breach routes
-  app.get("/api/breaches/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/breaches/:companyId", requireModulePermission('breaches', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const breaches = await storage.getDataBreaches(companyId);
@@ -1096,7 +1096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches", requireAuth, async (req, res) => {
+  app.post("/api/breaches", requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       console.log('Raw breach data received:', JSON.stringify(req.body, null, 2));
 
@@ -1119,7 +1119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/breaches/:id", requireAuth, async (req, res) => {
+  app.put("/api/breaches/:id", requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1130,7 +1130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/breaches/:id", requireAuth, async (req, res) => {
+  app.delete("/api/breaches/:id", requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -1154,7 +1154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/analyze", requireAuth, async (req, res) => {
+  app.post("/api/breaches/analyze", requireModulePermission('breaches', 'analyze'), async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
 
@@ -1183,7 +1183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/ai-analysis", requireAuth, async (req, res) => {
+  app.post("/api/breaches/ai-analysis", requireModulePermission('breaches', 'analyze'), async (req, res) => {
     try {
       // Debug session and headers information
       console.log('Session debug:', {
@@ -1564,7 +1564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DPIA Evaluation endpoints
-  app.get("/api/dpia-evaluations/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/dpia-evaluations/:companyId", requireModulePermission('dpia', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const evaluations = await storage.getDpiaEvaluations(companyId);
