@@ -58,24 +58,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [authData]);
 
-  // Get user's primary company
-  const { data: primaryCompany } = useQuery({
-    queryKey: [`/api/companies/user/${user?.id}`],
+  // Get user's accessible companies
+  const { data: userCompanies } = useQuery({
+    queryKey: [`/api/users/${user?.id}/companies`],
     enabled: !!user?.id,
   });
 
-  // Set current company when user or primary company changes
+  // Set current company when user or companies change
   useEffect(() => {
-    if (primaryCompany && !currentCompany) {
+    if (userCompanies && userCompanies.length > 0 && !currentCompany) {
       const savedCompanyId = localStorage.getItem('currentCompanyId');
+      
       if (savedCompanyId) {
-        // TODO: Validate user has access to this company
-        setCurrentCompany({ id: parseInt(savedCompanyId) });
+        // Validate user has access to saved company
+        const savedCompany = userCompanies.find((c: any) => c.id === parseInt(savedCompanyId));
+        if (savedCompany) {
+          setCurrentCompany(savedCompany);
+        } else {
+          // Fallback to first available company if saved company not accessible
+          setCurrentCompany(userCompanies[0]);
+          localStorage.setItem('currentCompanyId', userCompanies[0].id.toString());
+        }
       } else {
-        setCurrentCompany(primaryCompany);
+        // Set first company as default
+        setCurrentCompany(userCompanies[0]);
+        localStorage.setItem('currentCompanyId', userCompanies[0].id.toString());
       }
     }
-  }, [primaryCompany, currentCompany]);
+  }, [userCompanies, currentCompany]);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { identifier: string; password: string }) => {
@@ -204,13 +214,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await findUserByEmailMutation.mutateAsync(email);
   };
 
-  const switchCompany = (companyId: number) => {
-    // TODO: Validate user has access to this company
-    setCurrentCompany({ id: companyId });
-    localStorage.setItem('currentCompanyId', companyId.toString());
-    
-    // Invalidate all queries to refetch data for new company
-    queryClient.invalidateQueries();
+  const switchCompany = async (companyId: number) => {
+    try {
+      // Get user's companies to validate access
+      const response = await fetch(`/api/users/${user?.id}/companies`);
+      if (response.ok) {
+        const companies = await response.json();
+        const hasAccess = companies.some((c: any) => c.id === companyId);
+        
+        if (!hasAccess) {
+          toast({
+            title: "Accès refusé",
+            description: "Vous n'avez pas accès à cette entreprise",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Find the company details
+        const selectedCompany = companies.find((c: any) => c.id === companyId);
+        if (selectedCompany) {
+          setCurrentCompany(selectedCompany);
+          localStorage.setItem('currentCompanyId', companyId.toString());
+          
+          // Invalidate all queries to refetch data for new company
+          queryClient.invalidateQueries();
+          
+          toast({
+            title: "Entreprise changée",
+            description: `Vous consultez maintenant ${selectedCompany.name}`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error switching company:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de changer d'entreprise",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
