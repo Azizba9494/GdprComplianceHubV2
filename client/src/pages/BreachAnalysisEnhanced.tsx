@@ -669,8 +669,13 @@ Généré le: ${new Date().toLocaleString()}
                         <CardTitle className="text-lg">
                           Violation #{breach.id}
                         </CardTitle>
-                        <CardDescription>
-                          {new Date(breach.incidentDate).toLocaleDateString()} - {breach.description.substring(0, 100)}...
+                        <CardDescription className="text-sm text-gray-600 leading-relaxed">
+                          <div className="mb-1">
+                            <strong>Date de l'incident:</strong> {new Date(breach.incidentDate).toLocaleDateString()}
+                          </div>
+                          <div className="whitespace-pre-wrap">
+                            {breach.description}
+                          </div>
                         </CardDescription>
                       </div>
                       <div className="flex items-center space-x-2">
