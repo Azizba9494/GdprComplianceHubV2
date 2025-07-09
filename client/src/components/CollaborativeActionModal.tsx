@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { 
@@ -85,10 +84,13 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Add comment mutation
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
-      return apiRequest(`/api/actions/${action.id}/comments`, {
+      const response = await fetch(`/api/actions/${action.id}/comments`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
       });
+      if (!response.ok) throw new Error('Failed to add comment');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/actions/${action.id}/comments`] });
@@ -104,10 +106,13 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Edit comment mutation
   const editCommentMutation = useMutation({
     mutationFn: async ({ commentId, content }: { commentId: number; content: string }) => {
-      return apiRequest(`/api/actions/${action.id}/comments/${commentId}`, {
+      const response = await fetch(`/api/actions/${action.id}/comments/${commentId}`, {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
       });
+      if (!response.ok) throw new Error('Failed to edit comment');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/actions/${action.id}/comments`] });
@@ -124,9 +129,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Delete comment mutation
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: number) => {
-      return apiRequest(`/api/actions/${action.id}/comments/${commentId}`, {
+      const response = await fetch(`/api/actions/${action.id}/comments/${commentId}`, {
         method: 'DELETE',
       });
+      if (!response.ok) throw new Error('Failed to delete comment');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/actions/${action.id}/comments`] });
@@ -141,13 +148,16 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Add assignment mutation
   const addAssignmentMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/actions/${action.id}/assignments`, {
+      const response = await fetch(`/api/actions/${action.id}/assignments`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userId: parseInt(newAssigneeId), 
           role: newAssigneeRole 
         }),
       });
+      if (!response.ok) throw new Error('Failed to add assignment');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/actions/${action.id}/assignments`] });
@@ -164,9 +174,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Remove assignment mutation
   const removeAssignmentMutation = useMutation({
     mutationFn: async (assignmentId: number) => {
-      return apiRequest(`/api/actions/${action.id}/assignments/${assignmentId}`, {
+      const response = await fetch(`/api/actions/${action.id}/assignments/${assignmentId}`, {
         method: 'DELETE',
       });
+      if (!response.ok) throw new Error('Failed to remove assignment');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/actions/${action.id}/assignments`] });
@@ -181,21 +193,31 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Update action status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
-      return apiRequest(`/api/actions/${action.id}`, {
+      const response = await fetch(`/api/actions/${action.id}`, {
         method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ 
           status: newStatus,
           previousStatus: action.status,
           completedAt: newStatus === 'completed' ? new Date().toISOString() : null
         }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update action status');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/actions`] });
       queryClient.invalidateQueries({ queryKey: [`/api/actions/${action.id}/activity`] });
       toast({ title: "Statut mis à jour avec succès" });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Status update error:', error);
       toast({ title: "Erreur lors de la mise à jour", variant: "destructive" });
     },
   });
@@ -326,6 +348,9 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
               </Select>
             </div>
           </DialogTitle>
+          <DialogDescription>
+            Gérez les détails, discussions, assignations et activités de cette action collaborative.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="details" className="flex-1 overflow-hidden">
