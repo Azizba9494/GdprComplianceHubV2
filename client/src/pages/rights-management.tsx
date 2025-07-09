@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 
 interface DataSubjectRequest {
   id: number;
@@ -63,6 +65,18 @@ export default function RightsManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
+
+  // Check permissions first
+  if (!hasPermission('requests', 'read')) {
+    return (
+      <AccessDenied 
+        module="Demandes des personnes" 
+        requiredPermission="requests.read"
+        description="Vous n'avez pas accès au module des demandes des personnes car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   // Use current company from auth context instead of fetching
   const company = currentCompany;
