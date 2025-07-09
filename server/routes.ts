@@ -524,8 +524,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/diagnostic/responses", requireModulePermission('diagnostic', 'write'), async (req, res) => {
     try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+
       // Get user's company ID from authenticated session
-      const userCompany = await storage.getCompanyByUserId(req.user!.id);
+      const userCompany = await storage.getCompanyByUserId(userId);
       if (!userCompany) {
         return res.status(404).json({ error: "Aucune entreprise associée à cet utilisateur" });
       }
@@ -536,7 +541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyId: userCompany.id
       });
       
-      console.log(`[DIAGNOSTIC] Creating response for user ${req.user!.id}, company ${userCompany.id}`);
+      console.log(`[DIAGNOSTIC] Creating response for user ${userId}, company ${userCompany.id}`);
       const response = await storage.createDiagnosticResponse(responseData);
       res.json(response);
     } catch (error: any) {
@@ -547,8 +552,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/diagnostic/analyze", requireModulePermission('diagnostic', 'write'), async (req, res) => {
     try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+
       // Get user's company ID from authenticated session
-      const userCompany = await storage.getCompanyByUserId(req.user!.id);
+      const userCompany = await storage.getCompanyByUserId(userId);
       if (!userCompany) {
         return res.status(404).json({ error: "Aucune entreprise associée à cet utilisateur" });
       }
@@ -1141,7 +1151,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, existingBreach.companyId);
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, existingBreach.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
