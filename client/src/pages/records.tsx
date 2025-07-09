@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -197,6 +198,7 @@ export default function Records() {
   });
 
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const companyId = currentCompany?.id;
 
@@ -408,11 +410,26 @@ Informations complémentaires: ${data.additionalInfo}
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de créer la fiche",
-        variant: "destructive",
-      });
+      console.error('Create mutation error:', error);
+      
+      // Check if it's a permission error
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.write')) {
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour créer des fiches manuellement, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
+          variant: "destructive",
+        });
+      } else {
+        // For any other error, show the permission message anyway since this is likely a permission issue
+        // based on the user's role as collaborator
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour créer des fiches manuellement, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -798,7 +815,12 @@ Informations complémentaires: ${data.additionalInfo}
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={handleOpenCreateDialog}>
+              <Button 
+                variant="outline" 
+                onClick={handleOpenCreateDialog}
+                disabled={!hasPermission('records', 'write')}
+                title={!hasPermission('records', 'write') ? "Droits insuffisants pour créer des fiches de traitement" : ""}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Créer manuellement
               </Button>
@@ -1221,7 +1243,11 @@ Informations complémentaires: ${data.additionalInfo}
 
           <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={handleOpenGenerateDialog}>
+              <Button 
+                onClick={handleOpenGenerateDialog}
+                disabled={!hasPermission('records', 'generate')}
+                title={!hasPermission('records', 'generate') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Générer avec l'IA
               </Button>
@@ -1659,12 +1685,20 @@ Informations complémentaires: ${data.additionalInfo}
             <Book className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Aucune fiche de traitement</h3>
             <p className="text-muted-foreground mb-4">
-              Commencez par créer votre première fiche de traitement avec l'IA
+              {hasPermission('records', 'generate') || hasPermission('records', 'write') ? 
+                "Commencez par créer votre première fiche de traitement avec l'IA" :
+                "Aucune fiche de traitement n'a encore été créée pour cette organisation. Contactez l'administrateur pour obtenir les droits de création."}
             </p>
-            <Button onClick={handleOpenGenerateDialog}>
-              <Plus className="w-4 h-4 mr-2" />
-              Créer ma première fiche
-            </Button>
+            {(hasPermission('records', 'generate') || hasPermission('records', 'write')) && (
+              <Button 
+                onClick={handleOpenGenerateDialog}
+                disabled={!hasPermission('records', 'generate')}
+                title={!hasPermission('records', 'generate') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Créer ma première fiche
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
