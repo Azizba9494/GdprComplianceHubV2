@@ -2660,7 +2660,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.get("/api/bots/conversations/:id/messages", requireModulePermission('team', 'read'), async (req, res) => {
+  app.get("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const userId = req.session?.userId;
@@ -2669,7 +2669,24 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(401).json({ error: "User not authenticated properly" });
       }
       
-      // Access verification already done by requireModulePermission middleware
+      // Get conversation to get companyId for permission check
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+      
+      // Check user has team.read permission for this company
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === conversation.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+      
+      if (access.role !== 'owner' && !access.permissions?.includes('team.read')) {
+        return res.status(403).json({ error: "Droits insuffisants pour consulter la formation équipe" });
+      }
+      
       const messages = await storage.getBotMessages(conversationId);
       res.json(messages);
     } catch (error: any) {
@@ -2678,7 +2695,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/conversations/:id/messages", requireModulePermission('team', 'chat'), async (req, res) => {
+  app.post("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const { content, isBot } = req.body;
@@ -2688,7 +2705,24 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(401).json({ error: "User not authenticated properly" });
       }
       
-      // Access verification already done by requireModulePermission middleware
+      // Get conversation to get companyId for permission check
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+      
+      // Check user has team.chat permission for this company
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === conversation.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+      
+      if (access.role !== 'owner' && !access.permissions?.includes('team.chat')) {
+        return res.status(403).json({ error: "Droits insuffisants pour discuter avec la formation équipe" });
+      }
+      
       const message = await storage.createBotMessage({
         conversationId,
         content,
