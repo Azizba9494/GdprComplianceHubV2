@@ -196,13 +196,15 @@ export default function DpiaAssessment() {
   // AI assistance mutation
   const aiAssistMutation = useMutation({
     mutationFn: async ({ questionField }: { questionField: string }) => {
+      const formValues = form.getValues();
       const response = await fetch("/api/dpia/ai-assist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           questionField,
           companyId: company?.id,
-          existingDpiaData: form.getValues(),
+          existingDpiaData: formValues,
+          processingRecordId: formValues.processingRecordId, // Add the processing record ID
         }),
       });
       return response.json();

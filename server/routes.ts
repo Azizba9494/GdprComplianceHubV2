@@ -1306,13 +1306,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dpia/assessment/:id", requireModulePermission('dpia', 'read'), async (req, res) => {
+  app.get("/api/dpia/assessment/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const assessment = await storage.getDpiaAssessment(id);
       if (!assessment) {
         return res.status(404).json({ error: "AIPD non trouvée" });
       }
+
+      // Verify user has access to the company that owns this assessment
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, assessment.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
       res.json(assessment);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
