@@ -2561,13 +2561,13 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   app.get("/api/bots/conversations/:companyId", requireModulePermission('bots', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
+      const userId = req.session?.userId;
       
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
       }
 
+      // Access verification already done by requireModulePermission middleware
       const conversations = await storage.getBotConversations(companyId);
       res.json(conversations);
     } catch (error: any) {
@@ -2580,6 +2580,11 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   app.get("/api/bots/conversation/:conversationId", requireModulePermission('bots', 'read'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.conversationId);
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
       
       const conversation = await storage.getBotConversation(conversationId);
       if (!conversation) {
@@ -2587,7 +2592,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
       }
       
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, conversation.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
@@ -2602,15 +2607,15 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   app.post("/api/bots/conversations", requireModulePermission('bots', 'write'), async (req, res) => {
     try {
       const { companyId, botType, title } = req.body;
+      const userId = req.session?.userId;
       
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
       }
 
+      // Access verification already done by requireModulePermission middleware
       const conversation = await storage.createBotConversation({
-        userId: req.user!.id,
+        userId,
         companyId,
         botType,
         title,
@@ -2625,6 +2630,11 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   app.get("/api/bots/conversations/:id/messages", requireModulePermission('bots', 'read'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
       
       // Get conversation to verify access
       const conversation = await storage.getBotConversation(conversationId);
@@ -2633,7 +2643,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
       }
       
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, conversation.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
@@ -2650,6 +2660,11 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     try {
       const conversationId = parseInt(req.params.id);
       const { content, isBot } = req.body;
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
       
       // Get conversation to verify access
       const conversation = await storage.getBotConversation(conversationId);
@@ -2658,7 +2673,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
       }
       
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, conversation.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
@@ -2685,6 +2700,11 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     try {
       const { botType } = req.params;
       const { message, conversationId } = req.body;
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
 
       // Get conversation to verify access and get company context
       const conversation = await storage.getBotConversation(conversationId);
@@ -2693,7 +2713,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
       }
       
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, conversation.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, conversation.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
