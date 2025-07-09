@@ -11,6 +11,7 @@ import { Bell, Play, User, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import CompanySwitcher from "@/components/CompanySwitcher";
 
 const pageLabels: Record<string, { title: string; subtitle: string }> = {
   "/": {
@@ -56,7 +57,7 @@ const pageLabels: Record<string, { title: string; subtitle: string }> = {
 };
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user, logout, currentCompany } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
@@ -68,25 +69,28 @@ export default function Header() {
     enabled: !!user,
   });
 
+  // Use current company from context if available, otherwise fallback to user's primary company
+  const companyId = currentCompany?.id || userCompany?.id;
+
   // Get recent activity for notifications
   const { data: recentRequests = [] } = useQuery({
-    queryKey: ['/api/requests', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/requests/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/requests', companyId],
+    queryFn: () => companyId ? fetch(`/api/requests/${companyId}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!companyId,
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: recentActions = [] } = useQuery({
-    queryKey: ['/api/actions', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/actions/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/actions', companyId],
+    queryFn: () => companyId ? fetch(`/api/actions/${companyId}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!companyId,
     refetchInterval: 30000,
   });
 
   const { data: recentBreaches = [] } = useQuery({
-    queryKey: ['/api/breaches', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/breaches/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/breaches', companyId],
+    queryFn: () => companyId ? fetch(`/api/breaches/${companyId}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!companyId,
     refetchInterval: 30000,
   });
 
@@ -195,6 +199,10 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
+          <div className="mr-2">
+            <CompanySwitcher />
+          </div>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">

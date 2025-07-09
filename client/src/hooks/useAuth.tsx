@@ -14,18 +14,21 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  currentCompany: any | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: { identifier: string; password: string }) => Promise<void>;
   register: (userData: { username: string; email: string; password: string; firstName?: string; lastName?: string }) => Promise<void>;
   logout: () => Promise<void>;
   findUserByEmail: (email: string) => Promise<{ found: boolean; user?: User }>;
+  switchCompany: (companyId: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [currentCompany, setCurrentCompany] = useState<any | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -51,8 +54,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(authData.user);
     } else {
       setUser(null);
+      setCurrentCompany(null);
     }
   }, [authData]);
+
+  // Get user's primary company
+  const { data: primaryCompany } = useQuery({
+    queryKey: [`/api/companies/user/${user?.id}`],
+    enabled: !!user?.id,
+  });
+
+  // Set current company when user or primary company changes
+  useEffect(() => {
+    if (primaryCompany && !currentCompany) {
+      const savedCompanyId = localStorage.getItem('currentCompanyId');
+      if (savedCompanyId) {
+        // TODO: Validate user has access to this company
+        setCurrentCompany({ id: parseInt(savedCompanyId) });
+      } else {
+        setCurrentCompany(primaryCompany);
+      }
+    }
+  }, [primaryCompany, currentCompany]);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { identifier: string; password: string }) => {
@@ -181,16 +204,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await findUserByEmailMutation.mutateAsync(email);
   };
 
+  const switchCompany = (companyId: number) => {
+    // TODO: Validate user has access to this company
+    setCurrentCompany({ id: companyId });
+    localStorage.setItem('currentCompanyId', companyId.toString());
+    
+    // Invalidate all queries to refetch data for new company
+    queryClient.invalidateQueries();
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        currentCompany,
         isAuthenticated: !!user,
         isLoading,
         login,
         register,
         logout,
         findUserByEmail,
+        switchCompany,
       }}
     >
       {children}

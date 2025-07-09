@@ -439,6 +439,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all companies accessible to a user
+  app.get("/api/users/:userId/companies", requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const sessionUserId = req.session?.userId;
+      
+      // Users can only access their own company list
+      if (sessionUserId !== userId) {
+        return res.status(403).json({ error: "Accès refusé" });
+      }
+
+      // Get companies where user is owner
+      const ownedCompany = await storage.getCompanyByUserId(userId);
+      
+      // Get companies where user is collaborator
+      const collaboratorAccess = await storage.getUserCompanyAccess(userId);
+      
+      const companies = [];
+      
+      // Add owned company
+      if (ownedCompany) {
+        companies.push({
+          id: ownedCompany.id,
+          name: ownedCompany.name,
+          sector: ownedCompany.sector,
+          role: 'owner',
+          permissions: ['all']
+        });
+      }
+      
+      // Add collaborator companies
+      for (const access of collaboratorAccess) {
+        if (access.company) {
+          companies.push({
+            id: access.company.id,
+            name: access.company.name,
+            sector: access.company.sector,
+            role: access.role,
+            permissions: access.permissions
+          });
+        }
+      }
+      
+      res.json(companies);
+    } catch (error: any) {
+      console.error('Get user companies error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/companies", async (req, res) => {
     try {
       const companyData = insertCompanySchema.parse(req.body);
