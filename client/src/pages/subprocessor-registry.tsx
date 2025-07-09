@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -58,11 +60,23 @@ type SubprocessorFormData = z.infer<typeof subprocessorFormSchema>;
 
 export default function SubprocessorRegistry() {
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [customSecurityMeasure, setCustomSecurityMeasure] = useState("");
+
+  // Check permissions first
+  if (!hasPermission('subprocessors', 'read')) {
+    return (
+      <AccessDenied 
+        module="Registre du sous-traitant" 
+        requiredPermission="subprocessors.read"
+        description="Vous n'avez pas accès au module registre du sous-traitant car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   const companyId = currentCompany?.id;
 

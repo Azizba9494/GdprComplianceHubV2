@@ -10,6 +10,8 @@ import { ExpandableText } from "@/components/ui/expandable-text";
 import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 
 interface PrivacyPolicy {
   id: number;
@@ -24,6 +26,18 @@ export default function PrivacyPolicy() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
+
+  // Check permissions first
+  if (!hasPermission('policies', 'read')) {
+    return (
+      <AccessDenied 
+        module="Politique de confidentialité" 
+        requiredPermission="policies.read"
+        description="Vous n'avez pas accès au module de politique de confidentialité car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   // Fetch company data for the current user
   const { data: company, isLoading: companyLoading } = useQuery({
