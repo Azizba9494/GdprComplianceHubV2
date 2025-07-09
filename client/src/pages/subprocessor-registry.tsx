@@ -110,14 +110,14 @@ export default function SubprocessorRegistry() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          companyId: company?.id,
+          companyId: companyId,
         }),
       });
       if (!response.ok) throw new Error("Erreur lors de la création");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", company?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", companyId] });
       setIsCreateDialogOpen(false);
       setCustomSecurityMeasure("");
       form.reset();
@@ -146,7 +146,7 @@ export default function SubprocessorRegistry() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", company?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", companyId] });
       setEditingRecord(null);
       setCustomSecurityMeasure("");
       form.reset();
@@ -173,7 +173,7 @@ export default function SubprocessorRegistry() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", company?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subprocessor-records", companyId] });
       toast({
         title: "Enregistrement supprimé",
         description: "L'enregistrement de sous-traitant a été supprimé avec succès.",

@@ -210,21 +210,21 @@ export default function Records() {
 
   // Auto-fill company data when forms open
   const handleOpenCreateDialog = () => {
-    if (company) {
-      manualForm.setValue('dataControllerName', company.name || '');
-      manualForm.setValue('dataControllerAddress', company.address || '');
-      manualForm.setValue('dataControllerPhone', company.phone || '');
-      manualForm.setValue('dataControllerEmail', company.email || '');
+    if (currentCompany) {
+      manualForm.setValue('dataControllerName', currentCompany.name || '');
+      manualForm.setValue('dataControllerAddress', currentCompany.address || '');
+      manualForm.setValue('dataControllerPhone', currentCompany.phone || '');
+      manualForm.setValue('dataControllerEmail', currentCompany.email || '');
     }
     setIsCreateDialogOpen(true);
   };
 
   const handleOpenGenerateDialog = () => {
-    if (company) {
-      generateForm.setValue('dataControllerName', company.name || '');
-      generateForm.setValue('dataControllerAddress', company.address || '');
-      generateForm.setValue('dataControllerPhone', company.phone || '');
-      generateForm.setValue('dataControllerEmail', company.email || '');
+    if (currentCompany) {
+      generateForm.setValue('dataControllerName', currentCompany.name || '');
+      generateForm.setValue('dataControllerAddress', currentCompany.address || '');
+      generateForm.setValue('dataControllerPhone', currentCompany.phone || '');
+      generateForm.setValue('dataControllerEmail', currentCompany.email || '');
     }
     setIsGenerateDialogOpen(true);
   };
