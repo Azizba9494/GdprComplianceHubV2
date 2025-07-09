@@ -97,6 +97,12 @@ export default function ActionPlan() {
     enabled: !!user,
   });
 
+  // Get company users (collaborators)
+  const { data: companyUsers = [] } = useQuery({
+    queryKey: [`/api/companies/${userCompany?.id}/users`],
+    enabled: !!userCompany?.id,
+  });
+
   const { data: actions, isLoading } = useQuery({
     queryKey: ['/api/actions', userCompany?.id],
     queryFn: () => userCompany ? actionsApi.get(userCompany.id).then(res => res.json()) : Promise.resolve([]),
