@@ -67,17 +67,6 @@ export default function SubprocessorRegistry() {
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [customSecurityMeasure, setCustomSecurityMeasure] = useState("");
 
-  // Check permissions first
-  if (!hasPermission('subprocessors', 'read')) {
-    return (
-      <AccessDenied 
-        module="Registre du sous-traitant" 
-        requiredPermission="subprocessors.read"
-        description="Vous n'avez pas accès au module registre du sous-traitant car vos droits ne le permettent pas."
-      />
-    );
-  }
-
   const companyId = currentCompany?.id;
 
   // Get subprocessor records
@@ -287,6 +276,17 @@ export default function SubprocessorRegistry() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Check permissions after all hooks
+  if (!hasPermission('subprocessors', 'read')) {
+    return (
+      <AccessDenied 
+        module="Registre du sous-traitant" 
+        requiredPermission="subprocessors.read"
+        description="Vous n'avez pas accès au module registre du sous-traitant car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   if (isLoading) {
     return <div className="p-6">Chargement...</div>;

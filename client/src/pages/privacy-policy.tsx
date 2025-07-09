@@ -28,17 +28,6 @@ export default function PrivacyPolicy() {
   const { user } = useAuth();
   const { hasPermission } = usePermissions();
 
-  // Check permissions first
-  if (!hasPermission('policies', 'read')) {
-    return (
-      <AccessDenied 
-        module="Politique de confidentialité" 
-        requiredPermission="policies.read"
-        description="Vous n'avez pas accès au module de politique de confidentialité car vos droits ne le permettent pas."
-      />
-    );
-  }
-
   // Fetch company data for the current user
   const { data: company, isLoading: companyLoading } = useQuery({
     queryKey: ['/api/companies/user', user?.id],
@@ -118,6 +107,17 @@ export default function PrivacyPolicy() {
       });
     },
   });
+
+  // Check permissions after all hooks
+  if (!hasPermission('policies', 'read')) {
+    return (
+      <AccessDenied 
+        module="Politique de confidentialité" 
+        requiredPermission="policies.read"
+        description="Vous n'avez pas accès au module de politique de confidentialité car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   // Early returns after all hooks
   if (!user || companyLoading) {
