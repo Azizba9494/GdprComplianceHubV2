@@ -473,8 +473,12 @@ export default function DpiaList() {
   const [, setLocation] = useLocation();
   const { user, currentCompany } = useAuth();
   const { hasPermission } = usePermissions();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Check permissions first
+  const companyId = currentCompany?.id;
+
+  // Check permissions after hooks are initialized
   if (!hasPermission('dpia', 'read')) {
     return (
       <AccessDenied 
@@ -484,12 +488,6 @@ export default function DpiaList() {
       />
     );
   }
-
-  const companyId = currentCompany?.id;
-
-  // Delete DPIA mutation
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   const deleteDpiaMutation = useMutation({
     mutationFn: async (dpiaId: number) => {

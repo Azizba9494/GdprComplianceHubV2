@@ -805,7 +805,7 @@ Informations complémentaires: ${data.additionalInfo}
     );
   };
 
-  // Check permissions first
+  // Check permissions after all hooks are initialized
   if (!hasPermission('records', 'read')) {
     return (
       <AccessDenied

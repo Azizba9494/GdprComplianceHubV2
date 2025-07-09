@@ -664,7 +664,7 @@ Généré le: ${new Date().toLocaleString()}
     }
   };
 
-  // Check permissions first
+  // Check permissions after all hooks are initialized
   if (!hasPermission('breaches', 'read')) {
     return (
       <AccessDenied

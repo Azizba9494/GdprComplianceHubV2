@@ -67,17 +67,6 @@ export default function RightsManagement() {
   const { user, currentCompany } = useAuth();
   const { hasPermission } = usePermissions();
 
-  // Check permissions first
-  if (!hasPermission('requests', 'read')) {
-    return (
-      <AccessDenied 
-        module="Demandes des personnes" 
-        requiredPermission="requests.read"
-        description="Vous n'avez pas accès au module des demandes des personnes car vos droits ne le permettent pas."
-      />
-    );
-  }
-
   // Use current company from auth context instead of fetching
   const company = currentCompany;
 
@@ -170,6 +159,17 @@ export default function RightsManagement() {
     if (daysUntilDue <= 5) return "text-orange-600 dark:text-orange-400";
     return "text-muted-foreground";
   };
+
+  // Check permissions after all hooks are initialized
+  if (!hasPermission('requests', 'read')) {
+    return (
+      <AccessDenied 
+        module="Demandes des personnes" 
+        requiredPermission="requests.read"
+        description="Vous n'avez pas accès au module des demandes des personnes car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   // Filter requests
   const filteredRequests = requests?.filter((request: DataSubjectRequest) => {
