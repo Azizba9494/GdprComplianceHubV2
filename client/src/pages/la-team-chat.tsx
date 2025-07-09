@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 import { ArrowLeft, Send, Bot, User, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -61,9 +63,21 @@ export default function LaTeamChat() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Check permissions first
+  if (!hasPermission('bots', 'read')) {
+    return (
+      <AccessDenied 
+        module="LA Team Jean Michel" 
+        requiredPermission="bots.read"
+        description="Vous n'avez pas accès au module LA Team Jean Michel car vos droits ne le permettent pas."
+      />
+    );
+  }
   
   const [messageInput, setMessageInput] = useState("");
   const conversationId = parseInt(id || "0");

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 import { Users, MessageCircle, Plus, Bot, Scale, MapPin, Archive, Gavel, Settings, Calendar, ChevronRight, History, Clock, Trash2, X, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -64,6 +66,18 @@ export default function LaTeam() {
   const [showAllConversations, setShowAllConversations] = useState<string | null>(null);
 
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
+
+  // Check permissions first
+  if (!hasPermission('bots', 'read')) {
+    return (
+      <AccessDenied 
+        module="LA Team Jean Michel" 
+        requiredPermission="bots.read"
+        description="Vous n'avez pas accès au module LA Team Jean Michel car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   const companyId = currentCompany?.id;
 

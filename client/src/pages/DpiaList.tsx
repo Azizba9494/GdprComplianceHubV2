@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 import { Plus, FileText, Clock, CheckCircle, AlertCircle, Eye, Edit, BookOpen, Users, Shield, Globe, Search, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -470,6 +472,18 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
 export default function DpiaList() {
   const [, setLocation] = useLocation();
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
+
+  // Check permissions first
+  if (!hasPermission('dpia', 'read')) {
+    return (
+      <AccessDenied 
+        module="Analyse d'impact (AIPD)" 
+        requiredPermission="dpia.read"
+        description="Vous n'avez pas accès au module d'analyse d'impact car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   const companyId = currentCompany?.id;
 

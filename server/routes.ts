@@ -1296,7 +1296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DPIA routes
-  app.get("/api/dpia/:companyId", async (req, res) => {
+  app.get("/api/dpia/:companyId", requireModulePermission('dpia', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const assessments = await storage.getDpiaAssessments(companyId);
@@ -1306,7 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/dpia/assessment/:id", async (req, res) => {
+  app.get("/api/dpia/assessment/:id", requireModulePermission('dpia', 'read'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const assessment = await storage.getDpiaAssessment(id);
@@ -1320,7 +1320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comprehensive AI-assisted DPIA routes
-  app.post("/api/dpia", async (req, res) => {
+  app.post("/api/dpia", requireModulePermission('dpia', 'write'), async (req, res) => {
     try {
       const dpiaData = insertDpiaAssessmentSchema.parse(req.body);
       const assessment = await storage.createDpiaAssessment(dpiaData);
@@ -1330,7 +1330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/dpia/assessment/:id", async (req, res) => {
+  app.put("/api/dpia/assessment/:id", requireModulePermission('dpia', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1341,7 +1341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/dpia/:id", async (req, res) => {
+  app.patch("/api/dpia/:id", requireModulePermission('dpia', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1352,7 +1352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/dpia/:id", async (req, res) => {
+  app.delete("/api/dpia/:id", requireModulePermission('dpia', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteDpiaAssessment(id);
@@ -1363,7 +1363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI-assisted risk analysis for DPIA
-  app.post("/api/dpia/ai-risk-analysis", async (req, res) => {
+  app.post("/api/dpia/ai-risk-analysis", requireModulePermission('dpia', 'write'), async (req, res) => {
     try {
       const { companyId, dpiaId, riskCategory, section, promptKey, processingRecord } = req.body;
 
@@ -1396,7 +1396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI-assisted response generation for DPIA fields
-  app.post("/api/dpia/ai-assist", async (req, res) => {
+  app.post("/api/dpia/ai-assist", requireModulePermission('dpia', 'write'), async (req, res) => {
     try {
       const { questionField, companyId, existingDpiaData } = req.body;
 
@@ -1513,7 +1513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get processing records that require DPIA based on evaluations - simplified version
-  app.get("/api/dpia/assessment/processing-selection", requireAuth, async (req, res) => {
+  app.get("/api/dpia/assessment/processing-selection", requireModulePermission('dpia', 'read'), async (req, res) => {
     try {
       const companyId = req.query.companyId ? parseInt(req.query.companyId as string) : null;
       console.log('[DPIA PROCESSING SELECTION] Company ID from query:', companyId);
@@ -2553,7 +2553,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Bot conversation routes
-  app.get("/api/bots/conversations/:companyId", requireAuth, async (req, res) => {
+  app.get("/api/bots/conversations/:companyId", requireModulePermission('bots', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       
@@ -2572,7 +2572,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Get specific bot conversation by ID
-  app.get("/api/bots/conversation/:conversationId", requireAuth, async (req, res) => {
+  app.get("/api/bots/conversation/:conversationId", requireModulePermission('bots', 'read'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.conversationId);
       
@@ -2594,7 +2594,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/conversations", requireAuth, async (req, res) => {
+  app.post("/api/bots/conversations", requireModulePermission('bots', 'write'), async (req, res) => {
     try {
       const { companyId, botType, title } = req.body;
       
@@ -2617,7 +2617,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.get("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
+  app.get("/api/bots/conversations/:id/messages", requireModulePermission('bots', 'read'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       
@@ -2641,7 +2641,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
+  app.post("/api/bots/conversations/:id/messages", requireModulePermission('bots', 'write'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const { content, isBot } = req.body;
@@ -2676,7 +2676,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/:botType/chat", requireAuth, async (req, res) => {
+  app.post("/api/bots/:botType/chat", requireModulePermission('bots', 'write'), async (req, res) => {
     try {
       const { botType } = req.params;
       const { message, conversationId } = req.body;
@@ -2724,7 +2724,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.delete("/api/bots/conversations/:id", requireAuth, async (req, res) => {
+  app.delete("/api/bots/conversations/:id", requireModulePermission('bots', 'write'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       
