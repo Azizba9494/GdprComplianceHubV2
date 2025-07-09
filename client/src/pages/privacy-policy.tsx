@@ -25,31 +25,17 @@ export default function PrivacyPolicy() {
   const [selectedPolicy, setSelectedPolicy] = useState<PrivacyPolicy | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { hasPermission } = usePermissions();
 
-  // Fetch company data for the current user
-  const { data: company, isLoading: companyLoading } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const res = await fetch(`/api/companies/user/${user.id}`, {
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error('Failed to fetch company');
-      return res.json();
-    },
-    enabled: !!user?.id,
-  });
-
   const { data: policies, isLoading } = useQuery({
-    queryKey: ['/api/privacy-policies', company?.id],
-    queryFn: () => privacyPolicyApi.get(company.id).then(res => res.json()),
-    enabled: !!company?.id,
+    queryKey: ['/api/privacy-policies', currentCompany?.id],
+    queryFn: () => privacyPolicyApi.get(currentCompany.id).then(res => res.json()),
+    enabled: !!currentCompany?.id,
   });
 
   const generateMutation = useMutation({
-    mutationFn: () => privacyPolicyApi.generate(company.id),
+    mutationFn: () => privacyPolicyApi.generate(currentCompany.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/privacy-policies'] });
       toast({
@@ -120,24 +106,12 @@ export default function PrivacyPolicy() {
   }
 
   // Early returns after all hooks
-  if (!user || companyLoading) {
+  if (!user || !currentCompany) {
     return (
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="p-6">
             <p className="text-center text-muted-foreground">Chargement...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!company) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-center text-muted-foreground">Aucune entreprise trouvée pour cet utilisateur.</p>
           </CardContent>
         </Card>
       </div>
@@ -183,19 +157,26 @@ export default function PrivacyPolicy() {
             Générez automatiquement une politique conforme au RGPD
           </p>
         </div>
-        <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
-          {generateMutation.isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Génération...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Générer avec IA
-            </>
-          )}
-        </Button>
+        {hasPermission('policies', 'generate') || hasPermission('policies', 'write') ? (
+          <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
+            {generateMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Génération...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Générer avec IA
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button disabled variant="outline">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Générer avec IA (Accès restreint)
+          </Button>
+        )}
       </div>
 
       {/* Current Active Policy */}
@@ -252,19 +233,26 @@ export default function PrivacyPolicy() {
                 Générez automatiquement une politique de confidentialité personnalisée pour votre site web, 
                 conforme aux exigences du RGPD.
               </p>
-              <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
-                {generateMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Génération en cours...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Générer ma première politique
-                  </>
-                )}
-              </Button>
+              {hasPermission('policies', 'generate') || hasPermission('policies', 'write') ? (
+                <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
+                  {generateMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Génération en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Générer ma première politique
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button disabled variant="outline">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Générer ma première politique (Accès restreint)
+                </Button>
+              )}
               {generateMutation.isError && (
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex items-start justify-between">
@@ -278,15 +266,17 @@ export default function PrivacyPolicy() {
                         <li>Contacter le support technique</li>
                       </ul>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => generateMutation.mutate()}
-                      disabled={generateMutation.isPending}
-                      className="ml-4"
-                    >
-                      Réessayer
-                    </Button>
+                    {(hasPermission('policies', 'generate') || hasPermission('policies', 'write')) && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => generateMutation.mutate()}
+                        disabled={generateMutation.isPending}
+                        className="ml-4"
+                      >
+                        Réessayer
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
