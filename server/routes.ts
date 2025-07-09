@@ -512,7 +512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/diagnostic/responses/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/diagnostic/responses/:companyId", requireModulePermission('diagnostic', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const responses = await storage.getDiagnosticResponses(companyId);
@@ -522,7 +522,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/diagnostic/responses", requireAuth, async (req, res) => {
+  app.post("/api/diagnostic/responses", requireModulePermission('diagnostic', 'write'), async (req, res) => {
     try {
       // Get user's company ID from authenticated session
       const userCompany = await storage.getCompanyByUserId(req.user!.id);
@@ -545,7 +545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/diagnostic/analyze", requireAuth, async (req, res) => {
+  app.post("/api/diagnostic/analyze", requireModulePermission('diagnostic', 'write'), async (req, res) => {
     try {
       // Get user's company ID from authenticated session
       const userCompany = await storage.getCompanyByUserId(req.user!.id);
@@ -1001,7 +1001,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Privacy policy routes
-  app.get("/api/privacy-policies/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/privacy-policies/:companyId", requireModulePermission('policies', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const policies = await storage.getPrivacyPolicies(companyId);
@@ -1021,7 +1021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/privacy-policies/generate", requireAuth, async (req, res) => {
+  app.post("/api/privacy-policies/generate", requireModulePermission('policies', 'generate'), async (req, res) => {
     try {
       const { companyId } = req.body;
       const userId = req.session?.userId;
@@ -1229,7 +1229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data subject requests routes
-  app.get("/api/requests/:companyId", requireCompanyAccess, async (req, res) => {
+  app.get("/api/requests/:companyId", requireModulePermission('requests', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const requests = await storage.getDataSubjectRequests(companyId);
@@ -1239,7 +1239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/requests", requireAuth, async (req, res) => {
+  app.post("/api/requests", requireModulePermission('requests', 'write'), async (req, res) => {
     try {
       console.log('Request user:', req.user);
       const requestData = insertDataSubjectRequestSchema.parse(req.body);
@@ -1271,7 +1271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/requests/:id", requireAuth, async (req, res) => {
+  app.put("/api/requests/:id", requireModulePermission('requests', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1601,7 +1601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Subprocessor records endpoints
-  app.get("/api/subprocessor-records/:companyId", requireAuth, async (req, res) => {
+  app.get("/api/subprocessor-records/:companyId", requireModulePermission('subprocessors', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       
@@ -1618,7 +1618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/subprocessor-records", requireAuth, async (req, res) => {
+  app.post("/api/subprocessor-records", requireModulePermission('subprocessors', 'write'), async (req, res) => {
     try {
       const recordData = insertSubprocessorRecordSchema.parse(req.body);
       
