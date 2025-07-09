@@ -158,10 +158,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (!access.permissions?.includes(requiredPermission)) {
           console.log(`[PERMISSIONS] DENIED - User ${req.session.userId} missing permission: ${requiredPermission}`);
+          
+          // Create user-friendly error message based on module and permission
+          const moduleLabels: { [key: string]: string } = {
+            'records': 'fiches de traitement',
+            'actions': 'plan d\'action',
+            'breaches': 'violations de données',
+            'dpia': 'analyses d\'impact AIPD',
+            'privacy': 'politiques de confidentialité',
+            'rights': 'demandes de droits',
+            'subprocessors': 'registre des sous-traitants',
+            'team': 'formation équipe',
+            'admin': 'administration'
+          };
+          
+          const permissionLabels: { [key: string]: string } = {
+            'read': 'consulter',
+            'write': 'modifier',
+            'generate': 'générer',
+            'analyze': 'analyser',
+            'manage': 'administrer'
+          };
+          
+          const moduleLabel = moduleLabels[module] || module;
+          const permissionLabel = permissionLabels[permission] || permission;
+          
           return res.status(403).json({ 
-            error: `Permission denied. Required: ${requiredPermission}`,
+            error: `Droits insuffisants pour ${permissionLabel} les ${moduleLabel}. Contactez l'administrateur pour obtenir les permissions nécessaires.`,
+            technicalError: `Permission denied. Required: ${requiredPermission}`,
             userPermissions: access.permissions,
-            requiredPermission 
+            requiredPermission,
+            userRole: access.role
           });
         }
 

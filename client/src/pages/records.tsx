@@ -277,11 +277,22 @@ Informations complémentaires: ${data.additionalInfo}
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de générer la fiche",
-        variant: "destructive",
-      });
+      console.error('Generate mutation error:', error);
+      
+      // Check if it's a permission error
+      if (error.message?.includes('Permission denied') || error.message?.includes('records.generate')) {
+        toast({
+          title: "🔒 Accès insuffisant",
+          description: "Vous ne disposez pas des droits nécessaires pour générer des fiches de traitement. Contactez l'administrateur pour obtenir les permissions requises.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: error.message || "Impossible de générer la fiche",
+          variant: "destructive",
+        });
+      }
     },
   });
 
