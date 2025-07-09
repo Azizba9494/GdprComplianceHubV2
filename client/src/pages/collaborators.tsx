@@ -51,7 +51,7 @@ interface Invitation {
   expiresAt: string;
 }
 
-// Enhanced permissions with granular access levels
+// Simplified permissions with read/write access levels
 const MODULE_PERMISSIONS = [
   { 
     id: 'diagnostic', 
@@ -63,37 +63,37 @@ const MODULE_PERMISSIONS = [
     id: 'actions', 
     label: 'Plan d\'actions', 
     description: 'Gestion des actions de conformité',
-    levels: ['read', 'write', 'assign'] 
+    levels: ['read', 'write'] 
   },
   { 
     id: 'records', 
     label: 'Registre des traitements', 
     description: 'Fiches de traitement des données',
-    levels: ['read', 'write', 'generate'] 
+    levels: ['read', 'write'] 
   },
   { 
     id: 'breaches', 
     label: 'Violations de données', 
     description: 'Analyse et gestion des incidents',
-    levels: ['read', 'write', 'analyze'] 
+    levels: ['read', 'write'] 
   },
   { 
     id: 'dpia', 
     label: 'Analyses d\'impact (AIPD)', 
     description: 'Évaluations d\'impact sur la vie privée',
-    levels: ['read', 'write', 'evaluate'] 
+    levels: ['read', 'write'] 
   },
   { 
     id: 'requests', 
     label: 'Demandes des personnes', 
     description: 'Gestion des droits des personnes concernées',
-    levels: ['read', 'write', 'process'] 
+    levels: ['read', 'write'] 
   },
   { 
     id: 'policies', 
     label: 'Politique de confidentialité', 
     description: 'Génération et gestion des politiques',
-    levels: ['read', 'write', 'generate'] 
+    levels: ['read', 'write'] 
   },
   { 
     id: 'subprocessors', 
@@ -105,7 +105,7 @@ const MODULE_PERMISSIONS = [
     id: 'team', 
     label: 'LA Team Jean Michel', 
     description: 'Assistants IA spécialisés',
-    levels: ['read', 'chat'] 
+    levels: ['access'] 
   },
   { 
     id: 'learning', 
@@ -124,12 +124,7 @@ const MODULE_PERMISSIONS = [
 const PERMISSION_LEVEL_LABELS = {
   read: 'Lecture',
   write: 'Écriture',
-  assign: 'Assignation',
-  generate: 'Génération IA',
-  analyze: 'Analyse IA',
-  evaluate: 'Évaluation',
-  process: 'Traitement',
-  chat: 'Discussion IA',
+  access: 'Accès',
   participate: 'Participation',
   manage: 'Gestion complète'
 };
@@ -368,24 +363,21 @@ export default function Collaborators() {
     return selectedPermissions.includes(`${moduleId}.${level}`);
   };
 
-  // Preset permission templates for quick setup
+  // Simplified permission templates for quick setup
   const applyPermissionTemplate = (template: string) => {
     let newPermissions: string[] = [];
     
     switch (template) {
-      case 'viewer':
+      case 'read':
         newPermissions = MODULE_PERMISSIONS.map(module => `${module.id}.read`);
         break;
-      case 'contributor':
+      case 'write':
         newPermissions = MODULE_PERMISSIONS.flatMap(module => 
           module.levels.includes('write') 
             ? [`${module.id}.read`, `${module.id}.write`]
+            : module.levels.includes('access')
+            ? [`${module.id}.access`]
             : [`${module.id}.read`]
-        );
-        break;
-      case 'manager':
-        newPermissions = MODULE_PERMISSIONS.flatMap(module => 
-          module.levels.map(level => `${module.id}.${level}`)
         );
         break;
       default:
@@ -414,19 +406,16 @@ export default function Collaborators() {
     let newPermissions: string[] = [];
     
     switch (template) {
-      case 'viewer':
+      case 'read':
         newPermissions = MODULE_PERMISSIONS.map(module => `${module.id}.read`);
         break;
-      case 'contributor':
+      case 'write':
         newPermissions = MODULE_PERMISSIONS.flatMap(module => 
           module.levels.includes('write') 
             ? [`${module.id}.read`, `${module.id}.write`]
+            : module.levels.includes('access')
+            ? [`${module.id}.access`]
             : [`${module.id}.read`]
-        );
-        break;
-      case 'manager':
-        newPermissions = MODULE_PERMISSIONS.flatMap(module => 
-          module.levels.map(level => `${module.id}.${level}`)
         );
         break;
       default:
@@ -524,25 +513,17 @@ export default function Collaborators() {
                       type="button" 
                       variant="outline" 
                       size="sm"
-                      onClick={() => applyPermissionTemplate('viewer')}
+                      onClick={() => applyPermissionTemplate('read')}
                     >
-                      Lecteur
+                      Lecture
                     </Button>
                     <Button 
                       type="button" 
                       variant="outline" 
                       size="sm"
-                      onClick={() => applyPermissionTemplate('contributor')}
+                      onClick={() => applyPermissionTemplate('write')}
                     >
-                      Contributeur
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => applyPermissionTemplate('manager')}
-                    >
-                      Gestionnaire
+                      Écriture
                     </Button>
                   </div>
                 </div>
@@ -758,25 +739,17 @@ export default function Collaborators() {
                   type="button" 
                   variant="outline" 
                   size="sm"
-                  onClick={() => applyEditPermissionTemplate('viewer')}
+                  onClick={() => applyEditPermissionTemplate('read')}
                 >
-                  Lecteur
+                  Lecture
                 </Button>
                 <Button 
                   type="button" 
                   variant="outline" 
                   size="sm"
-                  onClick={() => applyEditPermissionTemplate('contributor')}
+                  onClick={() => applyEditPermissionTemplate('write')}
                 >
-                  Contributeur
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => applyEditPermissionTemplate('manager')}
-                >
-                  Gestionnaire
+                  Écriture
                 </Button>
               </div>
             </div>

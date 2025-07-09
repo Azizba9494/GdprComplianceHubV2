@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -44,6 +45,7 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Mock company users for collaboration indicators
   const companyUsers = [
@@ -149,6 +151,15 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, action: any) => {
+    if (!hasPermission('actions', 'write')) {
+      e.preventDefault();
+      toast({ 
+        title: "Accès restreint", 
+        description: "Vous devez avoir des permissions d'écriture pour déplacer les actions",
+        variant: "destructive" 
+      });
+      return;
+    }
     setDraggedAction(action);
     e.dataTransfer.effectAllowed = 'move';
   };
@@ -160,6 +171,16 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
 
   const handleDrop = (e: React.DragEvent, targetStatus: string) => {
     e.preventDefault();
+    
+    if (!hasPermission('actions', 'write')) {
+      toast({ 
+        title: "Accès restreint", 
+        description: "Vous devez avoir des permissions d'écriture pour modifier les actions",
+        variant: "destructive" 
+      });
+      setDraggedAction(null);
+      return;
+    }
     
     if (draggedAction && draggedAction.status !== targetStatus) {
       updateActionMutation.mutate({
@@ -214,6 +235,18 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
 
   return (
     <div className="space-y-4">
+      {/* Permission notice */}
+      {!hasPermission('actions', 'write') && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+            <AlertTriangle className="h-4 w-4" />
+            <p className="text-sm">
+              <span className="font-medium">Accès en lecture seule</span> - Vous ne pouvez pas déplacer les actions entre les colonnes.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Kanban Board */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {columns.map((column) => {
@@ -249,11 +282,13 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
                     <Card
                       key={action.id}
                       className={cn(
-                        "cursor-move transition-all duration-200 hover:shadow-md",
+                        "transition-all duration-200 hover:shadow-md",
+                        hasPermission('actions', 'write') ? "cursor-move" : "cursor-default",
                         getPriorityColor(action.priority),
-                        draggedAction?.id === action.id && "opacity-50 transform rotate-2"
+                        draggedAction?.id === action.id && "opacity-50 transform rotate-2",
+                        !hasPermission('actions', 'write') && "opacity-75"
                       )}
-                      draggable
+                      draggable={hasPermission('actions', 'write')}
                       onDragStart={(e) => handleDragStart(e, action)}
                       onClick={() => openActionModal(action)}
                     >
