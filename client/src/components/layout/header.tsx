@@ -62,36 +62,32 @@ export default function Header() {
   const { toast } = useToast();
   const pageInfo = pageLabels[location] || { title: "GDPR Suite", subtitle: "Plateforme de conformité RGPD" };
 
-  // Get user's company for notifications
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
-    enabled: !!user,
-  });
+  // Use current company from context - this is the key fix for multi-company switching
+  const companyId = currentCompany?.id;
 
-  // Use current company from context if available, otherwise fallback to user's primary company
-  const companyId = currentCompany?.id || userCompany?.id;
-
-  // Get recent activity for notifications
+  // Get recent activity for notifications - only when current company is set
   const { data: recentRequests = [] } = useQuery({
     queryKey: ['/api/requests', companyId],
     queryFn: () => companyId ? fetch(`/api/requests/${companyId}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!companyId,
+    enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 0, // Always fresh data when switching companies
   });
 
   const { data: recentActions = [] } = useQuery({
     queryKey: ['/api/actions', companyId],
     queryFn: () => companyId ? fetch(`/api/actions/${companyId}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!companyId,
+    enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000,
+    staleTime: 0,
   });
 
   const { data: recentBreaches = [] } = useQuery({
     queryKey: ['/api/breaches', companyId],
     queryFn: () => companyId ? fetch(`/api/breaches/${companyId}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!companyId,
+    enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000,
+    staleTime: 0,
   });
 
   const handleProfileClick = () => {

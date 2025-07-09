@@ -234,15 +234,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Find the company details
         const selectedCompany = companies.find((c: any) => c.id === companyId);
         if (selectedCompany) {
+          console.log('Switching to company:', selectedCompany);
+          
+          // First clear all cached data
+          queryClient.clear();
+          
+          // Update state
           setCurrentCompany(selectedCompany);
           localStorage.setItem('currentCompanyId', companyId.toString());
           
-          // Invalidate all queries to refetch data for new company
-          queryClient.invalidateQueries();
+          // Force a page reload to ensure clean state
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
           
           toast({
             title: "Entreprise changée",
-            description: `Vous consultez maintenant ${selectedCompany.name}`,
+            description: `Changement vers ${selectedCompany.name}...`,
           });
         }
       }
