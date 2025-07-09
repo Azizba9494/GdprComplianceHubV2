@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, MessageCircle, Plus, Bot, Scale, MapPin, Archive, Gavel, Settings, Calendar, ChevronRight, History, Clock, Trash2 } from "lucide-react";
+import { Users, MessageCircle, Plus, Bot, Scale, MapPin, Archive, Gavel, Settings, Calendar, ChevronRight, History, Clock, Trash2, X, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -62,6 +62,7 @@ export default function LaTeam() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showAllConversations, setShowAllConversations] = useState<string | null>(null);
 
   // Get user's company information
   const { data: userCompany } = useQuery({
@@ -150,6 +151,114 @@ export default function LaTeam() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // If showing all conversations for a specific bot
+  if (showAllConversations) {
+    const bot = BOTS.find(b => b.id === showAllConversations);
+    const botConversations = getBotConversations(showAllConversations);
+    
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAllConversations(null)}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Retour</span>
+            </Button>
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-full ${bot?.color} text-white`}>
+                {bot?.icon && <bot.icon className="h-6 w-6" />}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{bot?.name}</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Toutes les conversations ({botConversations.length})</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          {botConversations.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucune conversation</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  Vous n'avez pas encore de conversations avec {bot?.name}.
+                </p>
+                <Button 
+                  onClick={() => startChatWithBot(bot?.id || '', bot?.name || '')}
+                  disabled={createConversationMutation.isPending}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvelle conversation
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            botConversations.map((conversation: BotConversation) => (
+              <Card key={conversation.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        {conversation.title}
+                      </h3>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>Créée le {new Date(conversation.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="w-3 h-3" />
+                          <span>Modifiée le {new Date(conversation.updatedAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openExistingConversation(conversation.id)}
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Ouvrir
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                        disabled={deleteConversationMutation.isPending}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        <div className="text-center pt-4">
+          <Button 
+            onClick={() => startChatWithBot(bot?.id || '', bot?.name || '')}
+            disabled={createConversationMutation.isPending}
+            className="w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouvelle conversation avec {bot?.name}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -267,10 +376,7 @@ export default function LaTeam() {
                               variant="ghost"
                               size="sm"
                               className="text-xs text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                              onClick={() => {
-                                // TODO: Implement view all conversations
-                                console.log('View all conversations for bot:', bot.id);
-                              }}
+                              onClick={() => setShowAllConversations(bot.id)}
                             >
                               Voir toutes les conversations ({botConversations.length})
                             </Button>
