@@ -70,14 +70,14 @@ export default function LaTeam() {
 
   const companyId = currentCompany?.id;
 
-  // Check permissions after all hooks
-  const hasTeamAccess = hasPermission('team', 'read');
+  // Check permissions after all hooks - use 'access' for team module
+  const hasTeamAccess = hasPermission('team', 'access') || hasPermission('team', 'read');
 
   if (!hasTeamAccess) {
     return (
       <AccessDenied 
         module="LA Team Jean Michel" 
-        requiredPermission="team.read"
+        requiredPermission="team.access"
         description="Vous n'avez pas accès au module LA Team Jean Michel car vos droits ne le permettent pas."
       />
     );
