@@ -2577,7 +2577,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Get specific bot conversation by ID
-  app.get("/api/bots/conversation/:conversationId", requireModulePermission('bots', 'read'), async (req, res) => {
+  app.get("/api/bots/conversation/:conversationId", requireAuth, async (req, res) => {
     try {
       const conversationId = parseInt(req.params.conversationId);
       const userId = req.session?.userId;
@@ -2627,7 +2627,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.get("/api/bots/conversations/:id/messages", requireModulePermission('bots', 'read'), async (req, res) => {
+  app.get("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const userId = req.session?.userId;
@@ -2656,7 +2656,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/conversations/:id/messages", requireModulePermission('bots', 'write'), async (req, res) => {
+  app.post("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const { content, isBot } = req.body;
@@ -2696,7 +2696,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/:botType/chat", requireModulePermission('bots', 'write'), async (req, res) => {
+  app.post("/api/bots/:botType/chat", requireAuth, async (req, res) => {
     try {
       const { botType } = req.params;
       const { message, conversationId } = req.body;
@@ -2749,7 +2749,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.delete("/api/bots/conversations/:id", requireModulePermission('bots', 'write'), async (req, res) => {
+  app.delete("/api/bots/conversations/:id", requireAuth, async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       
