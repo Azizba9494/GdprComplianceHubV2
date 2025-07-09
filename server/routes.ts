@@ -652,7 +652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Log activity when status changes
       if (updates.status) {
-        const userId = (req.session as any).userId;
+        const userId = req.session?.userId;
         await storage.createActionActivityLog({
           actionId: id,
           userId,
@@ -685,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const actionId = parseInt(req.params.actionId);
       const { userId, role } = req.body;
-      const assignedById = (req.session as any).userId;
+      const assignedById = req.session?.userId;
 
       const assignment = await storage.createActionAssignment({
         actionId,
@@ -713,7 +713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const actionId = parseInt(req.params.actionId);
       const assignmentId = parseInt(req.params.assignmentId);
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
 
       await storage.deleteActionAssignment(assignmentId);
 
@@ -746,7 +746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const actionId = parseInt(req.params.actionId);
       const { content, mentionedUsers, isInternal } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
 
       const comment = await storage.createActionComment({
         actionId,
@@ -775,7 +775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const commentId = parseInt(req.params.commentId);
       const actionId = parseInt(req.params.actionId);
       const { content } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
 
       const comment = await storage.updateActionComment(commentId, { content });
 
@@ -797,7 +797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const commentId = parseInt(req.params.commentId);
       const actionId = parseInt(req.params.actionId);
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
 
       await storage.deleteActionComment(commentId);
 
@@ -840,7 +840,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/actions/:actionId/attachments", requireAuth, upload.single('file'), async (req, res) => {
     try {
       const actionId = parseInt(req.params.actionId);
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
       const file = req.file;
       
       if (!file) {
@@ -876,7 +876,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const actionId = parseInt(req.params.actionId);
       const attachmentId = parseInt(req.params.attachmentId);
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
 
       await storage.deleteActionAttachment(attachmentId);
 
@@ -910,7 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { companyId, processingType, description } = req.body;
 
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess((req.session as any).userId, companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session?.userId, companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
@@ -951,7 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const recordData = insertProcessingRecordSchema.parse(req.body);
 
       // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess((req.session as any).userId, recordData.companyId);
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session?.userId, recordData.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
@@ -2360,7 +2360,7 @@ Répondez de manière complète et utile à cette question en respectant tous le
   // Update user profile route
   app.put("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
       const { firstName, lastName, phoneNumber } = req.body;
 
       const updatedUser = await storage.updateUser(userId, {
@@ -2824,7 +2824,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   app.post("/api/companies/:companyId/invite", requireAuth, requireCompanyAccess, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
       const { email, role, permissions } = req.body;
 
       // Generate invitation token
@@ -3069,7 +3069,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     try {
       const actionId = parseInt(req.params.actionId);
       const { userId, role } = req.body;
-      const assignedBy = (req.session as any).userId;
+      const assignedBy = req.session?.userId;
 
       const assignment = await storage.createActionAssignment({
         actionId,
@@ -3115,7 +3115,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     try {
       const actionId = parseInt(req.params.actionId);
       const { content } = req.body;
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
 
       const comment = await storage.createActionComment({
         actionId,
