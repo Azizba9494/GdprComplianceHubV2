@@ -70,9 +70,23 @@ export default function Header() {
   console.log('Header - Company ID being used for queries:', companyId);
 
   // Get recent activity for notifications - only when current company is set
+  // Handle permission errors gracefully
   const { data: recentRequests = [] } = useQuery({
     queryKey: ['/api/requests', companyId],
-    queryFn: () => companyId ? fetch(`/api/requests/${companyId}`).then(res => res.json()) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!companyId) return [];
+      try {
+        const res = await fetch(`/api/requests/${companyId}`);
+        if (!res.ok) {
+          console.log('Requests access denied - user lacks permissions');
+          return [];
+        }
+        return await res.json();
+      } catch (error) {
+        console.log('Error fetching requests:', error);
+        return [];
+      }
+    },
     enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 0, // Always fresh data when switching companies
@@ -80,7 +94,20 @@ export default function Header() {
 
   const { data: recentActions = [] } = useQuery({
     queryKey: ['/api/actions', companyId],
-    queryFn: () => companyId ? fetch(`/api/actions/${companyId}`).then(res => res.json()) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!companyId) return [];
+      try {
+        const res = await fetch(`/api/actions/${companyId}`);
+        if (!res.ok) {
+          console.log('Actions access denied - user lacks permissions');
+          return [];
+        }
+        return await res.json();
+      } catch (error) {
+        console.log('Error fetching actions:', error);
+        return [];
+      }
+    },
     enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000,
     staleTime: 0,
@@ -88,7 +115,20 @@ export default function Header() {
 
   const { data: recentBreaches = [] } = useQuery({
     queryKey: ['/api/breaches', companyId],
-    queryFn: () => companyId ? fetch(`/api/breaches/${companyId}`).then(res => res.json()) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!companyId) return [];
+      try {
+        const res = await fetch(`/api/breaches/${companyId}`);
+        if (!res.ok) {
+          console.log('Breaches access denied - user lacks permissions');
+          return [];
+        }
+        return await res.json();
+      } catch (error) {
+        console.log('Error fetching breaches:', error);
+        return [];
+      }
+    },
     enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000,
     staleTime: 0,
@@ -114,11 +154,11 @@ export default function Header() {
     const notifications: any[] = [];
     const now = new Date();
 
-    // Recent requests (within last 7 days)
-    const recentNewRequests = recentRequests
+    // Recent requests (within last 7 days) - handle array safety
+    const recentNewRequests = Array.isArray(recentRequests) ? recentRequests
       .filter((req: any) => req.status === 'new' && new Date(req.createdAt) > new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000))
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 3);
+      .slice(0, 3) : [];
 
     recentNewRequests.forEach((req: any) => {
       const typeLabel = req.requestType === 'access' ? 'accès' : req.requestType === 'portability' ? 'portabilité' : req.requestType === 'deletion' ? 'suppression' : req.requestType;
@@ -149,11 +189,11 @@ export default function Header() {
       });
     });
 
-    // Recent breaches (within last 30 days)
-    const recentNewBreaches = recentBreaches
+    // Recent breaches (within last 30 days) - handle array safety
+    const recentNewBreaches = Array.isArray(recentBreaches) ? recentBreaches
       .filter((breach: any) => new Date(breach.createdAt) > new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000))
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 2);
+      .slice(0, 2) : [];
 
     recentNewBreaches.forEach((breach: any) => {
       notifications.push({
