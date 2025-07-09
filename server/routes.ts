@@ -1031,7 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/privacy-policies/generate", requireModulePermission('policies', 'generate'), async (req, res) => {
+  app.post("/api/privacy-policies/generate", requireAuth, async (req, res) => {
     try {
       const { companyId } = req.body;
       const userId = req.session?.userId;
@@ -1040,10 +1040,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Non authentifié" });
       }
 
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(userId, companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Accès refusé à cette entreprise" });
+      if (!companyId) {
+        return res.status(400).json({ error: "Company ID required" });
+      }
+
+      // Check user has policies.generate permission for this company
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+      
+      if (access.role !== 'owner' && !access.permissions?.includes('policies.generate')) {
+        return res.status(403).json({ error: "Droits insuffisants pour générer des politiques de confidentialité" });
       }
 
       const company = await storage.getCompany(companyId);
