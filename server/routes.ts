@@ -2591,7 +2591,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Bot conversation routes
-  app.get("/api/bots/conversations/:companyId", requireModulePermission('bots', 'read'), async (req, res) => {
+  app.get("/api/bots/conversations/:companyId", requireModulePermission('team', 'read'), async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const userId = req.session?.userId;
@@ -2637,7 +2637,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/conversations", requireModulePermission('bots', 'write'), async (req, res) => {
+  app.post("/api/bots/conversations", requireModulePermission('team', 'write'), async (req, res) => {
     try {
       const { companyId, botType, title } = req.body;
       const userId = req.session?.userId;
@@ -2660,7 +2660,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.get("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
+  app.get("/api/bots/conversations/:id/messages", requireModulePermission('team', 'read'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const userId = req.session?.userId;
@@ -2669,18 +2669,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(401).json({ error: "User not authenticated properly" });
       }
       
-      // Get conversation to verify access
-      const conversation = await storage.getBotConversation(conversationId);
-      if (!conversation) {
-        return res.status(404).json({ error: "Conversation not found" });
-      }
-      
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(userId, conversation.companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
-      }
-
+      // Access verification already done by requireModulePermission middleware
       const messages = await storage.getBotMessages(conversationId);
       res.json(messages);
     } catch (error: any) {
@@ -2689,7 +2678,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/conversations/:id/messages", requireAuth, async (req, res) => {
+  app.post("/api/bots/conversations/:id/messages", requireModulePermission('team', 'chat'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       const { content, isBot } = req.body;
@@ -2699,18 +2688,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(401).json({ error: "User not authenticated properly" });
       }
       
-      // Get conversation to verify access
-      const conversation = await storage.getBotConversation(conversationId);
-      if (!conversation) {
-        return res.status(404).json({ error: "Conversation not found" });
-      }
-      
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(userId, conversation.companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
-      }
-
+      // Access verification already done by requireModulePermission middleware
       const message = await storage.createBotMessage({
         conversationId,
         content,
@@ -2729,7 +2707,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/:botType/chat", requireAuth, async (req, res) => {
+  app.post("/api/bots/:botType/chat", requireModulePermission('team', 'chat'), async (req, res) => {
     try {
       const { botType } = req.params;
       const { message, conversationId } = req.body;
@@ -2739,16 +2717,10 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(401).json({ error: "User not authenticated properly" });
       }
 
-      // Get conversation to verify access and get company context
+      // Get conversation for company context (access already verified by middleware)
       const conversation = await storage.getBotConversation(conversationId);
       if (!conversation) {
         return res.status(404).json({ error: "Conversation not found" });
-      }
-      
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(userId, conversation.companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
       }
 
       // Get bot-specific prompt
@@ -2782,22 +2754,11 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.delete("/api/bots/conversations/:id", requireAuth, async (req, res) => {
+  app.delete("/api/bots/conversations/:id", requireModulePermission('team', 'write'), async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
       
-      // Get conversation to verify access
-      const conversation = await storage.getBotConversation(conversationId);
-      if (!conversation) {
-        return res.status(404).json({ error: "Conversation not found" });
-      }
-      
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, conversation.companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
-      }
-
+      // Access verification already done by requireModulePermission middleware
       await storage.deleteBotConversation(conversationId);
       res.json({ success: true });
     } catch (error: any) {
