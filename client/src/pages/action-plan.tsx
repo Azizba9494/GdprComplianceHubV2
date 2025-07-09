@@ -16,6 +16,7 @@ import { KanbanBoard } from "@/components/KanbanBoard";
 import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, Filter, Search, AlertTriangle, FileText, Shield, Users, MessageSquare, UserCheck, Activity, LayoutGrid, List } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { cn } from "@/lib/utils";
 
 const statusLabels = {
@@ -89,6 +90,7 @@ export default function ActionPlan() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const userCompany = currentCompany;
 
@@ -111,6 +113,15 @@ export default function ActionPlan() {
   };
 
   const openCollaborativeModal = (action: any) => {
+    if (!hasPermission('actions', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour le plan d'actions. Pour modifier les actions, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedAction(action);
     setIsCollaborativeModalOpen(true);
   };
@@ -147,9 +158,38 @@ export default function ActionPlan() {
         description: "Le statut de l'action a été modifié avec succès.",
       });
     },
+    onError: (error: any) => {
+      console.error('Update action error:', error);
+      
+      // Check if it's a permission error
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('actions.write')) {
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour le plan d'actions. Pour modifier les actions, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Une erreur s'est produite lors de la mise à jour de l'action. Contactez l'administrateur si le problème persiste.",
+          variant: "destructive",
+        });
+      }
+    },
   });
 
   const handleStatusChange = (actionId: number, newStatus: string) => {
+    if (!hasPermission('actions', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour le plan d'actions. Pour modifier les statuts, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const updates: any = { status: newStatus };
     if (newStatus === 'completed') {
       updates.completedAt = new Date().toISOString();
@@ -159,6 +199,15 @@ export default function ActionPlan() {
   };
 
   const openDateDialog = (action: any) => {
+    if (!hasPermission('actions', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour le plan d'actions. Pour modifier les échéances, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedAction(action);
     setNewDueDate(action.dueDate ? new Date(action.dueDate).toISOString().split('T')[0] : "");
     setIsDateDialogOpen(true);

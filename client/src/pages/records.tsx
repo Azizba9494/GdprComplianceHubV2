@@ -133,6 +133,8 @@ export default function Records() {
   const [editingValues, setEditingValues] = useState<{[key: string]: any}>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
 
   const generateForm = useForm({
     defaultValues: {
@@ -196,9 +198,6 @@ export default function Records() {
       jointControllerInfo: "",
     },
   });
-
-  const { user, currentCompany } = useAuth();
-  const { hasPermission } = usePermissions();
 
   const companyId = currentCompany?.id;
 
@@ -279,7 +278,7 @@ Informations complémentaires: ${data.additionalInfo}
       // The error message from the server contains "Droits insuffisants"
       const errorMessage = error.message || '';
       
-      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.generate')) {
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.write')) {
         toast({
           title: "🔒 Droits insuffisants",
           description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour générer des fiches avec l'IA, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
@@ -728,6 +727,8 @@ Informations complémentaires: ${data.additionalInfo}
             variant="outline"
             onClick={() => setEditMode(true)}
             className="mt-2"
+            disabled={!hasPermission('records', 'write')}
+            title={!hasPermission('records', 'write') ? "Droits insuffisants pour modifier les enregistrements" : ""}
           >
             <Edit2 className="w-3 h-3 mr-1" />
             Modifier
@@ -785,7 +786,12 @@ Informations complémentaires: ${data.additionalInfo}
         </div>
 
         <div className="flex gap-2">
-          <Button size="sm" onClick={saveChanges}>
+          <Button 
+            size="sm" 
+            onClick={saveChanges}
+            disabled={!hasPermission('records', 'write')}
+            title={!hasPermission('records', 'write') ? "Droits insuffisants pour sauvegarder les modifications" : ""}
+          >
             <Save className="w-3 h-3 mr-1" />
             Enregistrer
           </Button>
@@ -1245,8 +1251,8 @@ Informations complémentaires: ${data.additionalInfo}
             <DialogTrigger asChild>
               <Button 
                 onClick={handleOpenGenerateDialog}
-                disabled={!hasPermission('records', 'generate')}
-                title={!hasPermission('records', 'generate') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
+                disabled={!hasPermission('records', 'write')}
+                title={!hasPermission('records', 'write') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Générer avec l'IA
@@ -1685,15 +1691,15 @@ Informations complémentaires: ${data.additionalInfo}
             <Book className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Aucune fiche de traitement</h3>
             <p className="text-muted-foreground mb-4">
-              {hasPermission('records', 'generate') || hasPermission('records', 'write') ? 
+              {hasPermission('records', 'write') ? 
                 "Commencez par créer votre première fiche de traitement avec l'IA" :
                 "Aucune fiche de traitement n'a encore été créée pour cette organisation. Contactez l'administrateur pour obtenir les droits de création."}
             </p>
-            {(hasPermission('records', 'generate') || hasPermission('records', 'write')) && (
+            {hasPermission('records', 'write') && (
               <Button 
                 onClick={handleOpenGenerateDialog}
-                disabled={!hasPermission('records', 'generate')}
-                title={!hasPermission('records', 'generate') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
+                disabled={!hasPermission('records', 'write')}
+                title={!hasPermission('records', 'write') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Créer ma première fiche

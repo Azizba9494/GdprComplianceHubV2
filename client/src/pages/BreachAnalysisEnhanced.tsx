@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -76,6 +77,7 @@ export default function BreachAnalysisEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, currentCompany } = useAuth();
+  const { hasPermission } = usePermissions();
   const [selectedBreach, setSelectedBreach] = useState<Breach | null>(null);
   const [previewBreach, setPreviewBreach] = useState<Breach | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -180,12 +182,25 @@ export default function BreachAnalysisEnhanced() {
       queryClient.invalidateQueries({ queryKey: [`/api/breaches/${companyId}`] });
       setIsAnalyzing(false);
     },
-    onError: () => {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'effectuer l'analyse IA.",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      console.error('AI Analysis error:', error);
+      
+      // Check if it's a permission error
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('breaches.write')) {
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour effectuer des analyses IA, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'effectuer l'analyse IA.",
+          variant: "destructive",
+        });
+      }
       setIsAnalyzing(false);
     },
   });
@@ -212,12 +227,25 @@ export default function BreachAnalysisEnhanced() {
       setActiveTab("list"); // Retourner à la liste après création
       resetForm();
     },
-    onError: () => {
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder la violation.",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      console.error('Breach mutation error:', error);
+      
+      // Check if it's a permission error
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('breaches.write')) {
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour créer ou modifier des violations, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible de sauvegarder la violation.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -235,16 +263,38 @@ export default function BreachAnalysisEnhanced() {
       await queryClient.invalidateQueries({ queryKey: [`/api/breaches/${companyId}`] });
       await refetchBreaches();
     },
-    onError: () => {
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la violation.",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      console.error('Delete breach error:', error);
+      
+      // Check if it's a permission error
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('breaches.delete')) {
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour supprimer des violations, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer la violation.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
   const handleDeleteBreach = async (breach: Breach) => {
+    if (!hasPermission('breaches', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour supprimer des violations, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer la violation #${breach.id} ? Cette action est irréversible.`)) {
       deleteBreachMutation.mutate(breach.id);
     }
@@ -304,6 +354,15 @@ export default function BreachAnalysisEnhanced() {
   };
 
   const handleEdit = (breach: Breach) => {
+    if (!hasPermission('breaches', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour modifier des violations, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedBreach(breach);
     
     // Try to load comprehensive data if available
@@ -376,6 +435,15 @@ export default function BreachAnalysisEnhanced() {
   };
 
   const handleNewBreach = () => {
+    if (!hasPermission('breaches', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour créer des violations, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedBreach(null);
     resetForm();
     setShowForm(true);
@@ -627,7 +695,11 @@ Généré le: ${new Date().toLocaleString()}
             Gestion et analyse des violations de données selon les directives EDPB Guidelines 9/2022
           </p>
         </div>
-        <Button onClick={handleNewBreach}>
+        <Button 
+          onClick={handleNewBreach} 
+          disabled={!hasPermission('breaches', 'write')}
+          title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour créer des violations" : ""}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle Violation
         </Button>
@@ -724,7 +796,13 @@ Généré le: ${new Date().toLocaleString()}
 
                     <div className="flex justify-between items-center">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(breach)}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleEdit(breach)}
+                          disabled={!hasPermission('breaches', 'write')}
+                          title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour modifier des violations" : ""}
+                        >
                           <Edit className="w-4 h-4 mr-2" />
                           Modifier
                         </Button>
@@ -746,7 +824,8 @@ Généré le: ${new Date().toLocaleString()}
                             variant="outline" 
                             size="sm" 
                             onClick={() => handleAIAnalysis(breach)}
-                            disabled={isAnalyzing}
+                            disabled={isAnalyzing || !hasPermission('breaches', 'write')}
+                            title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour analyser des violations" : ""}
                           >
                             {isAnalyzing ? (
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -760,8 +839,9 @@ Généré le: ${new Date().toLocaleString()}
                           variant="outline" 
                           size="sm" 
                           onClick={() => handleDeleteBreach(breach)}
-                          disabled={deleteBreachMutation.isPending}
+                          disabled={deleteBreachMutation.isPending || !hasPermission('breaches', 'write')}
                           className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
+                          title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour supprimer des violations" : ""}
                         >
                           {deleteBreachMutation.isPending ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -794,7 +874,11 @@ Généré le: ${new Date().toLocaleString()}
                 <p className="text-gray-500 mb-4">
                   Commencez par enregistrer une violation de données pour l'analyser.
                 </p>
-                <Button onClick={handleNewBreach}>
+                <Button 
+                  onClick={handleNewBreach}
+                  disabled={!hasPermission('breaches', 'write')}
+                  title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour créer des violations" : ""}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Créer une violation
                 </Button>

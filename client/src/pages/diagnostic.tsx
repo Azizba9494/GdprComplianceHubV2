@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, ArrowRight, ArrowLeft, FileText, Shield, Users, Settings, Book, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const categoryIcons = {
   "Gouvernance": Settings,
@@ -39,6 +40,7 @@ export default function Diagnostic() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Get user's company information
   const { data: userCompany } = useQuery({
@@ -63,6 +65,26 @@ export default function Diagnostic() {
     onSuccess: () => {
       console.log('Response submitted successfully');
     },
+    onError: (error: any) => {
+      console.error('Submit response error:', error);
+      
+      // Check if it's a permission error
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('diagnostic.write')) {
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour le diagnostic. Pour soumettre des réponses, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Une erreur s'est produite lors de la soumission de la réponse. Contactez l'administrateur si le problème persiste.",
+          variant: "destructive",
+        });
+      }
+    },
   });
 
   const analyzeMutation = useMutation({
@@ -80,6 +102,26 @@ export default function Diagnostic() {
       setSelectedCategory(null);
       setCurrentQuestionIndex(0);
       setResponses({});
+    },
+    onError: (error: any) => {
+      console.error('Analyze mutation error:', error);
+      
+      // Check if it's a permission error
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('diagnostic.write')) {
+        toast({
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour le diagnostic. Pour analyser les réponses, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Une erreur s'est produite lors de l'analyse. Contactez l'administrateur si le problème persiste.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -170,8 +212,12 @@ export default function Diagnostic() {
                 return (
                   <Card 
                     key={category} 
-                    className={`cursor-pointer transition-all hover:shadow-md ${isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 'hover:border-primary'}`}
-                    onClick={() => setSelectedCategory(category)}
+                    className={`${hasPermission('diagnostic', 'write') ? 'cursor-pointer transition-all hover:shadow-md' : 'cursor-not-allowed opacity-60'} ${isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 'hover:border-primary'}`}
+                    onClick={() => hasPermission('diagnostic', 'write') ? setSelectedCategory(category) : toast({
+                      title: "🔒 Droits insuffisants",
+                      description: "Vous ne disposez que des droits de lecture pour le diagnostic. Pour répondre aux questions, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation.",
+                      variant: "destructive",
+                    })}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-3">
@@ -313,18 +359,30 @@ export default function Diagnostic() {
             
             <RadioGroup
               value={responses[currentQuestion.id] || ""}
-              onValueChange={handleResponse}
+              onValueChange={hasPermission('diagnostic', 'write') ? handleResponse : undefined}
               className="space-y-3"
+              disabled={!hasPermission('diagnostic', 'write')}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="oui" id="oui" />
+                <RadioGroupItem value="oui" id="oui" disabled={!hasPermission('diagnostic', 'write')} />
                 <Label htmlFor="oui">Oui</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="non" id="non" />
+                <RadioGroupItem value="non" id="non" disabled={!hasPermission('diagnostic', 'write')} />
                 <Label htmlFor="non">Non</Label>
               </div>
             </RadioGroup>
+            
+            {!hasPermission('diagnostic', 'write') && (
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  <p className="text-sm text-orange-700">
+                    Vous disposez uniquement des droits de lecture. Pour répondre aux questions, contactez l'administrateur de votre organisation.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between pt-6">
@@ -339,7 +397,8 @@ export default function Diagnostic() {
 
             <Button
               onClick={handleNext}
-              disabled={submitResponseMutation.isPending || analyzeMutation.isPending}
+              disabled={submitResponseMutation.isPending || analyzeMutation.isPending || !hasPermission('diagnostic', 'write')}
+              title={!hasPermission('diagnostic', 'write') ? "Droits insuffisants pour soumettre des réponses" : ""}
             >
               {isLastQuestion ? "Terminer le diagnostic" : "Suivant"}
               {!isLastQuestion && <ArrowRight className="w-4 h-4 ml-2" />}
