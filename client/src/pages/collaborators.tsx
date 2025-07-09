@@ -68,29 +68,37 @@ const ROLES = [
 ];
 
 export default function Collaborators() {
-  const { user, userCompany } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("collaborator");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
+  // Get user's company
+  const { data: company } = useQuery({
+    queryKey: [`/api/companies/user/${user?.id}`],
+    enabled: !!user?.id,
+  });
+
+  const companyId = company?.id;
+
   // Get collaborators
   const { data: collaborators = [], isLoading: loadingCollaborators } = useQuery({
-    queryKey: [`/api/companies/${userCompany?.id}/collaborators`],
-    enabled: !!userCompany?.id
+    queryKey: [`/api/companies/${companyId}/collaborators`],
+    enabled: !!companyId
   });
 
   // Get invitations
   const { data: invitations = [], isLoading: loadingInvitations } = useQuery({
-    queryKey: [`/api/companies/${userCompany?.id}/invitations`],
-    enabled: !!userCompany?.id
+    queryKey: [`/api/companies/${companyId}/invitations`],
+    enabled: !!companyId
   });
 
   // Invite collaborator mutation
   const inviteMutation = useMutation({
     mutationFn: async (data: { email: string; role: string; permissions: string[] }) => {
-      const response = await fetch(`/api/companies/${userCompany?.id}/invite`, {
+      const response = await fetch(`/api/companies/${companyId}/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -99,7 +107,7 @@ export default function Collaborators() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/companies/${userCompany?.id}/invitations`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/companies/${companyId}/invitations`] });
       setIsInviteOpen(false);
       setInviteEmail("");
       setSelectedPermissions([]);
@@ -113,14 +121,14 @@ export default function Collaborators() {
   // Remove collaborator mutation
   const removeCollaboratorMutation = useMutation({
     mutationFn: async (accessId: number) => {
-      const response = await fetch(`/api/companies/${userCompany?.id}/collaborators/${accessId}`, {
+      const response = await fetch(`/api/companies/${companyId}/collaborators/${accessId}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to remove collaborator');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/companies/${userCompany?.id}/collaborators`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/companies/${companyId}/collaborators`] });
       toast({ title: "Collaborateur supprimé" });
     },
     onError: () => {
@@ -131,14 +139,14 @@ export default function Collaborators() {
   // Delete invitation mutation
   const deleteInvitationMutation = useMutation({
     mutationFn: async (invitationId: number) => {
-      const response = await fetch(`/api/companies/${userCompany?.id}/invitations/${invitationId}`, {
+      const response = await fetch(`/api/companies/${companyId}/invitations/${invitationId}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete invitation');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/companies/${userCompany?.id}/invitations`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/companies/${companyId}/invitations`] });
       toast({ title: "Invitation supprimée" });
     },
     onError: () => {
@@ -167,7 +175,11 @@ export default function Collaborators() {
     }
   };
 
-  if (!userCompany) {
+  if (!user) {
+    return <div>Chargement...</div>;
+  }
+
+  if (!companyId) {
     return <div>Chargement...</div>;
   }
 
