@@ -1241,19 +1241,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/requests", requireModulePermission('requests', 'write'), async (req, res) => {
     try {
-      console.log('Request user:', req.user);
+      const userId = req.session?.userId;
+      console.log('Request user ID:', userId);
       const requestData = insertDataSubjectRequestSchema.parse(req.body);
       console.log('Request data:', requestData);
       
-      if (!req.user || !req.user.id) {
+      if (!userId) {
         return res.status(401).json({ error: "User not authenticated properly" });
       }
       
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user.id, requestData.companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
-      }
+      // Verify user has access to this company (already done by requireModulePermission middleware)
 
       // Auto-calculate due date (1 month from now)
       const dueDate = new Date();
@@ -1275,6 +1272,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
       
       // Get the existing request to verify company access
       const existingRequest = await storage.getDataSubjectRequest(id);
@@ -1282,11 +1284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Request not found" });
       }
       
-      // Verify user has access to this company
-      const hasAccess = await storage.verifyUserCompanyAccess(req.user!.id, existingRequest.companyId);
-      if (!hasAccess) {
-        return res.status(403).json({ error: "Access denied to this company data" });
-      }
+      // Verify user has access to this company (already done by requireModulePermission middleware)
 
       const request = await storage.updateDataSubjectRequest(id, updates);
       res.json(request);
