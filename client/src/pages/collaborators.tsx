@@ -19,7 +19,10 @@ import {
   Trash2, 
   Send,
   Shield,
-  Calendar
+  Calendar,
+  Edit,
+  Eye,
+  Zap
 } from "lucide-react";
 
 interface Collaborator {
@@ -48,18 +51,94 @@ interface Invitation {
   expiresAt: string;
 }
 
-const PERMISSIONS = [
-  { id: 'diagnostic', label: 'Diagnostic RGPD' },
-  { id: 'actions', label: 'Plan d\'action' },
-  { id: 'records', label: 'Registre des traitements' },
-  { id: 'breaches', label: 'Violations de données' },
-  { id: 'dpia', label: 'Analyses d\'impact (AIPD)' },
-  { id: 'requests', label: 'Demandes des personnes' },
-  { id: 'policies', label: 'Politique de confidentialité' },
-  { id: 'subprocessors', label: 'Sous-traitants' },
-  { id: 'learning', label: 'Formation' },
-  { id: 'admin', label: 'Administration' }
+// Enhanced permissions with granular access levels
+const MODULE_PERMISSIONS = [
+  { 
+    id: 'diagnostic', 
+    label: 'Diagnostic RGPD',
+    description: 'Questionnaire et évaluation de conformité',
+    levels: ['read', 'write'] 
+  },
+  { 
+    id: 'actions', 
+    label: 'Plan d\'actions', 
+    description: 'Gestion des actions de conformité',
+    levels: ['read', 'write', 'assign'] 
+  },
+  { 
+    id: 'records', 
+    label: 'Registre des traitements', 
+    description: 'Fiches de traitement des données',
+    levels: ['read', 'write', 'generate'] 
+  },
+  { 
+    id: 'breaches', 
+    label: 'Violations de données', 
+    description: 'Analyse et gestion des incidents',
+    levels: ['read', 'write', 'analyze'] 
+  },
+  { 
+    id: 'dpia', 
+    label: 'Analyses d\'impact (AIPD)', 
+    description: 'Évaluations d\'impact sur la vie privée',
+    levels: ['read', 'write', 'evaluate'] 
+  },
+  { 
+    id: 'requests', 
+    label: 'Demandes des personnes', 
+    description: 'Gestion des droits des personnes concernées',
+    levels: ['read', 'write', 'process'] 
+  },
+  { 
+    id: 'policies', 
+    label: 'Politique de confidentialité', 
+    description: 'Génération et gestion des politiques',
+    levels: ['read', 'write', 'generate'] 
+  },
+  { 
+    id: 'subprocessors', 
+    label: 'Sous-traitants', 
+    description: 'Registre du sous-traitant',
+    levels: ['read', 'write'] 
+  },
+  { 
+    id: 'team', 
+    label: 'LA Team Jean Michel', 
+    description: 'Assistants IA spécialisés',
+    levels: ['read', 'chat'] 
+  },
+  { 
+    id: 'learning', 
+    label: 'Formation', 
+    description: 'Modules d\'apprentissage gamifiés',
+    levels: ['read', 'participate'] 
+  },
+  { 
+    id: 'admin', 
+    label: 'Administration', 
+    description: 'Configuration et gestion avancée',
+    levels: ['read', 'write', 'manage'] 
+  }
 ];
+
+const PERMISSION_LEVEL_LABELS = {
+  read: 'Lecture',
+  write: 'Écriture',
+  assign: 'Assignation',
+  generate: 'Génération IA',
+  analyze: 'Analyse IA',
+  evaluate: 'Évaluation',
+  process: 'Traitement',
+  chat: 'Discussion IA',
+  participate: 'Participation',
+  manage: 'Gestion complète'
+};
+
+// Legacy permissions for backward compatibility
+const PERMISSIONS = MODULE_PERMISSIONS.map(module => ({ 
+  id: module.id, 
+  label: module.label 
+}));
 
 const ROLES = [
   { value: 'collaborator', label: 'Collaborateur' },
@@ -74,6 +153,8 @@ export default function Collaborators() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("collaborator");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [editingCollaborator, setEditingCollaborator] = useState<Collaborator | null>(null);
+  const [editPermissions, setEditPermissions] = useState<string[]>([]);
 
   // Get user's company
   const { data: company } = useQuery({
@@ -154,6 +235,28 @@ export default function Collaborators() {
     }
   });
 
+  // Update collaborator permissions mutation
+  const updatePermissionsMutation = useMutation({
+    mutationFn: async (data: { collaboratorId: number; permissions: string[] }) => {
+      const response = await fetch(`/api/companies/${companyId}/collaborators/${data.collaboratorId}/permissions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions: data.permissions }),
+      });
+      if (!response.ok) throw new Error('Failed to update permissions');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/companies/${companyId}/collaborators`] });
+      setEditingCollaborator(null);
+      setEditPermissions([]);
+      toast({ title: "Permissions mises à jour avec succès" });
+    },
+    onError: () => {
+      toast({ title: "Erreur lors de la mise à jour des permissions", variant: "destructive" });
+    }
+  });
+
   const handleInvite = () => {
     if (!inviteEmail || selectedPermissions.length === 0) {
       toast({ title: "Veuillez remplir tous les champs", variant: "destructive" });
@@ -173,6 +276,111 @@ export default function Collaborators() {
     } else {
       setSelectedPermissions(selectedPermissions.filter(p => p !== permissionId));
     }
+  };
+
+  // Enhanced permission management for granular access
+  const handleGranularPermissionChange = (moduleId: string, level: string, checked: boolean) => {
+    const permissionKey = `${moduleId}.${level}`;
+    if (checked) {
+      setSelectedPermissions([...selectedPermissions, permissionKey]);
+    } else {
+      setSelectedPermissions(selectedPermissions.filter(p => p !== permissionKey));
+    }
+  };
+
+  // Helper to check if a specific permission level is selected
+  const hasPermission = (moduleId: string, level: string) => {
+    return selectedPermissions.includes(`${moduleId}.${level}`);
+  };
+
+  // Preset permission templates for quick setup
+  const applyPermissionTemplate = (template: string) => {
+    let newPermissions: string[] = [];
+    
+    switch (template) {
+      case 'viewer':
+        newPermissions = MODULE_PERMISSIONS.map(module => `${module.id}.read`);
+        break;
+      case 'contributor':
+        newPermissions = MODULE_PERMISSIONS.flatMap(module => 
+          module.levels.includes('write') 
+            ? [`${module.id}.read`, `${module.id}.write`]
+            : [`${module.id}.read`]
+        );
+        break;
+      case 'manager':
+        newPermissions = MODULE_PERMISSIONS.flatMap(module => 
+          module.levels.map(level => `${module.id}.${level}`)
+        );
+        break;
+      default:
+        newPermissions = [];
+    }
+    
+    setSelectedPermissions(newPermissions);
+  };
+
+  // Edit collaborator permissions handlers
+  const startEditingPermissions = (collaborator: Collaborator) => {
+    setEditingCollaborator(collaborator);
+    setEditPermissions(collaborator.permissions);
+  };
+
+  const handleEditPermissionChange = (moduleId: string, level: string, checked: boolean) => {
+    const permissionKey = `${moduleId}.${level}`;
+    if (checked) {
+      setEditPermissions([...editPermissions, permissionKey]);
+    } else {
+      setEditPermissions(editPermissions.filter(p => p !== permissionKey));
+    }
+  };
+
+  const applyEditPermissionTemplate = (template: string) => {
+    let newPermissions: string[] = [];
+    
+    switch (template) {
+      case 'viewer':
+        newPermissions = MODULE_PERMISSIONS.map(module => `${module.id}.read`);
+        break;
+      case 'contributor':
+        newPermissions = MODULE_PERMISSIONS.flatMap(module => 
+          module.levels.includes('write') 
+            ? [`${module.id}.read`, `${module.id}.write`]
+            : [`${module.id}.read`]
+        );
+        break;
+      case 'manager':
+        newPermissions = MODULE_PERMISSIONS.flatMap(module => 
+          module.levels.map(level => `${module.id}.${level}`)
+        );
+        break;
+      default:
+        newPermissions = [];
+    }
+    
+    setEditPermissions(newPermissions);
+  };
+
+  const savePermissions = () => {
+    if (editingCollaborator) {
+      updatePermissionsMutation.mutate({
+        collaboratorId: editingCollaborator.id,
+        permissions: editPermissions
+      });
+    }
+  };
+
+  // Helper to get permission summary
+  const getPermissionSummary = (permissions: string[]) => {
+    const moduleCount = new Set(permissions.map(p => p.split('.')[0])).size;
+    const hasAdvanced = permissions.some(p => 
+      p.includes('.generate') || p.includes('.analyze') || p.includes('.manage')
+    );
+    
+    return {
+      moduleCount,
+      level: hasAdvanced ? 'Avancé' : permissions.some(p => p.includes('.write')) ? 'Standard' : 'Lecture'
+    };
   };
 
   if (!user) {
@@ -232,21 +440,70 @@ export default function Collaborators() {
                 </Select>
               </div>
 
-              <div>
-                <Label>Permissions d'accès</Label>
-                <div className="grid grid-cols-1 gap-2 mt-2 max-h-40 overflow-y-auto">
-                  {PERMISSIONS.map(permission => (
-                    <div key={permission.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={permission.id}
-                        checked={selectedPermissions.includes(permission.id)}
-                        onCheckedChange={(checked) => handlePermissionChange(permission.id, checked as boolean)}
-                      />
-                      <Label htmlFor={permission.id} className="text-sm">
-                        {permission.label}
-                      </Label>
-                    </div>
-                  ))}
+              <div className="space-y-4">
+                <div>
+                  <Label>Modèles de permissions</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => applyPermissionTemplate('viewer')}
+                    >
+                      Lecteur
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => applyPermissionTemplate('contributor')}
+                    >
+                      Contributeur
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => applyPermissionTemplate('manager')}
+                    >
+                      Gestionnaire
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Permissions détaillées par module</Label>
+                  <div className="space-y-3 mt-2 max-h-60 overflow-y-auto">
+                    {MODULE_PERMISSIONS.map((module) => (
+                      <Card key={module.id} className="p-3">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h5 className="font-medium text-sm">{module.label}</h5>
+                            <p className="text-xs text-muted-foreground">{module.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {module.levels.map((level) => {
+                            const permissionKey = `${module.id}.${level}`;
+                            return (
+                              <div key={level} className="flex items-center space-x-1">
+                                <Checkbox
+                                  id={permissionKey}
+                                  checked={selectedPermissions.includes(permissionKey)}
+                                  onCheckedChange={(checked) => 
+                                    handleGranularPermissionChange(module.id, level, checked as boolean)
+                                  }
+                                />
+                                <Label htmlFor={permissionKey} className="text-xs">
+                                  {PERMISSION_LEVEL_LABELS[level as keyof typeof PERMISSION_LEVEL_LABELS]}
+                                </Label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -262,6 +519,100 @@ export default function Collaborators() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Edit Permissions Dialog */}
+      <Dialog open={!!editingCollaborator} onOpenChange={() => setEditingCollaborator(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Modifier les permissions - {editingCollaborator?.user.firstName} {editingCollaborator?.user.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div>
+              <Label>Modèles de permissions</Label>
+              <div className="flex gap-2 mt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => applyEditPermissionTemplate('viewer')}
+                >
+                  Lecteur
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => applyEditPermissionTemplate('contributor')}
+                >
+                  Contributeur
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => applyEditPermissionTemplate('manager')}
+                >
+                  Gestionnaire
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label>Permissions par module</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                {MODULE_PERMISSIONS.map((module) => (
+                  <Card key={module.id} className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h5 className="font-medium text-sm">{module.label}</h5>
+                        <p className="text-xs text-muted-foreground">{module.description}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {module.levels.map((level) => {
+                        const permissionKey = `${module.id}.${level}`;
+                        return (
+                          <div key={level} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`edit-${permissionKey}`}
+                              checked={editPermissions.includes(permissionKey)}
+                              onCheckedChange={(checked) => 
+                                handleEditPermissionChange(module.id, level, checked as boolean)
+                              }
+                            />
+                            <Label htmlFor={`edit-${permissionKey}`} className="text-sm">
+                              {PERMISSION_LEVEL_LABELS[level as keyof typeof PERMISSION_LEVEL_LABELS]}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4 border-t">
+              <Button 
+                onClick={savePermissions}
+                disabled={updatePermissionsMutation.isPending}
+                className="flex-1"
+              >
+                {updatePermissionsMutation.isPending ? "Sauvegarde..." : "Sauvegarder les modifications"}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setEditingCollaborator(null)}
+              >
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active Collaborators */}
@@ -281,32 +632,67 @@ export default function Collaborators() {
                   Aucun collaborateur pour le moment
                 </p>
               ) : (
-                collaborators.map((collaborator: Collaborator) => (
-                  <div key={collaborator.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        {collaborator.user.firstName} {collaborator.user.lastName}
+                collaborators.map((collaborator: Collaborator) => {
+                  const permSummary = getPermissionSummary(collaborator.permissions);
+                  return (
+                    <div key={collaborator.id} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium">
+                            {collaborator.user.firstName} {collaborator.user.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">{collaborator.user.email}</div>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="secondary">
+                              {ROLES.find(r => r.value === collaborator.role)?.label || collaborator.role}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {permSummary.moduleCount} modules • {permSummary.level}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEditingPermissions(collaborator)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCollaboratorMutation.mutate(collaborator.id)}
+                            disabled={removeCollaboratorMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500">{collaborator.user.email}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary">
-                          {ROLES.find(r => r.value === collaborator.role)?.label || collaborator.role}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {collaborator.permissions.length} modules
-                        </Badge>
+                      
+                      {/* Permission preview */}
+                      <div className="flex flex-wrap gap-1">
+                        {Array.from(new Set(collaborator.permissions.map(p => p.split('.')[0]))).map(moduleId => {
+                          const module = MODULE_PERMISSIONS.find(m => m.id === moduleId);
+                          const userModulePerms = collaborator.permissions.filter(p => p.startsWith(moduleId + '.'));
+                          const hasWrite = userModulePerms.some(p => p.includes('.write'));
+                          const hasAdvanced = userModulePerms.some(p => 
+                            p.includes('.generate') || p.includes('.analyze') || p.includes('.manage')
+                          );
+                          
+                          return (
+                            <Badge key={moduleId} variant="outline" className="text-xs">
+                              {module?.label}
+                              {hasAdvanced && <Zap className="h-3 w-3 ml-1" />}
+                              {hasWrite && !hasAdvanced && <Edit className="h-3 w-3 ml-1" />}
+                              {!hasWrite && !hasAdvanced && <Eye className="h-3 w-3 ml-1" />}
+                            </Badge>
+                          );
+                        })}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeCollaboratorMutation.mutate(collaborator.id)}
-                      disabled={removeCollaboratorMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </CardContent>

@@ -212,6 +212,7 @@ export interface IStorage {
   getCompanyCollaborators(companyId: number): Promise<UserCompanyAccess[]>;
   getCompanyCollaboratorsWithUsers(companyId: number): Promise<(UserCompanyAccess & { user: User })[]>;
   updateUserCompanyAccess(id: number, updates: Partial<InsertUserCompanyAccess>): Promise<UserCompanyAccess>;
+  updateCollaboratorPermissions(collaboratorId: number, permissions: string[]): Promise<UserCompanyAccess>;
   createInvitation(invitation: InsertInvitation): Promise<Invitation>;
   getInvitationByToken(token: string): Promise<Invitation | undefined>;
   getCompanyInvitations(companyId: number): Promise<Invitation[]>;
@@ -1212,6 +1213,15 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserCompanyAccess(id: number, updates: Partial<InsertUserCompanyAccess>): Promise<UserCompanyAccess> {
     const [updated] = await db.update(userCompanyAccess).set(updates).where(eq(userCompanyAccess.id, id)).returning();
+    return updated;
+  }
+
+  // Update collaborator permissions (granular access control)
+  async updateCollaboratorPermissions(collaboratorId: number, permissions: string[]): Promise<UserCompanyAccess> {
+    const [updated] = await db.update(userCompanyAccess)
+      .set({ permissions })
+      .where(eq(userCompanyAccess.id, collaboratorId))
+      .returning();
     return updated;
   }
 

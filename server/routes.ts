@@ -2759,6 +2759,31 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
+  // Update collaborator permissions (granular access control)
+  app.put("/api/companies/:companyId/collaborators/:collaboratorId/permissions", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const collaboratorId = parseInt(req.params.collaboratorId);
+      const { permissions } = req.body;
+
+      if (!Array.isArray(permissions)) {
+        return res.status(400).json({ error: "Permissions must be an array" });
+      }
+
+      // Update the permissions in the user_company_access table
+      await storage.updateCollaboratorPermissions(collaboratorId, permissions);
+      
+      res.json({ 
+        success: true, 
+        message: "Permissions updated successfully",
+        permissions 
+      });
+    } catch (error: any) {
+      console.error('Update collaborator permissions error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get available users for assignment (collaborators of current company)
   app.get("/api/companies/:companyId/users", requireAuth, requireCompanyAccess, async (req, res) => {
     try {
