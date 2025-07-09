@@ -2860,6 +2860,62 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
+  // Search users by email (for adding existing users as collaborators)
+  app.get("/api/users/search", requireAuth, async (req, res) => {
+    try {
+      const { email } = req.query;
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ error: "Email parameter required" });
+      }
+
+      const users = await storage.searchUsersByEmail(email);
+      res.json(users);
+    } catch (error: any) {
+      console.error('Search users error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Add existing user as collaborator to company
+  app.post("/api/companies/:companyId/collaborators/add-existing", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const { userId, permissions, role } = req.body;
+      const currentUserId = req.session?.userId;
+
+      if (!currentUserId) {
+        return res.status(401).json({ error: "Non authentifié" });
+      }
+
+      // Verify current user is owner/admin of this company
+      const userAccess = await storage.getUserCompanyAccess(currentUserId, companyId);
+      if (!userAccess || userAccess.role !== 'owner') {
+        return res.status(403).json({ error: "Seuls les propriétaires peuvent ajouter des collaborateurs" });
+      }
+
+      // Check if user is already a collaborator for this company
+      const existingAccess = await storage.getUserCompanyAccess(userId, companyId);
+      if (existingAccess) {
+        return res.status(400).json({ error: "Cet utilisateur est déjà collaborateur de cette entreprise" });
+      }
+
+      // Add user as collaborator
+      const collaborator = await storage.createUserCompanyAccess({
+        userId,
+        companyId,
+        role: role || 'collaborator',
+        permissions: permissions || [],
+        invitedBy: currentUserId,
+        status: 'active'
+      });
+
+      res.json(collaborator);
+    } catch (error: any) {
+      console.error('Add existing collaborator error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get available users for assignment (collaborators of current company)
   app.get("/api/companies/:companyId/users", requireAuth, requireCompanyAccess, async (req, res) => {
     try {

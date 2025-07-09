@@ -155,6 +155,11 @@ export default function Collaborators() {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [editingCollaborator, setEditingCollaborator] = useState<Collaborator | null>(null);
   const [editPermissions, setEditPermissions] = useState<string[]>([]);
+  const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedPermissionsForExisting, setSelectedPermissionsForExisting] = useState<string[]>([]);
 
   // Get user's company
   const { data: company } = useQuery({
@@ -254,6 +259,53 @@ export default function Collaborators() {
     },
     onError: () => {
       toast({ title: "Erreur lors de la mise à jour des permissions", variant: "destructive" });
+    }
+  });
+
+  // Search users mutation
+  const searchUsersMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await fetch(`/api/users/search?email=${encodeURIComponent(email)}`);
+      if (!response.ok) throw new Error('Failed to search users');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSearchResults(data);
+    },
+    onError: () => {
+      toast({ title: "Erreur lors de la recherche d'utilisateurs", variant: "destructive" });
+    }
+  });
+
+  // Add existing user mutation
+  const addExistingUserMutation = useMutation({
+    mutationFn: async (data: { userId: number; permissions: string[]; role: string }) => {
+      const response = await fetch(`/api/companies/${companyId}/collaborators/add-existing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add user');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/companies/${companyId}/collaborators`] });
+      setIsAddExistingOpen(false);
+      setSearchEmail("");
+      setSearchResults([]);
+      setSelectedUser(null);
+      setSelectedPermissionsForExisting([]);
+      toast({ title: "Collaborateur ajouté avec succès" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Erreur", 
+        description: error.message || "Impossible d'ajouter le collaborateur",
+        variant: "destructive" 
+      });
     }
   });
 
@@ -401,13 +453,14 @@ export default function Collaborators() {
           </p>
         </div>
         
-        <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
-              Inviter un collaborateur
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Inviter par email
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Inviter un collaborateur</DialogTitle>
@@ -518,6 +571,151 @@ export default function Collaborators() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={isAddExistingOpen} onOpenChange={setIsAddExistingOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Ajouter utilisateur existant
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Ajouter un utilisateur existant</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="search-email">Rechercher par email</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    id="search-email"
+                    type="email"
+                    value={searchEmail}
+                    onChange={(e) => setSearchEmail(e.target.value)}
+                    placeholder="utilisateur@exemple.com"
+                  />
+                  <Button 
+                    onClick={() => searchUsersMutation.mutate(searchEmail)}
+                    disabled={!searchEmail || searchUsersMutation.isPending}
+                  >
+                    Rechercher
+                  </Button>
+                </div>
+              </div>
+
+              {searchResults.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Utilisateurs trouvés</Label>
+                  {searchResults.map((user) => (
+                    <div 
+                      key={user.id} 
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedUser?.id === user.id ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSelectedUser(user)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{user.firstName} {user.lastName}</p>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                        </div>
+                        {selectedUser?.id === user.id && (
+                          <div className="text-blue-600">
+                            <Users className="h-5 w-5" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedUser && (
+                <div className="space-y-4 border-t pt-4">
+                  <div>
+                    <Label>Permissions pour {selectedUser.firstName} {selectedUser.lastName}</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedPermissionsForExisting(['diagnostic.read', 'actions.read', 'records.read'])}
+                      >
+                        Lecteur
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedPermissionsForExisting(['diagnostic.read', 'diagnostic.write', 'actions.read', 'actions.write', 'records.read', 'records.write'])}
+                      >
+                        Contributeur
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedPermissionsForExisting(MODULE_PERMISSIONS.flatMap(m => m.levels.map(l => `${m.id}.${l}`)))}
+                      >
+                        Gestionnaire
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {MODULE_PERMISSIONS.map((module) => (
+                      <Card key={module.id} className="p-3">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h5 className="font-medium text-sm">{module.label}</h5>
+                            <p className="text-xs text-muted-foreground">{module.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {module.levels.map((level) => {
+                            const permissionKey = `${module.id}.${level}`;
+                            return (
+                              <div key={level} className="flex items-center space-x-1">
+                                <Checkbox
+                                  id={`existing-${permissionKey}`}
+                                  checked={selectedPermissionsForExisting.includes(permissionKey)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setSelectedPermissionsForExisting(prev => [...prev, permissionKey]);
+                                    } else {
+                                      setSelectedPermissionsForExisting(prev => prev.filter(p => p !== permissionKey));
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={`existing-${permissionKey}`} className="text-xs">
+                                  {PERMISSION_LEVEL_LABELS[level as keyof typeof PERMISSION_LEVEL_LABELS]}
+                                </Label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <Button 
+                    onClick={() => addExistingUserMutation.mutate({
+                      userId: selectedUser.id,
+                      permissions: selectedPermissionsForExisting,
+                      role: 'collaborator'
+                    })}
+                    disabled={addExistingUserMutation.isPending || selectedPermissionsForExisting.length === 0}
+                    className="w-full"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    {addExistingUserMutation.isPending ? "Ajout..." : "Ajouter à l'entreprise"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+        </div>
       </div>
 
       {/* Edit Permissions Dialog */}
