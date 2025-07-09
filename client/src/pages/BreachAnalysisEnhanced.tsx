@@ -607,7 +607,7 @@ Généré le: ${new Date().toLocaleString()}
     );
   }
 
-  if (companyLoading || !company) {
+  if (!companyId) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="text-center">

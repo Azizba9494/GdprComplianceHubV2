@@ -494,7 +494,7 @@ export default function DpiaList() {
         title: "AIPD supprimée",
         description: "L'analyse d'impact a été supprimée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${company?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${companyId}`] });
     },
     onError: (error: any) => {
       toast({
@@ -507,20 +507,20 @@ export default function DpiaList() {
 
   // Get all DPIA assessments
   const { data: dpias = [], isLoading } = useQuery({
-    queryKey: [`/api/dpia/${company?.id}`],
-    enabled: !!company?.id,
+    queryKey: [`/api/dpia/${companyId}`],
+    enabled: !!companyId,
   }) as { data: any[], isLoading: boolean };
 
   // Get processing records for reference
   const { data: processingRecords = [] } = useQuery({
-    queryKey: [`/api/records/${company?.id}`],
-    enabled: !!company?.id,
+    queryKey: [`/api/records/${companyId}`],
+    enabled: !!companyId,
   }) as { data: any[] };
 
   // Get DPIA evaluations
   const { data: dpiaEvaluations = [] } = useQuery({
-    queryKey: [`/api/dpia-evaluations/${company?.id}`],
-    enabled: !!company?.id,
+    queryKey: [`/api/dpia-evaluations/${companyId}`],
+    enabled: !!companyId,
   }) as { data: any[] };
 
   const getProcessingRecordName = (recordId: number) => {
@@ -647,7 +647,7 @@ export default function DpiaList() {
               <ProcessingSelectionForEvaluation 
                 records={processingRecords}
                 dpiaEvaluations={dpiaEvaluations}
-                companyId={company?.id}
+                companyId={companyId}
               />
             </CardContent>
           </Card>

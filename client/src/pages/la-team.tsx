@@ -58,20 +58,14 @@ const BOTS = [
 ];
 
 export default function LaTeam() {
-  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAllConversations, setShowAllConversations] = useState<string | null>(null);
 
-  // Get user's company information
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
-    enabled: !!user,
-  });
+  const { user, currentCompany } = useAuth();
 
-  const companyId = userCompany?.id;
+  const companyId = currentCompany?.id;
 
   // Get existing bot conversations
   const { data: conversations, isLoading } = useQuery({

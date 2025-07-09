@@ -60,7 +60,7 @@ const BOT_INFO = {
 export default function LaTeamChat() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
