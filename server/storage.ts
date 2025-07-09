@@ -5,6 +5,7 @@ import {
   learningModules, achievements, userProgress, userAchievements, moduleProgress,
   quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
   subscriptions, userCompanyAccess, invitations, invoices, botConversations, botMessages,
+  actionAssignments, actionComments, actionAttachments, actionActivityLog,
   type User, type InsertUser, type Company, type InsertCompany,
   type Subscription, type InsertSubscription, type UserCompanyAccess, type InsertUserCompanyAccess,
   type Invitation, type InsertInvitation, type Invoice, type InsertInvoice,
@@ -31,7 +32,11 @@ import {
   type QuizAttempt, type InsertQuizAttempt,
   type DpiaEvaluation, type InsertDpiaEvaluation,
   type RagDocument, type InsertRagDocument,
-  type PromptDocument, type InsertPromptDocument
+  type PromptDocument, type InsertPromptDocument,
+  type ActionAssignment, type InsertActionAssignment,
+  type ActionComment, type InsertActionComment,
+  type ActionAttachment, type InsertActionAttachment,
+  type ActionActivityLog, type InsertActionActivityLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
@@ -210,6 +215,38 @@ export interface IStorage {
   updateInvitation(id: number, updates: Partial<InsertInvitation>): Promise<Invitation>;
   getUserInvoices(userId: number): Promise<Invoice[]>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+
+  // Bot Conversations
+  getBotConversations(companyId: number): Promise<BotConversation[]>;
+  getBotConversation(id: number): Promise<BotConversation | undefined>;
+  createBotConversation(conversation: InsertBotConversation): Promise<BotConversation>;
+  updateBotConversation(id: number, updates: Partial<InsertBotConversation>): Promise<BotConversation>;
+  deleteBotConversation(id: number): Promise<void>;
+
+  // Bot Messages
+  getBotMessages(conversationId: number): Promise<BotMessage[]>;
+  createBotMessage(message: InsertBotMessage): Promise<BotMessage>;
+
+  // Action Assignments
+  getActionAssignments(actionId: number): Promise<ActionAssignment[]>;
+  getUserActionAssignments(userId: number): Promise<ActionAssignment[]>;
+  createActionAssignment(assignment: InsertActionAssignment): Promise<ActionAssignment>;
+  deleteActionAssignment(id: number): Promise<void>;
+
+  // Action Comments
+  getActionComments(actionId: number): Promise<ActionComment[]>;
+  createActionComment(comment: InsertActionComment): Promise<ActionComment>;
+  updateActionComment(id: number, updates: Partial<InsertActionComment>): Promise<ActionComment>;
+  deleteActionComment(id: number): Promise<void>;
+
+  // Action Attachments
+  getActionAttachments(actionId: number): Promise<ActionAttachment[]>;
+  createActionAttachment(attachment: InsertActionAttachment): Promise<ActionAttachment>;
+  deleteActionAttachment(id: number): Promise<void>;
+
+  // Action Activity Log
+  getActionActivityLog(actionId: number): Promise<ActionActivityLog[]>;
+  createActionActivityLog(log: InsertActionActivityLog): Promise<ActionActivityLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -345,6 +382,63 @@ export class DatabaseStorage implements IStorage {
 
   async deleteComplianceAction(id: number): Promise<void> {
     await db.delete(complianceActions).where(eq(complianceActions.id, id));
+  }
+
+  // Action Assignments
+  async getActionAssignments(actionId: number): Promise<ActionAssignment[]> {
+    return await db.select().from(actionAssignments).where(eq(actionAssignments.actionId, actionId)).orderBy(desc(actionAssignments.assignedAt));
+  }
+
+  async createActionAssignment(assignment: InsertActionAssignment): Promise<ActionAssignment> {
+    const [created] = await db.insert(actionAssignments).values(assignment).returning();
+    return created;
+  }
+
+  async deleteActionAssignment(id: number): Promise<void> {
+    await db.delete(actionAssignments).where(eq(actionAssignments.id, id));
+  }
+
+  // Action Comments
+  async getActionComments(actionId: number): Promise<ActionComment[]> {
+    return await db.select().from(actionComments).where(eq(actionComments.actionId, actionId)).orderBy(desc(actionComments.createdAt));
+  }
+
+  async createActionComment(comment: InsertActionComment): Promise<ActionComment> {
+    const [created] = await db.insert(actionComments).values(comment).returning();
+    return created;
+  }
+
+  async updateActionComment(id: number, updates: Partial<InsertActionComment>): Promise<ActionComment> {
+    const [updated] = await db.update(actionComments).set(updates).where(eq(actionComments.id, id)).returning();
+    return updated;
+  }
+
+  async deleteActionComment(id: number): Promise<void> {
+    await db.delete(actionComments).where(eq(actionComments.id, id));
+  }
+
+  // Action Attachments
+  async getActionAttachments(actionId: number): Promise<ActionAttachment[]> {
+    return await db.select().from(actionAttachments).where(eq(actionAttachments.actionId, actionId)).orderBy(desc(actionAttachments.createdAt));
+  }
+
+  async createActionAttachment(attachment: InsertActionAttachment): Promise<ActionAttachment> {
+    const [created] = await db.insert(actionAttachments).values(attachment).returning();
+    return created;
+  }
+
+  async deleteActionAttachment(id: number): Promise<void> {
+    await db.delete(actionAttachments).where(eq(actionAttachments.id, id));
+  }
+
+  // Action Activity Log
+  async getActionActivityLog(actionId: number): Promise<ActionActivityLog[]> {
+    return await db.select().from(actionActivityLog).where(eq(actionActivityLog.actionId, actionId)).orderBy(desc(actionActivityLog.createdAt));
+  }
+
+  async createActionActivityLog(activity: InsertActionActivityLog): Promise<ActionActivityLog> {
+    const [created] = await db.insert(actionActivityLog).values(activity).returning();
+    return created;
   }
 
   // Processing Records
@@ -1158,6 +1252,87 @@ export class DatabaseStorage implements IStorage {
 
   async createBotMessage(message: InsertBotMessage): Promise<BotMessage> {
     const [created] = await db.insert(botMessages).values(message).returning();
+    return created;
+  }
+
+  // Action Assignments
+  async getActionAssignments(actionId: number): Promise<ActionAssignment[]> {
+    const assignments = await db.select()
+      .from(actionAssignments)
+      .where(eq(actionAssignments.actionId, actionId))
+      .orderBy(actionAssignments.assignedAt);
+    return assignments;
+  }
+
+  async getUserActionAssignments(userId: number): Promise<ActionAssignment[]> {
+    const assignments = await db.select()
+      .from(actionAssignments)
+      .where(eq(actionAssignments.userId, userId))
+      .orderBy(desc(actionAssignments.assignedAt));
+    return assignments;
+  }
+
+  async createActionAssignment(assignment: InsertActionAssignment): Promise<ActionAssignment> {
+    const [created] = await db.insert(actionAssignments).values(assignment).returning();
+    return created;
+  }
+
+  async deleteActionAssignment(id: number): Promise<void> {
+    await db.delete(actionAssignments).where(eq(actionAssignments.id, id));
+  }
+
+  // Action Comments
+  async getActionComments(actionId: number): Promise<ActionComment[]> {
+    const comments = await db.select()
+      .from(actionComments)
+      .where(eq(actionComments.actionId, actionId))
+      .orderBy(actionComments.createdAt);
+    return comments;
+  }
+
+  async createActionComment(comment: InsertActionComment): Promise<ActionComment> {
+    const [created] = await db.insert(actionComments).values(comment).returning();
+    return created;
+  }
+
+  async updateActionComment(id: number, updates: Partial<InsertActionComment>): Promise<ActionComment> {
+    const [updated] = await db.update(actionComments).set(updates).where(eq(actionComments.id, id)).returning();
+    return updated;
+  }
+
+  async deleteActionComment(id: number): Promise<void> {
+    await db.delete(actionComments).where(eq(actionComments.id, id));
+  }
+
+  // Action Attachments
+  async getActionAttachments(actionId: number): Promise<ActionAttachment[]> {
+    const attachments = await db.select()
+      .from(actionAttachments)
+      .where(eq(actionAttachments.actionId, actionId))
+      .orderBy(actionAttachments.createdAt);
+    return attachments;
+  }
+
+  async createActionAttachment(attachment: InsertActionAttachment): Promise<ActionAttachment> {
+    const [created] = await db.insert(actionAttachments).values(attachment).returning();
+    return created;
+  }
+
+  async deleteActionAttachment(id: number): Promise<void> {
+    await db.delete(actionAttachments).where(eq(actionAttachments.id, id));
+  }
+
+  // Action Activity Log
+  async getActionActivityLog(actionId: number): Promise<ActionActivityLog[]> {
+    const logs = await db.select()
+      .from(actionActivityLog)
+      .where(eq(actionActivityLog.actionId, actionId))
+      .orderBy(desc(actionActivityLog.createdAt));
+    return logs;
+  }
+
+  async createActionActivityLog(log: InsertActionActivityLog): Promise<ActionActivityLog> {
+    const [created] = await db.insert(actionActivityLog).values(log).returning();
     return created;
   }
 

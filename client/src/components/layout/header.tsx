@@ -129,10 +129,10 @@ export default function Header() {
     });
 
     // Urgent actions (due within next 3 days)
-    const urgentActions = recentActions
+    const urgentActions = Array.isArray(recentActions) ? recentActions
       .filter((action: any) => action.status !== 'completed' && action.dueDate && new Date(action.dueDate) <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000))
       .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-      .slice(0, 2);
+      .slice(0, 2) : [];
 
     urgentActions.forEach((action: any) => {
       notifications.push({

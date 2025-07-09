@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
-import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, Filter, Search, AlertTriangle, FileText, Shield, Users } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CollaborativeActionModal } from "@/components/CollaborativeActionModal";
+import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, Filter, Search, AlertTriangle, FileText, Shield, Users, MessageSquare, UserCheck, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -76,6 +78,7 @@ function getActionCategory(action: any): string {
 
 export default function ActionPlan() {
   const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [isCollaborativeModalOpen, setIsCollaborativeModalOpen] = useState(false);
   const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
   const [newDueDate, setNewDueDate] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,6 +87,13 @@ export default function ActionPlan() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Mock company users for collaboration indicators
+  const companyUsers = [
+    { id: 1, firstName: "Jean", lastName: "Dupont", email: "jean@company.com" },
+    { id: 2, firstName: "Marie", lastName: "Martin", email: "marie@company.com" },
+    { id: 3, firstName: "Pierre", lastName: "Durand", email: "pierre@company.com" },
+  ];
 
   // Get user's company information
   const { data: userCompany } = useQuery({
@@ -97,6 +107,36 @@ export default function ActionPlan() {
     queryFn: () => userCompany ? actionsApi.get(userCompany.id).then(res => res.json()) : Promise.resolve([]),
     enabled: !!userCompany,
   });
+
+  // Helper functions for collaborative features
+  const getUserInitials = (userId: number) => {
+    const user = companyUsers.find(u => u.id === userId);
+    return user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}` : "U";
+  };
+
+  const openCollaborativeModal = (action: any) => {
+    setSelectedAction(action);
+    setIsCollaborativeModalOpen(true);
+  };
+
+  // Mock assignments data - in real app, this would come from API
+  const getActionAssignments = (actionId: number) => {
+    const mockAssignments = {
+      167: [{ userId: 1, role: 'assignee' }, { userId: 2, role: 'reviewer' }],
+      168: [{ userId: 3, role: 'assignee' }],
+    };
+    return mockAssignments[actionId as keyof typeof mockAssignments] || [];
+  };
+
+  // Mock comments count - in real app, this would come from API
+  const getActionCommentsCount = (actionId: number) => {
+    const mockComments = {
+      167: 3,
+      168: 1,
+      169: 0,
+    };
+    return mockComments[actionId as keyof typeof mockComments] || 0;
+  };
 
   const updateActionMutation = useMutation({
     mutationFn: ({ id, updates }: { id: number; updates: any }) => 
@@ -396,17 +436,69 @@ export default function ActionPlan() {
                                 )}
                               </div>
                               
+                              {/* Collaborative indicators */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {/* Assigned users */}
+                                  <div className="flex items-center gap-1">
+                                    {getActionAssignments(action.id).slice(0, 3).map((assignment, index) => (
+                                      <Avatar key={index} className="h-6 w-6 border-2 border-white dark:border-gray-800">
+                                        <AvatarFallback className="text-xs">
+                                          {getUserInitials(assignment.userId)}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    ))}
+                                    {getActionAssignments(action.id).length > 3 && (
+                                      <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium">
+                                        +{getActionAssignments(action.id).length - 3}
+                                      </div>
+                                    )}
+                                    {getActionAssignments(action.id).length > 0 && (
+                                      <UserCheck className="h-4 w-4 text-green-600 ml-1" />
+                                    )}
+                                  </div>
+
+                                  {/* Comments indicator */}
+                                  <div className="flex items-center gap-1">
+                                    <MessageSquare className="h-4 w-4 text-blue-600" />
+                                    <span className="text-sm text-muted-foreground">
+                                      {getActionCommentsCount(action.id)}
+                                    </span>
+                                  </div>
+
+                                  {/* Activity indicator */}
+                                  <div className="flex items-center gap-1">
+                                    <Activity className="h-4 w-4 text-purple-600" />
+                                    <span className="text-xs text-muted-foreground">
+                                      récent
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openDateDialog(action)}
+                                    className="flex items-center space-x-1"
+                                  >
+                                    <CalendarDays className="w-4 h-4" />
+                                    <span>Échéance</span>
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openCollaborativeModal(action)}
+                                    className="flex items-center space-x-1"
+                                  >
+                                    <Users className="w-4 h-4" />
+                                    <span>Collaborer</span>
+                                  </Button>
+                                </div>
+                              </div>
+                              
                               <div className="flex flex-wrap items-center justify-end gap-3">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openDateDialog(action)}
-                                  className="flex items-center space-x-1"
-                                >
-                                  <CalendarDays className="w-4 h-4" />
-                                  <span>Échéance</span>
-                                </Button>
-                                
                                 <Select
                                   value={action.status}
                                   onValueChange={(value) => handleStatusChange(action.id, value)}
@@ -479,6 +571,13 @@ export default function ActionPlan() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Collaborative Action Modal */}
+      <CollaborativeActionModal
+        action={selectedAction}
+        isOpen={isCollaborativeModalOpen}
+        onOpenChange={setIsCollaborativeModalOpen}
+      />
     </div>
   );
 }

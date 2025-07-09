@@ -87,6 +87,59 @@ export const complianceActions = pgTable("compliance_actions", {
   status: text("status").notNull().default("todo"), // todo, inprogress, completed
   dueDate: timestamp("due_date"),
   completedAt: timestamp("completed_at"),
+  createdById: integer("created_by_id").references(() => users.id),
+  requiresApproval: boolean("requires_approval").default(false),
+  approvedById: integer("approved_by_id").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Action assignments - who is assigned to work on which action
+export const actionAssignments = pgTable("action_assignments", {
+  id: serial("id").primaryKey(),
+  actionId: integer("action_id").notNull().references(() => complianceActions.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: text("role").notNull().default("assignee"), // assignee, reviewer, observer
+  assignedById: integer("assigned_by_id").references(() => users.id),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+});
+
+// Action comments - discussion thread for each action
+export const actionComments = pgTable("action_comments", {
+  id: serial("id").primaryKey(),
+  actionId: integer("action_id").notNull().references(() => complianceActions.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  mentionedUsers: integer("mentioned_users").array(), // Array of user IDs mentioned in the comment
+  isInternal: boolean("is_internal").default(false), // Internal team comment vs client-visible
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Action attachments - files, documents, screenshots
+export const actionAttachments = pgTable("action_attachments", {
+  id: serial("id").primaryKey(),
+  actionId: integer("action_id").notNull().references(() => complianceActions.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileType: text("file_type").notNull(),
+  filePath: text("file_path").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Action activity log - comprehensive audit trail
+export const actionActivityLog = pgTable("action_activity_log", {
+  id: serial("id").primaryKey(),
+  actionId: integer("action_id").notNull().references(() => complianceActions.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  activityType: text("activity_type").notNull(), // created, assigned, status_changed, commented, approved, etc.
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  description: text("description").notNull(),
+  metadata: jsonb("metadata"), // Additional context (e.g., assignment details, status change reasons)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -901,6 +954,28 @@ export const insertBotMessageSchema = createInsertSchema(botMessages).omit({
   timestamp: true,
 });
 
+// Collaborative action schemas
+export const insertActionAssignmentSchema = createInsertSchema(actionAssignments).omit({
+  id: true,
+  assignedAt: true,
+});
+
+export const insertActionCommentSchema = createInsertSchema(actionComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertActionAttachmentSchema = createInsertSchema(actionAttachments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertActionActivityLogSchema = createInsertSchema(actionActivityLog).omit({
+  id: true,
+  createdAt: true,
+});
+
 // RAG Document types
 export type RagDocument = typeof ragDocuments.$inferSelect;
 export type InsertRagDocument = z.infer<typeof insertRagDocumentSchema>;
@@ -912,6 +987,16 @@ export type BotConversation = typeof botConversations.$inferSelect;
 export type InsertBotConversation = z.infer<typeof insertBotConversationSchema>;
 export type BotMessage = typeof botMessages.$inferSelect;
 export type InsertBotMessage = z.infer<typeof insertBotMessageSchema>;
+
+// Collaborative action types
+export type ActionAssignment = typeof actionAssignments.$inferSelect;
+export type InsertActionAssignment = z.infer<typeof insertActionAssignmentSchema>;
+export type ActionComment = typeof actionComments.$inferSelect;
+export type InsertActionComment = z.infer<typeof insertActionCommentSchema>;
+export type ActionAttachment = typeof actionAttachments.$inferSelect;
+export type InsertActionAttachment = z.infer<typeof insertActionAttachmentSchema>;
+export type ActionActivityLog = typeof actionActivityLog.$inferSelect;
+export type InsertActionActivityLog = z.infer<typeof insertActionActivityLogSchema>;
 
 // Multi-tenant types
 export type Subscription = typeof subscriptions.$inferSelect;

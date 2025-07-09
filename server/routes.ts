@@ -511,8 +511,245 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updates.completedAt = new Date(updates.completedAt);
       }
 
+      // Log activity when status changes
+      if (updates.status) {
+        const userId = (req.session as any).userId;
+        await storage.createActionActivityLog({
+          actionId: id,
+          userId,
+          activityType: 'status_changed',
+          oldValue: updates.previousStatus || 'unknown',
+          newValue: updates.status,
+          description: `Statut modifié de "${updates.previousStatus || 'inconnu'}" vers "${updates.status}"`
+        });
+      }
+
       const action = await storage.updateComplianceAction(id, updates);
       res.json(action);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Action Assignments Routes
+  app.get("/api/actions/:actionId/assignments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const assignments = await storage.getActionAssignments(actionId);
+      res.json(assignments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/actions/:actionId/assignments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const { userId, role } = req.body;
+      const assignedById = (req.session as any).userId;
+
+      const assignment = await storage.createActionAssignment({
+        actionId,
+        userId,
+        role: role || 'assignee',
+        assignedById
+      });
+
+      // Log assignment activity
+      await storage.createActionActivityLog({
+        actionId,
+        userId: assignedById,
+        activityType: 'assigned',
+        newValue: userId.toString(),
+        description: `Tâche assignée à l'utilisateur ${userId} avec le rôle ${role || 'assignee'}`
+      });
+
+      res.json(assignment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/actions/:actionId/assignments/:assignmentId", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const assignmentId = parseInt(req.params.assignmentId);
+      const userId = (req.session as any).userId;
+
+      await storage.deleteActionAssignment(assignmentId);
+
+      // Log unassignment activity
+      await storage.createActionActivityLog({
+        actionId,
+        userId,
+        activityType: 'unassigned',
+        description: `Assignment supprimé (ID: ${assignmentId})`
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Action Comments Routes
+  app.get("/api/actions/:actionId/comments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const comments = await storage.getActionComments(actionId);
+      res.json(comments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/actions/:actionId/comments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const { content, mentionedUsers, isInternal } = req.body;
+      const userId = (req.session as any).userId;
+
+      const comment = await storage.createActionComment({
+        actionId,
+        userId,
+        content,
+        mentionedUsers: mentionedUsers || [],
+        isInternal: isInternal || false
+      });
+
+      // Log comment activity
+      await storage.createActionActivityLog({
+        actionId,
+        userId,
+        activityType: 'commented',
+        description: `Nouveau commentaire ajouté`
+      });
+
+      res.json(comment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/actions/:actionId/comments/:commentId", requireAuth, async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.commentId);
+      const actionId = parseInt(req.params.actionId);
+      const { content } = req.body;
+      const userId = (req.session as any).userId;
+
+      const comment = await storage.updateActionComment(commentId, { content });
+
+      // Log edit activity
+      await storage.createActionActivityLog({
+        actionId,
+        userId,
+        activityType: 'comment_edited',
+        description: `Commentaire modifié (ID: ${commentId})`
+      });
+
+      res.json(comment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/actions/:actionId/comments/:commentId", requireAuth, async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.commentId);
+      const actionId = parseInt(req.params.actionId);
+      const userId = (req.session as any).userId;
+
+      await storage.deleteActionComment(commentId);
+
+      // Log deletion activity
+      await storage.createActionActivityLog({
+        actionId,
+        userId,
+        activityType: 'comment_deleted',
+        description: `Commentaire supprimé (ID: ${commentId})`
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Action Activity Log Routes
+  app.get("/api/actions/:actionId/activity", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const activity = await storage.getActionActivityLog(actionId);
+      res.json(activity);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Action Attachments Routes
+  app.get("/api/actions/:actionId/attachments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const attachments = await storage.getActionAttachments(actionId);
+      res.json(attachments);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/actions/:actionId/attachments", requireAuth, upload.single('file'), async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const userId = (req.session as any).userId;
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ error: "Aucun fichier fourni" });
+      }
+
+      // For now, we'll store file metadata only (in a real app, upload to cloud storage)
+      const attachment = await storage.createActionAttachment({
+        actionId,
+        userId,
+        fileName: file.originalname,
+        fileSize: file.size,
+        fileType: file.mimetype,
+        filePath: `uploads/actions/${actionId}/${file.originalname}`, // placeholder path
+        description: req.body.description || ''
+      });
+
+      // Log attachment activity
+      await storage.createActionActivityLog({
+        actionId,
+        userId,
+        activityType: 'attachment_added',
+        description: `Fichier joint: ${file.originalname}`
+      });
+
+      res.json(attachment);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/actions/:actionId/attachments/:attachmentId", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const attachmentId = parseInt(req.params.attachmentId);
+      const userId = (req.session as any).userId;
+
+      await storage.deleteActionAttachment(attachmentId);
+
+      // Log deletion activity
+      await storage.createActionActivityLog({
+        actionId,
+        userId,
+        activityType: 'attachment_deleted',
+        description: `Pièce jointe supprimée (ID: ${attachmentId})`
+      });
+
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
