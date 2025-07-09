@@ -390,7 +390,7 @@ export default function Collaborators() {
   // Edit collaborator permissions handlers
   const startEditingPermissions = (collaborator: Collaborator) => {
     setEditingCollaborator(collaborator);
-    setEditPermissions(collaborator.permissions);
+    setEditPermissions(collaborator.permissions || []);
   };
 
   const handleEditPermissionChange = (moduleId: string, level: string, checked: boolean) => {
@@ -435,7 +435,11 @@ export default function Collaborators() {
   };
 
   // Helper to get permission summary
-  const getPermissionSummary = (permissions: string[]) => {
+  const getPermissionSummary = (permissions: string[] | null) => {
+    if (!permissions || permissions.length === 0) {
+      return { moduleCount: 0, level: 'Aucun' };
+    }
+    
     const moduleCount = new Set(permissions.map(p => p.split('.')[0])).size;
     const hasAdvanced = permissions.some(p => 
       p.includes('.generate') || p.includes('.analyze') || p.includes('.manage')
@@ -866,23 +870,29 @@ export default function Collaborators() {
                       
                       {/* Permission preview */}
                       <div className="flex flex-wrap gap-1">
-                        {Array.from(new Set(collaborator.permissions.map(p => p.split('.')[0]))).map(moduleId => {
-                          const module = MODULE_PERMISSIONS.find(m => m.id === moduleId);
-                          const userModulePerms = collaborator.permissions.filter(p => p.startsWith(moduleId + '.'));
-                          const hasWrite = userModulePerms.some(p => p.includes('.write'));
-                          const hasAdvanced = userModulePerms.some(p => 
-                            p.includes('.generate') || p.includes('.analyze') || p.includes('.manage')
-                          );
-                          
-                          return (
-                            <Badge key={moduleId} variant="outline" className="text-xs">
-                              {module?.label}
-                              {hasAdvanced && <Zap className="h-3 w-3 ml-1" />}
-                              {hasWrite && !hasAdvanced && <Edit className="h-3 w-3 ml-1" />}
-                              {!hasWrite && !hasAdvanced && <Eye className="h-3 w-3 ml-1" />}
-                            </Badge>
-                          );
-                        })}
+                        {collaborator.permissions && collaborator.permissions.length > 0 ? (
+                          Array.from(new Set(collaborator.permissions.map(p => p.split('.')[0]))).map(moduleId => {
+                            const module = MODULE_PERMISSIONS.find(m => m.id === moduleId);
+                            const userModulePerms = collaborator.permissions.filter(p => p.startsWith(moduleId + '.'));
+                            const hasWrite = userModulePerms.some(p => p.includes('.write'));
+                            const hasAdvanced = userModulePerms.some(p => 
+                              p.includes('.generate') || p.includes('.analyze') || p.includes('.manage')
+                            );
+                            
+                            return (
+                              <Badge key={moduleId} variant="outline" className="text-xs">
+                                {module?.label}
+                                {hasAdvanced && <Zap className="h-3 w-3 ml-1" />}
+                                {hasWrite && !hasAdvanced && <Edit className="h-3 w-3 ml-1" />}
+                                {!hasWrite && !hasAdvanced && <Eye className="h-3 w-3 ml-1" />}
+                              </Badge>
+                            );
+                          })
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-gray-500">
+                            Aucune permission
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   );
