@@ -274,10 +274,10 @@ Informations complémentaires: ${data.additionalInfo}
       console.error('Generate mutation error:', error);
       
       // Check if it's a permission error
-      if (error.message?.includes('Permission denied') || error.message?.includes('records.generate')) {
+      if (error.message?.includes('Permission denied') || error.message?.includes('records.generate') || error.message?.includes('Droits insuffisants')) {
         toast({
-          title: "🔒 Accès insuffisant",
-          description: "Vous ne disposez pas des droits nécessaires pour générer des fiches de traitement. Contactez l'administrateur pour obtenir les permissions requises.",
+          title: "🔒 Droits insuffisants",
+          description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour générer des fiches avec l'IA, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
           variant: "destructive",
         });
       } else {

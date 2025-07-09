@@ -12,7 +12,7 @@ interface AccessDeniedProps {
 export function AccessDenied({ 
   module, 
   requiredPermission, 
-  description = "Vous n'avez pas accès à ce module car vos droits ne le permettent pas." 
+  description = "Vous n'avez pas accès à ce module ou à cette fonctionnalité car vos droits ne le permettent pas." 
 }: AccessDeniedProps) {
   const [, setLocation] = useLocation();
 
@@ -53,9 +53,12 @@ export function AccessDenied({
             </Button>
           </div>
           
-          <p className="text-xs text-gray-400 dark:text-gray-500">
-            Contactez votre administrateur pour obtenir les droits nécessaires.
-          </p>
+          <div className="text-xs text-gray-400 dark:text-gray-500 space-y-1">
+            <p>Contactez votre administrateur pour obtenir les droits nécessaires.</p>
+            <p className="text-xs text-gray-500">
+              En tant que collaborateur, vous disposez de droits limités selon votre rôle dans l'organisation.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

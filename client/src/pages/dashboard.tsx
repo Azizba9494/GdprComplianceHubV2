@@ -48,6 +48,10 @@ export default function Dashboard() {
     queryKey: ['/api/requests', companyId],
     queryFn: () => requestsApi.get(companyId).then((res: any) => res.json()),
     enabled: !!companyId,
+    onError: (error: any) => {
+      console.error('Error fetching requests:', error);
+      // Fail silently for permission issues in dashboard
+    },
   });
 
   const heatMapData = {
