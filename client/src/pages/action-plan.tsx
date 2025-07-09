@@ -17,6 +17,7 @@ import { Calendar, Clock, CheckCircle, Circle, ArrowRight, CalendarDays, Edit, F
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 import { cn } from "@/lib/utils";
 
 const statusLabels = {
@@ -224,6 +225,17 @@ export default function ActionPlan() {
       setNewDueDate("");
     }
   };
+
+  // Check permissions first
+  if (!hasPermission('actions', 'read')) {
+    return (
+      <AccessDenied
+        module="Plan d'actions"
+        requiredPermission="actions.read"
+        description="Vous n'avez pas accès au module de gestion du plan d'actions. Ce module permet de suivre et organiser les actions de mise en conformité RGPD."
+      />
+    );
+  }
 
   if (isLoading || !user) {
     return (

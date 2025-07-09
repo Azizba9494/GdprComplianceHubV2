@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -803,6 +804,17 @@ Informations complémentaires: ${data.additionalInfo}
       </div>
     );
   };
+
+  // Check permissions first
+  if (!hasPermission('records', 'read')) {
+    return (
+      <AccessDenied
+        module="Registre des traitements"
+        requiredPermission="records.read"
+        description="Vous n'avez pas accès au module de gestion du registre des traitements. Ce module permet de documenter et gérer les activités de traitement de données personnelles."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

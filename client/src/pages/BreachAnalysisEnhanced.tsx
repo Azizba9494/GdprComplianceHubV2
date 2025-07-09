@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -662,6 +663,17 @@ Généré le: ${new Date().toLocaleString()}
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Check permissions first
+  if (!hasPermission('breaches', 'read')) {
+    return (
+      <AccessDenied
+        module="Analyse des violations"
+        requiredPermission="breaches.read"
+        description="Vous n'avez pas accès au module d'analyse des violations de données. Ce module permet de gérer et analyser les incidents de sécurité selon les directives EDPB."
+      />
+    );
+  }
 
   // Show loading states
   if (!user) {

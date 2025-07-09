@@ -11,6 +11,7 @@ import { CheckCircle, ArrowRight, ArrowLeft, FileText, Shield, Users, Settings, 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { AccessDenied } from "@/components/AccessDenied";
 
 const categoryIcons = {
   "Gouvernance": Settings,
@@ -147,6 +148,17 @@ export default function Diagnostic() {
       setCompletedCategories(new Set(completedList));
     }
   }, [existingResponses, allQuestions]);
+
+  // Check permissions first
+  if (!hasPermission('diagnostic', 'read')) {
+    return (
+      <AccessDenied
+        module="Diagnostic initial"
+        requiredPermission="diagnostic.read"
+        description="Vous n'avez pas accès au module de diagnostic RGPD. Ce module permet d'évaluer le niveau de conformité de votre organisation."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
