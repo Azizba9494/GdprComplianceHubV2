@@ -68,19 +68,21 @@ export default function LaTeamChat() {
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Check permissions first
-  if (!hasPermission('bots', 'read')) {
+  const [messageInput, setMessageInput] = useState("");
+  const conversationId = parseInt(id || "0");
+
+  // Check permissions after all hooks
+  const hasTeamChatAccess = hasPermission('team', 'chat');
+  
+  if (!hasTeamChatAccess) {
     return (
       <AccessDenied 
         module="LA Team Jean Michel" 
-        requiredPermission="bots.read"
-        description="Vous n'avez pas accès au module LA Team Jean Michel car vos droits ne le permettent pas."
+        requiredPermission="team.chat"
+        description="Vous n'avez pas accès au chat LA Team Jean Michel car vos droits ne le permettent pas."
       />
     );
   }
-  
-  const [messageInput, setMessageInput] = useState("");
-  const conversationId = parseInt(id || "0");
 
   // Get conversation details
   const { data: conversation, isLoading: conversationLoading } = useQuery({

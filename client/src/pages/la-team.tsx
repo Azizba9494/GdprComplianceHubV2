@@ -68,18 +68,20 @@ export default function LaTeam() {
   const { user, currentCompany } = useAuth();
   const { hasPermission } = usePermissions();
 
-  // Check permissions first
-  if (!hasPermission('bots', 'read')) {
+  const companyId = currentCompany?.id;
+
+  // Check permissions after all hooks
+  const hasTeamAccess = hasPermission('team', 'read');
+
+  if (!hasTeamAccess) {
     return (
       <AccessDenied 
         module="LA Team Jean Michel" 
-        requiredPermission="bots.read"
+        requiredPermission="team.read"
         description="Vous n'avez pas accès au module LA Team Jean Michel car vos droits ne le permettent pas."
       />
     );
   }
-
-  const companyId = currentCompany?.id;
 
   // Get existing bot conversations
   const { data: conversations, isLoading } = useQuery({
