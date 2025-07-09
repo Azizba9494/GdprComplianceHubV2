@@ -2782,6 +2782,141 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
+  // =================== ACTION COLLABORATION ROUTES ===================
+
+  // Get action assignments
+  app.get("/api/actions/:actionId/assignments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const assignments = await storage.getActionAssignments(actionId);
+      res.json(assignments);
+    } catch (error: any) {
+      console.error('Get action assignments error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create action assignment
+  app.post("/api/actions/:actionId/assignments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const { userId, role } = req.body;
+      const assignedBy = (req.session as any).userId;
+
+      const assignment = await storage.createActionAssignment({
+        actionId,
+        userId,
+        assignedBy,
+        role: role || 'assignee',
+        assignedAt: new Date()
+      });
+
+      res.json(assignment);
+    } catch (error: any) {
+      console.error('Create action assignment error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete action assignment
+  app.delete("/api/actions/:actionId/assignments/:assignmentId", requireAuth, async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.assignmentId);
+      await storage.deleteActionAssignment(assignmentId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Delete action assignment error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get action comments
+  app.get("/api/actions/:actionId/comments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const comments = await storage.getActionComments(actionId);
+      res.json(comments);
+    } catch (error: any) {
+      console.error('Get action comments error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Create action comment
+  app.post("/api/actions/:actionId/comments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const { content } = req.body;
+      const userId = (req.session as any).userId;
+
+      const comment = await storage.createActionComment({
+        actionId,
+        userId,
+        content,
+        createdAt: new Date()
+      });
+
+      res.json(comment);
+    } catch (error: any) {
+      console.error('Create action comment error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update action comment
+  app.put("/api/actions/:actionId/comments/:commentId", requireAuth, async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.commentId);
+      const { content } = req.body;
+
+      const comment = await storage.updateActionComment(commentId, {
+        content,
+        updatedAt: new Date()
+      });
+
+      res.json(comment);
+    } catch (error: any) {
+      console.error('Update action comment error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete action comment
+  app.delete("/api/actions/:actionId/comments/:commentId", requireAuth, async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.commentId);
+      await storage.deleteActionComment(commentId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Delete action comment error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get action activity log
+  app.get("/api/actions/:actionId/activity", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const activity = await storage.getActionActivityLog(actionId);
+      res.json(activity);
+    } catch (error: any) {
+      console.error('Get action activity error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get action attachments
+  app.get("/api/actions/:actionId/attachments", requireAuth, async (req, res) => {
+    try {
+      const actionId = parseInt(req.params.actionId);
+      const attachments = await storage.getActionAttachments(actionId);
+      res.json(attachments);
+    } catch (error: any) {
+      console.error('Get action attachments error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

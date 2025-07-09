@@ -46,12 +46,19 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Mock users data - in a real app, this would come from company members API
-  const companyUsers = [
-    { id: 1, firstName: "Jean", lastName: "Dupont", email: "jean@company.com" },
-    { id: 2, firstName: "Marie", lastName: "Martin", email: "marie@company.com" },
-    { id: 3, firstName: "Pierre", lastName: "Durand", email: "pierre@company.com" },
-  ];
+  // Get user's company
+  const { data: company } = useQuery({
+    queryKey: [`/api/companies/user/${user?.id}`],
+    enabled: !!user?.id,
+  });
+
+  const companyId = company?.id;
+
+  // Get company users (collaborators)
+  const { data: companyUsers = [] } = useQuery({
+    queryKey: [`/api/companies/${companyId}/users`],
+    enabled: !!companyId && isOpen,
+  });
 
   // Get action assignments
   const { data: assignments = [] } = useQuery({

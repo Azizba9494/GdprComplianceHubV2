@@ -393,6 +393,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(actionAssignments).where(eq(actionAssignments.actionId, actionId)).orderBy(desc(actionAssignments.assignedAt));
   }
 
+  async getUserActionAssignments(userId: number): Promise<ActionAssignment[]> {
+    return await db.select().from(actionAssignments).where(eq(actionAssignments.userId, userId)).orderBy(desc(actionAssignments.assignedAt));
+  }
+
   async createActionAssignment(assignment: InsertActionAssignment): Promise<ActionAssignment> {
     const [created] = await db.insert(actionAssignments).values(assignment).returning();
     return created;
@@ -1287,86 +1291,7 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  // Action Assignments
-  async getActionAssignments(actionId: number): Promise<ActionAssignment[]> {
-    const assignments = await db.select()
-      .from(actionAssignments)
-      .where(eq(actionAssignments.actionId, actionId))
-      .orderBy(actionAssignments.assignedAt);
-    return assignments;
-  }
 
-  async getUserActionAssignments(userId: number): Promise<ActionAssignment[]> {
-    const assignments = await db.select()
-      .from(actionAssignments)
-      .where(eq(actionAssignments.userId, userId))
-      .orderBy(desc(actionAssignments.assignedAt));
-    return assignments;
-  }
-
-  async createActionAssignment(assignment: InsertActionAssignment): Promise<ActionAssignment> {
-    const [created] = await db.insert(actionAssignments).values(assignment).returning();
-    return created;
-  }
-
-  async deleteActionAssignment(id: number): Promise<void> {
-    await db.delete(actionAssignments).where(eq(actionAssignments.id, id));
-  }
-
-  // Action Comments
-  async getActionComments(actionId: number): Promise<ActionComment[]> {
-    const comments = await db.select()
-      .from(actionComments)
-      .where(eq(actionComments.actionId, actionId))
-      .orderBy(actionComments.createdAt);
-    return comments;
-  }
-
-  async createActionComment(comment: InsertActionComment): Promise<ActionComment> {
-    const [created] = await db.insert(actionComments).values(comment).returning();
-    return created;
-  }
-
-  async updateActionComment(id: number, updates: Partial<InsertActionComment>): Promise<ActionComment> {
-    const [updated] = await db.update(actionComments).set(updates).where(eq(actionComments.id, id)).returning();
-    return updated;
-  }
-
-  async deleteActionComment(id: number): Promise<void> {
-    await db.delete(actionComments).where(eq(actionComments.id, id));
-  }
-
-  // Action Attachments
-  async getActionAttachments(actionId: number): Promise<ActionAttachment[]> {
-    const attachments = await db.select()
-      .from(actionAttachments)
-      .where(eq(actionAttachments.actionId, actionId))
-      .orderBy(actionAttachments.createdAt);
-    return attachments;
-  }
-
-  async createActionAttachment(attachment: InsertActionAttachment): Promise<ActionAttachment> {
-    const [created] = await db.insert(actionAttachments).values(attachment).returning();
-    return created;
-  }
-
-  async deleteActionAttachment(id: number): Promise<void> {
-    await db.delete(actionAttachments).where(eq(actionAttachments.id, id));
-  }
-
-  // Action Activity Log
-  async getActionActivityLog(actionId: number): Promise<ActionActivityLog[]> {
-    const logs = await db.select()
-      .from(actionActivityLog)
-      .where(eq(actionActivityLog.actionId, actionId))
-      .orderBy(desc(actionActivityLog.createdAt));
-    return logs;
-  }
-
-  async createActionActivityLog(log: InsertActionActivityLog): Promise<ActionActivityLog> {
-    const [created] = await db.insert(actionActivityLog).values(log).returning();
-    return created;
-  }
 
 }
 

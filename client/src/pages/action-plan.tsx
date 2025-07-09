@@ -90,13 +90,6 @@ export default function ActionPlan() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Mock company users for collaboration indicators
-  const companyUsers = [
-    { id: 1, firstName: "Jean", lastName: "Dupont", email: "jean@company.com" },
-    { id: 2, firstName: "Marie", lastName: "Martin", email: "marie@company.com" },
-    { id: 3, firstName: "Pierre", lastName: "Durand", email: "pierre@company.com" },
-  ];
-
   // Get user's company information
   const { data: userCompany } = useQuery({
     queryKey: ['/api/companies/user', user?.id],
