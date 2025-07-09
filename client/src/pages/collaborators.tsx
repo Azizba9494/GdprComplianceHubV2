@@ -147,7 +147,7 @@ const ROLES = [
 ];
 
 export default function Collaborators() {
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -161,13 +161,7 @@ export default function Collaborators() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedPermissionsForExisting, setSelectedPermissionsForExisting] = useState<string[]>([]);
 
-  // Get user's company
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/user/${user?.id}`],
-    enabled: !!user?.id,
-  });
-
-  const companyId = company?.id;
+  const companyId = currentCompany?.id;
 
   // Get collaborators
   const { data: collaborators = [], isLoading: loadingCollaborators } = useQuery({

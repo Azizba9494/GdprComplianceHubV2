@@ -57,29 +57,25 @@ const subprocessorFormSchema = z.object({
 type SubprocessorFormData = z.infer<typeof subprocessorFormSchema>;
 
 export default function SubprocessorRegistry() {
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [customSecurityMeasure, setCustomSecurityMeasure] = useState("");
 
-  // Get user's company
-  const { data: company } = useQuery({
-    queryKey: ["/api/companies/user", user?.id],
-    enabled: !!user?.id,
-  });
+  const companyId = currentCompany?.id;
 
   // Get subprocessor records
   const { data: records = [], isLoading } = useQuery({
-    queryKey: ["/api/subprocessor-records", company?.id],
+    queryKey: ["/api/subprocessor-records", companyId],
     queryFn: async () => {
-      if (!company?.id) throw new Error("No company ID");
-      const response = await fetch(`/api/subprocessor-records/${company.id}`);
+      if (!companyId) throw new Error("No company ID");
+      const response = await fetch(`/api/subprocessor-records/${companyId}`);
       if (!response.ok) throw new Error("Failed to fetch records");
       return response.json();
     },
-    enabled: !!company?.id,
+    enabled: !!companyId,
   });
 
   const form = useForm<SubprocessorFormData>({

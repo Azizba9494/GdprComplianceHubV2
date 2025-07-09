@@ -88,14 +88,9 @@ export default function ActionPlan() {
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
 
-  // Get user's company information
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
-    enabled: !!user,
-  });
+  const userCompany = currentCompany;
 
   // Get company users (collaborators)
   const { data: companyUsers = [] } = useQuery({

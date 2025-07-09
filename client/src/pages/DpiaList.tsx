@@ -469,13 +469,9 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
 
 export default function DpiaList() {
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
 
-  // Get company information - use the user ID to get their company
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/user/${user?.id}`],
-    enabled: !!user?.id,
-  }) as { data: any };
+  const companyId = currentCompany?.id;
 
   // Delete DPIA mutation
   const queryClient = useQueryClient();

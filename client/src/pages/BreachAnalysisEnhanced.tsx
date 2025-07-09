@@ -75,7 +75,7 @@ interface Breach {
 export default function BreachAnalysisEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const [selectedBreach, setSelectedBreach] = useState<Breach | null>(null);
   const [previewBreach, setPreviewBreach] = useState<Breach | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -86,19 +86,7 @@ export default function BreachAnalysisEnhanced() {
   const [editValue, setEditValue] = useState("");
   const [showAnalysisModal, setShowAnalysisModal] = useState<Breach | null>(null);
 
-  // Fetch company data for the current user
-  const { data: company, isLoading: companyLoading } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const res = await fetch(`/api/companies/user/${user.id}`, {
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error('Failed to fetch company');
-      return res.json();
-    },
-    enabled: !!user?.id,
-  });
+  const companyId = currentCompany?.id;
 
   const [formData, setFormData] = useState({
     // Nature de la violation
@@ -172,8 +160,8 @@ export default function BreachAnalysisEnhanced() {
 
   // Fetch breaches
   const { data: breaches, isLoading, refetch: refetchBreaches } = useQuery({
-    queryKey: [`/api/breaches/${company?.id}`],
-    enabled: !!company?.id,
+    queryKey: [`/api/breaches/${companyId}`],
+    enabled: !!companyId,
     staleTime: 0, // Pas de cache pour s'assurer d'avoir les données fraîches
   });
 
@@ -189,7 +177,7 @@ export default function BreachAnalysisEnhanced() {
         title: "Analyse IA terminée",
         description: "L'analyse de la violation selon les directives EDPB a été effectuée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/breaches/${companyId}`] });
       setIsAnalyzing(false);
     },
     onError: () => {
@@ -208,7 +196,7 @@ export default function BreachAnalysisEnhanced() {
       if (selectedBreach) {
         return await apiRequest("PUT", `/api/breaches/${selectedBreach.id}`, data);
       } else {
-        return await apiRequest("POST", "/api/breaches", { ...data, companyId: company.id });
+        return await apiRequest("POST", "/api/breaches", { ...data, companyId: companyId });
       }
     },
     onSuccess: async () => {
@@ -217,7 +205,7 @@ export default function BreachAnalysisEnhanced() {
         description: "Les informations ont été sauvegardées avec succès.",
       });
       // Invalidate et refetch pour s'assurer que la liste est mise à jour
-      await queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/breaches/${companyId}`] });
       await refetchBreaches();
       setShowForm(false);
       setSelectedBreach(null);
@@ -244,7 +232,7 @@ export default function BreachAnalysisEnhanced() {
         description: "La violation a été supprimée avec succès.",
       });
       // Invalidate et refetch pour s'assurer que la liste est mise à jour
-      await queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/breaches/${companyId}`] });
       await refetchBreaches();
     },
     onError: () => {
@@ -409,7 +397,7 @@ export default function BreachAnalysisEnhanced() {
     
     // Transform comprehensive form data for storage
     const breachData = {
-      companyId: company.id,
+      companyId: companyId,
       description: formData.discoveryCircumstances,
       incidentDate: formData.startDate ? formData.startDate + (formData.startTime ? `T${formData.startTime}:00` : 'T12:00:00') : new Date().toISOString(),
       discoveryDate: formData.discoveryDate ? formData.discoveryDate + (formData.discoveryTime ? `T${formData.discoveryTime}:00` : 'T12:00:00') : new Date().toISOString(),
@@ -523,7 +511,7 @@ Généré le: ${new Date().toLocaleString()}
         [editingCell.field]: editValue
       });
       
-      queryClient.invalidateQueries({ queryKey: [`/api/breaches/${company.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/breaches/${companyId}`] });
       toast({
         title: "Modification sauvegardée",
         description: "La violation a été mise à jour avec succès."

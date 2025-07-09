@@ -196,15 +196,9 @@ export default function Records() {
     },
   });
 
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
 
-  // Get user's company
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/user/${user?.id}`],
-    enabled: !!user?.id,
-  });
-
-  const companyId = company?.id;
+  const companyId = currentCompany?.id;
 
   const { data: records, isLoading } = useQuery({
     queryKey: ['/api/records', companyId],
