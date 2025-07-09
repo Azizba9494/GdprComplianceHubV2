@@ -22,6 +22,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   findUserByEmail: (email: string) => Promise<{ found: boolean; user?: User }>;
   switchCompany: (companyId: number) => void;
+  forceUseOwnedCompany: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,22 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (savedCompany) {
           console.log('Auth - Found saved company, setting as current:', savedCompany);
           setCurrentCompany(savedCompany);
-        } else {
-          // Fallback to owned company if saved company not accessible
-          const ownedCompany = userCompanies.find((c: any) => c.role === 'owner');
-          const fallbackCompany = ownedCompany || userCompanies[0];
-          console.log('Auth - Saved company not accessible, using fallback:', fallbackCompany);
-          setCurrentCompany(fallbackCompany);
-          localStorage.setItem('currentCompanyId', fallbackCompany.id.toString());
+          return;
         }
-      } else {
-        // Set first company as default - but this should prefer the user's own company
-        const ownedCompany = userCompanies.find((c: any) => c.role === 'owner');
-        const defaultCompany = ownedCompany || userCompanies[0];
-        console.log('Auth - No saved company, using default:', defaultCompany);
-        setCurrentCompany(defaultCompany);
-        localStorage.setItem('currentCompanyId', defaultCompany.id.toString());
       }
+      
+      // If no valid saved company, prefer the user's owned company
+      const ownedCompany = userCompanies.find((c: any) => c.role === 'owner');
+      const defaultCompany = ownedCompany || userCompanies[0];
+      console.log('Auth - Using default company (prefer owned):', defaultCompany);
+      setCurrentCompany(defaultCompany);
+      localStorage.setItem('currentCompanyId', defaultCompany.id.toString());
     }
   }, [userCompanies, currentCompany]);
 
@@ -266,6 +261,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const forceUseOwnedCompany = async () => {
+    try {
+      if (userCompanies && userCompanies.length > 0) {
+        const ownedCompany = userCompanies.find((c: any) => c.role === 'owner');
+        if (ownedCompany) {
+          console.log('Force switching to owned company:', ownedCompany);
+          
+          // Clear localStorage completely
+          localStorage.removeItem('currentCompanyId');
+          
+          // Clear all cached data and update state
+          queryClient.clear();
+          setCurrentCompany(ownedCompany);
+          localStorage.setItem('currentCompanyId', ownedCompany.id.toString());
+          
+          // Force a complete page reload to ensure clean state
+          window.location.reload();
+        }
+      }
+    } catch (error) {
+      console.error('Error forcing owned company:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -278,6 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         findUserByEmail,
         switchCompany,
+        forceUseOwnedCompany,
       }}
     >
       {children}

@@ -14,7 +14,7 @@ import RecentActivity from "@/components/dashboard/recent-activity";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Dashboard() {
-  const { user, currentCompany } = useAuth();
+  const { user, currentCompany, forceUseOwnedCompany } = useAuth();
 
   // Use current company from auth context instead of fetching
   const companyId = currentCompany?.id;
@@ -118,6 +118,30 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Bouton d'urgence temporaire pour forcer l'entreprise propriétaire */}
+      {currentCompany?.role === 'collaborator' && (
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-orange-800 dark:text-orange-200">
+                Changement d'entreprise
+              </h3>
+              <p className="text-sm text-orange-600 dark:text-orange-300">
+                Vous consultez actuellement "{currentCompany?.name}" en tant que collaborateur. 
+                Voulez-vous basculer vers votre entreprise propriétaire ?
+              </p>
+            </div>
+            <Button
+              onClick={forceUseOwnedCompany}
+              variant="outline"
+              className="border-orange-300 text-orange-800 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-200 dark:hover:bg-orange-900/40"
+            >
+              Utiliser mon entreprise
+            </Button>
+          </div>
+        </div>
+      )}
+      
       <ComplianceOverview stats={stats} />
 
       {/* Risk Heat Map */}
