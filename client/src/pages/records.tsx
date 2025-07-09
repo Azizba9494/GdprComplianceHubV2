@@ -1767,6 +1767,8 @@ Informations complémentaires: ${data.additionalInfo}
                         size="sm"
                         variant="ghost"
                         onClick={() => setEditingRecord(record.id)}
+                        disabled={!hasPermission('records', 'write')}
+                        title={!hasPermission('records', 'write') ? "Droits insuffisants pour modifier cette fiche" : ""}
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -2108,7 +2110,12 @@ Informations complémentaires: ${data.additionalInfo}
                 <div className="pt-4 border-t flex justify-end">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        disabled={!hasPermission('records', 'write')}
+                        title={!hasPermission('records', 'write') ? "Droits insuffisants pour supprimer cette fiche" : ""}
+                      >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Supprimer
                       </Button>

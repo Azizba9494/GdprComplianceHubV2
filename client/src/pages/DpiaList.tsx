@@ -624,7 +624,12 @@ export default function DpiaList() {
             Gérez vos analyses d'impact relatives à la protection des données
           </p>
         </div>
-        <Button onClick={() => setLocation('/dpia/new')} className="flex items-center gap-2">
+        <Button 
+          onClick={() => setLocation('/dpia/new')} 
+          className="flex items-center gap-2"
+          disabled={!hasPermission('dpia', 'write')}
+          title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour créer une nouvelle AIPD" : ""}
+        >
           <Plus className="h-4 w-4" />
           Nouvelle AIPD
         </Button>
@@ -685,7 +690,11 @@ export default function DpiaList() {
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
                     Commencez une nouvelle analyse d'impact pour vos traitements nécessitant une AIPD.
                   </p>
-                  <Button onClick={() => setLocation('/dpia/new')}>
+                  <Button 
+                    onClick={() => setLocation('/dpia/new')}
+                    disabled={!hasPermission('dpia', 'write')}
+                    title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour créer une AIPD" : ""}
+                  >
                     Créer une AIPD
                   </Button>
                 </div>
@@ -736,6 +745,8 @@ export default function DpiaList() {
                               variant="outline"
                               size="sm"
                               onClick={() => setLocation(`/dpia/${dpia.id}`)}
+                              disabled={!hasPermission('dpia', 'write')}
+                              title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour modifier cette AIPD" : ""}
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Continuer
@@ -749,6 +760,8 @@ export default function DpiaList() {
                                   deleteDpiaMutation.mutate(dpia.id);
                                 }
                               }}
+                              disabled={!hasPermission('dpia', 'write')}
+                              title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour supprimer cette AIPD" : ""}
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
@@ -824,6 +837,8 @@ export default function DpiaList() {
                               variant="outline"
                               size="sm"
                               onClick={() => setLocation(`/dpia/${dpia.id}`)}
+                              disabled={!hasPermission('dpia', 'read')}
+                              title={!hasPermission('dpia', 'read') ? "Droits insuffisants pour consulter cette AIPD" : ""}
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Consulter
