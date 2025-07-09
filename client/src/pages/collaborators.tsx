@@ -250,12 +250,31 @@ export default function Collaborators() {
       queryClient.invalidateQueries({ queryKey: [`/api/companies/${companyId}/collaborators`] });
       
       // Invalidate user companies cache to refresh permissions immediately
-      queryClient.invalidateQueries({ queryKey: ['/api/users', user?.id, 'companies'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/companies`] });
       
       // Force refresh of current user's permissions if they are editing their own
       if (editingCollaborator?.userId === user?.id) {
         queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+        // Force page reload for immediate effect on current user
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        // For other users, clear all their potential cached data
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${editingCollaborator?.userId}/companies`] });
       }
+      
+      // Global cache clear for all permission-related queries
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && (
+            key.some(k => typeof k === 'string' && k.includes('companies')) ||
+            key.some(k => typeof k === 'string' && k.includes('auth'))
+          );
+        }
+      });
       
       setEditingCollaborator(null);
       setEditPermissions([]);
