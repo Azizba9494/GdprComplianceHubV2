@@ -457,8 +457,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const collaboratorAccess = await storage.getUserCompanyAccess(userId);
       
       const companies = [];
+      const seenCompanyIds = new Set();
       
-      // Add owned company
+      // Add owned company first
       if (ownedCompany) {
         companies.push({
           id: ownedCompany.id,
@@ -467,11 +468,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role: 'owner',
           permissions: ['all']
         });
+        seenCompanyIds.add(ownedCompany.id);
       }
       
-      // Add collaborator companies
+      // Add collaborator companies (only if not already added as owner)
       for (const access of collaboratorAccess) {
-        if (access.company) {
+        if (access.company && !seenCompanyIds.has(access.company.id)) {
           companies.push({
             id: access.company.id,
             name: access.company.name,
@@ -479,6 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             role: access.role,
             permissions: access.permissions
           });
+          seenCompanyIds.add(access.company.id);
         }
       }
       
