@@ -2741,7 +2741,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.post("/api/bots/:botType/chat", requireModulePermission('team', 'chat'), async (req, res) => {
+  app.post("/api/bots/:botType/chat", requireAuth, async (req, res) => {
     try {
       const { botType } = req.params;
       const { message, conversationId } = req.body;
@@ -2751,10 +2751,22 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
         return res.status(401).json({ error: "User not authenticated properly" });
       }
 
-      // Get conversation for company context (access already verified by middleware)
+      // Get conversation for company context and permission check
       const conversation = await storage.getBotConversation(conversationId);
       if (!conversation) {
         return res.status(404).json({ error: "Conversation not found" });
+      }
+
+      // Check user has team.chat permission for this company
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === conversation.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+      
+      if (access.role !== 'owner' && !access.permissions?.includes('team.chat')) {
+        return res.status(403).json({ error: "Droits insuffisants pour discuter avec la formation équipe" });
       }
 
       // Get bot-specific prompt
@@ -2788,11 +2800,33 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
-  app.delete("/api/bots/conversations/:id", requireModulePermission('team', 'write'), async (req, res) => {
+  app.delete("/api/bots/conversations/:id", requireAuth, async (req, res) => {
     try {
       const conversationId = parseInt(req.params.id);
+      const userId = req.session?.userId;
       
-      // Access verification already done by requireModulePermission middleware
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+
+      // Get conversation for company context and permission check
+      const conversation = await storage.getBotConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+
+      // Check user has team.write permission for this company
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === conversation.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+      
+      if (access.role !== 'owner' && !access.permissions?.includes('team.write')) {
+        return res.status(403).json({ error: "Droits insuffisants pour supprimer les conversations de formation équipe" });
+      }
+
       await storage.deleteBotConversation(conversationId);
       res.json({ success: true });
     } catch (error: any) {
