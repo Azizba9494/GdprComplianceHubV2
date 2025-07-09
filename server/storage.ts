@@ -210,9 +210,13 @@ export interface IStorage {
   createUserCompanyAccess(access: InsertUserCompanyAccess): Promise<UserCompanyAccess>;
   deleteUserCompanyAccess(id: number): Promise<void>;
   getCompanyCollaborators(companyId: number): Promise<UserCompanyAccess[]>;
+  getCompanyCollaboratorsWithUsers(companyId: number): Promise<(UserCompanyAccess & { user: User })[]>;
+  updateUserCompanyAccess(id: number, updates: Partial<InsertUserCompanyAccess>): Promise<UserCompanyAccess>;
   createInvitation(invitation: InsertInvitation): Promise<Invitation>;
   getInvitationByToken(token: string): Promise<Invitation | undefined>;
+  getCompanyInvitations(companyId: number): Promise<Invitation[]>;
   updateInvitation(id: number, updates: Partial<InsertInvitation>): Promise<Invitation>;
+  deleteInvitation(id: number): Promise<void>;
   getUserInvoices(userId: number): Promise<Invoice[]>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
 
@@ -1167,6 +1171,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCompanyCollaborators(companyId: number): Promise<UserCompanyAccess[]> {
+    return await db.select().from(userCompanyAccess)
+      .where(eq(userCompanyAccess.companyId, companyId));
+  }
+
+  async getCompanyCollaboratorsWithUsers(companyId: number): Promise<(UserCompanyAccess & { user: User })[]> {
     return await db.select({
       id: userCompanyAccess.id,
       userId: userCompanyAccess.userId,
@@ -1182,11 +1191,24 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
+        username: users.username,
+        role: users.role,
+        phoneNumber: users.phoneNumber,
+        currentCompanyId: users.currentCompanyId,
+        lastLoginAt: users.lastLoginAt,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        password: users.password
       }
     })
     .from(userCompanyAccess)
     .leftJoin(users, eq(userCompanyAccess.userId, users.id))
     .where(eq(userCompanyAccess.companyId, companyId));
+  }
+
+  async updateUserCompanyAccess(id: number, updates: Partial<InsertUserCompanyAccess>): Promise<UserCompanyAccess> {
+    const [updated] = await db.update(userCompanyAccess).set(updates).where(eq(userCompanyAccess.id, id)).returning();
+    return updated;
   }
 
   async createInvitation(invitation: InsertInvitation): Promise<Invitation> {
@@ -1199,9 +1221,19 @@ export class DatabaseStorage implements IStorage {
     return invitation;
   }
 
+  async getCompanyInvitations(companyId: number): Promise<Invitation[]> {
+    return await db.select().from(invitations)
+      .where(eq(invitations.companyId, companyId))
+      .orderBy(desc(invitations.createdAt));
+  }
+
   async updateInvitation(id: number, updates: Partial<InsertInvitation>): Promise<Invitation> {
     const [updated] = await db.update(invitations).set(updates).where(eq(invitations.id, id)).returning();
     return updated;
+  }
+
+  async deleteInvitation(id: number): Promise<void> {
+    await db.delete(invitations).where(eq(invitations.id, id));
   }
 
   async getUserInvoices(userId: number): Promise<Invoice[]> {

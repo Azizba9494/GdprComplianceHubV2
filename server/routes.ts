@@ -2619,6 +2619,169 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
     }
   });
 
+  // =================== COLLABORATOR MANAGEMENT ROUTES ===================
+
+  // Get collaborators for a company
+  app.get("/api/companies/:companyId/collaborators", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const collaborators = await storage.getCompanyCollaboratorsWithUsers(companyId);
+      res.json(collaborators);
+    } catch (error: any) {
+      console.error('Get collaborators error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Invite a collaborator to a company
+  app.post("/api/companies/:companyId/invite", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const userId = (req.session as any).userId;
+      const { email, role, permissions } = req.body;
+
+      // Generate invitation token
+      const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
+
+      const invitation = await storage.createInvitation({
+        email,
+        companyId,
+        invitedBy: userId,
+        permissions: permissions || [],
+        token,
+        expiresAt,
+      });
+
+      // TODO: Send invitation email with token
+
+      res.json({ success: true, invitation });
+    } catch (error: any) {
+      console.error('Invite collaborator error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get invitations for a company
+  app.get("/api/companies/:companyId/invitations", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const invitations = await storage.getCompanyInvitations(companyId);
+      res.json(invitations);
+    } catch (error: any) {
+      console.error('Get invitations error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Accept invitation (public endpoint)
+  app.post("/api/invitations/:token/accept", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { userId } = req.body; // User must be authenticated
+
+      // Get invitation
+      const invitation = await storage.getInvitationByToken(token);
+      if (!invitation) {
+        return res.status(404).json({ error: "Invitation not found" });
+      }
+
+      // Check if invitation is expired
+      if (new Date() > invitation.expiresAt) {
+        return res.status(400).json({ error: "Invitation expired" });
+      }
+
+      // Check if invitation is already accepted
+      if (invitation.status !== 'pending') {
+        return res.status(400).json({ error: "Invitation already processed" });
+      }
+
+      // Create user company access
+      await storage.createUserCompanyAccess({
+        userId,
+        companyId: invitation.companyId,
+        role: 'collaborator',
+        permissions: invitation.permissions || [],
+        invitedBy: invitation.invitedBy,
+        status: 'active'
+      });
+
+      // Update invitation status
+      await storage.updateInvitation(invitation.id, { status: 'accepted' });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Accept invitation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update collaborator permissions
+  app.put("/api/companies/:companyId/collaborators/:accessId", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const accessId = parseInt(req.params.accessId);
+      const { role, permissions } = req.body;
+
+      const updatedAccess = await storage.updateUserCompanyAccess(accessId, {
+        role,
+        permissions
+      });
+
+      res.json(updatedAccess);
+    } catch (error: any) {
+      console.error('Update collaborator error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Remove collaborator from company
+  app.delete("/api/companies/:companyId/collaborators/:accessId", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const accessId = parseInt(req.params.accessId);
+      await storage.deleteUserCompanyAccess(accessId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Remove collaborator error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete invitation
+  app.delete("/api/companies/:companyId/invitations/:invitationId", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const invitationId = parseInt(req.params.invitationId);
+      await storage.deleteInvitation(invitationId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Delete invitation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get available users for assignment (collaborators of current company)
+  app.get("/api/companies/:companyId/users", requireAuth, requireCompanyAccess, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      const collaborators = await storage.getCompanyCollaboratorsWithUsers(companyId);
+      
+      // Return only user info for assignment purposes
+      const users = collaborators.map(collab => ({
+        id: collab.user.id,
+        firstName: collab.user.firstName,
+        lastName: collab.user.lastName,
+        email: collab.user.email,
+        role: collab.role,
+        permissions: collab.permissions
+      }));
+
+      res.json(users);
+    } catch (error: any) {
+      console.error('Get company users error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -18,6 +18,7 @@ const navigation = [
   { name: "Analyse d'impact (AIPD)", href: "/dpia", icon: BarChart3 },
   { name: "LA Team Jean Michel", href: "/la-team", icon: Users },
   { name: "Centre d'apprentissage", href: "/learning", icon: GraduationCap },
+  { name: "👥 Collaborateurs", href: "/collaborators", icon: Users },
   { name: "👤 Mon Compte", href: "/user-back-office", icon: User },
   { name: "⚙️ Administration", href: "/admin", icon: Settings },
 ];
