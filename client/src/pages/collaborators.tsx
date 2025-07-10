@@ -956,25 +956,24 @@ export default function Collaborators() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium mb-2">Propriétaire</h4>
+              <p className="text-gray-600">
+                Accès complet à tous les modules, gestion des collaborateurs et invitations. Peut accorder ou retirer des permissions spécifiques.
+              </p>
+            </div>
             <div>
               <h4 className="font-medium mb-2">Collaborateur</h4>
               <p className="text-gray-600">
-                Accès aux modules assignés en lecture et écriture limitée
+                Accès personnalisé selon les permissions accordées : lecture ou écriture par module (diagnostic, actions, fiches de traitement, etc.).
               </p>
             </div>
-            <div>
-              <h4 className="font-medium mb-2">Responsable</h4>
-              <p className="text-gray-600">
-                Peut assigner des tâches et gérer les données des modules autorisés
-              </p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Administrateur</h4>
-              <p className="text-gray-600">
-                Accès complet aux modules assignés, peut inviter d'autres utilisateurs
-              </p>
-            </div>
+          </div>
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              <strong>Permissions modulaires :</strong> Chaque collaborateur peut avoir des droits différents par module (lecture seule ou lecture/écriture). Le propriétaire conserve tous les droits.
+            </p>
           </div>
         </CardContent>
       </Card>
