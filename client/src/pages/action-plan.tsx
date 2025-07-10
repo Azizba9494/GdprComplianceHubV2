@@ -93,18 +93,18 @@ export default function ActionPlan() {
   const { user, currentCompany } = useAuth();
   const { hasPermission } = usePermissions();
 
-  const userCompany = currentCompany;
+
 
   // Get company users (collaborators)
   const { data: companyUsers = [] } = useQuery({
-    queryKey: [`/api/companies/${userCompany?.id}/users`],
-    enabled: !!userCompany?.id,
+    queryKey: [`/api/companies/${currentCompany?.id}/users`],
+    enabled: !!currentCompany?.id,
   });
 
   const { data: actions, isLoading } = useQuery({
-    queryKey: ['/api/actions', userCompany?.id],
-    queryFn: () => userCompany ? actionsApi.get(userCompany.id).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/actions', currentCompany?.id],
+    queryFn: () => currentCompany ? actionsApi.get(currentCompany.id).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!currentCompany,
   });
 
   // Helper functions for collaborative features
@@ -150,9 +150,9 @@ export default function ActionPlan() {
     mutationFn: ({ id, updates }: { id: number; updates: any }) => 
       actionsApi.update(id, updates),
     onSuccess: () => {
-      if (userCompany) {
-        queryClient.invalidateQueries({ queryKey: ['/api/actions', userCompany.id] });
-        queryClient.invalidateQueries({ queryKey: ['/api/dashboard', userCompany.id] });
+      if (currentCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/actions', currentCompany.id] });
+        queryClient.invalidateQueries({ queryKey: ['/api/dashboard', currentCompany.id] });
       }
       toast({
         title: "Action mise à jour",
@@ -249,7 +249,7 @@ export default function ActionPlan() {
     );
   }
 
-  if (!userCompany) {
+  if (!currentCompany) {
     return (
       <div className="p-6">
         <Card>
@@ -417,7 +417,7 @@ export default function ActionPlan() {
 
       {/* Actions Display */}
       {viewMode === 'kanban' ? (
-        <KanbanBoard companyId={userCompany?.id} />
+        <KanbanBoard companyId={currentCompany?.id} />
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">

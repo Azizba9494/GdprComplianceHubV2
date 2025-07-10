@@ -293,8 +293,8 @@ export default function DPIA() {
       return result;
     },
     onSuccess: () => {
-      if (userCompany) {
-        queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations', userCompany.id] });
+      if (currentCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations', currentCompany.id] });
       }
       toast({
         title: "Évaluation terminée",
@@ -314,14 +314,14 @@ export default function DPIA() {
   const dpiaAssessmentMutation = useMutation({
     mutationFn: (data: { processingName: string; processingDescription: string }) =>
       dpiaApi.assess({
-        companyId: userCompany?.id,
+        companyId: currentCompany?.id,
         processingName: data.processingName,
         processingDescription: data.processingDescription,
       }),
     onSuccess: (data) => {
       setCurrentAssessment(data);
-      if (userCompany) {
-        queryClient.invalidateQueries({ queryKey: ['/api/dpia', userCompany.id] });
+      if (currentCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/dpia', currentCompany.id] });
       }
       toast({
         title: "Analyse terminée",

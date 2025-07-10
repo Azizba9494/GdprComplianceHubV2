@@ -436,7 +436,7 @@ export default function DpiaAssessmentEnhanced() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -692,7 +692,7 @@ export default function DpiaAssessmentEnhanced() {
 
   // Risk analysis AI generation using DPIA prompts
   const handleRiskAIGenerate = async (scenario: string, riskType: string) => {
-    if (!company?.id) {
+    if (!currentCompany?.id) {
       console.error('Missing company ID for risk AI generation');
       return;
     }
@@ -725,14 +725,14 @@ export default function DpiaAssessmentEnhanced() {
         throw new Error(`Mapping non trouvé pour ${scenario}.${riskType}`);
       }
       
-      console.log('Risk AI Generate request:', { scenario, riskType, questionField, companyId: company.id });
+      console.log('Risk AI Generate request:', { scenario, riskType, questionField, companyId: currentCompany.id });
       
       const response = await fetch('/api/dpia/ai-assist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           questionField: questionField,
-          companyId: company.id,
+          companyId: currentCompany.id,
           processingRecordId: dpia?.processingRecordId
         })
       });

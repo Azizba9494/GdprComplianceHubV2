@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Brain, Save, FileText, Shield, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
@@ -105,10 +106,7 @@ export default function DpiaAssessment() {
   const [aiLoading, setAiLoading] = useState<string | null>(null);
 
   // Get user company info
-  const userId = parseInt(localStorage.getItem("userId") || "1");
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/${userId}`],
-  });
+  const { currentCompany } = useAuth();
 
   // Load existing DPIA if editing
   const { data: existingDpia, isLoading } = useQuery({
@@ -119,7 +117,7 @@ export default function DpiaAssessment() {
   const form = useForm<DpiaFormData>({
     resolver: zodResolver(dpiaFormSchema),
     defaultValues: {
-      companyId: (company as any)?.id || 1,
+      companyId: currentCompany?.id || 1,
       status: "draft",
       personalDataCategories: [],
       riskAssessment: [],
@@ -129,11 +127,11 @@ export default function DpiaAssessment() {
 
   // Load existing data into form
   useEffect(() => {
-    if (existingDpia && company) {
+    if (existingDpia && currentCompany) {
       const dpiaData = existingDpia as any;
       form.reset({
         ...dpiaData,
-        companyId: company.id,
+        companyId: currentCompany.id,
       });
       
       if (dpiaData.personalDataCategories) {
@@ -146,7 +144,7 @@ export default function DpiaAssessment() {
         setActions(dpiaData.actionPlan);
       }
     }
-  }, [existingDpia, company, form]);
+  }, [existingDpia, currentCompany, form]);
 
   // Save DPIA mutation
   const saveMutation = useMutation({
@@ -202,7 +200,7 @@ export default function DpiaAssessment() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           questionField,
-          companyId: company?.id,
+          companyId: currentCompany?.id,
           existingDpiaData: formValues,
           processingRecordId: formValues.processingRecordId, // Add the processing record ID
         }),
@@ -244,7 +242,7 @@ export default function DpiaAssessment() {
         body: JSON.stringify({
           processingDescription: form.getValues("generalDescription"),
           dataCategories,
-          companyId: company?.id,
+          companyId: currentCompany?.id,
         }),
       });
       const data = await response.json();

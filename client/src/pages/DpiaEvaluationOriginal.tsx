@@ -130,15 +130,8 @@ export default function DpiaEvaluationOriginal() {
   const [evaluationResults, setEvaluationResults] = useState<Record<number, any>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
   const { hasPermission } = usePermissions();
-
-  // Get user's company information
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
-    enabled: !!user,
-  });
 
   // Formulaires
   const evaluationForm = useForm({
@@ -165,21 +158,21 @@ export default function DpiaEvaluationOriginal() {
 
   // Requêtes de données
   const { data: records, isLoading: recordsLoading } = useQuery({
-    queryKey: ['/api/records', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/records/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/records', currentCompany?.id],
+    queryFn: () => currentCompany ? fetch(`/api/records/${currentCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!currentCompany,
   });
 
   const { data: assessments, isLoading: assessmentsLoading } = useQuery({
-    queryKey: ['/api/dpia', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/dpia/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/dpia', currentCompany?.id],
+    queryFn: () => currentCompany ? fetch(`/api/dpia/${currentCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!currentCompany,
   });
 
   const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
-    queryKey: ['/api/dpia-evaluations', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/dpia-evaluations/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/dpia-evaluations', currentCompany?.id],
+    queryFn: () => currentCompany ? fetch(`/api/dpia-evaluations/${currentCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!currentCompany,
   });
 
   // Filtrer les traitements de responsable uniquement
@@ -290,7 +283,7 @@ export default function DpiaEvaluationOriginal() {
 
       // Sauvegarder en base de données
       const evaluationData = {
-        companyId: userCompany?.id,
+        companyId: currentCompany?.id,
         recordId: selectedRecord!.id,
         score,
         recommendation,
@@ -333,8 +326,8 @@ export default function DpiaEvaluationOriginal() {
       return result;
     },
     onSuccess: () => {
-      if (userCompany) {
-        queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations', userCompany.id] });
+      if (currentCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations', currentCompany.id] });
       }
       toast({
         title: "Évaluation terminée",

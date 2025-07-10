@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { MessageCircle, X, Send, Bot } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { chatbotApi } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   id: string;
@@ -24,10 +25,11 @@ export default function Chatbot() {
     },
   ]);
   const [input, setInput] = useState("");
+  const { currentCompany } = useAuth();
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await chatbotApi.sendMessage(message, 1);
+      const response = await chatbotApi.sendMessage(message, currentCompany?.id || 1);
       return response.json();
     },
     onSuccess: (data) => {
