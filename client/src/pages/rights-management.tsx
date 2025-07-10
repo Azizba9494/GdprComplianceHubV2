@@ -161,7 +161,7 @@ export default function RightsManagement() {
   };
 
   // Check permissions after all hooks are initialized
-  if (!hasPermission('requests', 'read')) {
+  if (!hasPermission('requests.read')) {
     return (
       <AccessDenied 
         module="Demandes des personnes" 
@@ -213,8 +213,8 @@ export default function RightsManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button
-              disabled={!hasPermission('requests', 'write')}
-              title={!hasPermission('requests', 'write') ? "Droits insuffisants pour créer une nouvelle demande" : ""}
+              disabled={!hasPermission('requests.write')}
+              title={!hasPermission('requests.write') ? "Droits insuffisants pour créer une nouvelle demande" : ""}
             >
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle demande

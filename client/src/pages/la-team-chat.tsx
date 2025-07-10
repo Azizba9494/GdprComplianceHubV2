@@ -72,7 +72,7 @@ export default function LaTeamChat() {
   const conversationId = parseInt(id || "0");
 
   // Check permissions after all hooks - use 'access' for team module
-  const hasTeamChatAccess = hasPermission('team', 'access') || hasPermission('team', 'chat') || hasPermission('team', 'read');
+  const hasTeamChatAccess = hasPermission('team.access') || hasPermission('team.chat') || hasPermission('team.read');
   
   if (!hasTeamChatAccess) {
     return (

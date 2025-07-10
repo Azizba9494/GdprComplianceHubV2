@@ -71,7 +71,7 @@ export default function LaTeam() {
   const companyId = currentCompany?.id;
 
   // Check permissions after all hooks - use 'access' for team module
-  const hasTeamAccess = hasPermission('team', 'access') || hasPermission('team', 'read');
+  const hasTeamAccess = hasPermission('team.access') || hasPermission('team.read');
 
   if (!hasTeamAccess) {
     return (
