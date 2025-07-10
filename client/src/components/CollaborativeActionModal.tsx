@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { 
   MessageSquare, 
   Clock, 
@@ -45,6 +46,7 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Get user's company
   const { data: company } = useQuery({
@@ -91,6 +93,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Add comment mutation
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
+      // Vérification des permissions avant d'ajouter un commentaire
+      if (!hasPermission('actions', 'write')) {
+        throw new Error('Droits insuffisants pour ajouter un commentaire');
+      }
+      
       const response = await fetch(`/api/actions/${action.id}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,6 +120,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Edit comment mutation
   const editCommentMutation = useMutation({
     mutationFn: async ({ commentId, content }: { commentId: number; content: string }) => {
+      // Vérification des permissions avant de modifier un commentaire
+      if (!hasPermission('actions', 'write')) {
+        throw new Error('Droits insuffisants pour modifier un commentaire');
+      }
+      
       const response = await fetch(`/api/actions/${action.id}/comments/${commentId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -136,6 +148,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Delete comment mutation
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: number) => {
+      // Vérification des permissions avant de supprimer un commentaire
+      if (!hasPermission('actions', 'write')) {
+        throw new Error('Droits insuffisants pour supprimer un commentaire');
+      }
+      
       const response = await fetch(`/api/actions/${action.id}/comments/${commentId}`, {
         method: 'DELETE',
       });
@@ -155,6 +172,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Add assignment mutation
   const addAssignmentMutation = useMutation({
     mutationFn: async () => {
+      // Vérification des permissions avant d'ajouter une assignation
+      if (!hasPermission('actions', 'write')) {
+        throw new Error('Droits insuffisants pour assigner une tâche');
+      }
+      
       const response = await fetch(`/api/actions/${action.id}/assignments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -181,6 +203,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Remove assignment mutation
   const removeAssignmentMutation = useMutation({
     mutationFn: async (assignmentId: number) => {
+      // Vérification des permissions avant de supprimer une assignation
+      if (!hasPermission('actions', 'write')) {
+        throw new Error('Droits insuffisants pour supprimer une assignation');
+      }
+      
       const response = await fetch(`/api/actions/${action.id}/assignments/${assignmentId}`, {
         method: 'DELETE',
       });
@@ -200,6 +227,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
   // Update action status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
+      // Vérification des permissions avant de changer le statut
+      if (!hasPermission('actions', 'write')) {
+        throw new Error('Droits insuffisants pour modifier le statut');
+      }
+      
       const response = await fetch(`/api/actions/${action.id}`, {
         method: 'PUT',
         headers: {
@@ -343,7 +375,11 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
               <Badge className={getStatusColor(action.status)}>
                 {getStatusLabel(action.status)}
               </Badge>
-              <Select value={action.status} onValueChange={updateStatusMutation.mutate}>
+              <Select 
+                value={action.status} 
+                onValueChange={updateStatusMutation.mutate}
+                disabled={!hasPermission('actions', 'write')}
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -448,12 +484,13 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
                                 })}
                               </span>
                             </div>
-                            {comment.userId === user?.id && (
+                            {comment.userId === user?.id && hasPermission('actions', 'write') && (
                               <div className="flex items-center gap-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleEditComment(comment.id, comment.content)}
+                                  disabled={!hasPermission('actions', 'write')}
                                 >
                                   <Edit2 className="h-3 w-3" />
                                 </Button>
@@ -461,6 +498,7 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeleteComment(comment.id)}
+                                  disabled={!hasPermission('actions', 'write')}
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
@@ -496,27 +534,38 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
                   </Card>
                 ))}
 
-                <Card>
-                  <CardContent className="pt-4">
-                    <div className="space-y-3">
-                      <Textarea
-                        placeholder="Ajouter un commentaire..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="min-h-[80px]"
-                      />
-                      <div className="flex justify-end">
-                        <Button 
-                          onClick={handleAddComment}
-                          disabled={!newComment.trim() || addCommentMutation.isPending}
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Envoyer
-                        </Button>
+                {hasPermission('actions', 'write') ? (
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <Textarea
+                          placeholder="Ajouter un commentaire..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          className="min-h-[80px]"
+                        />
+                        <div className="flex justify-end">
+                          <Button 
+                            onClick={handleAddComment}
+                            disabled={!newComment.trim() || addCommentMutation.isPending}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Envoyer
+                          </Button>
+                        </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                      <MessageSquare className="h-4 w-4" />
+                      <p className="text-sm">
+                        <span className="font-medium">Accès en lecture seule</span> - Vous ne pouvez pas ajouter de commentaires. Contactez l'administrateur pour obtenir des droits d'écriture.
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -544,52 +593,68 @@ export function CollaborativeActionModal({ action, isOpen, onOpenChange }: Colla
                             </Badge>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveAssignment(assignment.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        {hasPermission('actions', 'write') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveAssignment(assignment.id)}
+                            disabled={!hasPermission('actions', 'write')}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     ))}
 
-                    <div className="border-t pt-3 space-y-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        <Select value={newAssigneeId} onValueChange={setNewAssigneeId}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner une personne" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {companyUsers
-                              .filter(user => !assignments.find((a: any) => a.userId === user.id))
-                              .map(user => (
-                                <SelectItem key={user.id} value={user.id.toString()}>
-                                  {user.firstName} {user.lastName}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                        <Select value={newAssigneeRole} onValueChange={setNewAssigneeRole}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="assignee">Responsable</SelectItem>
-                            <SelectItem value="reviewer">Réviseur</SelectItem>
-                            <SelectItem value="observer">Observateur</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    {hasPermission('actions', 'write') ? (
+                      <div className="border-t pt-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Select value={newAssigneeId} onValueChange={setNewAssigneeId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner une personne" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {companyUsers
+                                .filter(user => !assignments.find((a: any) => a.userId === user.id))
+                                .map(user => (
+                                  <SelectItem key={user.id} value={user.id.toString()}>
+                                    {user.firstName} {user.lastName}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <Select value={newAssigneeRole} onValueChange={setNewAssigneeRole}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="assignee">Responsable</SelectItem>
+                              <SelectItem value="reviewer">Réviseur</SelectItem>
+                              <SelectItem value="observer">Observateur</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button 
+                          onClick={handleAddAssignment}
+                          disabled={!newAssigneeId || addAssignmentMutation.isPending}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Assigner
+                        </Button>
                       </div>
-                      <Button 
-                        onClick={handleAddAssignment}
-                        disabled={!newAssigneeId || addAssignmentMutation.isPending}
-                        className="w-full"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Assigner
-                      </Button>
-                    </div>
+                    ) : (
+                      <div className="border-t pt-3">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                            <Users className="h-4 w-4" />
+                            <p className="text-sm">
+                              <span className="font-medium">Accès en lecture seule</span> - Vous ne pouvez pas modifier les assignations.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>

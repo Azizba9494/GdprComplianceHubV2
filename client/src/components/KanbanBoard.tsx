@@ -193,6 +193,15 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
   };
 
   const openActionModal = (action: any) => {
+    // Vérification des permissions avant d'ouvrir le modal
+    if (!hasPermission('actions', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour les actions. Contactez l'administrateur pour obtenir des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedAction(action);
     setIsModalOpen(true);
   };
@@ -291,6 +300,7 @@ export function KanbanBoard({ companyId }: KanbanBoardProps) {
                       draggable={hasPermission('actions', 'write')}
                       onDragStart={(e) => handleDragStart(e, action)}
                       onClick={() => openActionModal(action)}
+                      style={{ cursor: hasPermission('actions', 'write') ? 'pointer' : 'default' }}
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between gap-2">
