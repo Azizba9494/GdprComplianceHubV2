@@ -978,6 +978,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
+      
+      // Get the existing record to verify company access
+      const existingRecord = await storage.getProcessingRecord(id);
+      if (!existingRecord) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+      
+      // Verify user has access to this company
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, existingRecord.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
       const record = await storage.updateProcessingRecord(id, updates);
       res.json(record);
     } catch (error: any) {
@@ -988,6 +1006,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/records/:id", requireAuth, requireModulePermission('records', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Get the existing record to verify company access
+      const existingRecord = await storage.getProcessingRecord(id);
+      if (!existingRecord) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+      
+      // Verify user has access to this company
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, existingRecord.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
       await storage.deleteProcessingRecord(id);
       res.json({ success: true });
     } catch (error: any) {

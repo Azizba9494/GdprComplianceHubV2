@@ -264,7 +264,7 @@ Informations complémentaires: ${data.additionalInfo}
       return recordsApi.generate(requestData).then(res => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/records', companyId] });
       setIsGenerateDialogOpen(false);
       generateForm.reset();
       toast({
@@ -299,7 +299,7 @@ Informations complémentaires: ${data.additionalInfo}
     mutationFn: ({ id, data }: { id: number; data: any }) =>
       recordsApi.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/records', companyId] });
       setEditingRecord(null);
       toast({
         title: "Fiche mise à jour",
@@ -311,7 +311,7 @@ Informations complémentaires: ${data.additionalInfo}
   const deleteMutation = useMutation({
     mutationFn: (id: number) => recordsApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/records', companyId] });
       toast({
         title: "Fiche supprimée",
         description: "La fiche de traitement a été supprimée avec succès.",
@@ -399,7 +399,7 @@ Informations complémentaires: ${data.additionalInfo}
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/records'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/records', companyId] });
       setIsCreateDialogOpen(false);
       manualForm.reset();
       toast({
