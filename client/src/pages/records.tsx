@@ -275,22 +275,20 @@ Informations complémentaires: ${data.additionalInfo}
     onError: (error: any) => {
       console.error('Generate mutation error:', error);
       
-      // For permission errors, always show the specific message
-      // The error message from the server contains "Droits insuffisants"
+      // Check if this is actually a permission error from the server
       const errorMessage = error.message || '';
       
-      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.write')) {
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.write') || errorMessage.includes('Permission denied')) {
         toast({
           title: "🔒 Droits insuffisants",
           description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour générer des fiches avec l'IA, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
           variant: "destructive",
         });
       } else {
-        // For any other error, show the permission message anyway since this is likely a permission issue
-        // based on the user's role as collaborator
+        // For any other error, show the actual error message
         toast({
-          title: "🔒 Droits insuffisants",
-          description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour générer des fiches avec l'IA, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
+          title: "Erreur",
+          description: errorMessage || "Une erreur s'est produite lors de la génération de la fiche de traitement.",
           variant: "destructive",
         });
       }
@@ -412,21 +410,20 @@ Informations complémentaires: ${data.additionalInfo}
     onError: (error: any) => {
       console.error('Create mutation error:', error);
       
-      // Check if it's a permission error
+      // Check if this is actually a permission error from the server
       const errorMessage = error.message || '';
       
-      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.write')) {
+      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.write') || errorMessage.includes('Permission denied')) {
         toast({
           title: "🔒 Droits insuffisants",
           description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour créer des fiches manuellement, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
           variant: "destructive",
         });
       } else {
-        // For any other error, show the permission message anyway since this is likely a permission issue
-        // based on the user's role as collaborator
+        // For any other error, show the actual error message
         toast({
-          title: "🔒 Droits insuffisants",
-          description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour créer des fiches manuellement, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
+          title: "Erreur",
+          description: errorMessage || "Une erreur s'est produite lors de la création de la fiche de traitement.",
           variant: "destructive",
         });
       }

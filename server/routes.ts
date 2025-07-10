@@ -905,7 +905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/records/generate", requireAuth, requireModulePermission('records', 'generate'), async (req, res) => {
+  app.post("/api/records/generate", requireAuth, requireModulePermission('records', 'write'), async (req, res) => {
     try {
       const { companyId, processingType, description } = req.body;
 
@@ -1068,7 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Company ID required" });
       }
 
-      // Check user has policies.generate permission for this company
+      // Check user has policies.write permission for this company
       const userAccess = await storage.getUserCompanyAccess(userId);
       const access = userAccess.find(a => a.companyId === companyId);
       
@@ -1076,7 +1076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied to this company" });
       }
       
-      if (access.role !== 'owner' && !access.permissions?.includes('policies.generate')) {
+      if (access.role !== 'owner' && !access.permissions?.includes('policies.write')) {
         return res.status(403).json({ error: "Droits insuffisants pour générer des politiques de confidentialité" });
       }
 
@@ -1203,7 +1203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/analyze", requireModulePermission('breaches', 'analyze'), async (req, res) => {
+  app.post("/api/breaches/analyze", requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
 
@@ -1232,7 +1232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/ai-analysis", requireModulePermission('breaches', 'analyze'), async (req, res) => {
+  app.post("/api/breaches/ai-analysis", requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       // Debug session and headers information
       console.log('Session debug:', {
