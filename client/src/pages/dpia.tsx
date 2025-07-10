@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { BarChart3, Loader2, Search, Download, AlertTriangle, Shield, CheckCircle, Info, Lightbulb, FileText, Users, FileSearch, ArrowLeft, Trash2, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -114,6 +115,7 @@ export default function DPIA() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Get user's company information
   const { data: userCompany } = useQuery({
@@ -774,6 +776,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                             variant="outline" 
                             size="sm"
                             onClick={() => startEvaluation(record)}
+                            disabled={!hasPermission('dpia.write')}
+                            title={!hasPermission('dpia.write') ? "Droits insuffisants pour évaluer une DPIA" : ""}
                           >
                             <Search className="w-4 h-4 mr-2" />
                             Évaluer la nécessité
@@ -784,6 +788,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                               variant="outline" 
                               size="sm"
                               onClick={() => startEvaluation(record)}
+                              disabled={!hasPermission('dpia.write')}
+                              title={!hasPermission('dpia.write') ? "Droits insuffisants pour réévaluer une DPIA" : ""}
                             >
                               <Search className="w-4 h-4 mr-2" />
                               Réévaluer
@@ -792,6 +798,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                               <Button 
                                 size="sm"
                                 onClick={() => startFullDpia(record)}
+                                disabled={!hasPermission('dpia.write')}
+                                title={!hasPermission('dpia.write') ? "Droits insuffisants pour créer une AIPD" : ""}
                               >
                                 <FileText className="w-4 h-4 mr-2" />
                                 Réaliser l'AIPD
@@ -848,7 +856,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                         variant="destructive" 
                         size="sm"
                         onClick={() => deleteAssessmentMutation.mutate(assessment.id)}
-                        disabled={deleteAssessmentMutation.isPending}
+                        disabled={deleteAssessmentMutation.isPending || !hasPermission('dpia.write')}
+                        title={!hasPermission('dpia.write') ? "Droits insuffisants pour supprimer une AIPD" : ""}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Supprimer
