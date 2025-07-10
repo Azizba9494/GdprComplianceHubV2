@@ -635,6 +635,11 @@ Informations complémentaires: ${data.additionalInfo}
     });
   };
 
+  // New function for inline list updates that don't trigger immediate save
+  const handleInlineListUpdate = (recordId: number, field: string, value: any) => {
+    handleFieldChange(recordId, field, value);
+  };
+
   // Enhanced AI justification with detailed legal references  
   const [justificationCache, setJustificationCache] = useState<{[key: string]: string}>({});
   const [loadingJustifications, setLoadingJustifications] = useState<{[key: string]: boolean}>({});
@@ -703,19 +708,22 @@ Informations complémentaires: ${data.additionalInfo}
     const [currentItems, setCurrentItems] = useState<string[]>(items || []);
     const [newItem, setNewItem] = useState("");
 
-    // Sync with parent items when not editing
+    // Sync with current editing values when in edit mode
     useEffect(() => {
-      if (!isEditing) {
+      if (isEditing) {
+        const editingValue = getFieldValue({ id: recordId, [field]: items }, field);
+        setCurrentItems(editingValue || items || []);
+      } else {
         setCurrentItems(items || []);
         setNewItem("");
       }
-    }, [items, isEditing]);
+    }, [items, isEditing, recordId, field]);
 
     const addItem = () => {
       if (newItem.trim() && !currentItems.includes(newItem.trim())) {
         const updatedItems = [...currentItems, newItem.trim()];
         setCurrentItems(updatedItems);
-        handleFieldUpdate(recordId, field, updatedItems);
+        handleInlineListUpdate(recordId, field, updatedItems);
         setNewItem("");
       }
     };
@@ -723,14 +731,14 @@ Informations complémentaires: ${data.additionalInfo}
     const removeItem = (index: number) => {
       const updatedItems = currentItems.filter((_, i) => i !== index);
       setCurrentItems(updatedItems);
-      handleFieldUpdate(recordId, field, updatedItems);
+      handleInlineListUpdate(recordId, field, updatedItems);
     };
 
     const addPredefinedItem = (item: string) => {
       if (!currentItems.includes(item)) {
         const updatedItems = [...currentItems, item];
         setCurrentItems(updatedItems);
-        handleFieldUpdate(recordId, field, updatedItems);
+        handleInlineListUpdate(recordId, field, updatedItems);
       }
     };
 
