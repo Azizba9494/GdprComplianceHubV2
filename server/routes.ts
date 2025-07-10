@@ -132,7 +132,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      const companyId = req.params.companyId || req.body.companyId || req.query.companyId;
+      let companyId = req.params.companyId || req.body.companyId || req.query.companyId;
+      
+      // For routes with :id parameter (like PUT/DELETE /api/breaches/:id), 
+      // try to get companyId from the existing object
+      if (!companyId && req.params.id) {
+        try {
+          let existingObject = null;
+          
+          // Get the existing object based on module type
+          if (module === 'breaches') {
+            existingObject = await storage.getDataBreach(parseInt(req.params.id));
+          } else if (module === 'records') {
+            existingObject = await storage.getProcessingRecord(parseInt(req.params.id));
+          } else if (module === 'actions') {
+            existingObject = await storage.getAction(parseInt(req.params.id));
+          } else if (module === 'dpia') {
+            existingObject = await storage.getDpiaEvaluation(parseInt(req.params.id));
+          }
+          
+          if (existingObject && existingObject.companyId) {
+            companyId = existingObject.companyId;
+          }
+        } catch (error) {
+          console.error(`Error retrieving ${module} object for permission check:`, error);
+        }
+      }
+      
       if (!companyId) {
         return res.status(400).json({ error: "Company ID required" });
       }
