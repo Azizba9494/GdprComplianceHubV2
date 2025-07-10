@@ -25,7 +25,7 @@ const navigation = [
 
 export default function Sidebar() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, currentCompany } = useAuth();
 
   // Generate user initials
   const getUserInitials = () => {
@@ -46,9 +46,9 @@ export default function Sidebar() {
     return user?.username || "Utilisateur";
   };
 
-  // Get user role display
+  // Get user role display for current company
   const getRoleDisplay = () => {
-    switch (user?.role) {
+    switch (currentCompany?.role) {
       case 'admin': return 'Administrateur';
       case 'owner': return 'Propriétaire';
       case 'collaborator': return 'Collaborateur';
@@ -77,8 +77,8 @@ export default function Sidebar() {
           const Icon = item.icon;
           const isActive = location === item.href;
           
-          // Hide Collaborators and Administration for non-owners
-          if ((item.href === '/collaborators' || item.href === '/admin') && user?.role !== 'owner') {
+          // Hide Collaborators and Administration for non-owners of current company
+          if ((item.href === '/collaborators' || item.href === '/admin') && currentCompany?.role !== 'owner') {
             return null;
           }
 
