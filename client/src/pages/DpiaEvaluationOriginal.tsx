@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { 
   BarChart3, 
@@ -130,6 +131,7 @@ export default function DpiaEvaluationOriginal() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Get user's company information
   const { data: userCompany } = useQuery({
@@ -716,7 +718,7 @@ export default function DpiaEvaluationOriginal() {
                       </div>
                       
                       <div className="flex items-center gap-2 ml-4">
-                        {evaluation && (
+                        {evaluation && hasPermission('dpia.write') && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -726,13 +728,26 @@ export default function DpiaEvaluationOriginal() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button
-                          onClick={() => handleRecordSelect(record)}
-                          variant={evaluation ? "outline" : "default"}
-                        >
-                          {evaluation ? "Modifier l'évaluation" : "Évaluer"}
-                        </Button>
-                        {evaluation && evaluation.recommendation?.includes('obligatoire') && (
+                        {hasPermission('dpia.write') ? (
+                          <Button
+                            onClick={() => handleRecordSelect(record)}
+                            variant={evaluation ? "outline" : "default"}
+                          >
+                            {evaluation ? "Modifier l'évaluation" : "Évaluer"}
+                          </Button>
+                        ) : evaluation ? (
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              // Show evaluation details in read-only mode
+                              setSelectedRecord(record);
+                              setShowEvaluation(true);
+                            }}
+                          >
+                            Voir l'évaluation
+                          </Button>
+                        ) : null}
+                        {evaluation && evaluation.recommendation?.includes('obligatoire') && hasPermission('dpia.write') && (
                           <Button
                             onClick={() => setLocation(`/dpia/new?recordId=${record.id}`)}
                             className="bg-orange-600 hover:bg-orange-700"

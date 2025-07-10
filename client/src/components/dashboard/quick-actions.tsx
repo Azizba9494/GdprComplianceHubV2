@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { FileText, AlertTriangle, UserCheck, PieChart } from "lucide-react";
 import { Link } from "wouter";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface QuickActionsProps {
   stats: {
@@ -26,6 +27,7 @@ const quickActions = [
     iconBg: "bg-blue-100 dark:bg-blue-900/20",
     iconColor: "text-blue-600 dark:text-blue-400",
     href: "/privacy-policy",
+    permission: "policies.read",
   },
   {
     title: "Analyser une violation",
@@ -34,6 +36,7 @@ const quickActions = [
     iconBg: "bg-red-100 dark:bg-red-900/20",
     iconColor: "text-red-600 dark:text-red-400",
     href: "/breach-analysis",
+    permission: "breaches.read",
   },
   {
     title: "Traiter une demande",
@@ -42,10 +45,12 @@ const quickActions = [
     iconBg: "bg-green-100 dark:bg-green-900/20",
     iconColor: "text-green-600 dark:text-green-400",
     href: "/rights",
+    permission: "requests.read",
   },
 ];
 
 export default function QuickActions({ stats }: QuickActionsProps) {
+  const { hasPermission } = usePermissions();
   // Calculate dynamic progress data based on real compliance scores
   const calculateProgressData = () => {
     const categoryScores = stats.compliance?.categoryScores || {};
@@ -93,7 +98,9 @@ export default function QuickActions({ stats }: QuickActionsProps) {
           <CardTitle>Actions rapides</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {quickActions.map((action) => {
+          {quickActions
+            .filter(action => hasPermission(action.permission))
+            .map((action) => {
             const Icon = action.icon;
             return (
               <Link key={action.title} href={action.href}>

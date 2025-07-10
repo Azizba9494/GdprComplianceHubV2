@@ -12,9 +12,11 @@ import { ArrowRight, FileDown, User } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import RecentActivity from "@/components/dashboard/recent-activity";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function Dashboard() {
   const { user, currentCompany, forceUseOwnedCompany } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Use current company from auth context instead of fetching
   const companyId = currentCompany?.id;
@@ -25,29 +27,29 @@ export default function Dashboard() {
     enabled: !!companyId,
   });
 
-  // Fetch additional data for heat map
+  // Fetch additional data for heat map - only if user has permissions
   const { data: actions } = useQuery({
     queryKey: ['/api/actions', companyId],
     queryFn: () => actionsApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    enabled: !!companyId && hasPermission('actions.read'),
   });
 
   const { data: breaches } = useQuery({
     queryKey: ['/api/breaches', companyId],
     queryFn: () => breachApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    enabled: !!companyId && hasPermission('breaches.read'),
   });
 
   const { data: records } = useQuery({
     queryKey: ['/api/records', companyId],
     queryFn: () => recordsApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    enabled: !!companyId && hasPermission('records.read'),
   });
 
   const { data: requests } = useQuery({
     queryKey: ['/api/requests', companyId],
     queryFn: () => requestsApi.get(companyId).then((res: any) => res.json()),
-    enabled: !!companyId,
+    enabled: !!companyId && hasPermission('requests.read'),
     onError: (error: any) => {
       console.error('Error fetching requests:', error);
       // Fail silently for permission issues in dashboard
