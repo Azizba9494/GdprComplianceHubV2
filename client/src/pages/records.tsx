@@ -1034,13 +1034,15 @@ Informations complémentaires: ${data.additionalInfo}
                         ))}
                       </div>
                       <Input 
-                        placeholder="Autres catégories de données (séparées par des virgules)"
-                        onChange={(e) => {
-                          if (e.target.value.trim()) {
-                            const newCategories = e.target.value.split(',').map(c => c.trim()).filter(c => c);
+                        placeholder="Autres catégories (appuyez sur Entrée pour ajouter)"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                            e.preventDefault();
+                            const newCategories = e.currentTarget.value.split(',').map(c => c.trim()).filter(c => c);
                             const currentCategories = manualForm.getValues('dataCategories') || [];
                             const combinedCategories = Array.isArray(currentCategories) ? [...currentCategories, ...newCategories] : newCategories;
                             manualForm.setValue('dataCategories', combinedCategories);
+                            e.currentTarget.value = '';
                           }
                         }}
                       />
@@ -1072,13 +1074,15 @@ Informations complémentaires: ${data.additionalInfo}
                         ))}
                       </div>
                       <Input 
-                        placeholder="Autres destinataires (séparés par des virgules)"
-                        onChange={(e) => {
-                          if (e.target.value.trim()) {
-                            const newRecipients = e.target.value.split(',').map(r => r.trim()).filter(r => r);
+                        placeholder="Autres destinataires (appuyez sur Entrée pour ajouter)"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                            e.preventDefault();
+                            const newRecipients = e.currentTarget.value.split(',').map(r => r.trim()).filter(r => r);
                             const currentRecipients = manualForm.getValues('recipients') || [];
                             const combinedRecipients = Array.isArray(currentRecipients) ? [...currentRecipients, ...newRecipients] : newRecipients;
                             manualForm.setValue('recipients', combinedRecipients);
+                            e.currentTarget.value = '';
                           }
                         }}
                       />
@@ -1110,13 +1114,15 @@ Informations complémentaires: ${data.additionalInfo}
                         ))}
                       </div>
                       <Input 
-                        placeholder="Autres mesures de sécurité (séparées par des virgules)"
-                        onChange={(e) => {
-                          if (e.target.value.trim()) {
-                            const newMeasures = e.target.value.split(',').map(m => m.trim()).filter(m => m);
+                        placeholder="Autres mesures (appuyez sur Entrée pour ajouter)"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                            e.preventDefault();
+                            const newMeasures = e.currentTarget.value.split(',').map(m => m.trim()).filter(m => m);
                             const currentMeasures = manualForm.getValues('securityMeasures') || [];
                             const combinedMeasures = Array.isArray(currentMeasures) ? [...currentMeasures, ...newMeasures] : newMeasures;
                             manualForm.setValue('securityMeasures', combinedMeasures);
+                            e.currentTarget.value = '';
                           }
                         }}
                       />
