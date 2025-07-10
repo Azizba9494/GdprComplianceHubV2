@@ -691,22 +691,31 @@ Informations complémentaires: ${data.additionalInfo}
     }
   };
 
-  // Composant pour éditer les listes (catégories, destinataires, mesures)
-  const EditableList = ({ items, field, recordId, predefinedOptions, placeholder }: {
+  // Composant pour éditer les listes en mode inline (intégré au mode d'édition global)
+  const InlineEditableList = ({ items, field, recordId, predefinedOptions, placeholder, isEditing }: {
     items: string[];
     field: string;
     recordId: number;
     predefinedOptions: string[];
     placeholder: string;
+    isEditing: boolean;
   }) => {
-    const [editMode, setEditMode] = useState(false);
     const [currentItems, setCurrentItems] = useState<string[]>(items || []);
     const [newItem, setNewItem] = useState("");
+
+    // Sync with parent items when not editing
+    useEffect(() => {
+      if (!isEditing) {
+        setCurrentItems(items || []);
+        setNewItem("");
+      }
+    }, [items, isEditing]);
 
     const addItem = () => {
       if (newItem.trim() && !currentItems.includes(newItem.trim())) {
         const updatedItems = [...currentItems, newItem.trim()];
         setCurrentItems(updatedItems);
+        handleFieldUpdate(recordId, field, updatedItems);
         setNewItem("");
       }
     };
@@ -714,27 +723,18 @@ Informations complémentaires: ${data.additionalInfo}
     const removeItem = (index: number) => {
       const updatedItems = currentItems.filter((_, i) => i !== index);
       setCurrentItems(updatedItems);
+      handleFieldUpdate(recordId, field, updatedItems);
     };
 
     const addPredefinedItem = (item: string) => {
       if (!currentItems.includes(item)) {
         const updatedItems = [...currentItems, item];
         setCurrentItems(updatedItems);
+        handleFieldUpdate(recordId, field, updatedItems);
       }
     };
 
-    const saveChanges = () => {
-      handleFieldUpdate(recordId, field, currentItems);
-      setEditMode(false);
-    };
-
-    const cancelEdit = () => {
-      setCurrentItems(items || []);
-      setNewItem("");
-      setEditMode(false);
-    };
-
-    if (!editMode) {
+    if (!isEditing) {
       return (
         <div className="space-y-2">
           <div className="flex flex-wrap gap-1">
@@ -747,23 +747,12 @@ Informations complémentaires: ${data.additionalInfo}
               <span className="text-muted-foreground text-sm">Aucun élément</span>
             )}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setEditMode(true)}
-            className="mt-2"
-            disabled={!hasPermission('records', 'write')}
-            title={!hasPermission('records', 'write') ? "Droits insuffisants pour modifier les enregistrements" : ""}
-          >
-            <Edit2 className="w-3 h-3 mr-1" />
-            Modifier
-          </Button>
         </div>
       );
     }
 
     return (
-      <div className="space-y-3 border p-3 rounded-lg">
+      <div className="space-y-3 border p-3 rounded-lg bg-muted/30">
         <div className="flex flex-wrap gap-1">
           {currentItems.map((item, index) => (
             <Badge key={index} variant="secondary" className="text-xs">
@@ -808,22 +797,6 @@ Informations complémentaires: ${data.additionalInfo}
                 </Button>
               ))}
           </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            onClick={saveChanges}
-            disabled={!hasPermission('records', 'write')}
-            title={!hasPermission('records', 'write') ? "Droits insuffisants pour sauvegarder les modifications" : ""}
-          >
-            <Save className="w-3 h-3 mr-1" />
-            Enregistrer
-          </Button>
-          <Button size="sm" variant="outline" onClick={cancelEdit}>
-            <X className="w-3 h-3 mr-1" />
-            Annuler
-          </Button>
         </div>
       </div>
     );
@@ -1967,23 +1940,25 @@ Informations complémentaires: ${data.additionalInfo}
 
                   <div>
                     <Label className="font-medium">Catégories de données</Label>
-                    <EditableList
+                    <InlineEditableList
                       items={Array.isArray(record.dataCategories) ? record.dataCategories : [record.dataCategories].filter(Boolean)}
                       field="dataCategories"
                       recordId={record.id}
                       predefinedOptions={DATA_CATEGORIES}
                       placeholder="Ajouter une catégorie de données..."
+                      isEditing={editingRecord === record.id}
                     />
                   </div>
 
                   <div>
                     <Label className="font-medium">Destinataires</Label>
-                    <EditableList
+                    <InlineEditableList
                       items={Array.isArray(record.recipients) ? record.recipients : [record.recipients].filter(Boolean)}
                       field="recipients"
                       recordId={record.id}
                       predefinedOptions={RECIPIENT_TYPES}
                       placeholder="Ajouter un destinataire..."
+                      isEditing={editingRecord === record.id}
                     />
                   </div>
 
@@ -2194,12 +2169,13 @@ Informations complémentaires: ${data.additionalInfo}
 
                 <div className="pt-4 border-t">
                   <Label className="font-medium">Mesures de sécurité</Label>
-                  <EditableList
+                  <InlineEditableList
                     items={Array.isArray(record.securityMeasures) ? record.securityMeasures : [record.securityMeasures].filter(Boolean)}
                     field="securityMeasures"
                     recordId={record.id}
                     predefinedOptions={SECURITY_MEASURES}
                     placeholder="Ajouter une mesure de sécurité..."
+                    isEditing={editingRecord === record.id}
                   />
                 </div>
 
