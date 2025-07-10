@@ -20,7 +20,6 @@ import { AccessDenied } from "@/components/AccessDenied";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ExpandableText } from "@/components/ui/expandable-text";
-import { InlineEditSection, EditableField } from "@/components/InlineEditSection";
 import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch, Search } from "lucide-react";
 
 // Bases légales complètes du RGPD
@@ -1843,70 +1842,67 @@ Informations complémentaires: ${data.additionalInfo}
                     </Badge>
                   </div>
                   <div className="flex gap-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                    {editingRecord === record.id ? (
+                      <>
                         <Button
                           size="sm"
-                          variant="ghost"
-                          disabled={!hasPermission('records', 'write')}
-                          title={!hasPermission('records', 'write') ? "Droits insuffisants pour supprimer cette fiche" : ""}
+                          variant="default"
+                          onClick={() => saveAllChanges(record.id)}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Save className="w-4 h-4 mr-1" />
+                          Enregistrer
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Êtes-vous sûr de vouloir supprimer cette fiche de traitement ? Cette action est irréversible.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteMutation.mutate(record.id)}>
-                            Supprimer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => cancelEdit(record.id)}
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Annuler
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingRecord(record.id)}
+                        disabled={!hasPermission('records', 'write')}
+                        title={!hasPermission('records', 'write') ? "Droits insuffisants pour modifier cette fiche" : ""}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Section Finalité */}
-                <InlineEditSection
-                  title="Finalité"
-                  icon={<FileText className="h-4 w-4" />}
-                  modulePermission="records"
-                  editComponent={
-                    <EditableField
-                      value={record.purpose}
-                      type="textarea"
-                      onSave={(value) => handleFieldUpdate(record.id, 'purpose', value)}
-                      onCancel={() => {}}
-                      placeholder="Décrivez la finalité du traitement..."
-                    />
-                  }
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Label className="font-medium">Finalité</Label>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleJustification(record.id, 'purpose')}
+                      >
+                        <HelpCircle className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    {editingRecord === record.id ? (
+                      <Textarea
+                        defaultValue={record.purpose}
+                        onBlur={(e) => handleFieldUpdate(record.id, 'purpose', e.target.value)}
+                      />
+                    ) : (
                       <ExpandableText
                         text={record.purpose}
                         maxLength={120}
                         className="text-sm"
                         previewMode="characters"
                       />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => toggleJustification(record.id, 'purpose')}
-                        className="h-6 w-6 p-0"
-                      >
-                        <HelpCircle className="w-3 h-3" />
-                      </Button>
-                    </div>
+                    )}
                     {showJustification[`${record.id}_purpose`] && (
-                      <div className="p-3 bg-muted rounded-md text-xs">
+                      <div className="mt-2 p-3 bg-muted rounded-md text-xs">
                         <strong>Justification IA :</strong> {
                           loadingJustifications[`${record.id}_purpose`] ? (
                             <span className="flex items-center gap-2">
@@ -1921,37 +1917,39 @@ Informations complémentaires: ${data.additionalInfo}
                       </div>
                     )}
                   </div>
-                </InlineEditSection>
 
-                {/* Section Base légale */}
-                <InlineEditSection
-                  title="Base légale"
-                  icon={<Book className="h-4 w-4" />}
-                  modulePermission="records"
-                  editComponent={
-                    <EditableField
-                      value={record.legalBasis}
-                      type="select"
-                      options={LEGAL_BASES}
-                      onSave={(value) => handleFieldUpdate(record.id, 'legalBasis', value)}
-                      onCancel={() => {}}
-                    />
-                  }
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm">{getLegalBasisLabel(record.legalBasis)}</p>
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Label className="font-medium">Base légale</Label>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => toggleJustification(record.id, 'legalBasis')}
-                        className="h-6 w-6 p-0"
                       >
                         <HelpCircle className="w-3 h-3" />
                       </Button>
                     </div>
+                    {editingRecord === record.id ? (
+                      <Select
+                        defaultValue={record.legalBasis}
+                        onValueChange={(value) => handleFieldUpdate(record.id, 'legalBasis', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LEGAL_BASES.map((basis) => (
+                            <SelectItem key={basis.value} value={basis.value}>
+                              {basis.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-sm">{getLegalBasisLabel(record.legalBasis)}</p>
+                    )}
                     {showJustification[`${record.id}_legalBasis`] && (
-                      <div className="p-3 bg-muted rounded-md text-xs">
+                      <div className="mt-2 p-3 bg-muted rounded-md text-xs">
                         <strong>Justification IA :</strong> {
                           loadingJustifications[`${record.id}_legalBasis`] ? (
                             <span className="flex items-center gap-2">
@@ -1966,65 +1964,50 @@ Informations complémentaires: ${data.additionalInfo}
                       </div>
                     )}
                   </div>
-                </InlineEditSection>
 
-                {/* Section Catégories de données */}
-                <InlineEditSection
-                  title="Catégories de données"
-                  modulePermission="records"
-                >
-                  <EditableList
-                    items={Array.isArray(record.dataCategories) ? record.dataCategories : [record.dataCategories].filter(Boolean)}
-                    field="dataCategories"
-                    recordId={record.id}
-                    predefinedOptions={DATA_CATEGORIES}
-                    placeholder="Ajouter une catégorie de données..."
-                  />
-                </InlineEditSection>
-
-                {/* Section Destinataires */}
-                <InlineEditSection
-                  title="Destinataires"
-                  icon={<Users className="h-4 w-4" />}
-                  modulePermission="records"
-                >
-                  <EditableList
-                    items={Array.isArray(record.recipients) ? record.recipients : [record.recipients].filter(Boolean)}
-                    field="recipients"
-                    recordId={record.id}
-                    predefinedOptions={RECIPIENT_TYPES}
-                    placeholder="Ajouter un destinataire..."
-                  />
-                </InlineEditSection>
-
-                {/* Section Durée de conservation */}
-                <InlineEditSection
-                  title="Durée de conservation"
-                  modulePermission="records"
-                  editComponent={
-                    <EditableField
-                      value={record.retention}
-                      type="text"
-                      onSave={(value) => handleFieldUpdate(record.id, 'retention', value)}
-                      onCancel={() => {}}
-                      placeholder="Ex: 5 ans après la fin du contrat"
+                  <div>
+                    <Label className="font-medium">Catégories de données</Label>
+                    <EditableList
+                      items={Array.isArray(record.dataCategories) ? record.dataCategories : [record.dataCategories].filter(Boolean)}
+                      field="dataCategories"
+                      recordId={record.id}
+                      predefinedOptions={DATA_CATEGORIES}
+                      placeholder="Ajouter une catégorie de données..."
                     />
-                  }
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm">{record.retention}</p>
+                  </div>
+
+                  <div>
+                    <Label className="font-medium">Destinataires</Label>
+                    <EditableList
+                      items={Array.isArray(record.recipients) ? record.recipients : [record.recipients].filter(Boolean)}
+                      field="recipients"
+                      recordId={record.id}
+                      predefinedOptions={RECIPIENT_TYPES}
+                      placeholder="Ajouter un destinataire..."
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Label className="font-medium">Durée de conservation</Label>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => toggleJustification(record.id, 'retention')}
-                        className="h-6 w-6 p-0"
                       >
                         <HelpCircle className="w-3 h-3" />
                       </Button>
                     </div>
+                    {editingRecord === record.id ? (
+                      <Input
+                        defaultValue={record.retention}
+                        onBlur={(e) => handleFieldUpdate(record.id, 'retention', e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-sm">{record.retention}</p>
+                    )}
                     {showJustification[`${record.id}_retention`] && (
-                      <div className="p-3 bg-muted rounded-md text-xs">
+                      <div className="mt-2 p-3 bg-muted rounded-md text-xs">
                         <strong>Justification IA :</strong> {
                           loadingJustifications[`${record.id}_retention`] ? (
                             <span className="flex items-center gap-2">
@@ -2039,84 +2022,145 @@ Informations complémentaires: ${data.additionalInfo}
                       </div>
                     )}
                   </div>
-                </InlineEditSection>
 
-                {/* Section Transferts hors UE */}
-                <InlineEditSection
-                  title="Transferts hors UE"
-                  modulePermission="records"
-                  editComponent={
-                    <EditableField
-                      value={record.transfersOutsideEU}
-                      type="switch"
-                      onSave={(value) => handleFieldUpdate(record.id, 'transfersOutsideEU', value)}
-                      onCancel={() => {}}
-                    />
-                  }
-                >
-                  <Badge variant={record.transfersOutsideEU ? "destructive" : "secondary"}>
-                    {record.transfersOutsideEU ? "Oui" : "Non"}
-                  </Badge>
-                </InlineEditSection>
+                  <div>
+                    <Label className="font-medium">Transferts hors UE</Label>
+                    <div className="mt-2">
+                      {editingRecord === record.id ? (
+                        <Switch
+                          checked={record.transfersOutsideEU}
+                          onCheckedChange={(checked) => handleFieldUpdate(record.id, 'transfersOutsideEU', checked)}
+                        />
+                      ) : (
+                        <Badge variant={record.transfersOutsideEU ? "destructive" : "secondary"}>
+                          {record.transfersOutsideEU ? "Oui" : "Non"}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-                {/* Section Responsable de traitement */}
-                <InlineEditSection
-                  title="Responsable de traitement"
-                  icon={<Building className="h-4 w-4" />}
-                  modulePermission="records"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Responsable de traitement */}
+                <div className="pt-4 border-t">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Building className="w-4 h-4" />
+                    <Label className="font-medium text-base">Responsable de traitement</Label>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
                     <div>
                       <Label className="text-sm font-medium">Dénomination</Label>
-                      <p className="text-sm mt-1">{record.dataControllerName || "Non renseigné"}</p>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={getFieldValue(record, 'dataControllerName') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerName', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerName || "Non renseigné"}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Adresse</Label>
-                      <p className="text-sm mt-1">{record.dataControllerAddress || "Non renseigné"}</p>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={getFieldValue(record, 'dataControllerAddress') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerAddress', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerAddress || "Non renseigné"}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Téléphone</Label>
-                      <p className="text-sm mt-1">{record.dataControllerPhone || "Non renseigné"}</p>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={getFieldValue(record, 'dataControllerPhone') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerPhone', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerPhone || "Non renseigné"}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Email</Label>
-                      <p className="text-sm mt-1">{record.dataControllerEmail || "Non renseigné"}</p>
+                      {editingRecord === record.id ? (
+                        <Input
+                          defaultValue={getFieldValue(record, 'dataControllerEmail') || ""}
+                          onChange={(e) => handleFieldChange(record.id, 'dataControllerEmail', e.target.value)}
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm mt-1">{record.dataControllerEmail || "Non renseigné"}</p>
+                      )}
                     </div>
                   </div>
-                </InlineEditSection>
+                </div>
 
-                {/* Section DPO */}
-                <InlineEditSection
-                  title="Délégué à la Protection des Données (DPO)"
-                  icon={<Users className="h-4 w-4" />}
-                  modulePermission="records"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
+                {/* DPO */}
+                <div className="pt-4 border-t">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Users className="w-4 h-4" />
+                    <Label className="font-medium text-base">Délégué à la Protection des Données (DPO)</Label>
+                  </div>
+                  <div className="pl-6">
+                    <div className="flex items-center space-x-2 mb-4">
                       <Label className="text-sm font-medium">L'entreprise dispose-t-elle d'un DPO ?</Label>
-                      <Badge variant={record.hasDpo ? "default" : "secondary"}>
-                        {record.hasDpo ? "Oui" : "Non"}
-                      </Badge>
+                      {editingRecord === record.id ? (
+                        <Switch
+                          checked={getFieldValue(record, 'hasDpo') || false}
+                          onCheckedChange={(checked) => handleFieldChange(record.id, 'hasDpo', checked)}
+                        />
+                      ) : (
+                        <Badge variant={record.hasDpo ? "default" : "secondary"}>
+                          {record.hasDpo ? "Oui" : "Non"}
+                        </Badge>
+                      )}
                     </div>
                     
-                    {record.hasDpo && (
+                    {(editingRecord === record.id ? getFieldValue(record, 'hasDpo') : record.hasDpo) && (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <Label className="text-sm font-medium">Nom du DPO</Label>
-                          <p className="text-sm mt-1">{record.dpoName || "Non renseigné"}</p>
+                          {editingRecord === record.id ? (
+                            <Input
+                              defaultValue={getFieldValue(record, 'dpoName') || ""}
+                              onChange={(e) => handleFieldChange(record.id, 'dpoName', e.target.value)}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm mt-1">{record.dpoName || "Non renseigné"}</p>
+                          )}
                         </div>
                         <div>
                           <Label className="text-sm font-medium">Téléphone DPO</Label>
-                          <p className="text-sm mt-1">{record.dpoPhone || "Non renseigné"}</p>
+                          {editingRecord === record.id ? (
+                            <Input
+                              defaultValue={getFieldValue(record, 'dpoPhone') || ""}
+                              onChange={(e) => handleFieldChange(record.id, 'dpoPhone', e.target.value)}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm mt-1">{record.dpoPhone || "Non renseigné"}</p>
+                          )}
                         </div>
                         <div>
                           <Label className="text-sm font-medium">Email DPO</Label>
-                          <p className="text-sm mt-1">{record.dpoEmail || "Non renseigné"}</p>
+                          {editingRecord === record.id ? (
+                            <Input
+                              defaultValue={getFieldValue(record, 'dpoEmail') || ""}
+                              onChange={(e) => handleFieldChange(record.id, 'dpoEmail', e.target.value)}
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="text-sm mt-1">{record.dpoEmail || "Non renseigné"}</p>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
-                </InlineEditSection>
+                </div>
 
                 {/* Responsable conjoint - seulement pour les traitements conjoints */}
                 {record.type === "joint-controller" && (

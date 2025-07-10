@@ -17,8 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Building2, Users, Shield, Globe, ExternalLink, FileText, Download, Edit2 } from "lucide-react";
-import { InlineEditSection, EditableField } from "@/components/InlineEditSection";
+import { Plus, Edit, Trash2, Building2, Users, Shield, Globe, ExternalLink, FileText, Download } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import type { SubprocessorRecord } from "@shared/schema";
 
@@ -799,6 +798,15 @@ export default function SubprocessorRegistry() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleEdit(record)}
+                      disabled={!hasPermission('subprocessors', 'write')}
+                      title={!hasPermission('subprocessors', 'write') ? "Droits insuffisants pour modifier cet enregistrement" : ""}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleDelete(record.id)}
                       disabled={!hasPermission('subprocessors', 'write')}
                       title={!hasPermission('subprocessors', 'write') ? "Droits insuffisants pour supprimer cet enregistrement" : ""}
@@ -808,144 +816,51 @@ export default function SubprocessorRegistry() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Section Client */}
-                <InlineEditSection
-                  title="Client (Responsable de traitement)"
-                  icon={<Building2 className="h-4 w-4" />}
-                  modulePermission="subprocessors"
-                  onSave={(values) => {
-                    updateMutation.mutate({
-                      id: record.id,
-                      data: {
-                        ...record,
-                        ...values
-                      }
-                    });
-                  }}
-                >
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Adresse:</strong> {record.clientAddress}</p>
-                    {record.clientPhone && <p><strong>Téléphone:</strong> {record.clientPhone}</p>}
-                    {record.clientEmail && <p><strong>Email:</strong> {record.clientEmail}</p>}
-                    {record.clientRepresentativeName && (
-                      <p><strong>Représentant:</strong> {record.clientRepresentativeName}</p>
-                    )}
-                  </div>
-                </InlineEditSection>
-
-                {/* Section Sous-traitant */}
-                {record.subprocessorName && (
-                  <InlineEditSection
-                    title="Sous-traitant"
-                    icon={<Users className="h-4 w-4" />}
-                    modulePermission="subprocessors"
-                    onSave={(values) => {
-                      updateMutation.mutate({
-                        id: record.id,
-                        data: {
-                          ...record,
-                          ...values
-                        }
-                      });
-                    }}
-                  >
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Nom:</strong> {record.subprocessorName}</p>
-                      {record.subprocessorAddress && <p><strong>Adresse:</strong> {record.subprocessorAddress}</p>}
-                      {record.subprocessorPhone && <p><strong>Téléphone:</strong> {record.subprocessorPhone}</p>}
-                      {record.subprocessorEmail && <p><strong>Email:</strong> {record.subprocessorEmail}</p>}
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Client (Responsable de traitement)</h4>
+                    <div className="space-y-1 text-sm">
+                      <p><strong>Adresse:</strong> {record.clientAddress}</p>
+                      {record.clientPhone && <p><strong>Téléphone:</strong> {record.clientPhone}</p>}
+                      {record.clientEmail && <p><strong>Email:</strong> {record.clientEmail}</p>}
+                      {record.clientRepresentativeName && (
+                        <p><strong>Représentant:</strong> {record.clientRepresentativeName}</p>
+                      )}
                     </div>
-                  </InlineEditSection>
-                )}
+                  </div>
+                  
+                  {record.subprocessorName && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Sous-traitant</h4>
+                      <div className="space-y-1 text-sm">
+                        <p><strong>Nom:</strong> {record.subprocessorName}</p>
+                        {record.subprocessorAddress && <p><strong>Adresse:</strong> {record.subprocessorAddress}</p>}
+                        {record.subprocessorPhone && <p><strong>Téléphone:</strong> {record.subprocessorPhone}</p>}
+                        {record.subprocessorEmail && <p><strong>Email:</strong> {record.subprocessorEmail}</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                {/* Section Catégories de traitement */}
-                <InlineEditSection
-                  title="Catégories de traitement"
-                  icon={<FileText className="h-4 w-4" />}
-                  modulePermission="subprocessors"
-                  onSave={(value) => {
-                    updateMutation.mutate({
-                      id: record.id,
-                      data: {
-                        ...record,
-                        processingCategories: value
-                      }
-                    });
-                  }}
-                  editComponent={
-                    <EditableField
-                      value={record.processingCategories}
-                      type="textarea"
-                      onSave={(value) => {
-                        updateMutation.mutate({
-                          id: record.id,
-                          data: {
-                            ...record,
-                            processingCategories: value
-                          }
-                        });
-                      }}
-                      onCancel={() => {}}
-                      placeholder="Décrivez les catégories de traitement..."
-                    />
-                  }
-                >
+                <div>
+                  <h4 className="font-semibold mb-2">Catégories de traitement</h4>
                   <p className="text-sm text-muted-foreground">{record.processingCategories}</p>
-                </InlineEditSection>
+                </div>
 
-                {/* Section Transferts internationaux */}
-                <InlineEditSection
-                  title="Transferts internationaux"
-                  icon={<Globe className="h-4 w-4" />}
-                  modulePermission="subprocessors"
-                  onSave={(value) => {
-                    updateMutation.mutate({
-                      id: record.id,
-                      data: {
-                        ...record,
-                        hasInternationalTransfers: value
-                      }
-                    });
-                  }}
-                  editComponent={
-                    <EditableField
-                      value={record.hasInternationalTransfers}
-                      type="switch"
-                      onSave={(value) => {
-                        updateMutation.mutate({
-                          id: record.id,
-                          data: {
-                            ...record,
-                            hasInternationalTransfers: value
-                          }
-                        });
-                      }}
-                      onCancel={() => {}}
-                    />
-                  }
-                >
-                  <Badge variant={record.hasInternationalTransfers ? "destructive" : "secondary"}>
-                    {record.hasInternationalTransfers ? "Oui" : "Non"}
-                  </Badge>
-                </InlineEditSection>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    <span className="text-sm">Transferts internationaux:</span>
+                    <Badge variant={record.hasInternationalTransfers ? "destructive" : "secondary"}>
+                      {record.hasInternationalTransfers ? "Oui" : "Non"}
+                    </Badge>
+                  </div>
+                </div>
 
-                {/* Section Mesures de sécurité */}
                 {record.securityMeasures && record.securityMeasures.length > 0 && (
-                  <InlineEditSection
-                    title="Mesures de sécurité"
-                    icon={<Shield className="h-4 w-4" />}
-                    modulePermission="subprocessors"
-                    onSave={(values) => {
-                      updateMutation.mutate({
-                        id: record.id,
-                        data: {
-                          ...record,
-                          ...values
-                        }
-                      });
-                    }}
-                  >
+                  <div>
+                    <h4 className="font-semibold mb-2">Mesures de sécurité</h4>
                     <div className="flex flex-wrap gap-1">
                       {record.securityMeasures.map((measure, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
@@ -953,7 +868,7 @@ export default function SubprocessorRegistry() {
                         </Badge>
                       ))}
                     </div>
-                  </InlineEditSection>
+                  </div>
                 )}
               </CardContent>
             </Card>
