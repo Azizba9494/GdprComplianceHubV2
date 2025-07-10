@@ -29,7 +29,10 @@ export default function Chatbot() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await chatbotApi.sendMessage(message, currentCompany?.id || 1);
+      if (!currentCompany?.id) {
+        throw new Error('Company ID required');
+      }
+      const response = await chatbotApi.sendMessage(message, currentCompany.id);
       return response.json();
     },
     onSuccess: (data) => {
