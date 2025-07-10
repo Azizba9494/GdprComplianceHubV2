@@ -1176,7 +1176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches", requireModulePermission('breaches', 'write'), async (req, res) => {
+  app.post("/api/breaches", requireAuth, requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       console.log('Raw breach data received:', JSON.stringify(req.body, null, 2));
 
@@ -1199,7 +1199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/breaches/:id", requireModulePermission('breaches', 'write'), async (req, res) => {
+  app.put("/api/breaches/:id", requireAuth, requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1210,7 +1210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/breaches/:id", requireModulePermission('breaches', 'write'), async (req, res) => {
+  app.delete("/api/breaches/:id", requireAuth, requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -1239,7 +1239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/analyze", requireModulePermission('breaches', 'write'), async (req, res) => {
+  app.post("/api/breaches/analyze", requireAuth, requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       const breachData = insertDataBreachSchema.parse(req.body);
 
@@ -1268,7 +1268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/breaches/ai-analysis", requireModulePermission('breaches', 'write'), async (req, res) => {
+  app.post("/api/breaches/ai-analysis", requireAuth, requireModulePermission('breaches', 'write'), async (req, res) => {
     try {
       // Debug session and headers information
       console.log('Session debug:', {
