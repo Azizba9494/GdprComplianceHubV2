@@ -117,7 +117,7 @@ export default function DpiaAssessment() {
   const form = useForm<DpiaFormData>({
     resolver: zodResolver(dpiaFormSchema),
     defaultValues: {
-      companyId: currentCompany?.id || 1,
+      companyId: currentCompany?.id,
       status: "draft",
       personalDataCategories: [],
       riskAssessment: [],

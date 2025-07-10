@@ -554,7 +554,7 @@ export default function DpiaAssessmentEnhanced() {
       };
       form.reset(cleanedData);
     }
-  }, [dpia, company, form]);
+  }, [dpia, currentCompany, form]);
 
   // Save mutation
   const saveMutation = useMutation({
@@ -565,7 +565,7 @@ export default function DpiaAssessmentEnhanced() {
       // Clean data before sending
       const cleanData = {
         ...data,
-        companyId: company?.id || 1,
+        companyId: currentCompany?.id,
         securityMeasures: Array.isArray(data.securityMeasures) ? data.securityMeasures : [],
         customSecurityMeasures: Array.isArray(data.customSecurityMeasures) ? data.customSecurityMeasures : [],
         subcontractingMeasures: Array.isArray(data.subcontractingMeasures) ? data.subcontractingMeasures : [],

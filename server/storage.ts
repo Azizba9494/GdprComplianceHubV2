@@ -2,8 +2,8 @@ import {
   users, companies, diagnosticQuestions, diagnosticResponses, complianceActions,
   processingRecords, subprocessorRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
-  learningModules, achievements, userProgress, userAchievements, moduleProgress,
-  quizzes, quizAttempts, dpiaEvaluations, ragDocuments, promptDocuments,
+
+ dpiaEvaluations, ragDocuments, promptDocuments,
   subscriptions, userCompanyAccess, invitations, invoices, botConversations, botMessages,
   actionAssignments, actionComments, actionAttachments, actionActivityLog,
   type User, type InsertUser, type Company, type InsertCompany,
@@ -23,13 +23,7 @@ import {
   type AiPrompt, type InsertAiPrompt,
   type AuditLog, type InsertAuditLog,
   type LlmConfiguration, type InsertLlmConfiguration,
-  type LearningModule, type InsertLearningModule,
-  type Achievement, type InsertAchievement,
-  type UserProgress, type InsertUserProgress,
-  type UserAchievement, type InsertUserAchievement,
-  type ModuleProgress, type InsertModuleProgress,
-  type Quiz, type InsertQuiz,
-  type QuizAttempt, type InsertQuizAttempt,
+
   type DpiaEvaluation, type InsertDpiaEvaluation,
   type RagDocument, type InsertRagDocument,
   type PromptDocument, type InsertPromptDocument,
@@ -139,48 +133,7 @@ export interface IStorage {
   updateLlmConfiguration(id: number, updates: Partial<InsertLlmConfiguration>): Promise<LlmConfiguration>;
   deleteLlmConfiguration(id: number): Promise<void>;
 
-  // Learning Modules
-  getLearningModules(): Promise<LearningModule[]>;
-  getLearningModule(id: number): Promise<LearningModule | undefined>;
-  getLearningModulesByCategory(category: string): Promise<LearningModule[]>;
-  createLearningModule(module: InsertLearningModule): Promise<LearningModule>;
-  updateLearningModule(id: number, updates: Partial<InsertLearningModule>): Promise<LearningModule>;
-  deleteLearningModule(id: number): Promise<void>;
 
-  // User Progress & Gamification
-  getUserProgress(userId: number): Promise<UserProgress | undefined>;
-  createUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
-  updateUserProgress(userId: number, updates: Partial<InsertUserProgress>): Promise<UserProgress>;
-  addExperience(userId: number, xp: number): Promise<UserProgress>;
-  updateStreak(userId: number): Promise<UserProgress>;
-
-  // Achievements
-  getAchievements(): Promise<Achievement[]>;
-  getAchievement(id: number): Promise<Achievement | undefined>;
-  getUserAchievements(userId: number): Promise<UserAchievement[]>;
-  unlockAchievement(userId: number, achievementId: number): Promise<UserAchievement>;
-  checkAndUnlockAchievements(userId: number): Promise<UserAchievement[]>;
-
-  // Module Progress
-  getModuleProgress(userId: number, moduleId: number): Promise<ModuleProgress | undefined>;
-  getUserModuleProgress(userId: number): Promise<ModuleProgress[]>;
-  createModuleProgress(progress: InsertModuleProgress): Promise<ModuleProgress>;
-  updateModuleProgress(id: number, updates: Partial<InsertModuleProgress>): Promise<ModuleProgress>;
-  completeModule(userId: number, moduleId: number): Promise<ModuleProgress>;
-
-  // Quizzes
-  getQuizzes(): Promise<Quiz[]>;
-  getQuiz(id: number): Promise<Quiz | undefined>;
-  getQuizzesByModule(moduleId: number): Promise<Quiz[]>;
-  createQuiz(quiz: InsertQuiz): Promise<Quiz>;
-  updateQuiz(id: number, updates: Partial<InsertQuiz>): Promise<Quiz>;
-  deleteQuiz(id: number): Promise<void>;
-
-  // Quiz Attempts
-  getQuizAttempts(userId: number, quizId: number): Promise<QuizAttempt[]>;
-  getUserQuizAttempts(userId: number): Promise<QuizAttempt[]>;
-  createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
-  getLeaderboard(limit?: number): Promise<UserProgress[]>;
 
   // DPIA Evaluations
   getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]>;
@@ -773,246 +726,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(llmConfigurations).where(eq(llmConfigurations.id, id));
   }
 
-  // Learning Modules
-  async getLearningModules(): Promise<LearningModule[]> {
-    return await db.select().from(learningModules).where(eq(learningModules.isActive, true)).orderBy(learningModules.createdAt);
-  }
 
-  async getLearningModule(id: number): Promise<LearningModule | undefined> {
-    const result = await db.select().from(learningModules).where(eq(learningModules.id, id)).limit(1);
-    return result[0];
-  }
 
-  async getLearningModulesByCategory(category: string): Promise<LearningModule[]> {
-    return await db.select().from(learningModules)
-      .where(and(eq(learningModules.category, category), eq(learningModules.isActive, true)))
-      .orderBy(learningModules.difficulty, learningModules.createdAt);
-  }
 
-  async createLearningModule(module: InsertLearningModule): Promise<LearningModule> {
-    const result = await db.insert(learningModules).values(module).returning();
-    return result[0];
-  }
-
-  async updateLearningModule(id: number, updates: Partial<InsertLearningModule>): Promise<LearningModule> {
-    const result = await db.update(learningModules).set({ ...updates, updatedAt: new Date() }).where(eq(learningModules.id, id)).returning();
-    return result[0];
-  }
-
-  async deleteLearningModule(id: number): Promise<void> {
-    await db.delete(learningModules).where(eq(learningModules.id, id));
-  }
-
-  // User Progress & Gamification
-  async getUserProgress(userId: number): Promise<UserProgress | undefined> {
-    const result = await db.select().from(userProgress).where(eq(userProgress.userId, userId)).limit(1);
-    return result[0];
-  }
-
-  async createUserProgress(progress: InsertUserProgress): Promise<UserProgress> {
-    const result = await db.insert(userProgress).values(progress).returning();
-    return result[0];
-  }
-
-  async updateUserProgress(userId: number, updates: Partial<InsertUserProgress>): Promise<UserProgress> {
-    const result = await db.update(userProgress).set({ ...updates, updatedAt: new Date() }).where(eq(userProgress.userId, userId)).returning();
-    return result[0];
-  }
-
-  async addExperience(userId: number, xp: number): Promise<UserProgress> {
-    // Get current progress or create if not exists
-    let progress = await this.getUserProgress(userId);
-    if (!progress) {
-      progress = await this.createUserProgress({ userId, totalXp: 0, level: 1 });
-    }
-
-    const newXp = (progress.totalXp || 0) + xp;
-    const newLevel = Math.floor(newXp / 100) + 1; // 100 XP per level
-
-    return await this.updateUserProgress(userId, {
-      totalXp: newXp,
-      level: newLevel,
-      lastActivityDate: new Date()
-    });
-  }
-
-  async updateStreak(userId: number): Promise<UserProgress> {
-    const progress = await this.getUserProgress(userId);
-    if (!progress) {
-      return await this.createUserProgress({ userId, totalXp: 0, level: 1, streak: 1, lastActivityDate: new Date() });
-    }
-
-    const today = new Date();
-    const lastActivity = progress.lastActivityDate ? new Date(progress.lastActivityDate) : null;
-    let newStreak = progress.streak ?? 0;
-
-    if (lastActivity) {
-      const daysDiff = Math.floor((today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff === 1) {
-        newStreak = (newStreak ?? 0) + 1; // Continue streak
-      } else if (daysDiff > 1) {
-        newStreak = 1; // Reset streak
-      }
-      // If daysDiff === 0, same day, don't change streak
-    } else {
-      newStreak = 1;
-    }
-
-    return await this.updateUserProgress(userId, {
-      streak: newStreak,
-      lastActivityDate: today
-    });
-  }
-
-  // Achievements
-  async getAchievements(): Promise<Achievement[]> {
-    return await db.select().from(achievements).orderBy(achievements.category, achievements.rarity);
-  }
-
-  async getAchievement(id: number): Promise<Achievement | undefined> {
-    const result = await db.select().from(achievements).where(eq(achievements.id, id)).limit(1);
-    return result[0];
-  }
-
-  async getUserAchievements(userId: number): Promise<UserAchievement[]> {
-    return await db.select().from(userAchievements)
-      .where(eq(userAchievements.userId, userId))
-      .orderBy(userAchievements.unlockedAt);
-  }
-
-  async unlockAchievement(userId: number, achievementId: number): Promise<UserAchievement> {
-    const result = await db.insert(userAchievements).values({
-      userId,
-      achievementId
-    }).returning();
-    return result[0];
-  }
-
-  async checkAndUnlockAchievements(userId: number): Promise<UserAchievement[]> {
-    const progress = await this.getUserProgress(userId);
-    const userAchievements = await this.getUserAchievements(userId);
-    const allAchievements = await this.getAchievements();
-    const unlockedIds = userAchievements.map(ua => ua.achievementId);
-    const newUnlocks: UserAchievement[] = [];
-
-    for (const achievement of allAchievements) {
-      if (unlockedIds.includes(achievement.id)) continue;
-
-      const criteria = JSON.parse(achievement.criteria);
-      let shouldUnlock = false;
-
-      // Check different achievement criteria
-      if (criteria.type === 'xp' && progress && (progress.totalXp || 0) >= criteria.value) {
-        shouldUnlock = true;
-      } else if (criteria.type === 'level' && progress && (progress.level || 1) >= criteria.value) {
-        shouldUnlock = true;
-      } else if (criteria.type === 'streak' && progress && (progress.streak || 0) >= criteria.value) {
-        shouldUnlock = true;
-      }
-
-      if (shouldUnlock) {
-        const newAchievement = await this.unlockAchievement(userId, achievement.id);
-        newUnlocks.push(newAchievement);
-      }
-    }
-
-    return newUnlocks;
-  }
-
-  // Module Progress
-  async getModuleProgress(userId: number, moduleId: number): Promise<ModuleProgress | undefined> {
-    const result = await db.select().from(moduleProgress)
-      .where(and(eq(moduleProgress.userId, userId), eq(moduleProgress.moduleId, moduleId)))
-      .limit(1);
-    return result[0];
-  }
-
-  async getUserModuleProgress(userId: number): Promise<ModuleProgress[]> {
-    return await db.select().from(moduleProgress)
-      .where(eq(moduleProgress.userId, userId))
-      .orderBy(moduleProgress.updatedAt);
-  }
-
-  async createModuleProgress(progress: InsertModuleProgress): Promise<ModuleProgress> {
-    const result = await db.insert(moduleProgress).values(progress).returning();
-    return result[0];
-  }
-
-  async updateModuleProgress(id: number, updates: Partial<InsertModuleProgress>): Promise<ModuleProgress> {
-    const result = await db.update(moduleProgress).set({ ...updates, updatedAt: new Date() }).where(eq(moduleProgress.id, id)).returning();
-    return result[0];
-  }
-
-  async completeModule(userId: number, moduleId: number): Promise<ModuleProgress> {
-    const existing = await this.getModuleProgress(userId, moduleId);
-    if (existing) {
-      return await this.updateModuleProgress(existing.id, {
-        status: 'completed',
-        progress: 100,
-        completedAt: new Date()
-      });
-    } else {
-      return await this.createModuleProgress({
-        userId,
-        moduleId,
-        status: 'completed',
-        progress: 100,
-        completedAt: new Date()
-      });
-    }
-  }
-
-  // Quizzes
-  async getQuizzes(): Promise<Quiz[]> {
-    return await db.select().from(quizzes).orderBy(quizzes.createdAt);
-  }
-
-  async getQuiz(id: number): Promise<Quiz | undefined> {
-    const result = await db.select().from(quizzes).where(eq(quizzes.id, id)).limit(1);
-    return result[0];
-  }
-
-  async getQuizzesByModule(moduleId: number): Promise<Quiz[]> {
-    return await db.select().from(quizzes).where(eq(quizzes.moduleId, moduleId)).orderBy(quizzes.createdAt);
-  }
-
-  async createQuiz(quiz: InsertQuiz): Promise<Quiz> {
-    const result = await db.insert(quizzes).values(quiz).returning();
-    return result[0];
-  }
-
-  async updateQuiz(id: number, updates: Partial<InsertQuiz>): Promise<Quiz> {
-    const result = await db.update(quizzes).set({ ...updates, updatedAt: new Date() }).where(eq(quizzes.id, id)).returning();
-    return result[0];
-  }
-
-  async deleteQuiz(id: number): Promise<void> {
-    await db.delete(quizzes).where(eq(quizzes.id, id));
-  }
-
-  // Quiz Attempts
-  async getQuizAttempts(userId: number, quizId: number): Promise<QuizAttempt[]> {
-    return await db.select().from(quizAttempts)
-      .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizId, quizId)))
-      .orderBy(quizAttempts.attemptNumber);
-  }
-
-  async getUserQuizAttempts(userId: number): Promise<QuizAttempt[]> {
-    return await db.select().from(quizAttempts)
-      .where(eq(quizAttempts.userId, userId))
-      .orderBy(quizAttempts.completedAt);
-  }
-
-  async createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt> {
-    const result = await db.insert(quizAttempts).values(attempt).returning();
-    return result[0];
-  }
-
-  async getLeaderboard(limit: number = 10): Promise<UserProgress[]> {
-    return await db.select().from(userProgress)
-      .orderBy(desc(userProgress.totalXp), desc(userProgress.level))
-      .limit(limit);
-  }
 
   // DPIA Evaluations
   async getDpiaEvaluations(companyId: number): Promise<DpiaEvaluation[]> {

@@ -130,7 +130,7 @@ export default function ActionPlan() {
   // Mock assignments data - in real app, this would come from API
   const getActionAssignments = (actionId: number) => {
     const mockAssignments = {
-      167: [{ userId: 1, role: 'assignee' }, { userId: 2, role: 'reviewer' }],
+      167: [],
       168: [{ userId: 3, role: 'assignee' }],
     };
     return mockAssignments[actionId as keyof typeof mockAssignments] || [];

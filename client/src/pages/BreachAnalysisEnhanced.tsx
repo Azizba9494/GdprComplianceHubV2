@@ -568,7 +568,7 @@ Généré le: ${new Date().toLocaleString()}
   };
 
   const startEditing = (breachId: number, field: string, currentValue: string) => {
-    if (!hasPermission('breaches.write')) {
+    if (!hasPermission('breaches', 'write')) {
       toast({
         title: "Permissions insuffisantes",
         description: "Vous n'avez pas les droits d'écriture pour modifier les violations.",

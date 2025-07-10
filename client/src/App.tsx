@@ -21,7 +21,7 @@ import DpiaAssessment from "@/pages/DpiaAssessment";
 import DpiaAssessmentEnhanced from "@/pages/DpiaAssessmentEnhanced";
 import DpiaEvaluationOriginal from "@/pages/DpiaEvaluationOriginal";
 import DpiaProcessingSelection from "@/pages/DpiaProcessingSelection";
-import Learning from "@/pages/learning";
+
 import Admin from "@/pages/admin";
 import UserBackOfficeEnhanced from "@/pages/UserBackOfficeEnhanced";
 import Help from "@/pages/help";
@@ -81,7 +81,7 @@ function AuthenticatedApp() {
             <Route path="/dpia/new" component={DpiaProcessingSelection} />
             <Route path="/dpia/:id" component={DpiaAssessmentEnhanced} />
             <Route path="/dpia-old" component={DPIA} />
-            <Route path="/learning" component={Learning} />
+
             <Route path="/admin" component={Admin} />
             <Route path="/user-back-office" component={UserBackOfficeEnhanced} />
             <Route path="/help" component={Help} />
