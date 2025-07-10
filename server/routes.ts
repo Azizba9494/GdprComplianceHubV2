@@ -974,7 +974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/records/:id", requireAuth, requireModulePermission('records', 'write'), async (req, res) => {
+  app.put("/api/records/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -996,6 +996,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied to this company data" });
       }
 
+      // Check write permissions for records
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === existingRecord.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+
+      // Owners have all permissions
+      if (access.role !== 'owner') {
+        const requiredPermission = 'records.write';
+        if (!access.permissions?.includes(requiredPermission)) {
+          return res.status(403).json({ 
+            error: `Droits insuffisants pour modifier les fiches de traitement. Contactez l'administrateur pour obtenir les permissions nécessaires.`,
+            technicalError: `Permission denied. Required: ${requiredPermission}`,
+            userPermissions: access.permissions,
+            requiredPermission,
+            userRole: access.role
+          });
+        }
+      }
+
       const record = await storage.updateProcessingRecord(id, updates);
       res.json(record);
     } catch (error: any) {
@@ -1003,7 +1025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/records/:id", requireAuth, requireModulePermission('records', 'write'), async (req, res) => {
+  app.delete("/api/records/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -1022,6 +1044,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasAccess = await storage.verifyUserCompanyAccess(userId, existingRecord.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      // Check write permissions for records
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === existingRecord.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+
+      // Owners have all permissions
+      if (access.role !== 'owner') {
+        const requiredPermission = 'records.write';
+        if (!access.permissions?.includes(requiredPermission)) {
+          return res.status(403).json({ 
+            error: `Droits insuffisants pour modifier les fiches de traitement. Contactez l'administrateur pour obtenir les permissions nécessaires.`,
+            technicalError: `Permission denied. Required: ${requiredPermission}`,
+            userPermissions: access.permissions,
+            requiredPermission,
+            userRole: access.role
+          });
+        }
       }
 
       await storage.deleteProcessingRecord(id);
@@ -1210,7 +1254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/breaches/:id", requireAuth, requireModulePermission('breaches', 'write'), async (req, res) => {
+  app.delete("/api/breaches/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -1229,6 +1273,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasAccess = await storage.verifyUserCompanyAccess(userId, existingBreach.companyId);
       if (!hasAccess) {
         return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      // Check write permissions for breaches
+      const userAccess = await storage.getUserCompanyAccess(userId);
+      const access = userAccess.find(a => a.companyId === existingBreach.companyId);
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+
+      // Owners have all permissions
+      if (access.role !== 'owner') {
+        const requiredPermission = 'breaches.write';
+        if (!access.permissions?.includes(requiredPermission)) {
+          return res.status(403).json({ 
+            error: `Droits insuffisants pour modifier les violations de données. Contactez l'administrateur pour obtenir les permissions nécessaires.`,
+            technicalError: `Permission denied. Required: ${requiredPermission}`,
+            userPermissions: access.permissions,
+            requiredPermission,
+            userRole: access.role
+          });
+        }
       }
 
       await storage.deleteDataBreach(id);
