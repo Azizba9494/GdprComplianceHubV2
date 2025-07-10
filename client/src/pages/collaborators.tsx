@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -142,8 +141,10 @@ const ROLES = [
 ];
 
 export default function Collaborators() {
+  // All hooks must be called at the top, before any conditional returns
   const { user, currentCompany } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("collaborator");
@@ -157,36 +158,17 @@ export default function Collaborators() {
   const [selectedPermissionsForExisting, setSelectedPermissionsForExisting] = useState<string[]>([]);
 
   const companyId = currentCompany?.id;
-  
-  // Only owners can access this page
-  if (currentCompany?.role !== 'owner') {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Accès restreint</h2>
-              <p className="text-gray-600">
-                Seuls les propriétaires de l'entreprise peuvent gérer les collaborateurs et leurs permissions.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   // Get collaborators
   const { data: collaborators = [], isLoading: loadingCollaborators } = useQuery({
     queryKey: [`/api/companies/${companyId}/collaborators`],
-    enabled: !!companyId
+    enabled: !!companyId && currentCompany?.role === 'owner'
   });
 
   // Get invitations
   const { data: invitations = [], isLoading: loadingInvitations } = useQuery({
     queryKey: [`/api/companies/${companyId}/invitations`],
-    enabled: !!companyId
+    enabled: !!companyId && currentCompany?.role === 'owner'
   });
 
   // Invite collaborator mutation
@@ -345,6 +327,25 @@ export default function Collaborators() {
       });
     }
   });
+
+  // Only owners can access this page - conditional return placed after all hooks
+  if (currentCompany?.role !== 'owner') {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Accès restreint</h2>
+              <p className="text-gray-600">
+                Seuls les propriétaires de l'entreprise peuvent gérer les collaborateurs et leurs permissions.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const handleInvite = () => {
     if (!inviteEmail || selectedPermissions.length === 0) {
