@@ -287,7 +287,7 @@ export default function BreachAnalysisEnhanced() {
   });
 
   const handleDeleteBreach = async (breach: Breach) => {
-    if (!hasPermission('breaches', 'write')) {
+    if (!hasPermission('breaches.write')) {
       toast({
         title: "🔒 Droits insuffisants",
         description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour supprimer des violations, vous devez disposer des droits d'écriture.",
@@ -355,7 +355,7 @@ export default function BreachAnalysisEnhanced() {
   };
 
   const handleEdit = (breach: Breach) => {
-    if (!hasPermission('breaches', 'write')) {
+    if (!hasPermission('breaches.write')) {
       toast({
         title: "🔒 Droits insuffisants",
         description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour modifier des violations, vous devez disposer des droits d'écriture.",
@@ -436,7 +436,7 @@ export default function BreachAnalysisEnhanced() {
   };
 
   const handleNewBreach = () => {
-    if (!hasPermission('breaches', 'write')) {
+    if (!hasPermission('breaches.write')) {
       toast({
         title: "🔒 Droits insuffisants",
         description: "Vous ne disposez que des droits de lecture pour l'analyse des violations. Pour créer des violations, vous devez disposer des droits d'écriture.",
@@ -568,7 +568,7 @@ Généré le: ${new Date().toLocaleString()}
   };
 
   const startEditing = (breachId: number, field: string, currentValue: string) => {
-    if (!hasPermission('breaches', 'write')) {
+    if (!hasPermission('breaches.write')) {
       toast({
         title: "Permissions insuffisantes",
         description: "Vous n'avez pas les droits d'écriture pour modifier les violations.",
@@ -717,8 +717,8 @@ Généré le: ${new Date().toLocaleString()}
         </div>
         <Button 
           onClick={handleNewBreach} 
-          disabled={!hasPermission('breaches', 'write')}
-          title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour créer des violations" : ""}
+          disabled={!hasPermission('breaches.write')}
+          title={!hasPermission('breaches.write') ? "Droits insuffisants pour créer des violations" : ""}
         >
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle Violation
@@ -820,8 +820,8 @@ Généré le: ${new Date().toLocaleString()}
                           variant="outline" 
                           size="sm" 
                           onClick={() => handleEdit(breach)}
-                          disabled={!hasPermission('breaches', 'write')}
-                          title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour modifier des violations" : ""}
+                          disabled={!hasPermission('breaches.write')}
+                          title={!hasPermission('breaches.write') ? "Droits insuffisants pour modifier des violations" : ""}
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Modifier
@@ -844,8 +844,8 @@ Généré le: ${new Date().toLocaleString()}
                             variant="outline" 
                             size="sm" 
                             onClick={() => handleAIAnalysis(breach)}
-                            disabled={isAnalyzing || !hasPermission('breaches', 'write')}
-                            title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour analyser des violations" : ""}
+                            disabled={isAnalyzing || !hasPermission('breaches.write')}
+                            title={!hasPermission('breaches.write') ? "Droits insuffisants pour analyser des violations" : ""}
                           >
                             {isAnalyzing ? (
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -859,9 +859,9 @@ Généré le: ${new Date().toLocaleString()}
                           variant="outline" 
                           size="sm" 
                           onClick={() => handleDeleteBreach(breach)}
-                          disabled={deleteBreachMutation.isPending || !hasPermission('breaches', 'write')}
+                          disabled={deleteBreachMutation.isPending || !hasPermission('breaches.write')}
                           className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
-                          title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour supprimer des violations" : ""}
+                          title={!hasPermission('breaches.write') ? "Droits insuffisants pour supprimer des violations" : ""}
                         >
                           {deleteBreachMutation.isPending ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -896,8 +896,8 @@ Généré le: ${new Date().toLocaleString()}
                 </p>
                 <Button 
                   onClick={handleNewBreach}
-                  disabled={!hasPermission('breaches', 'write')}
-                  title={!hasPermission('breaches', 'write') ? "Droits insuffisants pour créer des violations" : ""}
+                  disabled={!hasPermission('breaches.write')}
+                  title={!hasPermission('breaches.write') ? "Droits insuffisants pour créer des violations" : ""}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Créer une violation

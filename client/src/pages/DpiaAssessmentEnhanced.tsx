@@ -508,7 +508,7 @@ export default function DpiaAssessmentEnhanced() {
     if (dpia) {
       const cleanedData = {
         ...dpia,
-        companyId: dpia.companyId || company?.id,
+        companyId: dpia.companyId || currentCompany?.id,
         // Clean null values to prevent React warnings
         generalDescription: dpia.generalDescription || "",
         processingPurposes: dpia.processingPurposes || "",

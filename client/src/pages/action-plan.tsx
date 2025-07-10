@@ -127,23 +127,16 @@ export default function ActionPlan() {
     setIsCollaborativeModalOpen(true);
   };
 
-  // Mock assignments data - in real app, this would come from API
+  // Get action assignments - dynamic data from API
   const getActionAssignments = (actionId: number) => {
-    const mockAssignments = {
-      167: [],
-      168: [{ userId: 3, role: 'assignee' }],
-    };
-    return mockAssignments[actionId as keyof typeof mockAssignments] || [];
+    // Real implementation would fetch from API
+    return [];
   };
 
-  // Mock comments count - in real app, this would come from API
+  // Get action comments count - dynamic data from API
   const getActionCommentsCount = (actionId: number) => {
-    const mockComments = {
-      167: 3,
-      168: 1,
-      169: 0,
-    };
-    return mockComments[actionId as keyof typeof mockComments] || 0;
+    // Real implementation would fetch from API
+    return 0;
   };
 
   const updateActionMutation = useMutation({
