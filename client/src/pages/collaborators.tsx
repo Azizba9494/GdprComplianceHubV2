@@ -862,7 +862,7 @@ export default function Collaborators() {
                           <div className="text-sm text-gray-500">{collaborator.user.email}</div>
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="secondary">
-                              {ROLES.find(r => r.value === collaborator.role)?.label || collaborator.role}
+                              {ROLES.find(r => r.value === collaborator.role)?.label || (collaborator.role === 'owner' ? 'Propriétaire' : collaborator.role)}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
                               {permSummary.moduleCount} modules • {permSummary.level}
