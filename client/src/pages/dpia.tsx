@@ -115,14 +115,7 @@ export default function DPIA() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { hasPermission, permissions } = usePermissions();
-  
-  // Debug log for permissions
-  console.log('DPIA permissions check:', {
-    hasWritePermission: hasPermission('dpia', 'write'),
-    allPermissions: permissions,
-    currentCompany: user?.currentCompany
-  });
+  const { hasPermission } = usePermissions();
 
   // Get user's company information
   const { data: userCompany } = useQuery({
@@ -371,12 +364,32 @@ export default function DPIA() {
   });
 
   const startEvaluation = (record: ProcessingRecord) => {
+    // Vérifier les permissions avant de permettre l'évaluation
+    if (!hasPermission('dpia', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour les analyses d'impact. Pour procéder à une évaluation DPIA, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedRecord(record);
     setShowEvaluation(true);
     evaluationForm.reset();
   };
 
   const startFullDpia = (record: ProcessingRecord) => {
+    // Vérifier les permissions avant de permettre la création d'une AIPD
+    if (!hasPermission('dpia', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour les analyses d'impact. Pour réaliser une AIPD complète, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedRecord(record);
     dpiaForm.setValue("processingName", record.name);
     dpiaForm.setValue("processingDescription", `
