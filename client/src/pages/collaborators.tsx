@@ -157,6 +157,25 @@ export default function Collaborators() {
   const [selectedPermissionsForExisting, setSelectedPermissionsForExisting] = useState<string[]>([]);
 
   const companyId = currentCompany?.id;
+  
+  // Only owners can access this page
+  if (currentCompany?.role !== 'owner') {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Accès restreint</h2>
+              <p className="text-gray-600">
+                Seuls les propriétaires de l'entreprise peuvent gérer les collaborateurs et leurs permissions.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Get collaborators
   const { data: collaborators = [], isLoading: loadingCollaborators } = useQuery({

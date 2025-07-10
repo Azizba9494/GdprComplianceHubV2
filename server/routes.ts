@@ -201,6 +201,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
   };
 
+  // Owner-only middleware - ensures only company owners can perform critical actions
+  const requireOwnerRole = async (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const companyId = req.params.companyId || req.body.companyId || req.query.companyId;
+    if (!companyId) {
+      return res.status(400).json({ error: "Company ID required" });
+    }
+
+    try {
+      // Get user's company access
+      const userAccess = await storage.getUserCompanyAccess(req.session.userId);
+      const access = userAccess.find(a => a.companyId === parseInt(companyId));
+      
+      if (!access) {
+        return res.status(403).json({ error: "Access denied to this company" });
+      }
+
+      // Only owners allowed
+      if (access.role !== 'owner') {
+        console.log(`[SECURITY] User ${req.session.userId} (role: ${access.role}) denied owner-only access to company ${companyId}`);
+        return res.status(403).json({ 
+          error: "Cette action est réservée aux propriétaires de l'entreprise.",
+          technicalError: "Owner role required",
+          userRole: access.role
+        });
+      }
+
+      console.log(`[SECURITY] Owner ${req.session.userId} granted owner-only access to company ${companyId}`);
+      next();
+    } catch (error: any) {
+      console.error('Owner role check error:', error);
+      res.status(500).json({ error: "Role verification failed" });
+    }
+  };
+
   // Enhanced Authentication routes with security
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -3008,7 +3046,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Invite a collaborator to a company
-  app.post("/api/companies/:companyId/invite", requireAuth, requireCompanyAccess, async (req, res) => {
+  app.post("/api/companies/:companyId/invite", requireAuth, requireOwnerRole, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
       const userId = req.session?.userId;
@@ -3092,7 +3130,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Update collaborator permissions
-  app.put("/api/companies/:companyId/collaborators/:accessId", requireAuth, requireCompanyAccess, async (req, res) => {
+  app.put("/api/companies/:companyId/collaborators/:accessId", requireAuth, requireOwnerRole, async (req, res) => {
     try {
       const accessId = parseInt(req.params.accessId);
       const { role, permissions } = req.body;
@@ -3110,7 +3148,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Remove collaborator from company
-  app.delete("/api/companies/:companyId/collaborators/:accessId", requireAuth, requireCompanyAccess, async (req, res) => {
+  app.delete("/api/companies/:companyId/collaborators/:accessId", requireAuth, requireOwnerRole, async (req, res) => {
     try {
       const accessId = parseInt(req.params.accessId);
       await storage.deleteUserCompanyAccess(accessId);
@@ -3122,7 +3160,7 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
   });
 
   // Delete invitation
-  app.delete("/api/companies/:companyId/invitations/:invitationId", requireAuth, requireCompanyAccess, async (req, res) => {
+  app.delete("/api/companies/:companyId/invitations/:invitationId", requireAuth, requireOwnerRole, async (req, res) => {
     try {
       const invitationId = parseInt(req.params.invitationId);
       await storage.deleteInvitation(invitationId);

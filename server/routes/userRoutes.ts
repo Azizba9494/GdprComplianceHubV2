@@ -213,10 +213,10 @@ router.get('/collaborators/:companyId', async (req, res) => {
       return res.status(401).json({ error: "Non authentifié" });
     }
 
-    // Check if user has access to this company
+    // Check if user has access to this company (only owners can manage collaborators)
     const userAccess = await storage.getUserCompanyAccess(userId);
     const hasAccess = userAccess.some(access => 
-      access.companyId === companyId && ['owner', 'admin'].includes(access.role || '')
+      access.companyId === companyId && access.role === 'owner'
     );
 
     if (!hasAccess) {
@@ -241,12 +241,10 @@ router.post('/invite', async (req, res) => {
 
     const { email, companyId, permissions } = inviteCollaboratorSchema.parse(req.body);
 
-    // Check if user can invite to this company
+    // Check if user can invite to this company (only owners can invite)
     const userAccess = await storage.getUserCompanyAccess(userId);
     const hasPermission = userAccess.some(access => 
-      access.companyId === companyId && 
-      ['owner', 'admin'].includes(access.role || '') &&
-      (access.permissions?.includes('all') || access.permissions?.includes('invite'))
+      access.companyId === companyId && access.role === 'owner'
     );
 
     if (!hasPermission) {
@@ -288,7 +286,7 @@ router.delete('/access/:accessId', async (req, res) => {
       return res.status(401).json({ error: "Non authentifié" });
     }
 
-    // Check if user has permission to revoke this access
+    // Check if user has permission to revoke this access (only owners can revoke)
     const userAccess = await storage.getUserCompanyAccess(userId);
     const targetAccess = await storage.getUserCompanyAccess(accessId);
     
@@ -298,8 +296,7 @@ router.delete('/access/:accessId', async (req, res) => {
 
     const companyId = targetAccess[0].companyId;
     const hasPermission = userAccess.some(access => 
-      access.companyId === companyId && 
-      ['owner', 'admin'].includes(access.role || '')
+      access.companyId === companyId && access.role === 'owner'
     );
 
     if (!hasPermission) {

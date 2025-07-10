@@ -76,6 +76,11 @@ export default function Sidebar() {
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
+          
+          // Hide Collaborators and Administration for non-owners
+          if ((item.href === '/collaborators' || item.href === '/admin') && user?.role !== 'owner') {
+            return null;
+          }
 
           return (
             <Link 
