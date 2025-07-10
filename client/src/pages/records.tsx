@@ -361,6 +361,9 @@ Informations complémentaires: ${data.additionalInfo}
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log('[CREATE RECORD] Form data received:', data);
+      console.log('[CREATE RECORD] Company ID:', companyId);
+      
       const recordData = {
         companyId: companyId,
         name: data.name,
@@ -395,6 +398,8 @@ Informations complémentaires: ${data.additionalInfo}
         jointControllerInfo: data.jointControllerInfo,
       };
       
+      console.log('[CREATE RECORD] Processed record data:', recordData);
+      
       const response = await recordsApi.create(recordData);
       return response.json();
     },
@@ -408,22 +413,38 @@ Informations complémentaires: ${data.additionalInfo}
       });
     },
     onError: (error: any) => {
-      console.error('Create mutation error:', error);
+      console.error('[CREATE RECORD] Mutation error:', error);
+      console.error('[CREATE RECORD] Error type:', typeof error);
+      console.error('[CREATE RECORD] Error keys:', Object.keys(error || {}));
+      console.error('[CREATE RECORD] Error message:', error?.message);
+      console.error('[CREATE RECORD] Error stack:', error?.stack);
       
-      // Check if this is actually a permission error from the server
-      const errorMessage = error.message || '';
+      // Safely get error message with fallback
+      const errorMessage = error?.message || error?.error || String(error) || '';
+      console.log('[CREATE RECORD] Processed error message:', errorMessage);
       
-      if (errorMessage.includes('Droits insuffisants') || errorMessage.includes('records.write') || errorMessage.includes('Permission denied')) {
+      // Check for permission errors
+      if (errorMessage.includes('Droits insuffisants') || 
+          errorMessage.includes('records.write') || 
+          errorMessage.includes('Permission denied') ||
+          errorMessage.includes('Access denied')) {
         toast({
           title: "🔒 Droits insuffisants",
           description: "Vous ne disposez que des droits de lecture pour les fiches de traitement. Pour créer des fiches manuellement, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation pour obtenir les permissions nécessaires.",
           variant: "destructive",
         });
-      } else {
-        // For any other error, show the actual error message
+      } else if (errorMessage.includes('Company ID required')) {
         toast({
-          title: "Erreur",
-          description: errorMessage || "Une erreur s'est produite lors de la création de la fiche de traitement.",
+          title: "Erreur de configuration",
+          description: "Aucune société sélectionnée. Veuillez actualiser la page ou contacter le support.",
+          variant: "destructive",
+        });
+      } else {
+        // For any other error, show a meaningful message
+        const displayMessage = errorMessage || "Une erreur s'est produite lors de la création de la fiche de traitement.";
+        toast({
+          title: "Erreur de création",
+          description: displayMessage,
           variant: "destructive",
         });
       }

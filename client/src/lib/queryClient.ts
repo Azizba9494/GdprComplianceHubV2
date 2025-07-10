@@ -2,15 +2,22 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    console.error(`[API Error] ${res.status} ${res.statusText} for ${res.url}`);
+    
     try {
       const errorData = await res.json();
-      throw new Error(errorData.error || errorData.message || res.statusText);
+      console.error('[API Error Data]:', errorData);
+      const errorMessage = errorData.error || errorData.message || res.statusText;
+      throw new Error(errorMessage);
     } catch (parseError) {
+      console.error('[API Parse Error]:', parseError);
       try {
         const text = await res.text();
-        throw new Error(text || res.statusText);
+        console.error('[API Error Text]:', text);
+        throw new Error(text || res.statusText || `HTTP ${res.status} Error`);
       } catch (textError) {
-        throw new Error(res.statusText);
+        console.error('[API Text Parse Error]:', textError);
+        throw new Error(res.statusText || `HTTP ${res.status} Error`);
       }
     }
   }
