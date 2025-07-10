@@ -776,8 +776,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                             variant="outline" 
                             size="sm"
                             onClick={() => startEvaluation(record)}
-                            disabled={!hasPermission('dpia.write')}
-                            title={!hasPermission('dpia.write') ? "Droits insuffisants pour évaluer une DPIA" : ""}
+                            disabled={!hasPermission('dpia', 'write')}
+                            title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour évaluer une DPIA" : ""}
                           >
                             <Search className="w-4 h-4 mr-2" />
                             Évaluer la nécessité
@@ -788,8 +788,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                               variant="outline" 
                               size="sm"
                               onClick={() => startEvaluation(record)}
-                              disabled={!hasPermission('dpia.write')}
-                              title={!hasPermission('dpia.write') ? "Droits insuffisants pour réévaluer une DPIA" : ""}
+                              disabled={!hasPermission('dpia', 'write')}
+                              title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour réévaluer une DPIA" : ""}
                             >
                               <Search className="w-4 h-4 mr-2" />
                               Réévaluer
@@ -798,8 +798,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                               <Button 
                                 size="sm"
                                 onClick={() => startFullDpia(record)}
-                                disabled={!hasPermission('dpia.write')}
-                                title={!hasPermission('dpia.write') ? "Droits insuffisants pour créer une AIPD" : ""}
+                                disabled={!hasPermission('dpia', 'write')}
+                                title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour créer une AIPD" : ""}
                               >
                                 <FileText className="w-4 h-4 mr-2" />
                                 Réaliser l'AIPD
@@ -856,8 +856,8 @@ Transferts hors UE: ${record.transfersOutsideEU ? 'Oui' : 'Non'}
                         variant="destructive" 
                         size="sm"
                         onClick={() => deleteAssessmentMutation.mutate(assessment.id)}
-                        disabled={deleteAssessmentMutation.isPending || !hasPermission('dpia.write')}
-                        title={!hasPermission('dpia.write') ? "Droits insuffisants pour supprimer une AIPD" : ""}
+                        disabled={deleteAssessmentMutation.isPending || !hasPermission('dpia', 'write')}
+                        title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour supprimer une AIPD" : ""}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Supprimer
