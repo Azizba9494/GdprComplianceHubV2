@@ -117,7 +117,7 @@ export default function DpiaProcessingSelection() {
     );
   }
 
-  if (!company) {
+  if (!currentCompany) {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">
