@@ -803,7 +803,7 @@ Informations complémentaires: ${data.additionalInfo}
   };
 
   // Check permissions after all hooks are initialized
-  if (!hasPermission('records', 'read')) {
+  if (!hasPermission('records.read')) {
     return (
       <AccessDenied
         module="Registre des traitements"
@@ -833,8 +833,8 @@ Informations complémentaires: ${data.additionalInfo}
               <Button 
                 variant="outline" 
                 onClick={handleOpenCreateDialog}
-                disabled={!hasPermission('records', 'write')}
-                title={!hasPermission('records', 'write') ? "Droits insuffisants pour créer des fiches de traitement" : ""}
+                disabled={!hasPermission('records.write')}
+                title={!hasPermission('records.write') ? "Droits insuffisants pour créer des fiches de traitement" : ""}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Créer manuellement
@@ -1335,8 +1335,8 @@ Informations complémentaires: ${data.additionalInfo}
             <DialogTrigger asChild>
               <Button 
                 onClick={handleOpenGenerateDialog}
-                disabled={!hasPermission('records', 'write')}
-                title={!hasPermission('records', 'write') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
+                disabled={!hasPermission('records.write')}
+                title={!hasPermission('records.write') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Générer avec l'IA
@@ -1775,15 +1775,15 @@ Informations complémentaires: ${data.additionalInfo}
             <Book className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Aucune fiche de traitement</h3>
             <p className="text-muted-foreground mb-4">
-              {hasPermission('records', 'write') ? 
+              {hasPermission('records.write') ? 
                 "Commencez par créer votre première fiche de traitement avec l'IA" :
                 "Aucune fiche de traitement n'a encore été créée pour cette organisation. Contactez l'administrateur pour obtenir les droits de création."}
             </p>
-            {hasPermission('records', 'write') && (
+            {hasPermission('records.write') && (
               <Button 
                 onClick={handleOpenGenerateDialog}
-                disabled={!hasPermission('records', 'write')}
-                title={!hasPermission('records', 'write') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
+                disabled={!hasPermission('records.write')}
+                title={!hasPermission('records.write') ? "Droits insuffisants pour générer des fiches avec l'IA" : ""}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Créer ma première fiche
@@ -1839,8 +1839,8 @@ Informations complémentaires: ${data.additionalInfo}
                         size="sm"
                         variant="ghost"
                         onClick={() => setEditingRecord(record.id)}
-                        disabled={!hasPermission('records', 'write')}
-                        title={!hasPermission('records', 'write') ? "Droits insuffisants pour modifier cette fiche" : ""}
+                        disabled={!hasPermission('records.write')}
+                        title={!hasPermission('records.write') ? "Droits insuffisants pour modifier cette fiche" : ""}
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -2188,8 +2188,8 @@ Informations complémentaires: ${data.additionalInfo}
                       <Button 
                         variant="destructive" 
                         size="sm"
-                        disabled={!hasPermission('records', 'write')}
-                        title={!hasPermission('records', 'write') ? "Droits insuffisants pour supprimer cette fiche" : ""}
+                        disabled={!hasPermission('records.write')}
+                        title={!hasPermission('records.write') ? "Droits insuffisants pour supprimer cette fiche" : ""}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Supprimer

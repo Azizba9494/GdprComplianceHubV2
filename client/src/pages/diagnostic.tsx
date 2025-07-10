@@ -146,7 +146,7 @@ export default function Diagnostic() {
   }, [existingResponses, allQuestions]);
 
   // Check permissions first
-  if (!hasPermission('diagnostic', 'read')) {
+  if (!hasPermission('diagnostic.read')) {
     return (
       <AccessDenied
         module="Diagnostic initial"
@@ -220,8 +220,8 @@ export default function Diagnostic() {
                 return (
                   <Card 
                     key={category} 
-                    className={`${hasPermission('diagnostic', 'write') ? 'cursor-pointer transition-all hover:shadow-md' : 'cursor-not-allowed opacity-60'} ${isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 'hover:border-primary'}`}
-                    onClick={() => hasPermission('diagnostic', 'write') ? setSelectedCategory(category) : toast({
+                    className={`${hasPermission('diagnostic.write') ? 'cursor-pointer transition-all hover:shadow-md' : 'cursor-not-allowed opacity-60'} ${isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 'hover:border-primary'}`}
+                    onClick={() => hasPermission('diagnostic.write') ? setSelectedCategory(category) : toast({
                       title: "🔒 Droits insuffisants",
                       description: "Vous ne disposez que des droits de lecture pour le diagnostic. Pour répondre aux questions, vous devez disposer des droits d'écriture. Contactez l'administrateur de votre organisation.",
                       variant: "destructive",
@@ -367,21 +367,21 @@ export default function Diagnostic() {
             
             <RadioGroup
               value={responses[currentQuestion.id] || ""}
-              onValueChange={hasPermission('diagnostic', 'write') ? handleResponse : undefined}
+              onValueChange={hasPermission('diagnostic.write') ? handleResponse : undefined}
               className="space-y-3"
-              disabled={!hasPermission('diagnostic', 'write')}
+              disabled={!hasPermission('diagnostic.write')}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="oui" id="oui" disabled={!hasPermission('diagnostic', 'write')} />
+                <RadioGroupItem value="oui" id="oui" disabled={!hasPermission('diagnostic.write')} />
                 <Label htmlFor="oui">Oui</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="non" id="non" disabled={!hasPermission('diagnostic', 'write')} />
+                <RadioGroupItem value="non" id="non" disabled={!hasPermission('diagnostic.write')} />
                 <Label htmlFor="non">Non</Label>
               </div>
             </RadioGroup>
             
-            {!hasPermission('diagnostic', 'write') && (
+            {!hasPermission('diagnostic.write') && (
               <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
                 <div className="flex items-center space-x-2">
                   <AlertTriangle className="w-5 h-5 text-orange-600" />
@@ -405,8 +405,8 @@ export default function Diagnostic() {
 
             <Button
               onClick={handleNext}
-              disabled={submitResponseMutation.isPending || analyzeMutation.isPending || !hasPermission('diagnostic', 'write')}
-              title={!hasPermission('diagnostic', 'write') ? "Droits insuffisants pour soumettre des réponses" : ""}
+              disabled={submitResponseMutation.isPending || analyzeMutation.isPending || !hasPermission('diagnostic.write')}
+              title={!hasPermission('diagnostic.write') ? "Droits insuffisants pour soumettre des réponses" : ""}
             >
               {isLastQuestion ? "Terminer le diagnostic" : "Suivant"}
               {!isLastQuestion && <ArrowRight className="w-4 h-4 ml-2" />}

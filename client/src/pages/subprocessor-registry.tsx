@@ -278,7 +278,7 @@ export default function SubprocessorRegistry() {
   };
 
   // Check permissions after all hooks
-  if (!hasPermission('subprocessors', 'read')) {
+  if (!hasPermission('subprocessors.read')) {
     return (
       <AccessDenied 
         module="Registre du sous-traitant" 
@@ -315,8 +315,8 @@ export default function SubprocessorRegistry() {
           }}>
             <DialogTrigger asChild>
               <Button
-                disabled={!hasPermission('subprocessors', 'write')}
-                title={!hasPermission('subprocessors', 'write') ? "Droits insuffisants pour créer un nouvel enregistrement" : ""}
+                disabled={!hasPermission('subprocessors.write')}
+                title={!hasPermission('subprocessors.write') ? "Droits insuffisants pour créer un nouvel enregistrement" : ""}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvel enregistrement
@@ -771,8 +771,8 @@ export default function SubprocessorRegistry() {
                 </p>
                 <Button 
                   onClick={() => setIsCreateDialogOpen(true)}
-                  disabled={!hasPermission('subprocessors', 'write')}
-                  title={!hasPermission('subprocessors', 'write') ? "Droits insuffisants pour créer un enregistrement" : ""}
+                  disabled={!hasPermission('subprocessors.write')}
+                  title={!hasPermission('subprocessors.write') ? "Droits insuffisants pour créer un enregistrement" : ""}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Créer le premier enregistrement
@@ -799,8 +799,8 @@ export default function SubprocessorRegistry() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEdit(record)}
-                      disabled={!hasPermission('subprocessors', 'write')}
-                      title={!hasPermission('subprocessors', 'write') ? "Droits insuffisants pour modifier cet enregistrement" : ""}
+                      disabled={!hasPermission('subprocessors.write')}
+                      title={!hasPermission('subprocessors.write') ? "Droits insuffisants pour modifier cet enregistrement" : ""}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -808,8 +808,8 @@ export default function SubprocessorRegistry() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(record.id)}
-                      disabled={!hasPermission('subprocessors', 'write')}
-                      title={!hasPermission('subprocessors', 'write') ? "Droits insuffisants pour supprimer cet enregistrement" : ""}
+                      disabled={!hasPermission('subprocessors.write')}
+                      title={!hasPermission('subprocessors.write') ? "Droits insuffisants pour supprimer cet enregistrement" : ""}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

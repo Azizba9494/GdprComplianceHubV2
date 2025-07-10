@@ -99,7 +99,7 @@ export default function PrivacyPolicy() {
   });
 
   // Check permissions after all hooks
-  if (!hasPermission('policies', 'read')) {
+  if (!hasPermission('policies.read')) {
     return (
       <AccessDenied 
         module="Politique de confidentialité" 
@@ -161,7 +161,7 @@ export default function PrivacyPolicy() {
             Générez automatiquement une politique conforme au RGPD
           </p>
         </div>
-        {hasPermission('policies', 'write') ? (
+        {hasPermission('policies.write') ? (
           <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
             {generateMutation.isPending ? (
               <>
@@ -237,7 +237,7 @@ export default function PrivacyPolicy() {
                 Générez automatiquement une politique de confidentialité personnalisée pour votre site web, 
                 conforme aux exigences du RGPD.
               </p>
-              {hasPermission('policies', 'write') ? (
+              {hasPermission('policies.write') ? (
                 <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
                   {generateMutation.isPending ? (
                     <>
@@ -270,7 +270,7 @@ export default function PrivacyPolicy() {
                         <li>Contacter le support technique</li>
                       </ul>
                     </div>
-                    {hasPermission('policies', 'write') && (
+                    {hasPermission('policies.write') && (
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -342,7 +342,7 @@ export default function PrivacyPolicy() {
                       <Download className="w-4 h-4 mr-2" />
                       Télécharger
                     </Button>
-                    {hasPermission('policies', 'write') ? (
+                    {hasPermission('policies.write') ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button

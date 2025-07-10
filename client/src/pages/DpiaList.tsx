@@ -207,7 +207,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
     if (!selectedRecord) return;
     
     // Vérification des permissions avant de sauvegarder
-    if (!hasPermission('dpia', 'write')) {
+    if (!hasPermission('dpia.write')) {
       toast({
         title: "🔒 Droits insuffisants",
         description: "Vous ne disposez que des droits de lecture pour les AIPD. Contactez l'administrateur pour obtenir des droits d'écriture.",
@@ -371,12 +371,12 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
                   <div className="flex gap-4">
                     <Button 
                       onClick={saveEvaluation}
-                      disabled={createEvaluationMutation.isPending || !hasPermission('dpia', 'write')}
+                      disabled={createEvaluationMutation.isPending || !hasPermission('dpia.write')}
                       className="flex-1"
-                      title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour sauvegarder l'évaluation" : ""}
+                      title={!hasPermission('dpia.write') ? "Droits insuffisants pour sauvegarder l'évaluation" : ""}
                     >
                       {createEvaluationMutation.isPending ? "Sauvegarde..." : 
-                       !hasPermission('dpia', 'write') ? "🔒 Droits insuffisants" :
+                       !hasPermission('dpia.write') ? "🔒 Droits insuffisants" :
                        "Sauvegarder l'évaluation"}
                     </Button>
                   </div>
@@ -469,7 +469,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
                     <Button
                       onClick={() => {
                         // Vérification des permissions avant d'ouvrir l'évaluation
-                        if (!hasPermission('dpia', 'write')) {
+                        if (!hasPermission('dpia.write')) {
                           toast({
                             title: "🔒 Droits insuffisants",
                             description: "Vous ne disposez que des droits de lecture pour les AIPD. Contactez l'administrateur pour obtenir des droits d'écriture.",
@@ -480,8 +480,8 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
                         setSelectedRecord(record);
                       }}
                       variant={existingEvaluation ? "outline" : "default"}
-                      disabled={!hasPermission('dpia', 'write')}
-                      title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour évaluer ce traitement" : ""}
+                      disabled={!hasPermission('dpia.write')}
+                      title={!hasPermission('dpia.write') ? "Droits insuffisants pour évaluer ce traitement" : ""}
                     >
                       {existingEvaluation ? "Réévaluer" : "Évaluer"}
                     </Button>
@@ -610,7 +610,7 @@ export default function DpiaList() {
   const completedDpias = dpias.filter(d => d.status === "completed" || d.status === "validated");
 
   // Check permissions after hooks are initialized
-  if (!hasPermission('dpia', 'read')) {
+  if (!hasPermission('dpia.read')) {
     return (
       <AccessDenied 
         module="Analyse d'impact (AIPD)" 
@@ -655,8 +655,8 @@ export default function DpiaList() {
         <Button 
           onClick={() => setLocation('/dpia/new')} 
           className="flex items-center gap-2"
-          disabled={!hasPermission('dpia', 'write')}
-          title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour créer une nouvelle AIPD" : ""}
+          disabled={!hasPermission('dpia.write')}
+          title={!hasPermission('dpia.write') ? "Droits insuffisants pour créer une nouvelle AIPD" : ""}
         >
           <Plus className="h-4 w-4" />
           Nouvelle AIPD
@@ -720,8 +720,8 @@ export default function DpiaList() {
                   </p>
                   <Button 
                     onClick={() => setLocation('/dpia/new')}
-                    disabled={!hasPermission('dpia', 'write')}
-                    title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour créer une AIPD" : ""}
+                    disabled={!hasPermission('dpia.write')}
+                    title={!hasPermission('dpia.write') ? "Droits insuffisants pour créer une AIPD" : ""}
                   >
                     Créer une AIPD
                   </Button>
@@ -773,8 +773,8 @@ export default function DpiaList() {
                               variant="outline"
                               size="sm"
                               onClick={() => setLocation(`/dpia/${dpia.id}`)}
-                              disabled={!hasPermission('dpia', 'write')}
-                              title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour modifier cette AIPD" : ""}
+                              disabled={!hasPermission('dpia.write')}
+                              title={!hasPermission('dpia.write') ? "Droits insuffisants pour modifier cette AIPD" : ""}
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Continuer
@@ -788,8 +788,8 @@ export default function DpiaList() {
                                   deleteDpiaMutation.mutate(dpia.id);
                                 }
                               }}
-                              disabled={!hasPermission('dpia', 'write')}
-                              title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour supprimer cette AIPD" : ""}
+                              disabled={!hasPermission('dpia.write')}
+                              title={!hasPermission('dpia.write') ? "Droits insuffisants pour supprimer cette AIPD" : ""}
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
@@ -865,8 +865,8 @@ export default function DpiaList() {
                               variant="outline"
                               size="sm"
                               onClick={() => setLocation(`/dpia/${dpia.id}`)}
-                              disabled={!hasPermission('dpia', 'read')}
-                              title={!hasPermission('dpia', 'read') ? "Droits insuffisants pour consulter cette AIPD" : ""}
+                              disabled={!hasPermission('dpia.read')}
+                              title={!hasPermission('dpia.read') ? "Droits insuffisants pour consulter cette AIPD" : ""}
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Consulter

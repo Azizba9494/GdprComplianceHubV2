@@ -114,7 +114,7 @@ export default function ActionPlan() {
   };
 
   const openCollaborativeModal = (action: any) => {
-    if (!hasPermission('actions', 'write')) {
+    if (!hasPermission('actions.write')) {
       toast({
         title: "🔒 Droits insuffisants",
         description: "Vous ne disposez que des droits de lecture pour le plan d'actions. Pour modifier les actions, vous devez disposer des droits d'écriture.",
@@ -175,7 +175,7 @@ export default function ActionPlan() {
   });
 
   const handleStatusChange = (actionId: number, newStatus: string) => {
-    if (!hasPermission('actions', 'write')) {
+    if (!hasPermission('actions.write')) {
       toast({
         title: "🔒 Droits insuffisants",
         description: "Vous ne disposez que des droits de lecture pour le plan d'actions. Pour modifier les statuts, vous devez disposer des droits d'écriture.",
@@ -193,7 +193,7 @@ export default function ActionPlan() {
   };
 
   const openDateDialog = (action: any) => {
-    if (!hasPermission('actions', 'write')) {
+    if (!hasPermission('actions.write')) {
       toast({
         title: "🔒 Droits insuffisants",
         description: "Vous ne disposez que des droits de lecture pour le plan d'actions. Pour modifier les échéances, vous devez disposer des droits d'écriture.",
@@ -220,7 +220,7 @@ export default function ActionPlan() {
   };
 
   // Check permissions first
-  if (!hasPermission('actions', 'read')) {
+  if (!hasPermission('actions.read')) {
     return (
       <AccessDenied
         module="Plan d'actions"

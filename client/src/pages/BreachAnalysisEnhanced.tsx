@@ -673,7 +673,7 @@ Généré le: ${new Date().toLocaleString()}
   };
 
   // Check permissions after all hooks are initialized
-  if (!hasPermission('breaches', 'read')) {
+  if (!hasPermission('breaches.read')) {
     return (
       <AccessDenied
         module="Analyse des violations"
