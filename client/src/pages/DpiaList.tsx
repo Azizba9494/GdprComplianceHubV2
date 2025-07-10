@@ -101,7 +101,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
         title: "AIPD supprimée",
         description: "L'analyse d'impact a été supprimée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${companyId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dpia', companyId] });
     },
     onError: (error: any) => {
       toast({
@@ -132,7 +132,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
         title: "Évaluation sauvegardée",
         description: "L'évaluation préliminaire a été enregistrée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/dpia-evaluations/${companyId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dpia-evaluations', companyId] });
       setSelectedRecord(null);
       setRiskAnswers({});
       setEstimatedPersons("");
@@ -495,7 +495,7 @@ export default function DpiaList() {
         title: "AIPD supprimée",
         description: "L'analyse d'impact a été supprimée avec succès.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${companyId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dpia', companyId] });
     },
     onError: (error: any) => {
       toast({
@@ -508,19 +508,22 @@ export default function DpiaList() {
 
   // Get all DPIA assessments
   const { data: dpias = [], isLoading } = useQuery({
-    queryKey: [`/api/dpia/${companyId}`],
+    queryKey: ['/api/dpia', companyId],
+    queryFn: () => fetch(`/api/dpia/${companyId}`).then(res => res.json()),
     enabled: !!companyId,
   }) as { data: any[], isLoading: boolean };
 
   // Get processing records for reference
   const { data: processingRecords = [] } = useQuery({
-    queryKey: [`/api/records/${companyId}`],
+    queryKey: ['/api/records', companyId],
+    queryFn: () => fetch(`/api/records/${companyId}`).then(res => res.json()),
     enabled: !!companyId,
   }) as { data: any[] };
 
   // Get DPIA evaluations
   const { data: dpiaEvaluations = [] } = useQuery({
-    queryKey: [`/api/dpia-evaluations/${companyId}`],
+    queryKey: ['/api/dpia-evaluations', companyId],
+    queryFn: () => fetch(`/api/dpia-evaluations/${companyId}`).then(res => res.json()),
     enabled: !!companyId,
   }) as { data: any[] };
 
