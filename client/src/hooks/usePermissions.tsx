@@ -3,14 +3,22 @@ import { useAuth } from "./useAuth";
 export function usePermissions() {
   const { currentCompany } = useAuth();
 
-  const hasPermission = (module: string, action: string): boolean => {
+  const hasPermission = (moduleOrPermission: string, action?: string): boolean => {
     if (!currentCompany?.permissions) return false;
     
     // Owner with "all" permissions has access to everything
     if (currentCompany.permissions.includes("all")) return true;
     
-    // Check specific permission
-    const requiredPermission = `${module}.${action}`;
+    // Support both signatures: hasPermission('module', 'action') and hasPermission('module.action')
+    let requiredPermission: string;
+    if (action) {
+      // Two parameter version: hasPermission('module', 'action')
+      requiredPermission = `${moduleOrPermission}.${action}`;
+    } else {
+      // Single parameter version: hasPermission('module.action')
+      requiredPermission = moduleOrPermission;
+    }
+    
     return currentCompany.permissions.includes(requiredPermission);
   };
 

@@ -115,7 +115,14 @@ export default function DPIA() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, permissions } = usePermissions();
+  
+  // Debug log for permissions
+  console.log('DPIA permissions check:', {
+    hasWritePermission: hasPermission('dpia', 'write'),
+    allPermissions: permissions,
+    currentCompany: user?.currentCompany
+  });
 
   // Get user's company information
   const { data: userCompany } = useQuery({
