@@ -477,17 +477,6 @@ export default function DpiaList() {
   const { toast } = useToast();
 
   const companyId = currentCompany?.id;
-
-  // Check permissions after hooks are initialized
-  if (!hasPermission('dpia', 'read')) {
-    return (
-      <AccessDenied 
-        module="Analyse d'impact (AIPD)" 
-        requiredPermission="dpia.read"
-        description="Vous n'avez pas accès au module d'analyse d'impact car vos droits ne le permettent pas."
-      />
-    );
-  }
   
   const deleteDpiaMutation = useMutation({
     mutationFn: async (dpiaId: number) => {
@@ -589,6 +578,17 @@ export default function DpiaList() {
 
   const inProgressDpias = dpias.filter(d => d.status === "draft" || d.status === "inprogress");
   const completedDpias = dpias.filter(d => d.status === "completed" || d.status === "validated");
+
+  // Check permissions after hooks are initialized
+  if (!hasPermission('dpia', 'read')) {
+    return (
+      <AccessDenied 
+        module="Analyse d'impact (AIPD)" 
+        requiredPermission="dpia.read"
+        description="Vous n'avez pas accès au module d'analyse d'impact car vos droits ne le permettent pas."
+      />
+    );
+  }
 
   if (!user) {
     return (
