@@ -369,10 +369,16 @@ Informations complémentaires: ${data.additionalInfo}
         name: data.name,
         purpose: data.purpose,
         legalBasis: data.legalBasis,
-        dataCategories: data.dataCategories ? data.dataCategories.split(',').map((s: string) => s.trim()) : [],
-        recipients: data.recipients ? data.recipients.split(',').map((s: string) => s.trim()) : [],
+        dataCategories: Array.isArray(data.dataCategories) ? data.dataCategories : 
+                       (data.dataCategories && typeof data.dataCategories === 'string' ? 
+                        data.dataCategories.split(',').map((s: string) => s.trim()) : []),
+        recipients: Array.isArray(data.recipients) ? data.recipients : 
+                   (data.recipients && typeof data.recipients === 'string' ? 
+                    data.recipients.split(',').map((s: string) => s.trim()) : []),
         retention: data.retention,
-        securityMeasures: data.securityMeasures ? data.securityMeasures.split(',').map((s: string) => s.trim()) : [],
+        securityMeasures: Array.isArray(data.securityMeasures) ? data.securityMeasures : 
+                         (data.securityMeasures && typeof data.securityMeasures === 'string' ? 
+                          data.securityMeasures.split(',').map((s: string) => s.trim()) : []),
         type: data.type,
         transfersOutsideEU: data.transfersOutsideEU,
         hasScoring: data.hasScoring,
