@@ -1046,6 +1046,29 @@ Informations complémentaires: ${data.additionalInfo}
                           }
                         }}
                       />
+                      
+                      {/* Affichage des catégories sélectionnées */}
+                      {manualForm.watch('dataCategories')?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm font-medium text-gray-600">Sélectionnées :</span>
+                          {(manualForm.watch('dataCategories') || []).map((category: string, index: number) => (
+                            <div key={index} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                              <span>{category}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentCategories = manualForm.getValues('dataCategories') || [];
+                                  const filtered = currentCategories.filter((_, i) => i !== index);
+                                  manualForm.setValue('dataCategories', filtered);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 ml-1 text-xs"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Destinataires - Liste de choix + texte libre */}
@@ -1086,6 +1109,29 @@ Informations complémentaires: ${data.additionalInfo}
                           }
                         }}
                       />
+                      
+                      {/* Affichage des destinataires sélectionnés */}
+                      {manualForm.watch('recipients')?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm font-medium text-gray-600">Sélectionnés :</span>
+                          {(manualForm.watch('recipients') || []).map((recipient: string, index: number) => (
+                            <div key={index} className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+                              <span>{recipient}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentRecipients = manualForm.getValues('recipients') || [];
+                                  const filtered = currentRecipients.filter((_, i) => i !== index);
+                                  manualForm.setValue('recipients', filtered);
+                                }}
+                                className="text-green-600 hover:text-green-800 ml-1 text-xs"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Mesures de sécurité - Liste de choix + texte libre */}
@@ -1126,6 +1172,29 @@ Informations complémentaires: ${data.additionalInfo}
                           }
                         }}
                       />
+                      
+                      {/* Affichage des mesures sélectionnées */}
+                      {manualForm.watch('securityMeasures')?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                          <span className="text-sm font-medium text-gray-600">Sélectionnées :</span>
+                          {(manualForm.watch('securityMeasures') || []).map((measure: string, index: number) => (
+                            <div key={index} className="flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm">
+                              <span>{measure}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentMeasures = manualForm.getValues('securityMeasures') || [];
+                                  const filtered = currentMeasures.filter((_, i) => i !== index);
+                                  manualForm.setValue('securityMeasures', filtered);
+                                }}
+                                className="text-purple-600 hover:text-purple-800 ml-1 text-xs"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Section Responsable de traitement */}
