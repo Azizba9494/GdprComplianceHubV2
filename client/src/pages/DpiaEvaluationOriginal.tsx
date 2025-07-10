@@ -352,6 +352,16 @@ export default function DpiaEvaluationOriginal() {
   });
 
   const handleRecordSelect = (record: ProcessingRecord) => {
+    // Vérifier les permissions avant de permettre l'évaluation
+    if (!hasPermission('dpia', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour les analyses d'impact. Pour procéder à une évaluation DPIA, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedRecord(record);
     setShowEvaluation(true);
     
@@ -388,6 +398,16 @@ export default function DpiaEvaluationOriginal() {
   };
 
   const deleteEvaluation = async (recordId: number) => {
+    // Vérifier les permissions avant de permettre la suppression
+    if (!hasPermission('dpia', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour les analyses d'impact. Pour supprimer une évaluation DPIA, vous devez disposer des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const evaluation = evaluationResults[recordId];
     if (!evaluation) return;
 
@@ -718,7 +738,7 @@ export default function DpiaEvaluationOriginal() {
                       </div>
                       
                       <div className="flex items-center gap-2 ml-4">
-                        {evaluation && hasPermission('dpia.write') && (
+                        {evaluation && hasPermission('dpia', 'write') && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -728,7 +748,7 @@ export default function DpiaEvaluationOriginal() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
-                        {hasPermission('dpia.write') ? (
+                        {hasPermission('dpia', 'write') ? (
                           <Button
                             onClick={() => handleRecordSelect(record)}
                             variant={evaluation ? "outline" : "default"}
@@ -747,7 +767,7 @@ export default function DpiaEvaluationOriginal() {
                             Voir l'évaluation
                           </Button>
                         ) : null}
-                        {evaluation && evaluation.recommendation?.includes('obligatoire') && hasPermission('dpia.write') && (
+                        {evaluation && evaluation.recommendation?.includes('obligatoire') && hasPermission('dpia', 'write') && (
                           <Button
                             onClick={() => setLocation(`/dpia/new?recordId=${record.id}`)}
                             className="bg-orange-600 hover:bg-orange-700"
