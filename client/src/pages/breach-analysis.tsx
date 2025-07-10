@@ -91,21 +91,7 @@ export default function BreachAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  // Fetch company data for the current user
-  const { data: company, isLoading: companyLoading } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const res = await fetch(`/api/companies/user/${user.id}`, {
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error('Failed to fetch company');
-      return res.json();
-    },
-    enabled: !!user?.id,
-  });
+  const { user, currentCompany } = useAuth();
 
   const form = useForm<BreachFormData>({
     defaultValues: {
@@ -146,9 +132,9 @@ export default function BreachAnalysis() {
   });
 
   const { data: breaches, isLoading } = useQuery({
-    queryKey: ['/api/breaches', company?.id],
-    queryFn: () => breachApi.get(company.id).then(res => res.json()),
-    enabled: !!company?.id,
+    queryKey: ['/api/breaches', currentCompany?.id],
+    queryFn: () => breachApi.get(currentCompany.id).then(res => res.json()),
+    enabled: !!currentCompany?.id,
   });
 
   const createBreachMutation = useMutation({
@@ -171,7 +157,7 @@ export default function BreachAnalysis() {
   });
 
   // Early returns after all hooks for loading states
-  if (!user || companyLoading) {
+  if (!user || !currentCompany) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -183,7 +169,7 @@ export default function BreachAnalysis() {
     );
   }
 
-  if (!company) {
+  if (!currentCompany) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -225,7 +211,7 @@ export default function BreachAnalysis() {
 
     // Save to database
     const breachData = {
-      companyId: company.id,
+      companyId: currentCompany.id,
       description: `Violation ${data.violationStatus} - ${data.discoveryCircumstances}`,
       incidentDate: data.startDate || data.discoveryDate,
       dataCategories: data.dataCategories,

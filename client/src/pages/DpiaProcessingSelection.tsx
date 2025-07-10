@@ -27,21 +27,18 @@ export default function DpiaProcessingSelection() {
   const { user } = useAuth();
 
   // Get user's company
-  const { data: company } = useQuery({
-    queryKey: [`/api/companies/user/${user?.id}`],
-    enabled: !!user?.id,
-  }) as { data: any };
+  const { currentCompany } = useAuth();
 
   // Get all processing records
   const { data: allRecords = [] } = useQuery({
-    queryKey: [`/api/records/${company?.id}`],
-    enabled: !!company?.id,
+    queryKey: [`/api/records/${currentCompany?.id}`],
+    enabled: !!currentCompany?.id,
   }) as { data: any[] };
 
   // Get DPIA evaluations
   const { data: dpiaEvaluations = [], isLoading } = useQuery({
-    queryKey: [`/api/dpia-evaluations/${company?.id}`],
-    enabled: !!company?.id,
+    queryKey: [`/api/dpia-evaluations/${currentCompany?.id}`],
+    enabled: !!currentCompany?.id,
   }) as { data: any[], isLoading: boolean };
 
   // Filter records that require DPIA based on evaluations
@@ -67,7 +64,7 @@ export default function DpiaProcessingSelection() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          companyId: company.id,
+          companyId: currentCompany.id,
           processingRecordId: recordId,
           title: `AIPD - ${record?.name || 'Nouveau traitement'}`,
           status: "draft"
@@ -85,7 +82,7 @@ export default function DpiaProcessingSelection() {
         title: "AIPD créée avec succès",
         description: "Vous pouvez maintenant commencer l'analyse d'impact.",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${company?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/dpia/${currentCompany?.id}`] });
       setLocation(`/dpia/${newDpia.id}`);
     },
     onError: (error: any) => {

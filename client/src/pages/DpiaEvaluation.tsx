@@ -121,27 +121,20 @@ export default function DpiaEvaluation() {
   const [evaluationResults, setEvaluationResults] = useState<Record<number, any>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  // Get user's company information
-  const { data: userCompany } = useQuery({
-    queryKey: ['/api/companies/user', user?.id],
-    queryFn: () => user ? fetch(`/api/companies/user/${user.id}`).then(res => res.json()) : Promise.resolve(null),
-    enabled: !!user,
-  });
+  const { user, currentCompany } = useAuth();
 
   // Get processing records
   const { data: records, isLoading: recordsLoading } = useQuery({
-    queryKey: ['/api/records', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/records/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/records', currentCompany?.id],
+    queryFn: () => currentCompany ? fetch(`/api/records/${currentCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!currentCompany,
   });
 
   // Get stored evaluations
   const { data: storedEvaluations, isLoading: evaluationsLoading } = useQuery({
-    queryKey: ['/api/dpia-evaluations', userCompany?.id],
-    queryFn: () => userCompany ? fetch(`/api/dpia-evaluations/${userCompany.id}`).then(res => res.json()) : Promise.resolve([]),
-    enabled: !!userCompany,
+    queryKey: ['/api/dpia-evaluations', currentCompany?.id],
+    queryFn: () => currentCompany ? fetch(`/api/dpia-evaluations/${currentCompany.id}`).then(res => res.json()) : Promise.resolve([]),
+    enabled: !!currentCompany,
   });
 
   // Filter controller records only
