@@ -82,6 +82,7 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { hasPermission } = usePermissions();
 
   // Delete DPIA mutation
   const deleteDpiaMutation = useMutation({
@@ -204,6 +205,16 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
 
   const saveEvaluation = () => {
     if (!selectedRecord) return;
+    
+    // Vérification des permissions avant de sauvegarder
+    if (!hasPermission('dpia', 'write')) {
+      toast({
+        title: "🔒 Droits insuffisants",
+        description: "Vous ne disposez que des droits de lecture pour les AIPD. Contactez l'administrateur pour obtenir des droits d'écriture.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const score = calculateRiskScore();
     const recommendation = getAipdRecommendation();
@@ -360,10 +371,13 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
                   <div className="flex gap-4">
                     <Button 
                       onClick={saveEvaluation}
-                      disabled={createEvaluationMutation.isPending}
+                      disabled={createEvaluationMutation.isPending || !hasPermission('dpia', 'write')}
                       className="flex-1"
+                      title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour sauvegarder l'évaluation" : ""}
                     >
-                      {createEvaluationMutation.isPending ? "Sauvegarde..." : "Sauvegarder l'évaluation"}
+                      {createEvaluationMutation.isPending ? "Sauvegarde..." : 
+                       !hasPermission('dpia', 'write') ? "🔒 Droits insuffisants" :
+                       "Sauvegarder l'évaluation"}
                     </Button>
                   </div>
                 </div>
@@ -453,8 +467,21 @@ function ProcessingSelectionForEvaluation({ records, dpiaEvaluations, companyId 
                     </div>
                     
                     <Button
-                      onClick={() => setSelectedRecord(record)}
+                      onClick={() => {
+                        // Vérification des permissions avant d'ouvrir l'évaluation
+                        if (!hasPermission('dpia', 'write')) {
+                          toast({
+                            title: "🔒 Droits insuffisants",
+                            description: "Vous ne disposez que des droits de lecture pour les AIPD. Contactez l'administrateur pour obtenir des droits d'écriture.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setSelectedRecord(record);
+                      }}
                       variant={existingEvaluation ? "outline" : "default"}
+                      disabled={!hasPermission('dpia', 'write')}
+                      title={!hasPermission('dpia', 'write') ? "Droits insuffisants pour évaluer ce traitement" : ""}
                     >
                       {existingEvaluation ? "Réévaluer" : "Évaluer"}
                     </Button>
