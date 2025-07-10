@@ -107,12 +107,6 @@ const MODULE_PERMISSIONS = [
     levels: ['access'] 
   },
   { 
-    id: 'learning', 
-    label: 'Formation', 
-    description: 'Modules d\'apprentissage gamifiés',
-    levels: ['read', 'participate'] 
-  },
-  { 
     id: 'admin', 
     label: 'Administration', 
     description: 'Configuration et gestion avancée',
@@ -124,7 +118,6 @@ const PERMISSION_LEVEL_LABELS = {
   read: 'Lecture',
   write: 'Écriture',
   access: 'Accès',
-  participate: 'Participation',
   manage: 'Gestion complète'
 };
 
