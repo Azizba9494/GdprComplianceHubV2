@@ -2281,64 +2281,78 @@ export default function DpiaAssessmentEnhanced() {
                         </h3>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-6">
                         <FormField
                           control={form.control}
                           name="riskScenarios.illegitimateAccess.impacts"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'impacts')}
-                                  disabled={isFieldGenerating('illegitimateAccessImpacts')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <FormDescription>
+                                Décrivez les conséquences possibles d'un accès non autorisé aux données personnelles.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Décrivez les conséquences possibles d'un accès non autorisé aux données..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Usurpation d'identité, discrimination, atteinte à la réputation, préjudice financier, perte de confiance..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('illegitimateAccessImpacts')}
+                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'impacts')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse du contexte de traitement...",
+                                    "Identification des données sensibles...",
+                                    "Évaluation des impacts potentiels...",
+                                    "Application méthodologie CNIL...",
+                                    "Génération de l'analyse..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-
-
 
                         <FormField
                           control={form.control}
                           name="riskScenarios.illegitimateAccess.sources"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Sources de risques et menaces</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'sources')}
-                                  disabled={isFieldGenerating('illegitimateAccessSources')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Sources de risques et menaces</FormLabel>
+                              <FormDescription>
+                                Identifiez les sources potentielles pouvant causer un accès illégitime aux données.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Identifiez les sources potentielles de ce risque..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Piratage informatique, négligence humaine, défaillance technique, vol d'équipements, accès par des tiers non autorisés..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('illegitimateAccessSources')}
+                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'sources')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse du contexte technique...",
+                                    "Identification des vulnérabilités...",
+                                    "Évaluation des menaces sectorielles...",
+                                    "Application référentiel CNIL...",
+                                    "Génération des sources de risques..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -2349,26 +2363,34 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.illegitimateAccess.measures"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Mesures existantes ou prévues</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'measures')}
-                                  disabled={isFieldGenerating('illegitimateAccessMeasures')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <FormDescription>
+                                Décrivez les mesures mises en place pour prévenir les accès illégitimes aux données.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Contrôle d'accès, chiffrement, authentification forte, formation du personnel, surveillance des accès..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('illegitimateAccessMeasures')}
+                                  onClick={() => handleRiskAIGenerate('illegitimateAccess', 'measures')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse des sources de risques...",
+                                    "Consultation référentiel sécurité...",
+                                    "Adaptation aux spécificités métier...",
+                                    "Application standards CNIL...",
+                                    "Génération des mesures de protection..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -2481,64 +2503,78 @@ export default function DpiaAssessmentEnhanced() {
                         </h3>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-6">
                         <FormField
                           control={form.control}
                           name="riskScenarios.unwantedModification.impacts"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'impacts')}
-                                  disabled={isFieldGenerating('dataModificationImpacts')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <FormDescription>
+                                Décrivez les conséquences possibles d'une modification non autorisée des données personnelles.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Décrivez les conséquences d'une modification non autorisée des données..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Données erronées, perte de crédibilité, décisions injustes, préjudice financier, atteinte aux droits..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('dataModificationImpacts')}
+                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'impacts')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse des données modifiables...",
+                                    "Évaluation des conséquences...",
+                                    "Identification des préjudices...",
+                                    "Application méthodologie CNIL...",
+                                    "Génération de l'analyse..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-
-
 
                         <FormField
                           control={form.control}
                           name="riskScenarios.unwantedModification.sources"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Sources de risques et menaces</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'sources')}
-                                  disabled={isFieldGenerating('dataModificationSources')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Sources de risques et menaces</FormLabel>
+                              <FormDescription>
+                                Identifiez les sources potentielles pouvant causer une modification non désirée des données.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Identifiez les sources potentielles de ce risque..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Erreur humaine, bug informatique, manipulation malveillante, défaillance système, corruption de données..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('dataModificationSources')}
+                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'sources')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse des processus de modification...",
+                                    "Identification des points de vulnérabilité...",
+                                    "Évaluation des risques humains et techniques...",
+                                    "Application référentiel CNIL...",
+                                    "Génération des sources de risques..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -2549,26 +2585,34 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.unwantedModification.measures"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Mesures existantes ou prévues</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'measures')}
-                                  disabled={isFieldGenerating('dataModificationMeasures')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <FormDescription>
+                                Décrivez les mesures mises en place pour prévenir les modifications non désirées des données.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Contrôle d'intégrité, validation des saisies, historique des modifications, sauvegarde, procédures de vérification..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('dataModificationMeasures')}
+                                  onClick={() => handleRiskAIGenerate('unwantedModification', 'measures')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse des sources de modification...",
+                                    "Consultation standards d'intégrité...",
+                                    "Adaptation aux processus métier...",
+                                    "Application bonnes pratiques CNIL...",
+                                    "Génération des mesures de contrôle..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -2681,64 +2725,78 @@ export default function DpiaAssessmentEnhanced() {
                         </h3>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-6">
                         <FormField
                           control={form.control}
                           name="riskScenarios.dataDisappearance.impacts"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'impacts')}
-                                  disabled={isFieldGenerating('dataDisappearanceImpacts')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Impacts potentiels sur les personnes concernées</FormLabel>
+                              <FormDescription>
+                                Décrivez les conséquences possibles de la perte ou destruction des données personnelles.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Décrivez les conséquences de la perte ou destruction des données..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Perte d'accès aux services, impossibilité d'exercer ses droits, perte d'historique, préjudice administratif..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('dataDisappearanceImpacts')}
+                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'impacts')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse de la criticité des données...",
+                                    "Évaluation de la dépendance des services...",
+                                    "Identification des impacts utilisateur...",
+                                    "Application méthodologie CNIL...",
+                                    "Génération de l'analyse..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-
-
 
                         <FormField
                           control={form.control}
                           name="riskScenarios.dataDisappearance.sources"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Sources de risques et menaces</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'sources')}
-                                  disabled={isFieldGenerating('dataDisappearanceSources')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Sources de risques et menaces</FormLabel>
+                              <FormDescription>
+                                Identifiez les sources potentielles pouvant causer la disparition des données.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Identifiez les sources potentielles de ce risque..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Panne matérielle, catastrophe naturelle, suppression accidentelle, cyberattaque, défaillance du cloud..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('dataDisappearanceSources')}
+                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'sources')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse de l'infrastructure de stockage...",
+                                    "Identification des vulnérabilités...",
+                                    "Évaluation des risques environnementaux...",
+                                    "Application référentiel CNIL...",
+                                    "Génération des sources de risques..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -2749,26 +2807,34 @@ export default function DpiaAssessmentEnhanced() {
                           name="riskScenarios.dataDisappearance.measures"
                           render={({ field }) => (
                             <FormItem>
-                              <div className="flex items-center justify-between mb-2">
-                                <FormLabel>Mesures existantes ou prévues</FormLabel>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'measures')}
-                                  disabled={isFieldGenerating('dataDisappearanceMeasures')}
-                                >
-                                  <Brain className="h-4 w-4 mr-1" />
-                                  IA
-                                </Button>
-                              </div>
+                              <FormLabel>Mesures existantes ou prévues</FormLabel>
+                              <FormDescription>
+                                Décrivez les mesures mises en place pour prévenir la disparition des données.
+                              </FormDescription>
                               <FormControl>
                                 <Textarea
-                                  placeholder="Décrivez les mesures mises en place pour prévenir ce risque..."
-                                  className="min-h-[100px]"
+                                  placeholder="Ex: Sauvegardes régulières, redondance, plan de continuité, supervision, contrats de niveau de service..."
+                                  className="min-h-[120px]"
                                   {...field}
                                 />
                               </FormControl>
+                              <div className="flex gap-2">
+                                <AIProgressIndicator
+                                  isGenerating={isFieldGenerating('dataDisappearanceMeasures')}
+                                  onClick={() => handleRiskAIGenerate('dataDisappearance', 'measures')}
+                                  buttonText="Générer une proposition par l'IA"
+                                  variant="outline"
+                                  size="sm"
+                                  estimatedSeconds={35}
+                                  steps={[
+                                    "Analyse des besoins de continuité...",
+                                    "Consultation standards de sauvegarde...",
+                                    "Adaptation aux enjeux métier...",
+                                    "Application bonnes pratiques CNIL...",
+                                    "Génération des mesures de protection..."
+                                  ]}
+                                />
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
