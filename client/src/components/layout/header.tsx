@@ -65,16 +65,21 @@ export default function Header() {
   // Use current company from context - this is the key fix for multi-company switching
   const companyId = currentCompany?.id;
   
-  // Debug logging
-  console.log('Header - Current company:', currentCompany);
-  console.log('Header - Company ID being used for queries:', companyId);
+  // Debug logging - only when company is null/undefined to reduce noise
+  if (!currentCompany || !companyId) {
+    console.log('Header - Current company:', currentCompany);
+    console.log('Header - Company ID being used for queries:', companyId);
+  }
 
   // Get recent activity for notifications - only when current company is set
-  // Handle permission errors gracefully
+  // Handle permission errors gracefully with proper validation
   const { data: recentRequests = [] } = useQuery({
     queryKey: ['/api/requests', companyId],
     queryFn: async () => {
-      if (!companyId) return [];
+      // Double check companyId is valid before making request
+      if (!companyId || typeof companyId !== 'number') {
+        return [];
+      }
       try {
         const res = await fetch(`/api/requests/${companyId}`);
         if (!res.ok) {
@@ -90,12 +95,16 @@ export default function Header() {
     enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 0, // Always fresh data when switching companies
+    retry: false, // Don't retry on permission errors
   });
 
   const { data: recentActions = [] } = useQuery({
     queryKey: ['/api/actions', companyId],
     queryFn: async () => {
-      if (!companyId) return [];
+      // Double check companyId is valid before making request
+      if (!companyId || typeof companyId !== 'number') {
+        return [];
+      }
       try {
         const res = await fetch(`/api/actions/${companyId}`);
         if (!res.ok) {
@@ -111,12 +120,16 @@ export default function Header() {
     enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000,
     staleTime: 0,
+    retry: false, // Don't retry on permission errors
   });
 
   const { data: recentBreaches = [] } = useQuery({
     queryKey: ['/api/breaches', companyId],
     queryFn: async () => {
-      if (!companyId) return [];
+      // Double check companyId is valid before making request
+      if (!companyId || typeof companyId !== 'number') {
+        return [];
+      }
       try {
         const res = await fetch(`/api/breaches/${companyId}`);
         if (!res.ok) {
@@ -132,6 +145,7 @@ export default function Header() {
     enabled: !!companyId && !!currentCompany,
     refetchInterval: 30000,
     staleTime: 0,
+    retry: false, // Don't retry on permission errors
   });
 
   const handleProfileClick = () => {
