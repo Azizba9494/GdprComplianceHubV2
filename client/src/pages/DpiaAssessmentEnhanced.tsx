@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Brain, Save, FileText, Shield, AlertTriangle, CheckCircle, Loader2, Plus, Trash2, ArrowLeft, Download } from "lucide-react";
+import { Brain, Save, FileText, Shield, AlertTriangle, CheckCircle, Loader2, Plus, Trash2, ArrowLeft, Download, Users, Printer } from "lucide-react";
 import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -464,6 +464,20 @@ export default function DpiaAssessmentEnhanced() {
     enabled: !!user?.id,
   }) as { data: any };
 
+  // Fetch collaborators for responsible person selection
+  const { data: collaborators = [] } = useQuery({
+    queryKey: ['/api/collaborators', currentCompany?.id],
+    queryFn: async () => {
+      if (!currentCompany?.id) return [];
+      const res = await fetch(`/api/collaborators/${currentCompany.id}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!currentCompany?.id,
+  });
+
   // Get DPIA data
   const { data: dpia, isLoading } = useQuery({
     queryKey: [`/api/dpia/assessment/${id}`],
@@ -738,6 +752,84 @@ export default function DpiaAssessmentEnhanced() {
     onSettled: (data, error, variables) => {
       setFieldGenerating(variables.field, false);
     }
+  });
+
+  // PDF Export mutation
+  const exportPdfMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/dpia/${id}/export-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form.getValues()),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'export PDF');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AIPD-${dpia?.processingRecordId || 'nouveau'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Export réussi",
+        description: "Le PDF de l'AIPD a été téléchargé avec succès.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur d'export",
+        description: error.message || "Impossible d'exporter l'AIPD en PDF",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Report Generation mutation
+  const generateReportMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/dpia/${id}/generate-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form.getValues()),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération du rapport');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Rapport-AIPD-${dpia?.processingRecordId || 'nouveau'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Rapport généré",
+        description: "Le rapport d'AIPD a été généré et téléchargé avec succès.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur de génération",
+        description: error.message || "Impossible de générer le rapport d'AIPD",
+        variant: "destructive",
+      });
+    },
   });
 
   // Risk analysis AI generation using DPIA prompts
@@ -4218,13 +4310,44 @@ export default function DpiaAssessmentEnhanced() {
                                       render={({ field }) => (
                                         <FormItem>
                                           <FormLabel className="text-xs">Responsable de mise en œuvre</FormLabel>
-                                          <FormControl>
-                                            <Input
-                                              placeholder="Ex: Responsable IT, DPO..."
-                                              className="text-sm"
-                                              {...field}
-                                            />
-                                          </FormControl>
+                                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                                            <FormControl>
+                                              <SelectTrigger className="text-sm">
+                                                <SelectValue placeholder="Sélectionner un responsable..." />
+                                              </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                              {collaborators.map((collaborator: any) => (
+                                                <SelectItem 
+                                                  key={collaborator.id} 
+                                                  value={`${collaborator.firstName} ${collaborator.lastName}`}
+                                                >
+                                                  <div className="flex items-center space-x-2">
+                                                    <Users className="h-3 w-3" />
+                                                    <span>{collaborator.firstName} {collaborator.lastName}</span>
+                                                    <span className="text-xs text-gray-500">({collaborator.email})</span>
+                                                  </div>
+                                                </SelectItem>
+                                              ))}
+                                              <SelectItem value="other-custom">
+                                                <div className="flex items-center space-x-2">
+                                                  <span className="text-xs text-gray-600">Saisie libre...</span>
+                                                </div>
+                                              </SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          
+                                          {/* Show text input if "other-custom" is selected */}
+                                          {field.value === "other-custom" && (
+                                            <div className="mt-2">
+                                              <Input
+                                                placeholder="Ex: Responsable IT, DPO, Prestataire externe..."
+                                                className="text-sm"
+                                                onChange={(e) => field.onChange(e.target.value)}
+                                                value=""
+                                              />
+                                            </div>
+                                          )}
                                           <FormMessage />
                                         </FormItem>
                                       )}
@@ -4332,13 +4455,43 @@ export default function DpiaAssessmentEnhanced() {
                     </Alert>
 
                     <div className="flex gap-4 pt-4">
-                      <Button type="button" variant="outline" className="flex-1">
-                        <Download className="h-4 w-4 mr-2" />
-                        Exporter en PDF
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => exportPdfMutation.mutate()}
+                        disabled={exportPdfMutation.isPending}
+                      >
+                        {exportPdfMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Export en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-2" />
+                            Exporter en PDF
+                          </>
+                        )}
                       </Button>
-                      <Button type="button" variant="outline" className="flex-1">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Générer le rapport
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => generateReportMutation.mutate()}
+                        disabled={generateReportMutation.isPending}
+                      >
+                        {generateReportMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Génération...
+                          </>
+                        ) : (
+                          <>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Générer le rapport
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

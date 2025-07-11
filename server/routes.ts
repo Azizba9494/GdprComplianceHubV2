@@ -1600,6 +1600,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PDF Export route for DPIA
+  app.post("/api/dpia/:id/export-pdf", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+      
+      // Get the DPIA assessment
+      const assessment = await storage.getDpiaAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ error: "AIPD non trouvée" });
+      }
+      
+      // Verify user has access to the company that owns this assessment
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, assessment.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      // Get company info
+      const company = await storage.getCompany(assessment.companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Company not found" });
+      }
+
+      // Get processing record
+      const processingRecord = await storage.getProcessingRecord(assessment.processingRecordId);
+      
+      // Generate HTML content for PDF
+      const htmlContent = generateDpiaHtml(assessment, company, processingRecord);
+      
+      // Use html-pdf-node to generate PDF
+      const htmlPdf = require('html-pdf-node');
+      const options = { 
+        format: 'A4',
+        margin: { top: 20, bottom: 20, left: 20, right: 20 }
+      };
+      const file = { content: htmlContent };
+      
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="AIPD-${assessment.processingRecordId}.pdf"`);
+      res.send(pdfBuffer);
+      
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Report Generation route for DPIA  
+  app.post("/api/dpia/:id/generate-report", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.session?.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated properly" });
+      }
+      
+      // Get the DPIA assessment
+      const assessment = await storage.getDpiaAssessment(id);
+      if (!assessment) {
+        return res.status(404).json({ error: "AIPD non trouvée" });
+      }
+      
+      // Verify user has access to the company that owns this assessment
+      const hasAccess = await storage.verifyUserCompanyAccess(userId, assessment.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      // Get company info
+      const company = await storage.getCompany(assessment.companyId);
+      if (!company) {
+        return res.status(404).json({ error: "Company not found" });
+      }
+
+      // Get processing record
+      const processingRecord = await storage.getProcessingRecord(assessment.processingRecordId);
+      
+      // Generate comprehensive report HTML
+      const htmlContent = generateDpiaReportHtml(assessment, company, processingRecord);
+      
+      // Use html-pdf-node to generate PDF
+      const htmlPdf = require('html-pdf-node');
+      const options = { 
+        format: 'A4',
+        margin: { top: 20, bottom: 20, left: 20, right: 20 }
+      };
+      const file = { content: htmlContent };
+      
+      const pdfBuffer = await htmlPdf.generatePdf(file, options);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Rapport-AIPD-${assessment.processingRecordId}.pdf"`);
+      res.send(pdfBuffer);
+      
+    } catch (error: any) {
+      console.error('Report generation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // AI-assisted risk analysis for DPIA
   app.post("/api/dpia/ai-risk-analysis", requireModulePermission('dpia', 'write'), async (req, res) => {
     try {
@@ -3300,6 +3408,240 @@ Données traitées: ${processingRecord?.dataCategories?.join(', ') || 'Non spéc
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// HTML generation functions for PDF export
+function generateDpiaHtml(assessment: any, company: any, processingRecord: any): string {
+  const currentDate = new Date().toLocaleDateString('fr-FR');
+  
+  return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>AIPD - ${processingRecord?.name || 'Nouveau traitement'}</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #0066cc; padding-bottom: 20px; margin-bottom: 30px; }
+        .section { margin-bottom: 30px; }
+        .section-title { color: #0066cc; font-size: 18px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .field-label { font-weight: bold; color: #555; margin-top: 15px; }
+        .field-content { margin-top: 5px; padding: 10px; background-color: #f9f9f9; border-left: 3px solid #0066cc; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .table th { background-color: #f2f2f2; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .status-draft { background-color: #fef3cd; color: #856404; }
+        .status-inprogress { background-color: #d1ecf1; color: #0c5460; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #e0e0e0; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Analyse d'Impact sur la Protection des Données (AIPD)</h1>
+        <h2>${processingRecord?.name || 'Nouveau traitement'}</h2>
+        <p><strong>Entreprise:</strong> ${company?.name || 'N/A'}</p>
+        <p><strong>Date de génération:</strong> ${currentDate}</p>
+        <p><strong>Statut:</strong> <span class="status-badge status-${assessment?.status || 'draft'}">${getStatusLabel(assessment?.status)}</span></p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">1. Description générale du traitement</div>
+        <div class="field-label">Description</div>
+        <div class="field-content">${assessment?.generalDescription || 'Non renseigné'}</div>
+        
+        <div class="field-label">Finalités du traitement</div>
+        <div class="field-content">${assessment?.processingPurposes || 'Non renseigné'}</div>
+        
+        <div class="field-label">Responsable du traitement</div>
+        <div class="field-content">${assessment?.dataController || 'Non renseigné'}</div>
+        
+        <div class="field-label">Sous-traitants</div>
+        <div class="field-content">${assessment?.dataProcessors || 'Non renseigné'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">2. Données personnelles traitées</div>
+        <div class="field-content">${assessment?.personalDataProcessed || 'Non renseigné'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">3. Mesures de sécurité</div>
+        ${assessment?.securityMeasures && assessment.securityMeasures.length > 0 ? 
+          '<ul>' + assessment.securityMeasures.map((measure: string) => `<li>${measure}</li>`).join('') + '</ul>' :
+          '<div class="field-content">Aucune mesure renseignée</div>'
+        }
+      </div>
+
+      ${assessment?.evaluation ? generateEvaluationSection(assessment.evaluation) : ''}
+
+      <div class="footer">
+        <p>Document généré automatiquement le ${currentDate}</p>
+        <p>Ce document constitue l'AIPD pour le traitement "${processingRecord?.name || 'Nouveau traitement'}" de l'entreprise ${company?.name || 'N/A'}</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function generateDpiaReportHtml(assessment: any, company: any, processingRecord: any): string {
+  const currentDate = new Date().toLocaleDateString('fr-FR');
+  
+  return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Rapport AIPD - ${processingRecord?.name || 'Nouveau traitement'}</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #0066cc; padding-bottom: 20px; margin-bottom: 30px; }
+        .executive-summary { background-color: #f8f9fa; padding: 20px; border-left: 4px solid #0066cc; margin-bottom: 30px; }
+        .section { margin-bottom: 30px; }
+        .section-title { color: #0066cc; font-size: 18px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .field-label { font-weight: bold; color: #555; margin-top: 15px; }
+        .field-content { margin-top: 5px; padding: 10px; background-color: #f9f9f9; border-left: 3px solid #0066cc; }
+        .risk-level-high { color: #dc3545; font-weight: bold; }
+        .risk-level-medium { color: #ffc107; font-weight: bold; }
+        .risk-level-low { color: #28a745; font-weight: bold; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .table th { background-color: #f2f2f2; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #e0e0e0; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Rapport d'Analyse d'Impact sur la Protection des Données</h1>
+        <h2>${processingRecord?.name || 'Nouveau traitement'}</h2>
+        <p><strong>Entreprise:</strong> ${company?.name || 'N/A'}</p>
+        <p><strong>Date de génération:</strong> ${currentDate}</p>
+      </div>
+
+      <div class="executive-summary">
+        <h3>Résumé exécutif</h3>
+        <p>Cette AIPD concerne le traitement "${processingRecord?.name || 'Nouveau traitement'}" mise en œuvre par ${company?.name || 'l\'entreprise'}.</p>
+        <p><strong>Statut actuel:</strong> ${getStatusLabel(assessment?.status)}</p>
+        <p><strong>Recommandation:</strong> ${generateRecommendation(assessment)}</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Analyse des risques</div>
+        ${generateRiskAnalysisReport(assessment)}
+      </div>
+
+      <div class="section">
+        <div class="section-title">Plan d'action</div>
+        ${generateActionPlanReport(assessment)}
+      </div>
+
+      <div class="section">
+        <div class="section-title">Conformité RGPD</div>
+        <div class="field-content">
+          <p>Cette AIPD a été réalisée conformément aux exigences de l'article 35 du RGPD.</p>
+          <p>Elle prend en compte les lignes directrices du G29 concernant l'analyse d'impact relative à la protection des données.</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>Rapport généré automatiquement le ${currentDate}</p>
+        <p>Document confidentiel - Usage interne uniquement</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function getStatusLabel(status: string): string {
+  const statusLabels: Record<string, string> = {
+    'draft': 'Brouillon',
+    'inprogress': 'En cours',
+    'completed': 'Terminée', 
+    'validated': 'Validée'
+  };
+  return statusLabels[status] || 'Non défini';
+}
+
+function generateEvaluationSection(evaluation: any): string {
+  if (!evaluation || Object.keys(evaluation).length === 0) {
+    return '';
+  }
+  
+  return `
+    <div class="section">
+      <div class="section-title">4. Évaluation des mesures</div>
+      ${Object.entries(evaluation).map(([key, value]: [string, any]) => `
+        <div class="field-label">${key}</div>
+        <div class="field-content">
+          <strong>Évaluation:</strong> ${value?.rating || 'Non évaluée'}<br>
+          ${value?.justification ? `<strong>Justification:</strong> ${value.justification}<br>` : ''}
+          ${value?.additionalMeasures ? `<strong>Mesures additionnelles:</strong> ${value.additionalMeasures}` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function generateRiskAnalysisReport(assessment: any): string {
+  if (!assessment?.riskScenarios || Object.keys(assessment.riskScenarios).length === 0) {
+    return '<div class="field-content">Aucune analyse de risque disponible</div>';
+  }
+  
+  return Object.entries(assessment.riskScenarios).map(([scenario, data]: [string, any]) => `
+    <div class="field-label">${scenario}</div>
+    <div class="field-content">
+      ${data?.impacts ? `<strong>Impacts:</strong> ${data.impacts}<br>` : ''}
+      ${data?.sources ? `<strong>Sources:</strong> ${data.sources}<br>` : ''}
+      ${data?.measures ? `<strong>Mesures:</strong> ${data.measures}` : ''}
+    </div>
+  `).join('');
+}
+
+function generateActionPlanReport(assessment: any): string {
+  if (!assessment?.actionPlan || assessment.actionPlan.length === 0) {
+    return '<div class="field-content">Aucun plan d\'action défini</div>';
+  }
+  
+  return `
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Responsable</th>
+          <th>Échéance</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${assessment.actionPlan.map((action: any) => `
+          <tr>
+            <td>${action?.measure || 'Action non définie'}</td>
+            <td>${action?.responsible || 'Non assigné'}</td>
+            <td>${action?.deadline || 'Non définie'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function generateRecommendation(assessment: any): string {
+  if (!assessment?.status) {
+    return 'AIPD en cours de réalisation';
+  }
+  
+  switch (assessment.status) {
+    case 'validated':
+      return 'AIPD validée - Traitement conforme';
+    case 'completed':
+      return 'AIPD terminée - En attente de validation';
+    case 'inprogress':
+      return 'AIPD en cours - Poursuivre l\'analyse';
+    default:
+      return 'AIPD à finaliser';
+  }
 }
 
 async function generateAIContent(prompt: string, options: { temperature?: number } = {}): Promise<string> {
