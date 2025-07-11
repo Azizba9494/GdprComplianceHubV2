@@ -95,7 +95,7 @@ export function AIProgressIndicator({
         <div className="flex items-center gap-2 flex-1">
           <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
           <span className="text-sm font-medium">
-            Génération en cours... ({elapsedTime}s/{estimatedSeconds}s)
+            Génération en cours...
           </span>
         </div>
         {onCancel && (
