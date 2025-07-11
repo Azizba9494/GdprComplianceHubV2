@@ -284,7 +284,11 @@ CONSIGNES IMPORTANTES POUR LA GÉNÉRATION:
 
 ${contextString}${ragContext}
 
-CHAMP À COMPLÉTER: ${context.field}
+RÈGLES DE GÉNÉRATION CRITIQUES:
+- Ne JAMAIS commencer votre réponse par des termes techniques comme "${context.field}" ou tout autre nom de champ
+- Commencez DIRECTEMENT par le contenu demandé sans préfixe technique
+- Votre réponse doit être du français professionnel adapté à un DPO
+- N'incluez AUCUN nom de variable, champ ou terme technique anglais dans votre réponse
 
 RÉPONSE ATTENDUE:
 Rédigez une réponse précise, personnalisée et professionnelle qui:

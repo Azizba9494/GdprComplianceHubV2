@@ -685,7 +685,35 @@ export default function DpiaAssessmentEnhanced() {
       return response.json();
     },
     onSuccess: (result, variables) => {
-      form.setValue(variables.field as any, result.response);
+      // Apply the same cleaning logic as in handleRiskAIGenerate
+      let cleanResponse = result.response
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/^### (.*$)/gm, '$1')
+        .replace(/^## (.*$)/gm, '$1')
+        .replace(/^# (.*$)/gm, '$1')
+        .trim();
+      
+      // Remove technical field names that might appear at the beginning
+      const technicalFields = [
+        'illegitimateAccessImpacts', 'illegitimateAccessSources', 'illegitimateAccessMeasures',
+        'dataModificationImpacts', 'dataModificationSources', 'dataModificationMeasures',
+        'dataDisappearanceImpacts', 'dataDisappearanceSources', 'dataDisappearanceMeasures',
+        'generalDescription', 'processingPurposes', 'dataController', 'dataProcessors',
+        'applicableReferentials', 'personalDataProcessed', 'personalDataCategories',
+        'finalitiesJustification', 'dataMinimization', 'retentionJustification',
+        'legalBasisJustification', 'dataQualityJustification', 'rightsInformation',
+        'rightsConsent', 'rightsAccess', 'rightsRectification', 'rightsOpposition',
+        'subcontractingMeasures', 'internationalTransfersMeasures'
+      ];
+      
+      for (const field of technicalFields) {
+        if (cleanResponse.startsWith(field)) {
+          cleanResponse = cleanResponse.substring(field.length).replace(/^[:\s-]*/, '').trim();
+          break;
+        }
+      }
+      
+      form.setValue(variables.field as any, cleanResponse);
       toast({
         title: "Contenu généré",
         description: "Le contenu a été généré avec succès par l'IA.",
@@ -759,13 +787,34 @@ export default function DpiaAssessmentEnhanced() {
       
       const data = await response.json();
       
-      // Clean the response and remove markdown formatting
-      const cleanResponse = data.response
+      // Clean the response and remove markdown formatting and technical field names
+      let cleanResponse = data.response
         .replace(/\*\*(.*?)\*\*/g, '$1')
         .replace(/^### (.*$)/gm, '$1')
         .replace(/^## (.*$)/gm, '$1')
         .replace(/^# (.*$)/gm, '$1')
         .trim();
+      
+      // Remove technical field names that might appear at the beginning of the response
+      const technicalFields = [
+        'illegitimateAccessImpacts',
+        'illegitimateAccessSources', 
+        'illegitimateAccessMeasures',
+        'dataModificationImpacts',
+        'dataModificationSources',
+        'dataModificationMeasures', 
+        'dataDisappearanceImpacts',
+        'dataDisappearanceSources',
+        'dataDisappearanceMeasures'
+      ];
+      
+      // Check if response starts with any technical field name and remove it
+      for (const field of technicalFields) {
+        if (cleanResponse.startsWith(field)) {
+          cleanResponse = cleanResponse.substring(field.length).replace(/^[:\s-]*/, '').trim();
+          break;
+        }
+      }
       
       // Update the specific field with generated content
       form.setValue(`riskScenarios.${scenario}.${riskType}`, cleanResponse);
