@@ -1636,10 +1636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use html-pdf-node to generate PDF
       const htmlPdf = await import('html-pdf-node');
-      const options = { 
-        format: 'A4',
-        margin: { top: 20, bottom: 20, left: 20, right: 20 }
-      };
+      const options = getPdfOptions();
       const file = { content: htmlContent };
       
       const pdfBuffer = await htmlPdf.default.generatePdf(file, options);
@@ -1685,15 +1682,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get processing record
       const processingRecord = await storage.getProcessingRecord(assessment.processingRecordId);
       
-      // Generate comprehensive report HTML
+      // Generate comprehensive report HTML - Report Route
       const htmlContent = generateDpiaReportHtml(assessment, company, processingRecord);
       
       // Use html-pdf-node to generate PDF
       const htmlPdf = await import('html-pdf-node');
-      const options = { 
-        format: 'A4',
-        margin: { top: 20, bottom: 20, left: 20, right: 20 }
-      };
+      const options = getPdfOptions();
       const file = { content: htmlContent };
       
       const pdfBuffer = await htmlPdf.default.generatePdf(file, options);
@@ -3642,6 +3636,26 @@ function generateRecommendation(assessment: any): string {
     default:
       return 'AIPD à finaliser';
   }
+}
+
+// PDF Configuration helper
+function getPdfOptions() {
+  return {
+    format: 'A4',
+    margin: { top: 20, bottom: 20, left: 20, right: 20 },
+    printBackground: true,
+    path: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu',
+      '--headless'
+    ]
+  };
 }
 
 async function generateAIContent(prompt: string, options: { temperature?: number } = {}): Promise<string> {
