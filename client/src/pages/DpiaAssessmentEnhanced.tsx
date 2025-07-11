@@ -438,8 +438,20 @@ export default function DpiaAssessmentEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, currentCompany } = useAuth();
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingFields, setGeneratingFields] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Helper functions for field-specific generation state
+  const setFieldGenerating = (field: string, isGenerating: boolean) => {
+    setGeneratingFields(prev => ({
+      ...prev,
+      [field]: isGenerating
+    }));
+  };
+
+  const isFieldGenerating = (field: string) => {
+    return generatingFields[field] || false;
+  };
 
   // Get user company
   const { data: company } = useQuery({
@@ -613,7 +625,7 @@ export default function DpiaAssessmentEnhanced() {
   // AI generation mutation with enhanced context
   const generateWithAI = useMutation({
     mutationFn: async ({ field, context }: { field: string, context?: any }) => {
-      setIsGenerating(true);
+      setFieldGenerating(field, true);
       
       // Enhanced context with registry data and prompt type mapping
       const registryData = {
@@ -686,8 +698,8 @@ export default function DpiaAssessmentEnhanced() {
         variant: "destructive",
       });
     },
-    onSettled: () => {
-      setIsGenerating(false);
+    onSettled: (data, error, variables) => {
+      setFieldGenerating(variables.field, false);
     }
   });
 
@@ -698,33 +710,35 @@ export default function DpiaAssessmentEnhanced() {
       return;
     }
     
-    setIsGenerating(true);
+    // Map scenario and riskType to the correct questionField for DPIA prompts
+    const fieldMapping: Record<string, Record<string, string>> = {
+      'illegitimateAccess': {
+        'impacts': 'illegitimateAccessImpacts',
+        'sources': 'illegitimateAccessSources',
+        'measures': 'illegitimateAccessMeasures'
+      },
+      'unwantedModification': {
+        'impacts': 'dataModificationImpacts',
+        'sources': 'dataModificationSources', 
+        'measures': 'dataModificationMeasures'
+      },
+      'dataDisappearance': {
+        'impacts': 'dataDisappearanceImpacts',
+        'sources': 'dataDisappearanceSources',
+        'measures': 'dataDisappearanceMeasures'
+      }
+    };
+    
+    const questionField = fieldMapping[scenario]?.[riskType];
+    
+    if (!questionField) {
+      console.error(`Mapping non trouvé pour ${scenario}.${riskType}`);
+      return;
+    }
+    
+    setFieldGenerating(questionField, true);
     
     try {
-      // Map scenario and riskType to the correct questionField for DPIA prompts
-      const fieldMapping: Record<string, Record<string, string>> = {
-        'illegitimateAccess': {
-          'impacts': 'illegitimateAccessImpacts',
-          'sources': 'illegitimateAccessSources',
-          'measures': 'illegitimateAccessMeasures'
-        },
-        'unwantedModification': {
-          'impacts': 'dataModificationImpacts',
-          'sources': 'dataModificationSources', 
-          'measures': 'dataModificationMeasures'
-        },
-        'dataDisappearance': {
-          'impacts': 'dataDisappearanceImpacts',
-          'sources': 'dataDisappearanceSources',
-          'measures': 'dataDisappearanceMeasures'
-        }
-      };
-      
-      const questionField = fieldMapping[scenario]?.[riskType];
-      
-      if (!questionField) {
-        throw new Error(`Mapping non trouvé pour ${scenario}.${riskType}`);
-      }
       
       console.log('Risk AI Generate request:', { scenario, riskType, questionField, companyId: currentCompany.id });
       
@@ -768,7 +782,7 @@ export default function DpiaAssessmentEnhanced() {
         variant: "destructive",
       });
     } finally {
-      setIsGenerating(false);
+      setFieldGenerating(questionField, false);
     }
   };
 
@@ -925,7 +939,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("generalDescription")}
                             onClick={() => generateWithAI.mutate({ field: "generalDescription" })}
                             buttonText="Générer avec l'IA"
                             variant="outline"
@@ -963,7 +977,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("processingPurposes")}
                             onClick={() => generateWithAI.mutate({ field: "processingPurposes" })}
                             buttonText="Générer avec l'IA"
                             variant="outline"
@@ -1002,7 +1016,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("dataController")}
                             onClick={() => generateWithAI.mutate({ field: "dataController" })}
                             buttonText="Générer avec l'IA"
                             variant="outline"
@@ -1040,7 +1054,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("dataProcessors")}
                             onClick={() => generateWithAI.mutate({ field: "dataProcessors" })}
                             buttonText="Générer avec l'IA"
                             variant="outline"
@@ -1078,7 +1092,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("applicableReferentials")}
                             onClick={() => generateWithAI.mutate({ field: "applicableReferentials" })}
                             buttonText="Générer avec l'IA"
                             variant="outline"
@@ -1127,7 +1141,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("personalDataProcessed")}
                             onClick={() => generateWithAI.mutate({ field: "personalDataProcessed" })}
                             buttonText="Générer avec l'IA"
                             variant="outline"
@@ -1188,7 +1202,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("finalitiesJustification")}
                             onClick={() => generateWithAI.mutate({ field: "finalitiesJustification" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1246,7 +1260,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("dataMinimization")}
                             onClick={() => generateWithAI.mutate({ field: "dataMinimization" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1304,7 +1318,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("retentionJustification")}
                             onClick={() => generateWithAI.mutate({ field: "retentionJustification" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1414,7 +1428,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("legalBasisJustification")}
                             onClick={() => generateWithAI.mutate({ field: "legalBasisJustification" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1472,7 +1486,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("dataQualityJustification")}
                             onClick={() => generateWithAI.mutate({ field: "dataQualityJustification" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1524,7 +1538,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("rightsInformation")}
                             onClick={() => generateWithAI.mutate({ field: "rightsInformation" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1573,7 +1587,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("rightsConsent")}
                             onClick={() => generateWithAI.mutate({ field: "rightsConsent" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1622,7 +1636,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("rightsAccess")}
                             onClick={() => generateWithAI.mutate({ field: "rightsAccess" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1671,7 +1685,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("rightsRectification")}
                             onClick={() => generateWithAI.mutate({ field: "rightsRectification" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
@@ -1720,7 +1734,7 @@ export default function DpiaAssessmentEnhanced() {
                         </FormControl>
                         <div className="flex gap-2">
                           <AIProgressIndicator
-                            isGenerating={isGenerating}
+                            isGenerating={isFieldGenerating("rightsOpposition")}
                             onClick={() => generateWithAI.mutate({ field: "rightsOpposition" })}
                             buttonText="Générer une proposition par l'IA"
                             variant="outline"
