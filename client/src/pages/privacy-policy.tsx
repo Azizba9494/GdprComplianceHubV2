@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { FileText, Download, Sparkles, Clock, CheckCircle, Loader2, Trash2 } from "lucide-react";
+import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -162,19 +163,19 @@ export default function PrivacyPolicy() {
           </p>
         </div>
         {hasPermission('policies.write') ? (
-          <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
-            {generateMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Génération...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Générer avec IA
-              </>
-            )}
-          </Button>
+          <AIProgressIndicator
+            isGenerating={generateMutation.isPending}
+            onClick={() => generateMutation.mutate()}
+            buttonText="Générer avec IA"
+            estimatedSeconds={45}
+            steps={[
+              "Analyse des traitements existants...",
+              "Extraction profil entreprise...",
+              "Application cadre légal RGPD...",
+              "Génération politique personnalisée...",
+              "Finalisation du document..."
+            ]}
+          />
         ) : (
           <Button disabled variant="outline">
             <Sparkles className="w-4 h-4 mr-2" />
@@ -238,19 +239,19 @@ export default function PrivacyPolicy() {
                 conforme aux exigences du RGPD.
               </p>
               {hasPermission('policies.write') ? (
-                <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
-                  {generateMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Génération en cours...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Générer ma première politique
-                    </>
-                  )}
-                </Button>
+                <AIProgressIndicator
+                  isGenerating={generateMutation.isPending}
+                  onClick={() => generateMutation.mutate()}
+                  buttonText="Générer ma première politique"
+                  estimatedSeconds={35}
+                  steps={[
+                    "Analyse du contexte entreprise...",
+                    "Extraction registre traitements...",
+                    "Application textes réglementaires...",
+                    "Génération politique personnalisée...",
+                    "Finalisation du document..."
+                  ]}
+                />
               ) : (
                 <Button disabled variant="outline">
                   <Sparkles className="w-4 h-4 mr-2" />

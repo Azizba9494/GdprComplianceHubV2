@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { AccessDenied } from "@/components/AccessDenied";
 import { ArrowLeft, Send, Bot, User, Loader2 } from "lucide-react";
+import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -293,17 +294,21 @@ export default function LaTeamChat() {
               className="flex-1 min-h-[60px] max-h-[200px] resize-none"
               rows={2}
             />
-            <Button 
+            <AIProgressIndicator
+              isGenerating={sendMessageMutation.isPending}
               onClick={handleSendMessage}
-              disabled={!messageInput.trim() || sendMessageMutation.isPending}
+              disabled={!messageInput.trim()}
+              buttonText=""
               className="h-[60px] px-4"
-            >
-              {sendMessageMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </Button>
+              estimatedSeconds={20}
+              steps={[
+                "Analyse de votre question...",
+                "Recherche expertise juridique...",
+                "Application connaissances RGPD...",
+                "Génération réponse experte...",
+                "Finalisation de la réponse..."
+              ]}
+            />
           </div>
           <div className="text-xs text-muted-foreground mt-2">
             💡 <strong>Astuce :</strong> Utilisez <kbd className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs">Shift + Entrée</kbd> pour aller à la ligne, <kbd className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs">Entrée</kbd> pour envoyer

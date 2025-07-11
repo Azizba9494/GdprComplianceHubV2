@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { Book, Plus, Building, Users, FileText, Download, Loader2, HelpCircle, Edit2, Save, X, AlertTriangle, CheckCircle2, Trash2, FileSearch, Search } from "lucide-react";
+import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 
 // Bases légales complètes du RGPD
 const LEGAL_BASES = [
@@ -1719,16 +1720,21 @@ Informations complémentaires: ${data.additionalInfo}
                     <Button type="button" variant="outline" onClick={() => setIsGenerateDialogOpen(false)}>
                       Annuler
                     </Button>
-                    <Button type="submit" disabled={generateMutation.isPending}>
-                      {generateMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Génération...
-                        </>
-                      ) : (
-                        "Générer la fiche"
-                      )}
-                    </Button>
+                    <div>
+                      <AIProgressIndicator
+                        isGenerating={generateMutation.isPending}
+                        onClick={() => generateForm.handleSubmit(data => generateMutation.mutate(data))()}
+                        buttonText="Générer la fiche"
+                        estimatedSeconds={40}
+                        steps={[
+                          "Analyse des informations saisies...",
+                          "Extraction contexte entreprise...",
+                          "Application référentiel CNIL...",
+                          "Génération fiche complète...",
+                          "Finalisation du registre..."
+                        ]}
+                      />
+                    </div>
                   </div>
                 </form>
               </Form>

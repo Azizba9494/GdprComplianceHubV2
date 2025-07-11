@@ -37,6 +37,7 @@ import {
   Save,
   Trash2
 } from "lucide-react";
+import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 
 interface Breach {
   id: number;
@@ -840,20 +841,22 @@ Généré le: ${new Date().toLocaleString()}
                           </Button>
                         )}
                         {!breach.aiRecommendationAuthority && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <AIProgressIndicator
+                            isGenerating={isAnalyzing}
                             onClick={() => handleAIAnalysis(breach)}
-                            disabled={isAnalyzing || !hasPermission('breaches.write')}
-                            title={!hasPermission('breaches.write') ? "Droits insuffisants pour analyser des violations" : ""}
-                          >
-                            {isAnalyzing ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Brain className="w-4 h-4 mr-2" />
-                            )}
-                            Analyse IA
-                          </Button>
+                            buttonText="Analyse IA"
+                            disabled={!hasPermission('breaches.write')}
+                            variant="outline"
+                            size="sm"
+                            estimatedSeconds={30}
+                            steps={[
+                              "Analyse des données de violation...",
+                              "Application lignes directrices EDPB...",
+                              "Évaluation des risques...",
+                              "Génération recommandations...",
+                              "Finalisation de l'analyse..."
+                            ]}
+                          />
                         )}
                         <Button 
                           variant="outline" 

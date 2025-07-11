@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Brain, Save, FileText, Shield, AlertTriangle, CheckCircle, Loader2, Plus, Trash2, ArrowLeft, Download } from "lucide-react";
+import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 // Import constants directly in the file since the shared import is causing issues
@@ -923,16 +924,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "generalDescription" })}
+                            buttonText="Générer avec l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "generalDescription" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            {isGenerating ? "Génération..." : "Générer avec l'IA"}
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération description générale...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>

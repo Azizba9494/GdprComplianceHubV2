@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Brain, Loader2, AlertTriangle, Users, Shield, Zap } from "lucide-react";
+import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 
 interface RiskAssessmentProps {
   dpiaId: number;
@@ -165,19 +166,21 @@ export default function DpiaRiskAssessment({ dpiaId, companyId, processingRecord
                     <h4 className="font-medium">{section.title}</h4>
                     <p className="text-sm text-muted-foreground">{section.description}</p>
                   </div>
-                  <Button
+                  <AIProgressIndicator
+                    isGenerating={loadingPrompts[`${riskCategory.id}-${section.id}`]}
+                    onClick={() => handleGenerateAnalysis(riskCategory.id, section.id, section.promptKey)}
+                    buttonText="Générer avec l'IA"
                     variant="outline"
                     size="sm"
-                    onClick={() => handleGenerateAnalysis(riskCategory.id, section.id, section.promptKey)}
-                    disabled={loadingPrompts[`${riskCategory.id}-${section.id}`]}
-                  >
-                    {loadingPrompts[`${riskCategory.id}-${section.id}`] ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Brain className="h-4 w-4 mr-2" />
-                    )}
-                    Générer avec l'IA
-                  </Button>
+                    estimatedSeconds={35}
+                    steps={[
+                      "Analyse du contexte entreprise...",
+                      "Extraction des données AIPD...",
+                      "Application méthodologie CNIL...",
+                      "Génération analyse de risques...",
+                      "Finalisation de la réponse..."
+                    ]}
+                  />
                 </div>
                 
                 <Textarea

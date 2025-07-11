@@ -6,6 +6,7 @@ import { MessageCircle, Send, X, Bot } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { AIProgressIndicator } from "@/components/ui/ai-progress-indicator";
 
 interface Message {
   id: string;
@@ -162,13 +163,22 @@ export default function Chatbot() {
                   onKeyPress={handleKeyPress}
                   className="flex-1"
                 />
-                <Button
+                <AIProgressIndicator
+                  isGenerating={chatMutation.isPending}
                   onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || chatMutation.isPending}
+                  disabled={!inputValue.trim()}
+                  buttonText=""
                   size="sm"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+                  estimatedSeconds={15}
+                  steps={[
+                    "Traitement de votre question...",
+                    "Recherche d'informations RGPD...",
+                    "Génération de la réponse...",
+                    "Vérification de la conformité...",
+                    "Finalisation de la réponse..."
+                  ]}
+                  className="px-3"
+                />
               </div>
             </div>
           </CardContent>
