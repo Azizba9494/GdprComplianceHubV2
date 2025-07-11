@@ -2294,7 +2294,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('illegitimateAccess', 'impacts')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('illegitimateAccessImpacts')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2326,7 +2326,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('illegitimateAccess', 'sources')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('illegitimateAccessSources')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2356,7 +2356,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('illegitimateAccess', 'measures')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('illegitimateAccessMeasures')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2494,7 +2494,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('unwantedModification', 'impacts')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('dataModificationImpacts')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2526,7 +2526,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('unwantedModification', 'sources')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('dataModificationSources')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2556,7 +2556,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('unwantedModification', 'measures')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('dataModificationMeasures')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2694,7 +2694,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('dataDisappearance', 'impacts')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('dataDisappearanceImpacts')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2726,7 +2726,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('dataDisappearance', 'sources')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('dataDisappearanceSources')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
@@ -2756,7 +2756,7 @@ export default function DpiaAssessmentEnhanced() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRiskAIGenerate('dataDisappearance', 'measures')}
-                                  disabled={isGenerating}
+                                  disabled={isFieldGenerating('dataDisappearanceMeasures')}
                                 >
                                   <Brain className="h-4 w-4 mr-1" />
                                   IA
