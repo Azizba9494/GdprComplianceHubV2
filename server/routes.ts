@@ -3644,7 +3644,6 @@ function getPdfOptions() {
     format: 'A4',
     margin: { top: 20, bottom: 20, left: 20, right: 20 },
     printBackground: true,
-    path: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
