@@ -267,12 +267,9 @@ const dpiaFormSchema = z.object({
   })).optional(), // 2.2.6 - New
   internationalTransfersMeasures: z.array(z.object({
     dataType: z.string(),
-    france: z.boolean(),
-    eu: z.boolean(),
-    adequateCountry: z.boolean(),
-    otherCountry: z.boolean(),
+    country: z.string(),
     justification: z.string()
-  })).optional(), // 2.2.7 - New
+  })).optional(), // 2.2.7 - Simplified
   rightsProtectionEvaluation: z.object({
     information: z.object({ status: z.enum(["acceptable", "improvable"]), measures: z.string() }),
     consent: z.object({ status: z.enum(["acceptable", "improvable"]), measures: z.string() }),
@@ -544,7 +541,19 @@ export default function DpiaAssessmentEnhanced() {
         securityMeasures: dpia.securityMeasures || [],
         customSecurityMeasures: dpia.customSecurityMeasures || [],
         subcontractingMeasures: dpia.subcontractingMeasures || [],
-        internationalTransfersMeasures: dpia.internationalTransfersMeasures || [],
+        internationalTransfersMeasures: Array.isArray(dpia.internationalTransfersMeasures) 
+          ? dpia.internationalTransfersMeasures.map((transfer: any) => {
+              // Convert old format to new simplified format
+              if (transfer.france !== undefined || transfer.eu !== undefined) {
+                return {
+                  dataType: transfer.dataType || "",
+                  country: transfer.country || "",
+                  justification: transfer.justification || ""
+                };
+              }
+              return transfer;
+            })
+          : [],
         riskScenarios: dpia.riskScenarios || {},
         proportionalityEvaluation: dpia.proportionalityEvaluation || {
           finalities: { status: "acceptable", measures: "" },
@@ -4354,6 +4363,8 @@ export default function DpiaAssessmentEnhanced() {
                 console.log("Save button clicked");
                 console.log("Form valid:", form.formState.isValid);
                 console.log("Form errors:", form.formState.errors);
+                const formData = form.getValues();
+                console.log("internationalTransfersMeasures data:", formData.internationalTransfersMeasures);
               }}
             >
               {saveMutation.isPending ? (
