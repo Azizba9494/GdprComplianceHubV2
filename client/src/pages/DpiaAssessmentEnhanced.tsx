@@ -962,16 +962,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "processingPurposes" })}
+                            buttonText="Générer avec l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "processingPurposes" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer avec l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération finalités traitement...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -996,16 +1001,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "dataController" })}
+                            buttonText="Générer avec l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "dataController" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer avec l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération responsable traitement...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1029,16 +1039,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "dataProcessors" })}
+                            buttonText="Générer avec l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "dataProcessors" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer avec l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération sous-traitants...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1062,16 +1077,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "applicableReferentials" })}
+                            buttonText="Générer avec l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "applicableReferentials" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer avec l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération référentiels applicables...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1106,16 +1126,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "personalDataProcessed" })}
+                            buttonText="Générer avec l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "personalDataProcessed" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            {isGenerating ? "Génération..." : "Générer avec l'IA"}
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération données personnelles...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1162,16 +1187,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "finalitiesJustification" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "finalitiesJustification" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération justification finalités...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1215,16 +1245,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "dataMinimization" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "dataMinimization" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération justification minimisation...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1268,16 +1303,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "retentionJustification" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "retentionJustification" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération justification rétention...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1373,16 +1413,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "legalBasisJustification" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "legalBasisJustification" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération justification base légale...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1426,16 +1471,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "dataQualityJustification" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "dataQualityJustification" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération mesures qualité données...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1473,16 +1523,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "rightsInformation" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "rightsInformation" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération mesures information...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1517,16 +1572,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "rightsConsent" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "rightsConsent" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération mesures consentement...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1561,16 +1621,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "rightsAccess" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "rightsAccess" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération mesures accès/portabilité...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1605,16 +1670,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "rightsRectification" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "rightsRectification" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération mesures rectification...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1649,16 +1719,21 @@ export default function DpiaAssessmentEnhanced() {
                           />
                         </FormControl>
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
+                          <AIProgressIndicator
+                            isGenerating={isGenerating}
+                            onClick={() => generateWithAI.mutate({ field: "rightsOpposition" })}
+                            buttonText="Générer une proposition par l'IA"
                             variant="outline"
                             size="sm"
-                            onClick={() => generateWithAI.mutate({ field: "rightsOpposition" })}
-                            disabled={isGenerating}
-                          >
-                            <Brain className="h-4 w-4 mr-2" />
-                            Générer une proposition par l'IA
-                          </Button>
+                            estimatedSeconds={40}
+                            steps={[
+                              "Analyse du contexte AIPD...",
+                              "Extraction profil entreprise...",
+                              "Application méthodologie CNIL...",
+                              "Génération mesures opposition...",
+                              "Finalisation de la réponse..."
+                            ]}
+                          />
                         </div>
                         <FormMessage />
                       </FormItem>
