@@ -143,17 +143,20 @@ export default function ContractualAnnexes() {
     createMutation.mutate(data);
   };
 
-  // Filter annexes
-  const filteredAnnexes = annexes.filter((annex: ContractualAnnex) => {
-    const matchesSearch = 
-      annex.projectName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      annex.contractorName?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter annexes safely
+  const filteredAnnexes = (annexes || []).filter((annex: ContractualAnnex) => {
+    if (!annex) return false;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm || 
+      (annex.projectName && annex.projectName.toLowerCase().includes(searchLower)) ||
+      (annex.contractorName && annex.contractorName.toLowerCase().includes(searchLower));
     
     const matchesStatus = statusFilter === "all" || annex.status === statusFilter;
     
     const matchesType = typeFilter === "all" || 
       (annex.documentTypes && Array.isArray(annex.documentTypes) && 
-       annex.documentTypes.some(type => type === typeFilter));
+       annex.documentTypes.includes(typeFilter as 'DPA' | 'CCT'));
     
     return matchesSearch && matchesStatus && matchesType;
   });
