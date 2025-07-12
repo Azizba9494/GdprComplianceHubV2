@@ -101,6 +101,12 @@ const MODULE_PERMISSIONS = [
     levels: ['read', 'write'] 
   },
   { 
+    id: 'annexes', 
+    label: 'Annexes contractuelles', 
+    description: 'Génération de DPA et CCT',
+    levels: ['read', 'write'] 
+  },
+  { 
     id: 'team', 
     label: 'LA Team Jean Michel', 
     description: 'Assistants IA spécialisés',

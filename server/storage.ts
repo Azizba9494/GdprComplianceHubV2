@@ -2,7 +2,7 @@ import {
   users, companies, diagnosticQuestions, diagnosticResponses, complianceActions,
   processingRecords, subprocessorRecords, dataSubjectRequests, privacyPolicies, dataBreaches,
   dpiaAssessments, aiPrompts, auditLogs, llmConfigurations, complianceSnapshots,
-
+  contractualAnnexes, generatedDocuments, annexChatMessages,
  dpiaEvaluations, ragDocuments, promptDocuments,
   subscriptions, userCompanyAccess, invitations, invoices, botConversations, botMessages,
   actionAssignments, actionComments, actionAttachments, actionActivityLog,
@@ -23,7 +23,9 @@ import {
   type AiPrompt, type InsertAiPrompt,
   type AuditLog, type InsertAuditLog,
   type LlmConfiguration, type InsertLlmConfiguration,
-
+  type ContractualAnnex, type InsertContractualAnnex,
+  type GeneratedDocument, type InsertGeneratedDocument,
+  type AnnexChatMessage, type InsertAnnexChatMessage,
   type DpiaEvaluation, type InsertDpiaEvaluation,
   type RagDocument, type InsertRagDocument,
   type PromptDocument, type InsertPromptDocument,
@@ -85,6 +87,25 @@ export interface IStorage {
   createSubprocessorRecord(record: InsertSubprocessorRecord): Promise<SubprocessorRecord>;
   updateSubprocessorRecord(id: number, updates: Partial<InsertSubprocessorRecord>): Promise<SubprocessorRecord>;
   deleteSubprocessorRecord(id: number): Promise<void>;
+
+  // Contractual Annexes
+  getContractualAnnexes(companyId: number): Promise<ContractualAnnex[]>;
+  getContractualAnnex(id: number): Promise<ContractualAnnex | undefined>;
+  createContractualAnnex(annex: InsertContractualAnnex): Promise<ContractualAnnex>;
+  updateContractualAnnex(id: number, updates: Partial<InsertContractualAnnex>): Promise<ContractualAnnex>;
+  deleteContractualAnnex(id: number): Promise<void>;
+
+  // Generated Documents
+  getGeneratedDocuments(annexId: number): Promise<GeneratedDocument[]>;
+  getGeneratedDocument(id: number): Promise<GeneratedDocument | undefined>;
+  createGeneratedDocument(document: InsertGeneratedDocument): Promise<GeneratedDocument>;
+  updateGeneratedDocument(id: number, updates: Partial<InsertGeneratedDocument>): Promise<GeneratedDocument>;
+  deleteGeneratedDocument(id: number): Promise<void>;
+
+  // Annex Chat Messages
+  getAnnexChatMessages(annexId: number): Promise<AnnexChatMessage[]>;
+  createAnnexChatMessage(message: InsertAnnexChatMessage): Promise<AnnexChatMessage>;
+  deleteAnnexChatMessages(annexId: number): Promise<void>;
 
   // Data Subject Requests
   getDataSubjectRequests(companyId: number): Promise<DataSubjectRequest[]>;
@@ -1069,7 +1090,83 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  // Contractual Annexes methods
+  async getContractualAnnexes(companyId: number): Promise<ContractualAnnex[]> {
+    return await db.select().from(contractualAnnexes)
+      .where(eq(contractualAnnexes.companyId, companyId))
+      .orderBy(desc(contractualAnnexes.createdAt));
+  }
 
+  async getContractualAnnex(id: number): Promise<ContractualAnnex | undefined> {
+    const [annex] = await db.select().from(contractualAnnexes)
+      .where(eq(contractualAnnexes.id, id));
+    return annex;
+  }
+
+  async createContractualAnnex(annex: InsertContractualAnnex): Promise<ContractualAnnex> {
+    const [created] = await db.insert(contractualAnnexes).values(annex).returning();
+    return created;
+  }
+
+  async updateContractualAnnex(id: number, updates: Partial<InsertContractualAnnex>): Promise<ContractualAnnex> {
+    const [updated] = await db.update(contractualAnnexes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(contractualAnnexes.id, id)).returning();
+    return updated;
+  }
+
+  async deleteContractualAnnex(id: number): Promise<void> {
+    // Delete associated documents and chat messages first
+    await db.delete(generatedDocuments).where(eq(generatedDocuments.annexId, id));
+    await db.delete(annexChatMessages).where(eq(annexChatMessages.annexId, id));
+    // Delete the annex
+    await db.delete(contractualAnnexes).where(eq(contractualAnnexes.id, id));
+  }
+
+  // Generated Documents methods
+  async getGeneratedDocuments(annexId: number): Promise<GeneratedDocument[]> {
+    return await db.select().from(generatedDocuments)
+      .where(eq(generatedDocuments.annexId, annexId))
+      .orderBy(desc(generatedDocuments.createdAt));
+  }
+
+  async getGeneratedDocument(id: number): Promise<GeneratedDocument | undefined> {
+    const [document] = await db.select().from(generatedDocuments)
+      .where(eq(generatedDocuments.id, id));
+    return document;
+  }
+
+  async createGeneratedDocument(document: InsertGeneratedDocument): Promise<GeneratedDocument> {
+    const [created] = await db.insert(generatedDocuments).values(document).returning();
+    return created;
+  }
+
+  async updateGeneratedDocument(id: number, updates: Partial<InsertGeneratedDocument>): Promise<GeneratedDocument> {
+    const [updated] = await db.update(generatedDocuments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(generatedDocuments.id, id)).returning();
+    return updated;
+  }
+
+  async deleteGeneratedDocument(id: number): Promise<void> {
+    await db.delete(generatedDocuments).where(eq(generatedDocuments.id, id));
+  }
+
+  // Annex Chat Messages methods
+  async getAnnexChatMessages(annexId: number): Promise<AnnexChatMessage[]> {
+    return await db.select().from(annexChatMessages)
+      .where(eq(annexChatMessages.annexId, annexId))
+      .orderBy(annexChatMessages.timestamp);
+  }
+
+  async createAnnexChatMessage(message: InsertAnnexChatMessage): Promise<AnnexChatMessage> {
+    const [created] = await db.insert(annexChatMessages).values(message).returning();
+    return created;
+  }
+
+  async deleteAnnexChatMessages(annexId: number): Promise<void> {
+    await db.delete(annexChatMessages).where(eq(annexChatMessages.annexId, annexId));
+  }
 
 }
 

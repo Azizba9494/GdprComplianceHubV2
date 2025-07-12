@@ -2020,7 +2020,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Contractual Annexes Routes
+  app.get("/api/annexes/:companyId", requireAuth, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.companyId);
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
 
+      const annexes = await storage.getContractualAnnexes(companyId);
+      res.json(annexes);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/annexes", requireAuth, async (req, res) => {
+    try {
+      const annexData = req.body;
+      
+      // Verify user has access to the specified company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, annexData.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const annex = await storage.createContractualAnnex(annexData);
+      res.json(annex);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/annexes/:id/details", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get annex and verify access
+      const annex = await storage.getContractualAnnex(id);
+      if (!annex) {
+        return res.status(404).json({ error: "Annex not found" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, annex.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      res.json(annex);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/annexes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // Get annex and verify access
+      const existingAnnex = await storage.getContractualAnnex(id);
+      if (!existingAnnex) {
+        return res.status(404).json({ error: "Annex not found" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, existingAnnex.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const annex = await storage.updateContractualAnnex(id, updateData);
+      res.json(annex);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/annexes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get annex and verify access
+      const existingAnnex = await storage.getContractualAnnex(id);
+      if (!existingAnnex) {
+        return res.status(404).json({ error: "Annex not found" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, existingAnnex.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      await storage.deleteContractualAnnex(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Generated Documents Routes
+  app.get("/api/annexes/:annexId/documents", requireAuth, async (req, res) => {
+    try {
+      const annexId = parseInt(req.params.annexId);
+      
+      // Get annex and verify access
+      const annex = await storage.getContractualAnnex(annexId);
+      if (!annex) {
+        return res.status(404).json({ error: "Annex not found" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, annex.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const documents = await storage.getGeneratedDocuments(annexId);
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/annexes/:annexId/documents", requireAuth, async (req, res) => {
+    try {
+      const annexId = parseInt(req.params.annexId);
+      const documentData = req.body;
+      
+      // Get annex and verify access
+      const annex = await storage.getContractualAnnex(annexId);
+      if (!annex) {
+        return res.status(404).json({ error: "Annex not found" });
+      }
+      
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, annex.companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const document = await storage.createGeneratedDocument({
+        ...documentData,
+        annexId
+      });
+      res.json(document);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   // AI Prompts management (Admin only)
   app.get("/api/admin/prompts", async (req, res) => {
