@@ -56,9 +56,12 @@ export default function ContractualAnnexes() {
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Fetch annexes
-  const { data: annexes = [], isLoading } = useQuery({
+  const { data: annexes = [], isLoading, error } = useQuery({
     queryKey: [`/api/annexes/${currentCompany?.id}`],
     enabled: !!currentCompany,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Create form
@@ -180,6 +183,22 @@ export default function ContractualAnnexes() {
     }
   };
 
+  // Handle error state
+  if (error) {
+    console.error('Annexes query error:', error);
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Annexes contractuelles</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Erreur lors du chargement des annexes contractuelles.</p>
+          <p className="text-sm text-red-600 mt-2">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-6">
@@ -211,13 +230,14 @@ export default function ContractualAnnexes() {
           </p>
         </div>
         
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button disabled={!canWrite}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nouveau projet
-            </Button>
-          </DialogTrigger>
+        {currentCompany && (
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button disabled={!canWrite}>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouveau projet
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Créer un nouveau projet d'annexe</DialogTitle>
@@ -320,6 +340,7 @@ export default function ContractualAnnexes() {
             </Form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Filters */}
