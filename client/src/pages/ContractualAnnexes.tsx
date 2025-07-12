@@ -54,30 +54,10 @@ export default function ContractualAnnexes() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (!currentCompany) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900">Aucune entreprise sélectionnée</h2>
-          <p className="text-gray-600">Veuillez sélectionner une entreprise pour accéder aux annexes contractuelles.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const canWrite = hasPermission('annexes.write');
-
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Fetch annexes
   const { data: annexes = [], isLoading } = useQuery({
-    queryKey: ['/api/annexes', currentCompany.id],
+    queryKey: ['/api/annexes', currentCompany?.id],
     enabled: !!currentCompany,
   });
 
@@ -98,12 +78,14 @@ export default function ContractualAnnexes() {
         method: 'POST',
         body: {
           ...data,
-          companyId: currentCompany.id,
+          companyId: currentCompany?.id,
         },
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/annexes', currentCompany.id] });
+      if (currentCompany) {
+        queryClient.invalidateQueries({ queryKey: ['/api/annexes', currentCompany.id] });
+      }
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
@@ -119,6 +101,29 @@ export default function ContractualAnnexes() {
       });
     },
   });
+
+  // Calculate derived values
+  const canWrite = hasPermission('annexes.write');
+
+  // NOW WE CAN HAVE CONDITIONAL RETURNS AFTER ALL HOOKS
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (!currentCompany) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Aucune entreprise sélectionnée</h2>
+          <p className="text-gray-600">Veuillez sélectionner une entreprise pour accéder aux annexes contractuelles.</p>
+        </div>
+      </div>
+    );
+  }
 
   const onSubmit = (data: CreateAnnexFormData) => {
     if (!canWrite) {
