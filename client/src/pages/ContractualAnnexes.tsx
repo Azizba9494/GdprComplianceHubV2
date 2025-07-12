@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
@@ -17,10 +20,12 @@ import {
   Download,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Upload
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ContractualAnnex {
   id: number;
@@ -41,6 +46,12 @@ export default function ContractualAnnexes() {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newProject, setNewProject] = useState({
+    contractorName: "",
+    contractType: "",
+    contractFile: null as File | null
+  });
 
   // Safe data fetching with proper error handling
   const { data: annexes = [], isLoading, error } = useQuery({
@@ -48,6 +59,52 @@ export default function ContractualAnnexes() {
     enabled: !!currentCompany?.id,
     staleTime: 5 * 60 * 1000
   });
+
+  // Create annex mutation
+  const createAnnexMutation = useMutation({
+    mutationFn: async (annexData: any) => {
+      const response = await apiRequest("POST", "/api/annexes", annexData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/annexes/${currentCompany?.id}`] });
+      toast({
+        title: "Succès",
+        description: "Le projet d'annexe contractuelle a été créé avec succès.",
+      });
+      setIsCreateDialogOpen(false);
+      setNewProject({
+        contractorName: "",
+        contractType: "",
+        contractFile: null
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la création du projet.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreateProject = () => {
+    if (!newProject.contractorName || !newProject.contractType) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createAnnexMutation.mutate({
+      companyId: currentCompany?.id,
+      contractorName: newProject.contractorName,
+      contractType: newProject.contractType,
+      status: 'draft'
+    });
+  };
 
   if (authLoading) {
     return (
@@ -111,10 +168,78 @@ export default function ContractualAnnexes() {
         </div>
         
         {canWrite && (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau projet
-          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Nouveau projet
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Créer une nouvelle annexe contractuelle</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="contractorName">Nom du co-contractant *</Label>
+                  <Input
+                    id="contractorName"
+                    value={newProject.contractorName}
+                    onChange={(e) => setNewProject(prev => ({ ...prev, contractorName: e.target.value }))}
+                    placeholder="ex: ACME Corporation"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="contractType">Type de contrat *</Label>
+                  <Select
+                    value={newProject.contractType}
+                    onValueChange={(value) => setNewProject(prev => ({ ...prev, contractType: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sous-traitance">Contrat de sous-traitance</SelectItem>
+                      <SelectItem value="prestations">Contrat de prestations</SelectItem>
+                      <SelectItem value="hebergement">Contrat d'hébergement</SelectItem>
+                      <SelectItem value="cloud">Contrat cloud/SaaS</SelectItem>
+                      <SelectItem value="maintenance">Contrat de maintenance</SelectItem>
+                      <SelectItem value="autre">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="contractFile">Contrat (optionnel)</Label>
+                  <Input
+                    id="contractFile"
+                    type="file"
+                    accept=".pdf,.docx,.txt"
+                    onChange={(e) => setNewProject(prev => ({ 
+                      ...prev, 
+                      contractFile: e.target.files?.[0] || null 
+                    }))}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Formats acceptés : PDF, DOCX, TXT
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCreateDialogOpen(false)}
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={handleCreateProject}
+                  disabled={createAnnexMutation.isPending}
+                >
+                  {createAnnexMutation.isPending ? "Création..." : "Créer"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
 
@@ -177,7 +302,7 @@ export default function ContractualAnnexes() {
               }
             </p>
             {canWrite && !searchTerm && statusFilter === "all" && (
-              <Button>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Créer une annexe
               </Button>
