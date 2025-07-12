@@ -58,6 +58,7 @@ export default function ContractualAnnexes() {
   // Fetch annexes
   const { data: annexes = [], isLoading } = useQuery({
     queryKey: ['/api/annexes', currentCompany?.id],
+    queryFn: () => apiRequest(`/api/annexes/${currentCompany?.id}`),
     enabled: !!currentCompany,
   });
 
@@ -77,8 +78,11 @@ export default function ContractualAnnexes() {
       return apiRequest(`/api/annexes`, {
         method: 'POST',
         body: {
-          ...data,
+          projectName: data.projectName,
+          contractorName: data.contractorName,
+          documentTypes: data.documentTypes,
           companyId: currentCompany?.id,
+          status: 'draft',
         },
       });
     },
@@ -140,13 +144,14 @@ export default function ContractualAnnexes() {
   // Filter annexes
   const filteredAnnexes = annexes.filter((annex: ContractualAnnex) => {
     const matchesSearch = 
-      annex.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      annex.contractorName.toLowerCase().includes(searchTerm.toLowerCase());
+      annex.projectName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      annex.contractorName?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || annex.status === statusFilter;
     
     const matchesType = typeFilter === "all" || 
-      annex.documentTypes.some(type => type === typeFilter);
+      (annex.documentTypes && Array.isArray(annex.documentTypes) && 
+       annex.documentTypes.some(type => type === typeFilter));
     
     return matchesSearch && matchesStatus && matchesType;
   });
