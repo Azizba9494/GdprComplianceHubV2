@@ -44,7 +44,7 @@ const createAnnexSchema = z.object({
 type CreateAnnexFormData = z.infer<typeof createAnnexSchema>;
 
 export default function ContractualAnnexes() {
-  const { currentCompany } = useAuth();
+  const { currentCompany, isLoading: authLoading } = useAuth();
   const { hasPermission } = usePermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,8 +54,23 @@ export default function ContractualAnnexes() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
   if (!currentCompany) {
-    throw new Error("Company ID required");
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900">Aucune entreprise sélectionnée</h2>
+          <p className="text-gray-600">Veuillez sélectionner une entreprise pour accéder aux annexes contractuelles.</p>
+        </div>
+      </div>
+    );
   }
 
   const canWrite = hasPermission('annexes.write');
