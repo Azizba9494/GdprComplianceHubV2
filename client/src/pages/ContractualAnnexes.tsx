@@ -44,7 +44,7 @@ export default function ContractualAnnexes() {
 
   // Safe data fetching with proper error handling
   const { data: annexes = [], isLoading, error } = useQuery({
-    queryKey: ['/api/annexes', currentCompany?.id],
+    queryKey: [`/api/annexes/${currentCompany?.id}`],
     enabled: !!currentCompany?.id,
     staleTime: 5 * 60 * 1000
   });

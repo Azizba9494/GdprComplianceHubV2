@@ -2021,6 +2021,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Contractual Annexes Routes
+  app.get("/api/annexes", requireAuth, async (req, res) => {
+    try {
+      const companyId = parseInt(req.query.companyId as string);
+      if (!companyId) {
+        return res.status(400).json({ error: "Company ID required" });
+      }
+      
+      // Verify user has access to this company
+      const hasAccess = await storage.verifyUserCompanyAccess(req.session.userId, companyId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied to this company data" });
+      }
+
+      const annexes = await storage.getContractualAnnexes(companyId);
+      res.json(annexes);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/annexes/:companyId", requireAuth, async (req, res) => {
     try {
       const companyId = parseInt(req.params.companyId);
