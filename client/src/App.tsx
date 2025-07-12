@@ -28,7 +28,7 @@ import Help from "@/pages/help";
 import LaTeam from "@/pages/la-team";
 import LaTeamChat from "@/pages/la-team-chat";
 import Collaborators from "@/pages/collaborators";
-import ContractualAnnexesSimple from "@/pages/ContractualAnnexesSimple";
+import ContractualAnnexes from "@/pages/ContractualAnnexes";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import Chatbot from "@/components/chatbot/chatbot";
@@ -74,7 +74,7 @@ function AuthenticatedApp() {
             <Route path="/actions" component={ActionPlan} />
             <Route path="/records" component={Records} />
             <Route path="/subprocessor-registry" component={SubprocessorRegistry} />
-            <Route path="/annexes" component={ContractualAnnexesSimple} />
+            <Route path="/annexes" component={ContractualAnnexes} />
             <Route path="/privacy-policy" component={PrivacyPolicy} />
             <Route path="/breach-analysis" component={BreachAnalysisEnhanced} />
             <Route path="/rights" component={RightsManagement} />
