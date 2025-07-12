@@ -461,48 +461,6 @@ export const llmConfigurations = pgTable("llm_configurations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Contractual Annexes - Main projects
-export const contractualAnnexes = pgTable("contractual_annexes", {
-  id: serial("id").primaryKey(),
-  companyId: integer("company_id").notNull().references(() => companies.id),
-  projectName: text("project_name").notNull(),
-  contractorName: text("contractor_name").notNull(), // Co-contractant
-  documentTypes: jsonb("document_types").$type<('DPA' | 'CCT')[]>().notNull(), // Types de documents à générer
-  originalContractPath: text("original_contract_path"), // Chemin du contrat uploadé
-  originalContractName: text("original_contract_name"), // Nom original du fichier
-  contractContent: text("contract_content"), // Contenu extrait du contrat
-  extractedInfo: jsonb("extracted_info").$type<Record<string, any>>().default({}), // Infos extraites par l'IA
-  missingInfo: jsonb("missing_info").$type<string[]>().default([]), // Questions pour infos manquantes
-  additionalInfo: jsonb("additional_info").$type<Record<string, any>>().default({}), // Réponses utilisateur
-  status: text("status").notNull().default("draft"), // draft, analyzing, ready, completed
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Generated Documents - Documents générés pour chaque annexe
-export const generatedDocuments = pgTable("generated_documents", {
-  id: serial("id").primaryKey(),
-  annexId: integer("annex_id").notNull().references(() => contractualAnnexes.id),
-  documentType: text("document_type").notNull(), // 'DPA' ou 'CCT'
-  title: text("title").notNull(),
-  content: text("content").notNull(), // Contenu HTML pour l'éditeur
-  docxPath: text("docx_path"), // Chemin du fichier DOCX généré
-  version: integer("version").notNull().default(1),
-  validationMarkers: jsonb("validation_markers").$type<string[]>().default([]), // Marqueurs [à valider par le client]
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Chat Messages - Conversations pour collecter les infos manquantes
-export const annexChatMessages = pgTable("annex_chat_messages", {
-  id: serial("id").primaryKey(),
-  annexId: integer("annex_id").notNull().references(() => contractualAnnexes.id),
-  role: text("role").notNull(), // 'user' ou 'assistant'
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   company: one(companies, {
@@ -527,39 +485,6 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   dpiaAssessments: many(dpiaAssessments),
   dpiaEvaluations: many(dpiaEvaluations),
   auditLogs: many(auditLogs),
-  subprocessorRecords: many(subprocessorRecords),
-  contractualAnnexes: many(contractualAnnexes),
-}));
-
-// Contractual Annexes relations
-export const contractualAnnexesRelations = relations(contractualAnnexes, ({ one, many }) => ({
-  company: one(companies, {
-    fields: [contractualAnnexes.companyId],
-    references: [companies.id],
-  }),
-  generatedDocuments: many(generatedDocuments),
-  chatMessages: many(annexChatMessages),
-}));
-
-export const generatedDocumentsRelations = relations(generatedDocuments, ({ one }) => ({
-  annex: one(contractualAnnexes, {
-    fields: [generatedDocuments.annexId],
-    references: [contractualAnnexes.id],
-  }),
-}));
-
-export const annexChatMessagesRelations = relations(annexChatMessages, ({ one }) => ({
-  annex: one(contractualAnnexes, {
-    fields: [annexChatMessages.annexId],
-    references: [contractualAnnexes.id],
-  }),
-}));
-
-export const subprocessorRecordsRelations = relations(subprocessorRecords, ({ one }) => ({
-  company: one(companies, {
-    fields: [subprocessorRecords.companyId],
-    references: [companies.id],
-  }),
 }));
 
 export const complianceSnapshotsRelations = relations(complianceSnapshots, ({ one }) => ({
@@ -668,23 +593,6 @@ export const insertSubprocessorRecordSchema = createInsertSchema(subprocessorRec
   createdAt: true,
 });
 
-export const insertContractualAnnexSchema = createInsertSchema(contractualAnnexes).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertGeneratedDocumentSchema = createInsertSchema(generatedDocuments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertAnnexChatMessageSchema = createInsertSchema(annexChatMessages).omit({
-  id: true,
-  createdAt: true,
-});
-
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -725,14 +633,6 @@ export type LlmConfiguration = typeof llmConfigurations.$inferSelect;
 export type InsertLlmConfiguration = z.infer<typeof insertLlmConfigurationSchema>;
 export type SubprocessorRecord = typeof subprocessorRecords.$inferSelect;
 export type InsertSubprocessorRecord = z.infer<typeof insertSubprocessorRecordSchema>;
-
-// Contractual Annexes types
-export type ContractualAnnex = typeof contractualAnnexes.$inferSelect;
-export type InsertContractualAnnex = z.infer<typeof insertContractualAnnexSchema>;
-export type GeneratedDocument = typeof generatedDocuments.$inferSelect;
-export type InsertGeneratedDocument = z.infer<typeof insertGeneratedDocumentSchema>;
-export type AnnexChatMessage = typeof annexChatMessages.$inferSelect;
-export type InsertAnnexChatMessage = z.infer<typeof insertAnnexChatMessageSchema>;
 
 
 
