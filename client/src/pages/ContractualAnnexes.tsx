@@ -57,8 +57,7 @@ export default function ContractualAnnexes() {
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Fetch annexes
   const { data: annexes = [], isLoading } = useQuery({
-    queryKey: ['/api/annexes', currentCompany?.id],
-    queryFn: () => apiRequest(`/api/annexes/${currentCompany?.id}`),
+    queryKey: [`/api/annexes/${currentCompany?.id}`],
     enabled: !!currentCompany,
   });
 
